@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://Seung-Won-Yu.github.io/rune-drift-survivors/"><strong>Play on GitHub Pages</strong></a>
+  <a href="https://seung-won-yu.github.io/rune-drift-survivors/"><strong>Play on GitHub Pages</strong></a>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@ The current slice focuses on a fast 5-minute run: move through a wide rune ruin 
 Play the GitHub Pages build here:
 
 ```txt
-https://Seung-Won-Yu.github.io/rune-drift-survivors/
+https://seung-won-yu.github.io/rune-drift-survivors/
 ```
 
 If the link is not active yet, push this project to a GitHub repository named `rune-drift-survivors` and enable GitHub Pages with `GitHub Actions` as the source. The included workflow publishes every push to `main`.
@@ -104,13 +104,13 @@ To publish the game:
 The game will be available at:
 
 ```txt
-https://Seung-Won-Yu.github.io/rune-drift-survivors/
+https://seung-won-yu.github.io/rune-drift-survivors/
 ```
 
 If you rename the repository, the deployed path changes to:
 
 ```txt
-https://Seung-Won-Yu.github.io/<repository-name>/
+https://seung-won-yu.github.io/<repository-name>/
 ```
 
 ## Project Structure
