@@ -1,0 +1,25 @@
+{
+  "name": "rune-drift-survivors",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "assets:gltf-to-glb": "node scripts/gltf-to-glb.mjs --out-dir public/models assets/archive/public-models/gltf-source/player-wizard.gltf assets/archive/public-models/gltf-source/enemy-demon.gltf assets/archive/public-models/gltf-source/enemy-bat-source.gltf assets/archive/public-models/gltf-source/enemy-cyclops.gltf assets/archive/public-models/gltf-source/boss-cthulhu.gltf",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.0",
+    "@react-three/postprocessing": "^3.0.4",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "three": "^0.181.2",
+    "zustand": "^5.0.9"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
+    "vite": "^7.2.7"
+  }
+}
