@@ -32,6 +32,7 @@ const FIELD_ITEM_ATTRACT_RADIUS = 12;
 const FIELD_ITEM_PICKUP_RADIUS = 3.05;
 const SHRINE_ACTIVATE_RADIUS = 6.4;
 const SHRINE_CHANNEL_TIME = 1.15;
+const PLAYER_VISUAL_BASE_SCALE = 1.52;
 
 const FIELD_ITEM_META = {
   magnet: { color: '#70d6ff', label: 'MAGNET', name: '자석 룬' },
@@ -675,12 +676,25 @@ function App() {
         window.setTimeout(() => sceneApi.current?.stress?.(options), 120);
         window.setTimeout(() => sceneApi.current?.stress?.(options), 220);
       },
+      upgrade: () => {
+        const nextGame = {
+          ...createQaStressGame(),
+          phase: 'upgrade',
+          pendingUpgrades: 1
+        };
+        sceneApi.current?.reset();
+        setUpgradeChoices(pickUpgrades(nextGame));
+        setGame(nextGame);
+      },
       reset: () => {
         sceneApi.current?.reset();
         setUpgradeChoices([]);
         setGame(createInitialGame());
       }
     };
+    if (new URLSearchParams(window.location.search).get('qa') === 'upgrade') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.upgrade(), 120);
+    }
     return () => {
       delete window.__RUNE_DRIFT_QA__;
     };
@@ -1110,13 +1124,24 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
     if (playerMesh.current) {
       playerMesh.current.position.copy(player.current.pos);
       const yaw = Math.atan2(player.current.facing.x, player.current.facing.z);
-      const tilt = Math.min(0.16, player.current.vel.length() * 0.014);
+      const moveSpeed = player.current.vel.length();
+      const moveAmount = THREE.MathUtils.clamp(moveSpeed / (PLAYER_SPEED * 1.2), 0, 1);
+      const stride = performance.now() * 0.012;
+      const bob = Math.sin(stride) * 0.055 * moveAmount;
+      const sideSway = Math.sin(stride * 0.5) * 0.045 * moveAmount;
+      const tilt = Math.min(0.22, moveSpeed * 0.018);
+      const dashScale = player.current.dashTimer > 0 ? 1.12 : 1;
+      playerMesh.current.position.y += bob;
       playerMesh.current.rotation.set(
-        -player.current.facing.z * tilt,
-        yaw,
+        -player.current.facing.z * tilt + Math.sin(stride) * 0.035 * moveAmount,
+        yaw + sideSway,
         player.current.facing.x * tilt
       );
-      playerMesh.current.scale.setScalar(player.current.dashTimer > 0 ? 1.16 : 1);
+      playerMesh.current.scale.set(
+        dashScale * (1 + Math.sin(stride) * 0.025 * moveAmount),
+        dashScale * (1 - Math.sin(stride) * 0.035 * moveAmount),
+        dashScale * (1 + Math.cos(stride) * 0.018 * moveAmount)
+      );
     }
   };
 
@@ -3766,7 +3791,7 @@ function RuneDrifterModel() {
       object={model}
       position={[0, 0.02, 0]}
       rotation={[0, 0, 0]}
-      scale={[1.52, 1.52, 1.52]}
+      scale={[PLAYER_VISUAL_BASE_SCALE, PLAYER_VISUAL_BASE_SCALE, PLAYER_VISUAL_BASE_SCALE]}
     />
   );
 }
@@ -4022,29 +4047,38 @@ function NaturalFieldKit() {
       };
     };
 
-    const rocks = Array.from({ length: 84 }, (_, index) => {
+    const sightlineClear = item => {
+      const distance = item.position.length();
+      const frontScreenLane = item.position.z < -18 && Math.abs(item.position.x) < 52;
+      const nearCenter = distance < 42;
+      return !nearCenter && !frontScreenLane;
+    };
+
+    const rocks = Array.from({ length: 68 }, (_, index) => {
       const angle = index * 1.17 + 0.42;
-      const radius = 30 + (index % 18) * 4.3;
-      return place(angle, radius, 2.35 + (index % 5) * 0.42, 0.02, index % 3 === 0 ? 0.1 : 0);
-    }).filter(item => item.position.length() < ARENA_RADIUS - 7 && item.position.length() > 22);
+      const radius = 40 + (index % 18) * 4.1;
+      const distanceScale = radius > 78 ? 1 : 0.74;
+      return place(angle, radius, (1.55 + (index % 5) * 0.34) * distanceScale, 0.02, index % 3 === 0 ? 0.08 : 0);
+    }).filter(item => item.position.length() < ARENA_RADIUS - 7 && item.position.length() > 34 && sightlineClear(item));
 
-    const trees = Array.from({ length: 130 }, (_, index) => {
+    const trees = Array.from({ length: 88 }, (_, index) => {
       const angle = index * 0.67 + (index % 5) * 0.13;
-      const radius = 82 + (index % 12) * 2.9;
-      return place(angle, radius, 7.3 + (index % 5) * 0.72, -0.04, 0);
-    }).filter(item => item.position.length() < ARENA_RADIUS - 1.6);
+      const radius = 91 + (index % 10) * 2.45;
+      const scale = radius > 106 ? 6.2 + (index % 4) * 0.58 : 4.6 + (index % 4) * 0.42;
+      return place(angle, radius, scale, -0.04, 0);
+    }).filter(item => item.position.length() < ARENA_RADIUS - 2.4 && sightlineClear(item));
 
-    const bushes = Array.from({ length: 128 }, (_, index) => {
+    const bushes = Array.from({ length: 82 }, (_, index) => {
       const angle = index * 0.97 + 0.17;
-      const radius = 25 + (index % 24) * 3.6;
-      return place(angle, radius, 1.85 + (index % 4) * 0.2, 0.01, 0);
-    }).filter(item => item.position.length() < ARENA_RADIUS - 5.5 && item.position.length() > 18);
+      const radius = 38 + (index % 22) * 3.4;
+      return place(angle, radius, 1.28 + (index % 4) * 0.16, 0.01, 0);
+    }).filter(item => item.position.length() < ARENA_RADIUS - 5.5 && item.position.length() > 32 && sightlineClear(item));
 
-    const grass = Array.from({ length: 220 }, (_, index) => {
+    const grass = Array.from({ length: 170 }, (_, index) => {
       const angle = index * 1.61 + (index % 7) * 0.09;
-      const radius = 13 + (index % 35) * 2.9;
-      return place(angle, radius, 0.86 + (index % 5) * 0.1, 0.025, 0);
-    }).filter(item => item.position.length() < ARENA_RADIUS - 6 && item.position.length() > 11);
+      const radius = 20 + (index % 35) * 2.75;
+      return place(angle, radius, 0.62 + (index % 5) * 0.08, 0.025, 0);
+    }).filter(item => item.position.length() < ARENA_RADIUS - 6 && item.position.length() > 18);
 
     return { rocks, trees, bushes, grass };
   }, []);
@@ -4421,31 +4455,16 @@ function HUD({ game, onRestart, onPause }) {
   const runPct = Math.min(100, (game.time / RUN_DURATION) * 100);
   const timeRemaining = Math.max(0, RUN_DURATION - game.time);
   const waveProfile = getWaveProfile(game.wave);
-  const threat = getWaveThreat(game.wave, waveProfile);
-  const combatRhythm = getCombatRhythm(game);
-  const weaponStage = getWeaponStage(game);
-  const weaponTone = getOrbColor(game.stats, weaponStage);
-  const dominantBuild = getDominantBuild(game);
   const crisis = getCrisisState(game);
   const dashCooldown = game.dash?.cooldown ?? 0;
   const dashCooldownMax = Math.max(0.01, game.dash?.cooldownMax ?? DASH_COOLDOWN);
   const dashPct = Math.max(0, Math.min(100, (1 - dashCooldown / dashCooldownMax) * 100));
   const dashReady = game.dash?.ready ?? dashCooldown <= 0;
-  const shrineHint = getShrineHint(game);
-  const openingObjectives = getOpeningObjectives(game);
-  const completedOpeningObjectives = openingObjectives.filter(objective => objective.complete).length;
-  const activeOpeningObjectives = openingObjectives.filter(objective => !objective.complete).slice(0, 2);
-  const showOpeningObjectives = game.time < 118;
-  const onboardingSteps = getOnboardingSteps(game);
-  const activeOnboardingStep = onboardingSteps.find(step => !step.complete) ?? onboardingSteps[onboardingSteps.length - 1];
-  const completedOnboardingSteps = onboardingSteps.filter(step => step.complete).length;
-  const showOnboardingCoach = game.time < 42 && completedOnboardingSteps < onboardingSteps.length;
   const encounterAlert = game.encounterAlertTimer > 0 ? game.encounterAlert : null;
   const activeThreat = game.activeThreat;
   const bossStatus = game.bossStatus;
   const bossPatternMeta = game.lastBossPattern ? BOSS_PATTERN_META[game.lastBossPattern] : null;
   const isThreatened = crisis.level >= 3 || bossStatus?.enraged || encounterAlert?.kind === 'boss' || encounterAlert?.kind === 'boss-pattern';
-  const activeSynergies = getBuildSynergyStates(game).filter(synergy => synergy.level > 0).slice(0, 3);
 
   return (
     <section className={`hud ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''}`} aria-label="게임 상태">
@@ -4478,6 +4497,19 @@ function HUD({ game, onRestart, onPause }) {
           <button className="iconButton" type="button" onClick={onRestart} aria-label="다시 시작">↻</button>
         </div>
       </div>
+      <div className="combatTicker">
+        <span>Wave {game.wave}</span>
+        <strong style={{ '--tone': waveProfile.accent }}>{waveProfile.trait}</strong>
+        <span>{game.kills} KOs</span>
+        <span className={`dashPill ${dashReady ? 'isReady' : ''}`}>
+          Dash <b>{dashReady ? 'Ready' : `${dashCooldown.toFixed(1)}s`}</b>
+          <i style={{ width: `${dashPct}%` }} />
+        </span>
+        {crisis.level > 0 && <span className={`tickerAlert ${crisis.level >= 3 ? 'isCritical' : ''}`}>{crisis.label}</span>}
+        {activeThreat && <span className="tickerAlert" style={{ '--tone': activeThreat.color }}>{activeThreat.label} · {activeThreat.weakness}</span>}
+        {bossPatternMeta && <span className="tickerAlert" style={{ '--tone': bossPatternMeta.color }}>{bossPatternMeta.label} · {bossPatternMeta.hint}</span>}
+        {game.pickupFlash > 0 && <span className="tickerPickup">{game.pickupMessage}</span>}
+      </div>
       {encounterAlert && (
         <div
           className={`encounterBanner ${encounterAlert.kind === 'boss' || encounterAlert.kind === 'boss-pattern' ? 'isBoss' : ''}`}
@@ -4486,30 +4518,6 @@ function HUD({ game, onRestart, onPause }) {
           <span>{encounterAlert.label}</span>
           <strong>{encounterAlert.title}</strong>
           <small>{encounterAlert.hint}</small>
-        </div>
-      )}
-      {showOnboardingCoach && activeOnboardingStep && (
-        <div className="onboardingCoach" style={{ '--tone': activeOnboardingStep.color }}>
-          <div className="coachHeader">
-            <span>개시 루트</span>
-            <strong>{activeOnboardingStep.title}</strong>
-            <small>{completedOnboardingSteps} / {onboardingSteps.length}</small>
-          </div>
-          <div className="coachBody">
-            <b>{activeOnboardingStep.label}</b>
-            <i style={{ width: `${activeOnboardingStep.progress * 100}%` }} />
-          </div>
-          <div className="coachSteps">
-            {onboardingSteps.map(step => (
-              <span
-                key={step.id}
-                className={`${step.complete ? 'isComplete' : ''} ${step.id === activeOnboardingStep.id ? 'isActive' : ''}`}
-                style={{ '--tone': step.color }}
-              >
-                {step.title}
-              </span>
-            ))}
-          </div>
         </div>
       )}
       {bossStatus && (
@@ -4530,81 +4538,6 @@ function HUD({ game, onRestart, onPause }) {
             <span>Pattern <b>{bossStatus.patternStage}</b></span>
             <span>{bossStatus.patternHint}</span>
           </div>
-        </div>
-      )}
-      <div className="statusRow">
-        <span>생존 {formatTime(game.time)}</span>
-        <span>Wave {game.wave}</span>
-        <span className="waveName">{waveProfile.name}</span>
-        <span className="waveTrait" style={{ '--tone': waveProfile.accent }}>
-          {waveProfile.trait} <b>{waveProfile.hint}</b>
-        </span>
-        <span className="combatRhythm">리듬 <b>{combatRhythm.label}</b></span>
-        <span>위협 {threat}%</span>
-        <span className={`dashStatus ${dashReady ? 'isReady' : ''}`}>
-          Dash <b>{dashReady ? 'READY' : `${dashCooldown.toFixed(1)}s`}</b>
-          <i style={{ width: `${dashPct}%` }} />
-        </span>
-        {crisis.level > 0 && <span className={`dangerMessage ${crisis.level >= 3 ? 'isCritical' : ''}`}>{crisis.label}</span>}
-        {activeThreat && (
-          <span className="weaknessHint" style={{ '--tone': activeThreat.color }}>
-            {activeThreat.label} <b>{activeThreat.weakness}</b>
-          </span>
-        )}
-        {bossPatternMeta && (
-          <span className="bossPatternHint" style={{ '--tone': bossPatternMeta.color }}>
-            보스 {bossPatternMeta.label} <b>{bossPatternMeta.hint}</b>
-          </span>
-        )}
-        <span>{game.kills} KOs</span>
-        <span className="shrineStatus">제단 {game.shrineActivations ?? 0} / {SHRINE_SITES.length}</span>
-        {shrineHint && <span className="shrineHint">{shrineHint.direction} {shrineHint.distance}m {shrineHint.label}</span>}
-        {game.overloadTimer > 0 && <span className="overloadMessage">과부하 {game.overloadTimer.toFixed(1)}s</span>}
-        {game.pickupFlash > 0 && <span className="pickupMessage">{game.pickupMessage}</span>}
-      </div>
-      <div className="weaponRow" aria-label="무기 성장 상태">
-        <span style={{ '--tone': weaponTone }}>룬 구체 {getWeaponBuildLabel(game, 'orb')}</span>
-        <span style={{ '--tone': getStormColor(game.stats, weaponStage) }}>폭풍 낙인 {getWeaponBuildLabel(game, 'storm')}</span>
-        <span style={{ '--tone': getBladeColor(game.stats, weaponStage) }}>궤도 칼날 {getWeaponBuildLabel(game, 'blade')}</span>
-        <span style={{ '--tone': getLightningColor(game.stats, weaponStage) }}>연쇄 번개 {getWeaponBuildLabel(game, 'chain')}</span>
-        <span style={{ '--tone': getNovaColor(game.stats, weaponStage) }}>태양 파동 {getWeaponBuildLabel(game, 'nova')}</span>
-      </div>
-      {dominantBuild && (
-        <div className="buildRow" style={{ '--tone': dominantBuild.color }}>
-          <span>{dominantBuild.title}</span>
-          <strong>{dominantBuild.label} 집중 {formatFocusLevel(dominantBuild.focus)}</strong>
-          <small>{dominantBuild.perks[Math.min(dominantBuild.perks.length - 1, dominantBuild.focus - 1)]}</small>
-        </div>
-      )}
-      {activeSynergies.length > 0 && (
-        <div className="synergyRow" aria-label="빌드 조합">
-          {activeSynergies.map(synergy => (
-            <span key={synergy.id} style={{ '--tone': synergy.color }}>
-              {synergy.title} <b>{formatFocusLevel(synergy.level)}</b>
-            </span>
-          ))}
-        </div>
-      )}
-      {showOpeningObjectives && (
-        <div className="objectiveRow" aria-label="초반 목표">
-          <div className="objectiveSummary">
-            <span>첫 파동 목표</span>
-            <strong>{completedOpeningObjectives} / {openingObjectives.length}</strong>
-          </div>
-          {(activeOpeningObjectives.length > 0 ? activeOpeningObjectives : openingObjectives.slice(-1)).map(objective => (
-            <div
-              key={objective.id}
-              className={`objectiveCard ${objective.complete ? 'isComplete' : ''}`}
-              style={{ '--tone': objective.color }}
-            >
-              <div>
-                <span>{objective.title}</span>
-                <strong>{objective.label}</strong>
-              </div>
-              <small>{objective.displayValue} / {objective.displayTarget}</small>
-              <i style={{ width: `${objective.progress * 100}%` }} />
-            </div>
-          ))}
         </div>
       )}
     </section>
@@ -4677,6 +4610,8 @@ function UpgradeOverlay({ game, choices, onChoose }) {
         <div className="upgradeGrid">
           {choices.map(choice => {
             const cardMeta = getUpgradeCardMeta(game, choice);
+            const displayTitle = getUpgradeDisplayTitle(game, choice);
+            const focusPreview = getUpgradeFocusPreview(game, choice);
             return (
               <button
                 key={choice.id}
@@ -4685,16 +4620,17 @@ function UpgradeOverlay({ game, choices, onChoose }) {
                 style={{ '--tone': getUpgradeTone(choice) }}
                 onClick={() => onChoose(choice)}
               >
-                <div className="upgradeCardMeta">
-                  <em>{choice.family} / {choice.branch}</em>
-                  <strong>{cardMeta.role}</strong>
+                <div className="upgradePickCue">
+                  <em>{choice.family}</em>
+                  <strong>{cardMeta.recommended ? `추천 · ${cardMeta.role}` : cardMeta.role}</strong>
                 </div>
-                <span>{getUpgradeDisplayTitle(game, choice)}</span>
+                <span>{displayTitle}</span>
                 <small>{choice.text}</small>
+                <b>{focusPreview}</b>
                 <div className="upgradeTags">
+                  <i>{choice.branch}</i>
                   {cardMeta.tags.map(tag => <i key={tag}>{tag}</i>)}
                 </div>
-                <b>{getUpgradeFocusPreview(game, choice)}</b>
               </button>
             );
           })}
