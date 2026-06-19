@@ -77,16 +77,16 @@ const COMBAT_RHYTHM = [
 
 const EARLY_FIELD_ITEM_SCHEDULE = [
   { id: 'starter-magnet', time: 5, type: 'magnet', distance: 2.2, spread: 1.1 },
-  { id: 'starter-cache', time: 14, type: 'cache', distance: 3.0, spread: 1.4 },
   { id: 'starter-overload', time: 34, type: 'overload', distance: 5.2, spread: 2.2 },
+  { id: 'starter-cache', time: 52, type: 'cache', distance: 5.8, spread: 2.4 },
   { id: 'second-magnet', time: 48, type: 'magnet', distance: 5.8, spread: 2.4 },
   { id: 'starter-purge', time: 68, type: 'purge', distance: 7.0, spread: 2.6 },
-  { id: 'second-cache', time: 88, type: 'cache', distance: 7.6, spread: 3.0 },
+  { id: 'second-cache', time: 118, type: 'cache', distance: 7.6, spread: 3.0 },
   { id: 'third-magnet', time: 116, type: 'magnet', distance: 8.8, spread: 3.6 },
-  { id: 'third-cache', time: 146, type: 'cache', distance: 9.5, spread: 4.0 },
+  { id: 'third-cache', time: 178, type: 'cache', distance: 9.5, spread: 4.0 },
   { id: 'second-purge', time: 176, type: 'purge', distance: 10.5, spread: 4.4 },
   { id: 'second-overload', time: 214, type: 'overload', distance: 11.2, spread: 4.8 },
-  { id: 'final-cache', time: 246, type: 'cache', distance: 12.0, spread: 5.2 }
+  { id: 'final-cache', time: 252, type: 'cache', distance: 12.0, spread: 5.2 }
 ];
 
 const ELITE_ROLE_META = {
@@ -328,6 +328,9 @@ const WEAPON_UPGRADE_IDS = new Set([
   'cooldown',
   'damage'
 ]);
+
+const STARTING_WEAPON_FAMILIES = new Set(['orb']);
+const UPGRADE_CHOICE_COUNT = 4;
 
 function createInitialGame() {
   return {
@@ -687,6 +690,23 @@ function App() {
         setUpgradeChoices(pickUpgrades(nextGame));
         setGame(nextGame);
       },
+      starterUpgrade: () => {
+        const nextGame = {
+          ...createInitialGame(),
+          phase: 'upgrade',
+          level: 2,
+          xp: 0,
+          xpToNext: 46,
+          pendingUpgrades: 1,
+          time: 28,
+          kills: 18,
+          onboardingMovement: 42,
+          dashUses: 1
+        };
+        sceneApi.current?.reset();
+        setUpgradeChoices(pickUpgrades(nextGame));
+        setGame(nextGame);
+      },
       reset: () => {
         sceneApi.current?.reset();
         setUpgradeChoices([]);
@@ -696,6 +716,8 @@ function App() {
     const qaMode = new URLSearchParams(window.location.search).get('qa');
     if (qaMode === 'upgrade') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.upgrade(), 120);
+    } else if (qaMode === 'starter-upgrade') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.starterUpgrade(), 120);
     } else if (qaMode === 'stress') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.stress({
         enemies: MAX_ENEMIES - 6,
@@ -1307,6 +1329,9 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
     const bladeFocus = getBuildFocus(currentGame, 'blade');
     const chainFocus = getBuildFocus(currentGame, 'chain');
     const novaFocus = getBuildFocus(currentGame, 'nova');
+    const stormUnlocked = isWeaponFamilyUnlocked(currentGame, 'storm');
+    const chainUnlocked = isWeaponFamilyUnlocked(currentGame, 'chain');
+    const novaUnlocked = isWeaponFamilyUnlocked(currentGame, 'nova');
     const stormChainLevel = getSynergyLevel(currentGame, 'storm-chain');
     const bladeNovaLevel = getSynergyLevel(currentGame, 'blade-nova');
     const orbPierceLevel = getSynergyLevel(currentGame, 'orb-pierce');
@@ -1345,7 +1370,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       orbTimer.current = Math.max(0.16, weaponCatalog[0].cooldown * stats.cooldown * overloadCooldown * (1 - weaponStage * 0.04) * (1 - Math.min(0.12, orbFocus * 0.02)));
     }
 
-    if (stormTimer.current <= 0 && enemies.current.length > 3) {
+    if (stormUnlocked && stormTimer.current <= 0 && enemies.current.length > 3) {
       const tier = getWeaponTier(stats, weaponStage);
       const strikeCount = Math.min(7, Math.max(1, Math.round(stats.stormStrikes) + Math.floor(stormFocus / 2)));
       for (let strike = 0; strike < strikeCount; strike += 1) {
@@ -1382,7 +1407,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       stormTimer.current = Math.max(0.38, weaponCatalog[1].cooldown * stats.cooldown * stats.stormCooldown * overloadCooldown * (1 - weaponStage * 0.06) * (1 - Math.min(0.14, stormFocus * 0.025 + stormChainLevel * 0.018)));
     }
 
-    if (lightningTimer.current <= 0 && enemies.current.length > 0) {
+    if (chainUnlocked && lightningTimer.current <= 0 && enemies.current.length > 0) {
       const chainTargets = nearestEnemies(
         stats.lightningChains + Math.floor(weaponStage / 2) + Math.floor(chainFocus / 2),
         weaponCatalog[3].range * stats.lightningRange + weaponStage * 4 + chainFocus * 3 + stormChainLevel * 3.5
@@ -1424,7 +1449,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       lightningTimer.current = Math.max(0.3, weaponCatalog[3].cooldown * stats.cooldown * overloadCooldown * (1 - weaponStage * 0.05) * (1 - Math.min(0.12, chainFocus * 0.02)));
     }
 
-    if (novaTimer.current <= 0 && enemies.current.length > 0) {
+    if (novaUnlocked && novaTimer.current <= 0 && enemies.current.length > 0) {
       const color = getNovaColor(stats, weaponStage);
       const radius = weaponCatalog[4].radius * stats.novaRadius * (1 + weaponStage * 0.08 + novaFocus * 0.045 + bladeNovaLevel * 0.04);
       const pulseBoost = 1 + stats.novaPulse * 0.12;
@@ -1489,8 +1514,9 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
     const weaponStage = getWeaponStage(currentGame);
     const overloadDamage = currentGame.overloadTimer > 0 ? 1.25 : 1;
     const bladeFocus = getBuildFocus(currentGame, 'blade');
+    const bladeUnlocked = isWeaponFamilyUnlocked(currentGame, 'blade');
     const bladeRadius = (2.5 + weaponStage * 0.16 + bladeFocus * 0.08) * stats.bladeRadius;
-    const bladeCount = getBladeCount(stats, bladeFocus);
+    const bladeCount = getBladeCount(stats, bladeFocus, bladeUnlocked);
     const bladeColor = getBladeColor(stats, weaponStage);
     for (let i = 0; i < bladeCount; i += 1) {
       const offset = angle + i * (Math.PI * 2 / bladeCount);
@@ -2286,7 +2312,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         let nextGame = withItemPickup(current, 'cache');
         const boosts = [];
         const excluded = new Set();
-        const boostCount = current.time < 90 ? 2 : current.time > 210 ? 3 : 2;
+        const boostCount = current.time < 120 ? 1 : current.time > 210 ? 3 : 2;
         for (let index = 0; index < boostCount; index += 1) {
           const boost = pickArmoryBoost(nextGame, excluded);
           if (!boost) break;
@@ -2309,7 +2335,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
           pickupFlash: 2.8
         };
       });
-      addDamageNumber(player.current.pos, currentGame.time > 210 ? '무기 강화 x3' : '무기 강화 x2', color, 1.0);
+      addDamageNumber(player.current.pos, currentGame.time < 120 ? '무기 강화 x1' : currentGame.time > 210 ? '무기 강화 x3' : '무기 강화 x2', color, 1.0);
       orbTimer.current = Math.min(orbTimer.current, 0.04);
       stormTimer.current = Math.min(stormTimer.current, 0.08);
       lightningTimer.current = Math.min(lightningTimer.current, 0.06);
@@ -4115,12 +4141,22 @@ function NaturalFieldKit() {
       return place(angle, radius, (1.55 + (index % 5) * 0.34) * distanceScale, 0.02, index % 3 === 0 ? 0.08 : 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 7 && item.position.length() > 34 && sightlineClear(item));
 
-    const trees = Array.from({ length: 88 }, (_, index) => {
+    const ringTrees = Array.from({ length: 58 }, (_, index) => {
       const angle = index * 0.67 + (index % 5) * 0.13;
       const radius = 91 + (index % 10) * 2.45;
       const scale = radius > 106 ? 6.2 + (index % 4) * 0.58 : 4.6 + (index % 4) * 0.42;
       return place(angle, radius, scale, -0.04, 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 2.4 && sightlineClear(item));
+
+    const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: 7 }, (_, index) => {
+      const offset = index - 3;
+      const angle = site.angle + offset * 0.07 + (siteIndex % 2 ? -0.035 : 0.035);
+      const radius = site.radius + 9 + (index % 3) * 3.2;
+      const scale = 3.7 + (index % 4) * 0.52 + siteIndex * 0.08;
+      return place(angle, radius, scale, -0.04, 0);
+    })).filter(item => item.position.length() < ARENA_RADIUS - 3.5 && sightlineClear(item));
+
+    const trees = [...ringTrees, ...groveTrees];
 
     const bushes = Array.from({ length: 82 }, (_, index) => {
       const angle = index * 0.97 + 0.17;
@@ -4158,6 +4194,30 @@ function NaturalFieldKit() {
 
 function OpenFieldTerrainIdentity() {
   const landmarks = useMemo(() => {
+    const groveClearings = SHRINE_SITES.map((site, index) => {
+      const x = Math.cos(site.angle) * site.radius;
+      const z = Math.sin(site.angle) * site.radius;
+      return {
+        position: [x, getTerrainHeight(x, z) + 0.04, z],
+        rotation: -site.angle + Math.PI / 2,
+        scale: [7.4 + (index % 2) * 1.2, 5.1 + (index % 3) * 0.6, 1],
+        color: index % 2 ? '#475842' : '#586145',
+        ring: site.color
+      };
+    });
+
+    const shrineRoads = SHRINE_SITES.map((site, index) => {
+      const radius = site.radius * 0.5;
+      const x = Math.cos(site.angle) * radius;
+      const z = Math.sin(site.angle) * radius;
+      return {
+        position: [x, getTerrainHeight(x, z) + 0.044, z],
+        rotation: -site.angle + Math.PI / 2,
+        scale: [site.radius * 0.84, 2.4 + (index % 2) * 0.35, 1],
+        color: index % 2 ? '#646846' : '#535d41'
+      };
+    });
+
     const ridges = Array.from({ length: 30 }, (_, index) => {
       const angle = index * Math.PI * 2 / 30 + (index % 2) * 0.07;
       const radius = 42 + (index % 5) * 2.1;
@@ -4193,7 +4253,7 @@ function OpenFieldTerrainIdentity() {
       };
     });
 
-    return { ridges, standingStones, wornPaths };
+    return { groveClearings, shrineRoads, ridges, standingStones, wornPaths };
   }, []);
 
   return (
@@ -4206,6 +4266,26 @@ function OpenFieldTerrainIdentity() {
         <ringGeometry args={[43.0, 43.28, 192]} />
         <meshBasicMaterial color="#d9b85e" transparent opacity={0.16} depthWrite={false} toneMapped={false} />
       </mesh>
+
+      {landmarks.shrineRoads.map((pathMark, index) => (
+        <mesh key={`shrine-field-road-${index}`} position={pathMark.position} rotation={[-Math.PI / 2, 0, pathMark.rotation]} scale={pathMark.scale}>
+          <circleGeometry args={[1, 64]} />
+          <meshBasicMaterial color={pathMark.color} transparent opacity={0.16} depthWrite={false} toneMapped={false} />
+        </mesh>
+      ))}
+
+      {landmarks.groveClearings.map((clearing, index) => (
+        <group key={`shrine-grove-clearing-${index}`}>
+          <mesh position={clearing.position} rotation={[-Math.PI / 2, 0, clearing.rotation]} scale={clearing.scale}>
+            <circleGeometry args={[1, 64]} />
+            <meshBasicMaterial color={clearing.color} transparent opacity={0.2} depthWrite={false} toneMapped={false} />
+          </mesh>
+          <mesh position={[clearing.position[0], clearing.position[1] + 0.01, clearing.position[2]]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[5.9, 6.12, 96]} />
+            <meshBasicMaterial color={clearing.ring} transparent opacity={0.14} depthWrite={false} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
 
       {landmarks.wornPaths.map((pathMark, index) => (
         <mesh key={`worn-field-path-${index}`} position={pathMark.position} rotation={[-Math.PI / 2, 0, pathMark.rotation]} scale={pathMark.scale}>
@@ -4345,7 +4425,7 @@ function OrbitBlades({ player, game }) {
   const parts = useInstancedModelParts(PROJECTILE_MODEL_URLS.orbitBlade);
   const meshRefs = useRef([]);
   const bladeFocus = getBuildFocus(game, 'blade');
-  const bladeCount = getBladeCount(stats, bladeFocus);
+  const bladeCount = getBladeCount(stats, bladeFocus, isWeaponFamilyUnlocked(game, 'blade'));
   const axis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
   const local = useMemo(() => ({
     pos: new THREE.Vector3(),
@@ -4361,6 +4441,11 @@ function OrbitBlades({ player, game }) {
     parts.forEach((part, partIndex) => {
       const mesh = meshRefs.current[partIndex];
       if (!mesh) return;
+      if (bladeCount <= 0) {
+        mesh.count = 0;
+        mesh.instanceMatrix.needsUpdate = true;
+        return;
+      }
       for (let index = 0; index < bladeCount; index += 1) {
         const angle = spin + index * (Math.PI * 2 / bladeCount);
         local.pos.set(
@@ -5033,7 +5118,8 @@ function pickFieldItemType(game) {
   const hpRatio = game.stats.hp / game.stats.maxHp;
   const roll = Math.random();
   if (hpRatio < 0.45 && roll < 0.34) return 'heal';
-  if (game.time < 130 && roll < 0.28) return 'cache';
+  if (game.time >= 55 && game.time < 130 && roll < 0.18) return 'cache';
+  if (game.time >= 130 && roll < 0.24) return 'cache';
   if (roll < 0.46) return 'magnet';
   if (roll < 0.67) return 'overload';
   if (roll < 0.86) return 'purge';
@@ -5353,7 +5439,8 @@ function getWeaponEvolutionName(stage = 0) {
   return '기본';
 }
 
-function getBladeCount(stats, bladeFocus = 0) {
+function getBladeCount(stats, bladeFocus = 0, unlocked = true) {
+  if (!unlocked) return 0;
   return Math.min(MAX_ORBIT_BLADES, 2 + stats.bladeBonus + Math.floor(stats.pierce / 2) + Math.floor(bladeFocus / 2) + (stats.damage > 1.5 ? 1 : 0));
 }
 
@@ -5369,22 +5456,26 @@ function getWeaponBuildLabel(game, family) {
     return `${stageName} ${game.stats.orbCount}발`;
   }
   if (family === 'storm') {
+    if (!isWeaponFamilyUnlocked(game, family)) return '미개방';
     if (hasUpgrade(game, 'storm-volley')) return `낙뢰 ${game.stats.stormStrikes}연`;
     if (hasUpgrade(game, 'storm-carpet')) return `잔류 x${game.stats.stormDuration.toFixed(1)}`;
     return `${stageName} x${game.stats.stormRadius.toFixed(1)}`;
   }
   if (family === 'blade') {
+    if (!isWeaponFamilyUnlocked(game, family)) return '미개방';
     const bladeFocus = getBuildFocus(game, 'blade');
     if (hasUpgrade(game, 'blade-guard')) return `수호 ${getBladeCount(game.stats, bladeFocus)}연`;
     if (hasUpgrade(game, 'blade-reaper')) return `사신 x${game.stats.bladeDamage.toFixed(1)}`;
     return `${getBladeCount(game.stats, bladeFocus)}연`;
   }
   if (family === 'chain') {
+    if (!isWeaponFamilyUnlocked(game, family)) return '미개방';
     if (hasUpgrade(game, 'chain-web')) return `전류망 ${game.stats.lightningChains}연쇄`;
     if (hasUpgrade(game, 'chain-smite')) return `처형 x${(1 + game.stats.lightningExecute * 0.34).toFixed(1)}`;
     return `${game.stats.lightningChains}연쇄`;
   }
   if (family === 'nova') {
+    if (!isWeaponFamilyUnlocked(game, family)) return '미개방';
     if (hasUpgrade(game, 'nova-pulse')) return `쌍파동 x${game.stats.novaPulse}`;
     if (hasUpgrade(game, 'nova-comet')) return `핵심 x${game.stats.novaDamage.toFixed(1)}`;
     return `x${game.stats.novaRadius.toFixed(1)}`;
@@ -5568,6 +5659,13 @@ function getUpgradeFocusKey(upgrade) {
   return null;
 }
 
+function isWeaponFamilyUnlocked(game, key) {
+  if (!key) return true;
+  if (STARTING_WEAPON_FAMILIES.has(key)) return true;
+  if (getBuildFocus(game, key) > 0) return true;
+  return game?.upgrades?.some(upgradeId => getUpgradeFocusKey({ id: upgradeId }) === key) ?? false;
+}
+
 function applyBuildFocus(buildFocus, key) {
   const next = { ...createEmptyBuildFocus(), ...(buildFocus ?? {}) };
   if (key && next[key] !== undefined) next[key] += 1;
@@ -5647,12 +5745,14 @@ function getUpgradeTone(upgrade) {
 function getUpgradeFocusPreview(game, upgrade) {
   const key = getUpgradeFocusKey(upgrade);
   const synergy = getUpgradeSynergyMatches(game, upgrade)[0];
+  const unlocksWeapon = key && !isWeaponFamilyUnlocked(game, key);
   if (synergy && synergy.nextLevel > synergy.currentLevel) {
     return `${synergy.title} ${formatFocusLevel(synergy.nextLevel)} - ${synergy.bonus}`;
   }
   if (!key) return '공용 강화';
   const focus = getBuildFocus(game, key) + 1;
   const meta = BUILD_FOCUS_META[key];
+  if (unlocksWeapon) return `신규 무기 해금 - ${meta.label} ${meta.perks[0]}`;
   return `${meta.title} ${formatFocusLevel(focus)} - ${meta.perks[Math.min(meta.perks.length - 1, focus - 1)]}`;
 }
 
@@ -5664,10 +5764,17 @@ function getUpgradeCardMeta(game, upgrade) {
   const synergyMatches = getUpgradeSynergyMatches(game, upgrade);
   const primarySynergy = synergyMatches[0];
   const improvesSynergy = primarySynergy ? primarySynergy.nextLevel > primarySynergy.currentLevel : false;
+  const unlocksWeapon = key && !isWeaponFamilyUnlocked(game, key);
   const tags = [];
   let role = WEAPON_UPGRADE_IDS.has(upgrade.id) ? '무기 성장' : '공용 강화';
 
-  if (improvesSynergy) {
+  if (unlocksWeapon) {
+    role = '새 무기 해금';
+    tags.push('신규 무기');
+  } else if (key && STARTING_WEAPON_FAMILIES.has(key) && focus === 0) {
+    role = '기본 무기 강화';
+    tags.push('초반 안정');
+  } else if (improvesSynergy) {
     role = '조합 완성';
     tags.push(primarySynergy.title);
   } else if (primarySynergy) {
@@ -5704,7 +5811,8 @@ function getUpgradeCardMeta(game, upgrade) {
   if (tags.length < 2) tags.push(upgrade.branch);
 
   const recommended = Boolean(
-    improvesSynergy
+    unlocksWeapon
+    || improvesSynergy
     || (key && dominant?.key === key && dominant.focus >= 2)
     || (key && focus === 0 && game.level <= 5)
     || (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.72)
@@ -5715,7 +5823,7 @@ function getUpgradeCardMeta(game, upgrade) {
   return {
     role,
     recommended,
-    tags: [...new Set(tags)].slice(0, 3)
+    tags: [...new Set(tags.filter(tag => tag !== upgrade.branch))].slice(0, 2)
   };
 }
 
@@ -5784,10 +5892,11 @@ function getUpgradeWeight(game, upgrade) {
     const focus = getBuildFocus(game, key);
     const synergyDelta = getUpgradeSynergyMatches(game, upgrade).some(synergy => synergy.nextLevel > synergy.currentLevel);
     weight += focus * 0.48;
+    if (!isWeaponFamilyUnlocked(game, key)) weight += game.level <= 7 ? 2.2 : 1.15;
     if (synergyDelta) weight += 1.7;
     if (dominant?.key === key) weight += 1.15;
     if (focus === 0 && game.level <= 8) weight += 1.05;
-    if (game.level <= 5 && (key === 'orb' || key === 'storm' || key === 'chain' || key === 'nova')) weight += 0.34;
+    if (game.level <= 5 && (key === 'orb' || key === 'storm' || key === 'chain' || key === 'nova' || key === 'blade')) weight += 0.34;
   } else {
     if (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.72) weight += 1.25;
     if (upgrade.id === 'magnet' && game.level <= 4) weight += 0.55;
@@ -5810,6 +5919,7 @@ function pickWeightedUpgrade(pool, game) {
 }
 
 function addDraftChoice(choices, candidates, game) {
+  if (choices.length >= UPGRADE_CHOICE_COUNT) return;
   const available = candidates.filter(upgrade => !choices.some(choice => choice.id === upgrade.id));
   const choice = pickWeightedUpgrade(available, game);
   if (choice) choices.push(choice);
@@ -5819,9 +5929,18 @@ function pickUpgrades(game) {
   const available = upgradePool.filter(upgrade => isUpgradeAvailable(game, upgrade));
   const weaponChoices = available.filter(upgrade => WEAPON_UPGRADE_IDS.has(upgrade.id));
   const utilityChoices = available.filter(upgrade => !WEAPON_UPGRADE_IDS.has(upgrade.id));
+  const starterChoices = weaponChoices.filter(upgrade => getUpgradeFocusKey(upgrade) === 'orb');
+  const lockedWeaponChoices = weaponChoices.filter(upgrade => {
+    const key = getUpgradeFocusKey(upgrade);
+    return key && !isWeaponFamilyUnlocked(game, key);
+  });
   const dominant = getDominantBuild(game);
   const choices = [];
 
+  if (game.level <= 4) {
+    addDraftChoice(choices, starterChoices, game);
+    addDraftChoice(choices, lockedWeaponChoices, game);
+  }
   if (dominant?.focus >= 2) {
     addDraftChoice(choices, weaponChoices.filter(upgrade => getUpgradeFocusKey(upgrade) === dominant.key), game);
   }
@@ -5836,7 +5955,7 @@ function pickUpgrades(game) {
   }
   addDraftChoice(choices, weaponChoices, game);
   addDraftChoice(choices, utilityChoices, game);
-  while (choices.length < 4 && choices.length < available.length) {
+  while (choices.length < UPGRADE_CHOICE_COUNT && choices.length < available.length) {
     addDraftChoice(choices, available, game);
   }
 
