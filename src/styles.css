@@ -74,6 +74,16 @@ button {
   opacity: 0.28;
 }
 
+.shell.visual-low::before {
+  background:
+    radial-gradient(circle at 50% 50%, transparent 34%, rgba(0, 0, 0, 0.24) 70%, rgba(0, 0, 0, 0.62) 100%),
+    linear-gradient(180deg, rgba(112, 214, 255, 0.04), transparent 22%, transparent 78%, rgba(127, 108, 255, 0.035));
+}
+
+.shell.visual-low::after {
+  opacity: 0.12;
+}
+
 .hud {
   position: absolute;
   inset: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) auto max(18px, env(safe-area-inset-left));
@@ -106,6 +116,24 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(115, 251, 211, 0.08);
   backdrop-filter: blur(10px);
+}
+
+.visual-low .topbar,
+.visual-low .upgradePanel,
+.visual-low .endPanel,
+.visual-low .pausePanel,
+.visual-low .modalLayer {
+  backdrop-filter: none;
+}
+
+.visual-low .topbar,
+.visual-low .upgradeCard,
+.visual-low .upgradePanel,
+.visual-low .endPanel,
+.visual-low .pausePanel {
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .combatTicker {
@@ -1583,6 +1611,10 @@ h1 {
 
 @media (max-width: 700px) {
   .modalLayer {
+    backdrop-filter: none;
+  }
+
+  .modalLayer {
     place-items: start center;
     padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   }
@@ -1643,6 +1675,9 @@ h1 {
   .upgradeCard {
     min-height: 128px;
     padding: 14px 13px;
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   .objectiveRow {
@@ -1739,6 +1774,29 @@ h1 {
   .primaryButton,
   .secondaryButton {
     min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  .shell::after {
+    opacity: 0.1;
+  }
+
+  .modalLayer,
+  .topbar,
+  .upgradePanel,
+  .endPanel,
+  .pausePanel {
+    backdrop-filter: none;
   }
 }
 

@@ -335,6 +335,34 @@ const WEAPON_UPGRADE_IDS = new Set([
 const STARTING_WEAPON_FAMILIES = new Set(['orb']);
 const UPGRADE_CHOICE_COUNT = 4;
 
+function getVisualQuality() {
+  if (typeof window === 'undefined') return 'high';
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  const narrowViewport = window.innerWidth <= 700;
+  const lowMemory = navigator.deviceMemory !== undefined && navigator.deviceMemory <= 4;
+  const lowCore = navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4;
+  if (reducedMotion || (narrowViewport && (lowMemory || lowCore))) return 'low';
+  if (narrowViewport || lowMemory || lowCore) return 'balanced';
+  return 'high';
+}
+
+function useVisualQuality() {
+  const [quality, setQuality] = useState(() => getVisualQuality());
+
+  useEffect(() => {
+    const update = () => setQuality(getVisualQuality());
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    window.addEventListener('resize', update);
+    reducedMotion?.addEventListener?.('change', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      reducedMotion?.removeEventListener?.('change', update);
+    };
+  }, []);
+
+  return quality;
+}
+
 function createInitialGame() {
   return {
     phase: 'playing',
@@ -600,6 +628,10 @@ function App() {
   const [game, setGame] = useState(() => createInitialGame());
   const [upgradeChoices, setUpgradeChoices] = useState([]);
   const sceneApi = useRef(null);
+  const visualQuality = useVisualQuality();
+  const canvasDpr = useMemo(() => (
+    visualQuality === 'low' ? [1, 1] : visualQuality === 'balanced' ? [1, 1.25] : [1, 1.45]
+  ), [visualQuality]);
 
   const togglePause = () => {
     setGame(current => {
@@ -734,11 +766,11 @@ function App() {
   }, []);
 
   return (
-    <main className="shell">
+    <main className={`shell visual-${visualQuality}`}>
       <Canvas
         shadows
         camera={{ position: [0, 44, 74], fov: 48, near: 0.1, far: 420 }}
-        dpr={[1, 1.45]}
+        dpr={canvasDpr}
       >
         <color attach="background" args={[ART_TOKENS.void]} />
         <fog attach="fog" args={['#07110f', 68, 255]} />
@@ -748,15 +780,18 @@ function App() {
             game={game}
             setGame={setGame}
             onLevelUp={onLevelUp}
+            visualQuality={visualQuality}
           />
           <ContactShadows position={[0, 0.02, 0]} opacity={0.18} scale={300} blur={2.7} far={14} color="#020605" />
           <Environment preset="night" />
         </Suspense>
-        <EffectComposer>
-          <Bloom luminanceThreshold={0.28} intensity={1.18} mipmapBlur />
-          <Noise opacity={0.035} />
+        {visualQuality !== 'low' && (
+          <EffectComposer>
+          <Bloom luminanceThreshold={0.28} intensity={visualQuality === 'high' ? 1.18 : 0.82} mipmapBlur />
+          {visualQuality === 'high' && <Noise opacity={0.035} />}
           <Vignette eskil={false} offset={0.16} darkness={0.82} />
-        </EffectComposer>
+          </EffectComposer>
+        )}
       </Canvas>
       <HUD game={game} onRestart={restart} onPause={togglePause} />
       {game.phase === 'paused' && <PauseOverlay game={game} onResume={resume} onRestart={restart} />}
@@ -768,7 +803,7 @@ function App() {
   );
 }
 
-function GameScene({ refApi, game, setGame, onLevelUp }) {
+function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' }) {
   const player = useRef({
     pos: new THREE.Vector3(0, 0.55, 0),
     vel: new THREE.Vector3(),
@@ -2526,12 +2561,12 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       <pointLight position={[48, 3.2, 26]} intensity={0.86} color={ART_TOKENS.runeMint} distance={38} />
       <MapBaseArena />
       <ArenaAtmosphere />
-      <RiftSkyMotifs />
+      {visualQuality !== 'low' && <RiftSkyMotifs visualQuality={visualQuality} />}
       <PlayerAvatar rootRef={playerMesh} game={game} />
       <PlayerPresence player={player} game={game} />
       <OrbitBlades player={player} game={game} />
       <EnemyGroundAuras enemiesRef={enemies} />
-      <EnemyAccents enemiesRef={enemies} />
+      <EnemyAccents enemiesRef={enemies} visualQuality={visualQuality} />
       <SourceEnemyInstances enemiesRef={enemies} kind="golem" url={MODEL_URLS.golem} scaleMultiplier={2.42} materialTone="#365042" />
       <SourceEnemyInstances enemiesRef={enemies} kind="runner" url={MODEL_URLS.runner} scaleMultiplier={2.82} materialTone="#24324c" />
       <SourceEnemyInstances enemiesRef={enemies} kind="brute" url={MODEL_URLS.brute} scaleMultiplier={2.92} materialTone="#7b3e32" />
@@ -2543,7 +2578,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         <octahedronGeometry args={[0.34, 0]} />
         <meshStandardMaterial color="#9ff7ff" emissive="#38d9ff" emissiveIntensity={3.5} roughness={0.18} toneMapped={false} />
       </instancedMesh>
-      <GemBeacons gemsRef={xpGems} />
+      {visualQuality !== 'low' && <GemBeacons gemsRef={xpGems} />}
       <FieldPickupItems itemsRef={fieldItems} />
       <RuneShrineSites shrinesRef={shrines} />
       <SourceProjectileInstances projectilesRef={projectiles} type="orb" url={PROJECTILE_MODEL_URLS.orb} scaleMultiplier={1.25} />
@@ -2867,7 +2902,7 @@ function EnemyGroundAuras({ enemiesRef }) {
   );
 }
 
-function EnemyAccents({ enemiesRef }) {
+function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
   const coreMesh = useRef();
   const flashMesh = useRef();
   const eyeMesh = useRef();
@@ -2882,6 +2917,7 @@ function EnemyAccents({ enemiesRef }) {
     color: new THREE.Color(),
     pos: new THREE.Vector3()
   }), []);
+  const showDecor = visualQuality !== 'low';
 
   useFrame(() => {
     const time = performance.now() * 0.004;
@@ -2955,7 +2991,7 @@ function EnemyAccents({ enemiesRef }) {
       flashMesh.current.instanceMatrix.needsUpdate = true;
     }
 
-    if (runnerTrailMesh.current) {
+    if (showDecor && runnerTrailMesh.current) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'runner') continue;
@@ -2975,7 +3011,7 @@ function EnemyAccents({ enemiesRef }) {
       runnerTrailMesh.current.instanceMatrix.needsUpdate = true;
     }
 
-    if (bruteMarkMesh.current) {
+    if (showDecor && bruteMarkMesh.current) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'brute') continue;
@@ -2993,7 +3029,7 @@ function EnemyAccents({ enemiesRef }) {
       bruteMarkMesh.current.instanceMatrix.needsUpdate = true;
     }
 
-    if (golemShardMesh.current) {
+    if (showDecor && golemShardMesh.current) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'golem') continue;
@@ -3011,7 +3047,7 @@ function EnemyAccents({ enemiesRef }) {
       golemShardMesh.current.instanceMatrix.needsUpdate = true;
     }
 
-    if (eliteCrownMesh.current) {
+    if (showDecor && eliteCrownMesh.current) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'elite') continue;
@@ -3051,22 +3087,26 @@ function EnemyAccents({ enemiesRef }) {
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial transparent opacity={0.92} toneMapped={false} />
       </instancedMesh>
-      <instancedMesh ref={runnerTrailMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial color="#70d6ff" transparent opacity={0.34} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
-      </instancedMesh>
-      <instancedMesh ref={bruteMarkMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <torusGeometry args={[0.68, 0.045, 8, 28]} />
-        <meshBasicMaterial color="#ff8b72" transparent opacity={0.72} depthWrite={false} toneMapped={false} />
-      </instancedMesh>
-      <instancedMesh ref={golemShardMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <octahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color="#70f0b4" transparent opacity={0.86} toneMapped={false} />
-      </instancedMesh>
-      <instancedMesh ref={eliteCrownMesh} args={[null, null, MAX_ENEMIES * 4]} frustumCulled={false}>
-        <coneGeometry args={[1, 1, 4]} />
-        <meshBasicMaterial color={ART_TOKENS.elderViolet} transparent opacity={0.72} toneMapped={false} />
-      </instancedMesh>
+      {showDecor && (
+        <>
+          <instancedMesh ref={runnerTrailMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial color="#70d6ff" transparent opacity={0.34} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+          </instancedMesh>
+          <instancedMesh ref={bruteMarkMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+            <torusGeometry args={[0.68, 0.045, 8, 28]} />
+            <meshBasicMaterial color="#ff8b72" transparent opacity={0.72} depthWrite={false} toneMapped={false} />
+          </instancedMesh>
+          <instancedMesh ref={golemShardMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+            <octahedronGeometry args={[1, 0]} />
+            <meshBasicMaterial color="#70f0b4" transparent opacity={0.86} toneMapped={false} />
+          </instancedMesh>
+          <instancedMesh ref={eliteCrownMesh} args={[null, null, MAX_ENEMIES * 4]} frustumCulled={false}>
+            <coneGeometry args={[1, 1, 4]} />
+            <meshBasicMaterial color={ART_TOKENS.elderViolet} transparent opacity={0.72} toneMapped={false} />
+          </instancedMesh>
+        </>
+      )}
     </>
   );
 }
@@ -4566,12 +4606,13 @@ function ArenaAtmosphere() {
   );
 }
 
-function RiftSkyMotifs() {
+function RiftSkyMotifs({ visualQuality = 'high' }) {
   const dustRef = useRef();
   const tearRef = useRef();
   const dustGeometry = useMemo(() => {
+    const dustCount = visualQuality === 'high' ? 150 : 80;
     const positions = [];
-    for (let index = 0; index < 150; index += 1) {
+    for (let index = 0; index < dustCount; index += 1) {
       const angle = index * 2.399 + (index % 5) * 0.07;
       const radius = 22 + (index % 44) * 2.05;
       const height = 4.8 + (index % 19) * 0.62 + Math.sin(index * 1.7) * 0.45;
@@ -4580,7 +4621,7 @@ function RiftSkyMotifs() {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     return geometry;
-  }, []);
+  }, [visualQuality]);
 
   const tears = useMemo(() => [
     { x: -58, y: 9.4, z: -44, ry: 0.55, s: 4.4, color: ART_TOKENS.riftViolet },
@@ -4601,7 +4642,7 @@ function RiftSkyMotifs() {
   return (
     <group>
       <points ref={dustRef} geometry={dustGeometry} frustumCulled={false}>
-        <pointsMaterial color={ART_TOKENS.runeMint} size={0.22} sizeAttenuation transparent opacity={0.28} depthWrite={false} toneMapped={false} />
+        <pointsMaterial color={ART_TOKENS.runeMint} size={visualQuality === 'high' ? 0.22 : 0.18} sizeAttenuation transparent opacity={visualQuality === 'high' ? 0.28 : 0.18} depthWrite={false} toneMapped={false} />
       </points>
       <group ref={tearRef}>
         {tears.map((tear, index) => (
