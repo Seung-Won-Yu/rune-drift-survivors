@@ -8,4 +8,5 @@ output
 .env.*
 assets/source
 assets/archive
+assets/blender/*.blend
 *.blend1

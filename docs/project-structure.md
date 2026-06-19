@@ -13,12 +13,11 @@
 - `public/models/` contains only assets loaded by the current game.
 - `public/models/nature-kit/` contains the active open-field environment props from Kenney Nature Kit.
 
-## Source And Archive Assets
+## Local Source Assets
 
-- `assets/source/kenney-nature-kit/` keeps the downloaded Kenney Nature Kit source package.
-- `assets/archive/public-models/` keeps older experiment assets removed from `public` so Vite no longer copies them into `dist`.
-- `assets/archive/public-models/gltf-source/` keeps source `.gltf` exports after runtime copies are converted to `.glb`.
-- `assets/archive/public-textures/` keeps old standalone textures that are not needed by the current runtime.
+- `assets/blender/*.blend` can exist locally as source files, but they are ignored by git.
+- `assets/source/` and `assets/archive/` are also ignored by git.
+- Only runtime-ready files under `public/models/` should be committed for the deployed game.
 
 ## Generated Folders
 

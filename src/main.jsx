@@ -18,13 +18,20 @@ const PLAYER_RADIUS = 0.58;
 const MAX_ENEMIES = 168;
 const WAVE_DURATION = 22;
 const MAX_FIELD_ITEMS = 22;
-const MAX_XP_GEMS = 520;
-const MAX_PROJECTILES = 260;
+const MAX_XP_GEMS = 480;
+const MAX_PROJECTILES = 230;
+const MAX_HIT_BURSTS = 86;
+const MAX_WEAPON_EFFECTS = 42;
+const MAX_DAMAGE_NUMBERS = 72;
+const MAX_SPAWN_WARNINGS = 24;
+const MAX_ORBIT_BLADES = 12;
 const OVERLOAD_DURATION = 8;
 const XP_BASE_MAGNET_RADIUS = 8.2;
 const XP_PICKUP_RADIUS = 1.3;
 const FIELD_ITEM_ATTRACT_RADIUS = 12;
 const FIELD_ITEM_PICKUP_RADIUS = 3.05;
+const SHRINE_ACTIVATE_RADIUS = 6.4;
+const SHRINE_CHANNEL_TIME = 1.15;
 
 const FIELD_ITEM_META = {
   magnet: { color: '#70d6ff', label: 'MAGNET', name: '자석 룬' },
@@ -49,11 +56,21 @@ const ART_TOKENS = {
 };
 
 const WAVE_PROFILES = [
-  { name: 'Rift Scouts', targetBase: 58, spawnBase: 9, runner: 0.18, brute: 0.02, interval: 0.5 },
-  { name: 'Howling Pack', targetBase: 72, spawnBase: 10, runner: 0.34, brute: 0.06, interval: 0.45 },
-  { name: 'Stone March', targetBase: 86, spawnBase: 11, runner: 0.2, brute: 0.22, interval: 0.42 },
-  { name: 'Split Swarm', targetBase: 102, spawnBase: 12, runner: 0.4, brute: 0.16, interval: 0.38 },
-  { name: 'Rift Siege', targetBase: 116, spawnBase: 13, runner: 0.32, brute: 0.3, interval: 0.36 }
+  { name: 'Rift Scouts', trait: '정찰', hint: '균형형 진입', accent: '#70f0b4', affix: 'scout', targetBase: 44, spawnBase: 6, runner: 0.14, brute: 0.02, interval: 0.62 },
+  { name: 'Howling Pack', trait: '추격', hint: '러너 가속', accent: '#70d6ff', affix: 'pack', targetBase: 62, spawnBase: 8, runner: 0.3, brute: 0.05, interval: 0.5 },
+  { name: 'Stone March', trait: '장갑', hint: '체력 높은 행군', accent: '#ffdf6e', affix: 'stone', targetBase: 76, spawnBase: 10, runner: 0.18, brute: 0.19, interval: 0.45 },
+  { name: 'Split Swarm', trait: '분열', hint: '일부 적 사망 시 분열', accent: '#d8b2ff', affix: 'split', targetBase: 94, spawnBase: 12, runner: 0.38, brute: 0.14, interval: 0.4 },
+  { name: 'Rift Siege', trait: '공성', hint: '피해와 압박 증가', accent: '#ff8b72', affix: 'siege', targetBase: 112, spawnBase: 14, runner: 0.3, brute: 0.28, interval: 0.36 }
+];
+
+const BOSS_WAVE_SCHEDULE = [6, 9, 12];
+
+const COMBAT_RHYTHM = [
+  { until: 35, label: '학습', target: 0.72, spawn: 0.72, hp: 0.9, move: 0.92, damage: 0.9, ability: 1.08 },
+  { until: 85, label: '정착', target: 0.88, spawn: 0.9, hp: 0.96, move: 0.98, damage: 0.96, ability: 1.02 },
+  { until: 145, label: '검증', target: 1.02, spawn: 1.04, hp: 1.02, move: 1.04, damage: 1.04, ability: 0.94 },
+  { until: 210, label: '압박', target: 1.14, spawn: 1.16, hp: 1.08, move: 1.12, damage: 1.12, ability: 0.84 },
+  { until: Infinity, label: '붕괴', target: 1.26, spawn: 1.28, hp: 1.14, move: 1.2, damage: 1.24, ability: 0.72 }
 ];
 
 const EARLY_FIELD_ITEM_SCHEDULE = [
@@ -77,15 +94,39 @@ const ELITE_ROLE_META = {
 };
 
 const BOSS_PATTERN_META = {
-  shockwave: { label: 'SHOCKWAVE', color: '#ff8b72' },
-  summon: { label: 'SUMMON', color: '#f5c7ff' },
-  guard: { label: 'WARD', color: '#fff1a6' }
+  shockwave: { label: 'SHOCKWAVE', color: '#ff8b72', hint: '중거리 이탈' },
+  summon: { label: 'SUMMON', color: '#f5c7ff', hint: '소환수 정리' },
+  guard: { label: 'WARD', color: '#fff1a6', hint: '룬/번개 집중' }
 };
+
+const BOSS_PATTERN_ORDER = ['shockwave', 'summon', 'guard'];
 
 const SURGE_EVENTS = [
   { time: 150, label: 'RIFT SURGE', message: '균열 폭주: 적 무리 진입', color: '#ff8b72', count: 10 },
   { time: 195, label: 'ELITE SURGE', message: '정예 파동: 패턴 가속', color: '#f5c7ff', count: 13 },
   { time: 245, label: 'FINAL SURGE', message: '최종 폭주: 생존 압박 최대', color: '#fff1a6', count: 16 }
+];
+
+const OPENING_OBJECTIVES = [
+  { id: 'first-blood', title: '균열 정찰', label: '적 12 처치', target: 12, color: '#70f0b4', getValue: game => game.kills },
+  { id: 'magnet-flow', title: 'XP 흐름 열기', label: '자석 룬 회수', target: 1, color: '#70d6ff', getValue: game => getItemPickupCount(game, 'magnet') },
+  { id: 'armory-seed', title: '빌드 방향 잡기', label: '무기 보급 회수', target: 1, color: '#fff1a6', getValue: game => getItemPickupCount(game, 'cache') },
+  { id: 'first-etching', title: '첫 각인 완성', label: '레벨 3 도달', target: 3, color: '#d8b2ff', getValue: game => game.level },
+  { id: 'first-surge', title: '첫 파동 버티기', label: '90초 생존', target: 90, color: '#ff8b72', getValue: game => game.time }
+];
+
+const ONBOARDING_STEPS = [
+  { id: 'move', title: '이동', label: 'WASD / 방향키', target: 12, color: '#73fbd3', getValue: game => game.onboardingMovement ?? 0 },
+  { id: 'dash', title: '회피', label: 'Space 대시', target: 1, color: '#70d6ff', getValue: game => game.dashUses ?? 0 },
+  { id: 'xp', title: '성장', label: '푸른 XP 회수', target: 12, color: '#d8b2ff', getValue: game => Math.max(game.xp, game.level > 1 ? 12 : 0) },
+  { id: 'cache', title: '빌드', label: '무기 보급 회수', target: 1, color: '#fff1a6', getValue: game => getItemPickupCount(game, 'cache') }
+];
+
+const SHRINE_SITES = [
+  { id: 'armory', angle: 0.72, radius: 82, reward: 'cache', label: '무기 제단', color: '#fff1a6' },
+  { id: 'vital', angle: 2.62, radius: 89.5, reward: 'heal', label: '생명 제단', color: '#79f29a' },
+  { id: 'purge', angle: 4.08, radius: 82, reward: 'purge', label: '정화 제단', color: '#ffdf6e' },
+  { id: 'etching', angle: 5.45, radius: 89.5, reward: 'upgrade', label: '각인 제단', color: '#d8b2ff' }
 ];
 
 const MAP_CLIFFS = [
@@ -151,6 +192,15 @@ const weaponCatalog = [
   }
 ];
 
+const DAMAGE_SOURCE_META = {
+  orb: { label: '룬 구체', color: '#70d6ff' },
+  storm: { label: '폭풍 낙인', color: '#b8f7ff' },
+  blade: { label: '궤도 칼날', color: '#f7d06b' },
+  lightning: { label: '연쇄 번개', color: '#d7b7ff' },
+  nova: { label: '태양 파동', color: '#ff8b72' },
+  generic: { label: '기타', color: '#fff1a6' }
+};
+
 const upgradePool = [
   { id: 'orb-count', family: '룬 구체', branch: '분열', title: '룬 구체 분열', text: '룬 구체 발사 수 +1', apply: stats => ({ ...stats, orbCount: Math.min(7, stats.orbCount + 1) }) },
   { id: 'orb-fan', family: '룬 구체', branch: '분열', title: '분열 룬진', text: '구체 +2, 구체 피해 -6%', apply: stats => ({ ...stats, orbCount: Math.min(8, stats.orbCount + 2), orbDamage: stats.orbDamage * 0.94 }) },
@@ -209,6 +259,33 @@ const BUILD_FOCUS_META = {
     perks: ['파동 범위 증가', '밀어내기 강화', '쿨다운 압축']
   }
 };
+
+const BUILD_SYNERGIES = [
+  {
+    id: 'storm-chain',
+    title: '폭풍 전류망',
+    label: '폭풍 + 번개',
+    keys: ['storm', 'chain'],
+    color: '#9ff7ff',
+    bonus: '낙뢰가 더 자주 감전시키고 번개 사거리가 증가'
+  },
+  {
+    id: 'blade-nova',
+    title: '태양 칼날환',
+    label: '칼날 + 태양',
+    keys: ['blade', 'nova'],
+    color: '#fff1a6',
+    bonus: '근접 방어와 파동 밀어내기가 함께 강화'
+  },
+  {
+    id: 'orb-pierce',
+    title: '관통 룬창',
+    label: '구체 관통',
+    keys: ['orb'],
+    color: '#70d6ff',
+    bonus: '구체 관통/속도/피해가 집중 성장'
+  }
+];
 
 const UPGRADE_RANK_LIMITS = {
   'orb-lance': 4,
@@ -269,7 +346,21 @@ function createInitialGame() {
     result: null,
     pickupMessage: '',
     pickupFlash: 0,
+    encounterAlert: null,
+    encounterAlertTimer: 0,
+    activeThreat: null,
+    lastBossPattern: null,
+    bossStatus: null,
+    onboardingMovement: 0,
+    dashUses: 0,
+    eliteKills: 0,
+    bossKills: 0,
+    runStats: createEmptyRunStats(),
     overloadTimer: 0,
+    itemPickups: createEmptyItemPickups(),
+    shrineActivations: 0,
+    activatedShrines: {},
+    playerPos: { x: 0, z: 0 },
     stats: {
       hp: 120,
       maxHp: 120,
@@ -306,10 +397,213 @@ function createInitialGame() {
   };
 }
 
+function createQaBossGame(options = {}) {
+  const enraged = options.enraged ?? true;
+  return {
+    ...createInitialGame(),
+    phase: 'qa-preview',
+    level: 8,
+    xp: 18,
+    xpToNext: 68,
+    time: 132,
+    kills: 246,
+    wave: 6,
+    pickupMessage: enraged ? '보스 분노: 패턴 가속' : '보스 접근: 패턴을 읽으세요',
+    pickupFlash: 2.5,
+    encounterAlert: {
+      kind: 'boss-pattern',
+      label: 'RIFT BEAST',
+      title: enraged ? '분노 페이즈 진입' : '보스 패턴 예고',
+      hint: '중거리 이탈 후 약점 집중',
+      color: enraged ? '#ff8b72' : '#fff1a6'
+    },
+    encounterAlertTimer: 2.8,
+    activeThreat: { label: 'RIFT BEAST', weakness: '룬/번개 집중', color: '#ffdf6e' },
+    lastBossPattern: enraged ? 'shockwave' : 'guard',
+    bossStatus: {
+      hp: enraged ? 720 : 1260,
+      maxHp: 1800,
+      hpPct: enraged ? 0.4 : 0.7,
+      wave: 6,
+      enraged,
+      phaseLabel: enraged ? 'RAGE' : 'PRESSURE',
+      phaseColor: enraged ? '#ff8b72' : '#ffdf6e',
+      patternLabel: enraged ? BOSS_PATTERN_META.shockwave.label : BOSS_PATTERN_META.guard.label,
+      patternHint: enraged ? BOSS_PATTERN_META.shockwave.hint : BOSS_PATTERN_META.guard.hint,
+      patternColor: enraged ? BOSS_PATTERN_META.shockwave.color : BOSS_PATTERN_META.guard.color,
+      patternStage: enraged ? 4 : 2,
+      casting: true
+    },
+    onboardingMovement: 64,
+    dashUses: 2,
+    eliteKills: 4,
+    bossKills: 0,
+    itemPickups: { ...createEmptyItemPickups(), magnet: 2, cache: 2, overload: 1 },
+    shrineActivations: 1,
+    activatedShrines: { armory: true },
+    buildFocus: { ...createEmptyBuildFocus(), orb: 2, storm: 2, chain: 2, nova: 1 },
+    upgrades: ['orb-lance', 'pierce', 'storm-volley', 'chain-plus', 'chain-web', 'nova-plus'],
+    runStats: {
+      totalDamage: 16540,
+      damageBySource: {
+        ...createEmptyRunStats().damageBySource,
+        orb: 3820,
+        storm: 4560,
+        lightning: 6120,
+        nova: 1440,
+        blade: 600
+      }
+    }
+  };
+}
+
+function createQaResultGame(result = 'victory') {
+  const didWin = result === 'victory';
+  return {
+    ...createInitialGame(),
+    phase: 'ended',
+    result,
+    level: didWin ? 13 : 9,
+    xp: didWin ? 48 : 22,
+    xpToNext: 84,
+    time: didWin ? RUN_DURATION : 214,
+    kills: didWin ? 682 : 391,
+    wave: didWin ? 14 : 10,
+    onboardingMovement: 120,
+    dashUses: 8,
+    eliteKills: didWin ? 9 : 5,
+    bossKills: didWin ? 3 : 1,
+    itemPickups: { ...createEmptyItemPickups(), magnet: 4, cache: 4, heal: 2, purge: 2, overload: 2 },
+    shrineActivations: didWin ? 4 : 2,
+    activatedShrines: didWin
+      ? { armory: true, vital: true, purge: true, etching: true }
+      : { armory: true, vital: true },
+    buildFocus: { ...createEmptyBuildFocus(), storm: 4, chain: 4, orb: 3, nova: 2, blade: 1 },
+    upgrades: [
+      'storm-volley',
+      'storm-carpet',
+      'storm-burst',
+      'chain-plus',
+      'chain-web',
+      'chain-smite',
+      'orb-lance',
+      'pierce',
+      'nova-plus',
+      'damage',
+      'cooldown'
+    ],
+    stats: {
+      ...createInitialGame().stats,
+      hp: didWin ? 86 : 0,
+      maxHp: 160,
+      damage: 1.42,
+      cooldown: 0.78,
+      magnet: 1.5,
+      lightningChains: 8,
+      stormStrikes: 3,
+      pierce: 3
+    },
+    runStats: {
+      totalDamage: didWin ? 84200 : 48750,
+      damageBySource: {
+        ...createEmptyRunStats().damageBySource,
+        storm: didWin ? 23800 : 14200,
+        lightning: didWin ? 28600 : 16100,
+        orb: didWin ? 17600 : 9300,
+        nova: didWin ? 8900 : 5400,
+        blade: didWin ? 5300 : 3750
+      }
+    }
+  };
+}
+
+function createQaStressGame() {
+  return {
+    ...createQaBossGame({ enraged: true }),
+    phase: 'qa-preview',
+    level: 12,
+    xp: 44,
+    xpToNext: 92,
+    time: 246,
+    kills: 540,
+    wave: 12,
+    pickupMessage: '성능 점검: 후반 전투 부하',
+    pickupFlash: 2.8,
+    encounterAlert: {
+      kind: 'surge',
+      label: 'PERF STRESS',
+      title: '후반 전투 부하 재현',
+      hint: '적/투사체/이펙트 cap 확인',
+      color: '#70d6ff'
+    },
+    encounterAlertTimer: 2.8,
+    buildFocus: { ...createEmptyBuildFocus(), orb: 4, storm: 4, chain: 4, nova: 3, blade: 3 },
+    upgrades: [
+      'orb-count',
+      'orb-lance',
+      'pierce',
+      'storm-volley',
+      'storm-carpet',
+      'storm-burst',
+      'chain-plus',
+      'chain-web',
+      'chain-smite',
+      'blade-guard',
+      'blade-reaper',
+      'nova-plus',
+      'nova-pulse',
+      'damage',
+      'cooldown'
+    ],
+    stats: {
+      ...createInitialGame().stats,
+      hp: 146,
+      maxHp: 180,
+      damage: 1.58,
+      cooldown: 0.68,
+      magnet: 1.6,
+      dashCooldown: 0.82,
+      pierce: 4,
+      orbCount: 6,
+      orbDamage: 1.6,
+      orbScale: 1.28,
+      orbSpeed: 1.18,
+      stormRadius: 1.48,
+      stormDamage: 1.42,
+      stormStrikes: 4,
+      stormCooldown: 0.78,
+      stormDuration: 1.35,
+      bladeBonus: 4,
+      bladeDamage: 1.56,
+      bladeRadius: 1.18,
+      lightningChains: 9,
+      lightningDamage: 1.52,
+      lightningRange: 1.26,
+      lightningExecute: 1,
+      novaRadius: 1.44,
+      novaDamage: 1.48,
+      novaCooldown: 0.78,
+      novaPulse: 1
+    }
+  };
+}
+
 function App() {
   const [game, setGame] = useState(() => createInitialGame());
   const [upgradeChoices, setUpgradeChoices] = useState([]);
   const sceneApi = useRef(null);
+
+  const togglePause = () => {
+    setGame(current => {
+      if (current.phase === 'playing') return { ...current, phase: 'paused' };
+      if (current.phase === 'paused') return { ...current, phase: 'playing' };
+      return current;
+    });
+  };
+
+  const resume = () => {
+    setGame(current => current.phase === 'paused' ? { ...current, phase: 'playing' } : current);
+  };
 
   const chooseUpgrade = upgrade => {
     setGame(current => {
@@ -349,12 +643,55 @@ function App() {
     });
   };
 
+  useEffect(() => {
+    const onKeyDown = event => {
+      if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.code !== 'Escape' && event.code !== 'KeyP') return;
+      event.preventDefault();
+      togglePause();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return undefined;
+    const showQaGame = nextGame => {
+      sceneApi.current?.reset();
+      setUpgradeChoices([]);
+      setGame(nextGame);
+      window.setTimeout(() => setGame(nextGame), 80);
+    };
+    window.__RUNE_DRIFT_QA__ = {
+      boss: options => {
+        showQaGame(createQaBossGame(options));
+      },
+      result: result => {
+        showQaGame(createQaResultGame(result));
+      },
+      stress: options => {
+        const nextGame = createQaStressGame();
+        showQaGame(nextGame);
+        window.setTimeout(() => sceneApi.current?.stress?.(options), 120);
+        window.setTimeout(() => sceneApi.current?.stress?.(options), 220);
+      },
+      reset: () => {
+        sceneApi.current?.reset();
+        setUpgradeChoices([]);
+        setGame(createInitialGame());
+      }
+    };
+    return () => {
+      delete window.__RUNE_DRIFT_QA__;
+    };
+  }, []);
+
   return (
     <main className="shell">
       <Canvas
         shadows
         camera={{ position: [0, 44, 74], fov: 48, near: 0.1, far: 420 }}
-        dpr={[1, 1.7]}
+        dpr={[1, 1.45]}
       >
         <color attach="background" args={['#030807']} />
         <fog attach="fog" args={['#030807', 92, 320]} />
@@ -373,7 +710,8 @@ function App() {
           <Vignette eskil={false} offset={0.18} darkness={0.78} />
         </EffectComposer>
       </Canvas>
-      <HUD game={game} onRestart={restart} />
+      <HUD game={game} onRestart={restart} onPause={togglePause} />
+      {game.phase === 'paused' && <PauseOverlay game={game} onResume={resume} onRestart={restart} />}
       {game.phase === 'upgrade' && (
         <UpgradeOverlay game={game} choices={upgradeChoices} onChoose={chooseUpgrade} />
       )}
@@ -397,6 +735,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
   const projectiles = useRef([]);
   const xpGems = useRef([]);
   const fieldItems = useRef([]);
+  const shrines = useRef(createInitialShrines());
   const hitBursts = useRef([]);
   const damageNumbers = useRef([]);
   const spawnWarnings = useRef([]);
@@ -404,6 +743,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
   const fieldItemTimer = useRef(4);
   const fieldItemDropLock = useRef(0);
   const scheduledFieldItems = useRef(new Set());
+  const runStats = useRef(createEmptyRunStats());
   const bossSpawnedWave = useRef(0);
   const eliteSpawnedMinute = useRef(0);
   const surgeIndex = useRef(0);
@@ -426,6 +766,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
 
   useEffect(() => {
     const down = event => {
+      if (game.phase !== 'playing') return;
       keys.current.add(event.code);
       if (event.code === 'Space') {
         if (!event.repeat) dashQueued.current = true;
@@ -439,7 +780,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
     };
-  }, []);
+  }, [game.phase]);
 
   useEffect(() => {
     refApi.current = {
@@ -454,6 +795,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         projectiles.current = [];
         xpGems.current = [];
         fieldItems.current = [];
+        shrines.current = createInitialShrines();
         hitBursts.current = [];
         damageNumbers.current = [];
         spawnWarnings.current = [];
@@ -461,6 +803,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         fieldItemTimer.current = 4;
         fieldItemDropLock.current = 0;
         scheduledFieldItems.current = new Set();
+        runStats.current = createEmptyRunStats();
         bossSpawnedWave.current = 0;
         eliteSpawnedMinute.current = 0;
         surgeIndex.current = 0;
@@ -470,6 +813,120 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         novaTimer.current = 1.25;
         levelUpQueued.current = false;
         weaponEffects.current = [];
+      },
+      stress: (options = {}) => {
+        const wave = options.wave ?? 12;
+        const enemyCount = Math.min(MAX_ENEMIES - 1, options.enemies ?? 160);
+        const projectileCount = Math.min(MAX_PROJECTILES, options.projectiles ?? 210);
+        const gemCount = Math.min(MAX_XP_GEMS, options.gems ?? 420);
+        const profile = getWaveProfile(wave);
+        const rhythm = getCombatRhythm({ time: 246, wave });
+        player.current.pos.set(0, 0.55, 0);
+        enemies.current = [];
+        const boss = createBoss(wave, player.current.pos);
+        boss.pos.set(18, getEnemyTerrainY(18, -20), -20);
+        boss.enraged = true;
+        boss.currentPattern = 'shockwave';
+        boss.currentPatternTimer = 0.8;
+        boss.patternIndex = 4;
+        boss.hp = boss.maxHp * 0.38;
+        enemies.current.push(boss);
+        for (let index = 1; index < enemyCount; index += 1) {
+          const angle = index * 2.399;
+          const ring = 16 + (index % 7) * 5.2;
+          const enemy = applyCombatRhythm(createEnemy(wave, profile, player.current.pos), rhythm);
+          enemy.pos.set(Math.cos(angle) * ring, 0, Math.sin(angle) * ring);
+          enemy.pos.y = getEnemyTerrainY(enemy.pos.x, enemy.pos.z);
+          enemy.facingAngle = Math.atan2(-enemy.pos.x, -enemy.pos.z);
+          if (index % 19 === 0) {
+            enemy.kind = 'elite';
+            enemy.role = index % 38 === 0 ? 'bulwark' : 'charger';
+            enemy.radius = 1.28;
+            enemy.hitRadius = 2.08;
+            enemy.color = ELITE_ROLE_META[enemy.role].color;
+            enemy.hp *= 2.6;
+            enemy.maxHp = enemy.hp;
+          }
+          enemies.current.push(enemy);
+        }
+        projectiles.current = Array.from({ length: projectileCount }, (_, index) => {
+          const type = index % 5 === 0 ? 'storm' : 'orb';
+          const angle = index * 1.618;
+          const radius = 4 + (index % 18) * 2.1;
+          const dir = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
+          return {
+            type,
+            pos: new THREE.Vector3(dir.x * radius, 0.65 + (index % 4) * 0.05, dir.z * radius),
+            vel: type === 'storm' ? new THREE.Vector3() : dir.multiplyScalar(12 + (index % 5)),
+            angle,
+            life: 0.9 + (index % 7) * 0.08,
+            damage: 40,
+            pierce: 4,
+            radius: type === 'storm' ? 2.1 : 0.42,
+            visualScale: type === 'storm' ? 1.6 : 1.15,
+            stage: 4,
+            burstRadius: 3.6,
+            trailLength: 2.4,
+            color: type === 'storm' ? '#b8f7ff' : '#70d6ff'
+          };
+        });
+        xpGems.current = Array.from({ length: gemCount }, (_, index) => {
+          const angle = index * 2.17;
+          const radius = 8 + (index % 28) * 2.6;
+          const pos = new THREE.Vector3(Math.cos(angle) * radius, 0.9, Math.sin(angle) * radius);
+          pos.y = getPlayerTerrainY(pos.x, pos.z) + 0.72;
+          return { pos, value: 4 + (index % 5), pulse: Math.random() * Math.PI * 2 };
+        });
+        hitBursts.current = Array.from({ length: MAX_HIT_BURSTS }, (_, index) => {
+          const angle = index * 1.77;
+          const radius = 7 + (index % 16) * 3;
+          return {
+            pos: new THREE.Vector3(Math.cos(angle) * radius, 0.8, Math.sin(angle) * radius),
+            life: 0.45 + (index % 5) * 0.08,
+            maxLife: 0.8,
+            color: index % 3 === 0 ? '#ff8b72' : index % 3 === 1 ? '#70d6ff' : '#fff1a6',
+            type: index % 3 === 0 ? 'storm' : 'hit',
+            stage: 4,
+            radius: 1.2 + (index % 5) * 0.28
+          };
+        });
+        weaponEffects.current = Array.from({ length: MAX_WEAPON_EFFECTS }, (_, index) => {
+          const angle = index * 1.31;
+          const radius = 6 + (index % 12) * 3.4;
+          return {
+            type: 'ring',
+            pos: new THREE.Vector3(Math.cos(angle) * radius, 0.5, Math.sin(angle) * radius),
+            life: 0.38 + (index % 6) * 0.08,
+            maxLife: 0.86,
+            color: index % 2 === 0 ? '#73fbd3' : '#d8b2ff',
+            radius: 4.2 + (index % 4)
+          };
+        });
+        damageNumbers.current = Array.from({ length: MAX_DAMAGE_NUMBERS }, (_, index) => {
+          const angle = index * 1.49;
+          const radius = 5 + (index % 14) * 3.2;
+          return {
+            pos: new THREE.Vector3(Math.cos(angle) * radius, 1.4, Math.sin(angle) * radius),
+            value: index % 6 === 0 ? 'CRIT' : `${42 + index}`,
+            color: index % 2 === 0 ? '#fff1a6' : '#d8b2ff',
+            size: 0.45 + (index % 4) * 0.04,
+            age: 0,
+            life: 0.4 + (index % 5) * 0.04,
+            maxLife: 0.64
+          };
+        });
+        spawnWarnings.current = Array.from({ length: MAX_SPAWN_WARNINGS }, (_, index) => {
+          const angle = index * 2.61;
+          const radius = 20 + (index % 8) * 6;
+          return {
+            pos: new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius),
+            life: 1.1,
+            maxLife: 1.1,
+            color: index % 2 === 0 ? '#ff8b72' : '#70d6ff',
+            label: index < 3 ? 'SURGE' : '',
+            radius: 2.8 + (index % 4) * 0.6
+          };
+        });
       }
     };
   }, [refApi]);
@@ -495,13 +952,21 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       const nextTime = current.time + dt;
       const nextWave = Math.max(1, Math.floor(nextTime / WAVE_DURATION) + 1);
       const pickupFlash = Math.max(0, (current.pickupFlash ?? 0) - dt);
+      const encounterAlertTimer = Math.max(0, (current.encounterAlertTimer ?? 0) - dt);
       const dashCooldownMax = DASH_COOLDOWN * current.stats.dashCooldown;
+      const movementDelta = player.current.vel.length() > 0.1 ? player.current.vel.length() * dt : 0;
       const basePatch = {
         time: Math.min(nextTime, RUN_DURATION),
         wave: nextWave,
         pickupFlash,
         pickupMessage: pickupFlash > 0 ? current.pickupMessage : '',
+        encounterAlertTimer,
+        encounterAlert: encounterAlertTimer > 0 ? current.encounterAlert : null,
+        bossStatus: getBossStatusSnapshot(),
+        runStats: getRunStatsSnapshot(),
         overloadTimer: Math.max(0, (current.overloadTimer ?? 0) - dt),
+        onboardingMovement: Math.min(120, (current.onboardingMovement ?? 0) + movementDelta),
+        playerPos: { x: player.current.pos.x, z: player.current.pos.z },
         dash: {
           cooldown: Math.min(dashCooldownMax, player.current.dashCd),
           cooldownMax: dashCooldownMax,
@@ -515,13 +980,14 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       return { ...current, ...basePatch };
     });
 
-    updatePlayer(dt, game.stats);
+    updatePlayer(dt, game.stats, setGame);
     updateSpawning(dt, game, setGame);
     updateWeapons(dt, game);
     updateProjectiles(dt, game.stats, game);
     updateEnemies(dt, game, setGame);
     updateGems(dt, game, setGame, onLevelUp);
     updateFieldItems(dt, game, setGame);
+    updateShrines(dt, game, setGame);
     updateBursts(dt);
     updateWeaponEffects(dt);
     updateDamageNumbers(dt);
@@ -530,7 +996,56 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
     renderInstances();
   });
 
-  const updatePlayer = (dt, stats) => {
+  const showEncounterAlert = (updateGame, alert, duration = 3.0) => {
+    updateGame(current => ({
+      ...current,
+      encounterAlert: alert,
+      encounterAlertTimer: Math.max(current.encounterAlertTimer ?? 0, duration),
+      activeThreat: alert.threat ?? current.activeThreat,
+      lastBossPattern: alert.pattern ?? current.lastBossPattern,
+      pickupMessage: alert.message ?? current.pickupMessage,
+      pickupFlash: Math.max(current.pickupFlash ?? 0, alert.flash ?? 0)
+    }));
+  };
+
+  const getBossStatusSnapshot = () => {
+    const boss = enemies.current.find(enemy => enemy.kind === 'boss' && enemy.hp > 0);
+    if (!boss) return null;
+    const hpPct = THREE.MathUtils.clamp(boss.hp / boss.maxHp, 0, 1);
+    const phase = getBossPhaseMeta(hpPct, boss.enraged);
+    const patternKey = (boss.currentPatternTimer ?? 0) > 0
+      ? boss.currentPattern
+      : BOSS_PATTERN_ORDER[boss.patternIndex % BOSS_PATTERN_ORDER.length];
+    const patternMeta = BOSS_PATTERN_META[patternKey] ?? BOSS_PATTERN_META.shockwave;
+    return {
+      hp: Math.max(0, boss.hp),
+      maxHp: boss.maxHp,
+      hpPct,
+      wave: boss.wave,
+      enraged: Boolean(boss.enraged),
+      phaseLabel: phase.label,
+      phaseColor: phase.color,
+      patternLabel: patternMeta.label,
+      patternHint: patternMeta.hint,
+      patternColor: patternMeta.color,
+      patternStage: Math.max(1, boss.patternIndex),
+      casting: (boss.currentPatternTimer ?? 0) > 0
+    };
+  };
+
+  const recordDamage = (source, amount) => {
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    const key = DAMAGE_SOURCE_META[source] ? source : 'generic';
+    runStats.current.damageBySource[key] = (runStats.current.damageBySource[key] ?? 0) + amount;
+    runStats.current.totalDamage += amount;
+  };
+
+  const getRunStatsSnapshot = () => ({
+    totalDamage: runStats.current.totalDamage,
+    damageBySource: { ...runStats.current.damageBySource }
+  });
+
+  const updatePlayer = (dt, stats, updateGame) => {
     const input = new THREE.Vector3(
       Number(keys.current.has('KeyD') || keys.current.has('ArrowRight')) - Number(keys.current.has('KeyA') || keys.current.has('ArrowLeft')),
       0,
@@ -570,6 +1085,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       });
       addDamageNumber(player.current.pos, '회피', '#9ff7ff', 0.74);
       cameraShake.current = Math.max(cameraShake.current, 0.18);
+      updateGame(current => ({ ...current, dashUses: (current.dashUses ?? 0) + 1 }));
     }
     dashQueued.current = false;
 
@@ -608,13 +1124,15 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
     spawnTimer.current -= dt;
     const waveProfile = getWaveProfile(currentGame.wave);
     const pressure = getDirectorPressure(currentGame);
-    const targetCount = Math.min(Math.floor((waveProfile.targetBase + currentGame.wave * 7) * pressure), MAX_ENEMIES - 12);
+    const rhythm = getCombatRhythm(currentGame);
+    const openingEase = currentGame.time < 30 ? 0.68 + currentGame.time / 30 * 0.26 : 1;
+    const targetCount = Math.min(Math.floor((waveProfile.targetBase + currentGame.wave * 7) * pressure * openingEase * rhythm.target), MAX_ENEMIES - 12);
     const minuteMark = Math.floor(currentGame.time / 60);
     const nextSurge = SURGE_EVENTS[surgeIndex.current];
     if (nextSurge && currentGame.time >= nextSurge.time && enemies.current.length < MAX_ENEMIES - 8) {
       const count = Math.min(nextSurge.count + Math.floor(currentGame.wave / 2), MAX_ENEMIES - enemies.current.length);
       for (let i = 0; i < count; i += 1) {
-        const enemy = createEnemy(currentGame.wave + 1, waveProfile, player.current.pos);
+        const enemy = applyCombatRhythm(createEnemy(currentGame.wave + 1, waveProfile, player.current.pos), rhythm);
         enemy.surge = true;
         enemy.hp *= 1.16;
         enemy.maxHp *= 1.16;
@@ -640,23 +1158,29 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         stage: 5,
         radius: 12
       });
-      cameraShake.current = Math.max(cameraShake.current, 0.24);
-      updateGame(current => ({
-        ...current,
-        pickupMessage: nextSurge.message,
-        pickupFlash: 3
-      }));
+      cameraShake.current = Math.max(cameraShake.current, 0.36);
+      showEncounterAlert(updateGame, {
+        kind: 'surge',
+        label: nextSurge.label,
+        title: nextSurge.message,
+        hint: '빈 공간 확보',
+        color: nextSurge.color,
+        message: nextSurge.message,
+        flash: 3.4
+      }, 3.4);
       surgeIndex.current += 1;
     }
     if (minuteMark >= 1 && minuteMark <= 4 && eliteSpawnedMinute.current < minuteMark) {
       const elite = createElite(minuteMark, currentGame.wave, player.current.pos);
+      const meta = ELITE_ROLE_META[elite.role] ?? ELITE_ROLE_META.charger;
       enemies.current.push(elite);
       spawnWarnings.current.push({
         pos: elite.pos.clone(),
-        life: 1.35,
-        maxLife: 1.35,
-        color: getEnemyAccentColor(elite),
-        label: ELITE_ROLE_META[elite.role]?.label ?? 'ELITE'
+        life: 1.65,
+        maxLife: 1.65,
+        color: meta.color,
+        label: `RIFT ${meta.label}`,
+        radius: 3.0
       });
       hitBursts.current.push({
         pos: elite.pos.clone(),
@@ -667,9 +1191,23 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         stage: 3,
         radius: 3.2
       });
+      showEncounterAlert(updateGame, {
+        kind: 'elite',
+        label: `RIFT ${meta.label}`,
+        title: meta.name,
+        hint: `약점: ${meta.hint}`,
+        color: meta.color,
+        threat: {
+          kind: 'elite',
+          label: meta.label,
+          name: meta.name,
+          weakness: meta.hint,
+          color: meta.color
+        }
+      }, 3.6);
       eliteSpawnedMinute.current = minuteMark;
     }
-    if (currentGame.wave >= 5 && currentGame.wave % 2 === 1 && bossSpawnedWave.current < currentGame.wave) {
+    if (BOSS_WAVE_SCHEDULE.includes(currentGame.wave) && bossSpawnedWave.current < currentGame.wave) {
       const boss = createBoss(currentGame.wave, player.current.pos);
       enemies.current.push(boss);
       spawnWarnings.current.push({
@@ -677,17 +1215,32 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         life: 1.45,
         maxLife: 1.45,
         color: getEnemyAccentColor(boss),
-        label: 'RIFT BEAST'
+        label: 'RIFT BEAST',
+        radius: 4.2
       });
       hitBursts.current.push({ pos: boss.pos.clone(), life: 1.1, maxLife: 1.1, color: '#ffdf6e' });
+      showEncounterAlert(updateGame, {
+        kind: 'boss',
+        label: 'RIFT BEAST',
+        title: '균열 보스 출현',
+        hint: '패턴 예고 확인',
+        color: '#ffdf6e',
+        threat: {
+          kind: 'boss',
+          label: 'RIFT BEAST',
+          name: '균열 보스',
+          weakness: '예고 후 회피',
+          color: '#ffdf6e'
+        }
+      }, 4.0);
       bossSpawnedWave.current = currentGame.wave;
     }
     if (spawnTimer.current <= 0 && enemies.current.length < targetCount) {
       const missing = targetCount - enemies.current.length;
       const catchUp = missing > 42 ? 6 : missing > 26 ? 4 : missing > 14 ? 2 : 0;
-      const amount = Math.min(18, Math.ceil((waveProfile.spawnBase + Math.floor(currentGame.time / 72) + catchUp) * Math.min(1.24, pressure)));
+      const amount = Math.min(18, Math.ceil((waveProfile.spawnBase + Math.floor(currentGame.time / 72) + catchUp) * Math.min(1.24, pressure) * openingEase * rhythm.spawn));
       for (let i = 0; i < amount; i += 1) {
-        const enemy = createEnemy(currentGame.wave, waveProfile, player.current.pos);
+        const enemy = applyCombatRhythm(createEnemy(currentGame.wave, waveProfile, player.current.pos), rhythm);
         enemies.current.push(enemy);
         if (i === 0 || currentGame.wave > 2) {
           spawnWarnings.current.push({
@@ -699,7 +1252,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
           });
         }
       }
-      spawnTimer.current = Math.max(0.24, waveProfile.interval - currentGame.wave * 0.02);
+      spawnTimer.current = Math.max(0.24, (waveProfile.interval - currentGame.wave * 0.018) / Math.max(0.8, rhythm.spawn));
     }
   };
 
@@ -710,8 +1263,12 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
     const overloadCooldown = currentGame.overloadTimer > 0 ? 0.58 : 1;
     const orbFocus = getBuildFocus(currentGame, 'orb');
     const stormFocus = getBuildFocus(currentGame, 'storm');
+    const bladeFocus = getBuildFocus(currentGame, 'blade');
     const chainFocus = getBuildFocus(currentGame, 'chain');
     const novaFocus = getBuildFocus(currentGame, 'nova');
+    const stormChainLevel = getSynergyLevel(currentGame, 'storm-chain');
+    const bladeNovaLevel = getSynergyLevel(currentGame, 'blade-nova');
+    const orbPierceLevel = getSynergyLevel(currentGame, 'orb-pierce');
     orbTimer.current -= dt;
     stormTimer.current -= dt;
     lightningTimer.current -= dt;
@@ -731,11 +1288,11 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
           projectiles.current.push({
             type: 'orb',
             pos: player.current.pos.clone().add(new THREE.Vector3(0, 0.35, 0)),
-            vel: dir.multiplyScalar(weaponCatalog[0].speed * stats.orbSpeed),
+            vel: dir.multiplyScalar(weaponCatalog[0].speed * stats.orbSpeed * (1 + orbPierceLevel * 0.06)),
             angle: Math.atan2(dir.x, dir.z),
             life: 1.25 + stats.pierce * 0.05,
-            damage: weaponCatalog[0].damage * stats.damage * stats.orbDamage * overloadDamage * (1 + orbFocus * 0.035),
-            pierce: weaponCatalog[0].pierce + stats.pierce + (orbFocus >= 3 ? 1 : 0),
+            damage: weaponCatalog[0].damage * stats.damage * stats.orbDamage * overloadDamage * (1 + orbFocus * 0.035 + orbPierceLevel * 0.05),
+            pierce: weaponCatalog[0].pierce + stats.pierce + (orbFocus >= 3 ? 1 : 0) + Math.floor(orbPierceLevel / 2),
             radius: weaponCatalog[0].size * stats.orbScale * (tier + weaponStage * 0.1),
             visualScale: stats.orbScale * (tier + weaponStage * 0.2),
             stage: weaponStage,
@@ -763,7 +1320,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
           vel: new THREE.Vector3(),
           angle: Math.random() * Math.PI * 2,
           life: 0.34 * stats.stormDuration * (1 + stormFocus * 0.06),
-          damage: weaponCatalog[1].damage * stats.damage * stats.stormDamage * overloadDamage * (1 + stormFocus * 0.03),
+          damage: weaponCatalog[1].damage * stats.damage * stats.stormDamage * overloadDamage * (1 + stormFocus * 0.03 + stormChainLevel * 0.035),
           pierce: weaponCatalog[1].pierce,
           radius: 1.55 * (tier + weaponStage * 0.08) * stats.stormRadius * (1 + stormFocus * 0.035),
           visualScale: tier + weaponStage * 0.18,
@@ -781,13 +1338,13 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
           radius: 1.35 + tier * 0.24 + stormFocus * 0.12
         });
       }
-      stormTimer.current = Math.max(0.38, weaponCatalog[1].cooldown * stats.cooldown * stats.stormCooldown * overloadCooldown * (1 - weaponStage * 0.06) * (1 - Math.min(0.14, stormFocus * 0.025)));
+      stormTimer.current = Math.max(0.38, weaponCatalog[1].cooldown * stats.cooldown * stats.stormCooldown * overloadCooldown * (1 - weaponStage * 0.06) * (1 - Math.min(0.14, stormFocus * 0.025 + stormChainLevel * 0.018)));
     }
 
     if (lightningTimer.current <= 0 && enemies.current.length > 0) {
       const chainTargets = nearestEnemies(
         stats.lightningChains + Math.floor(weaponStage / 2) + Math.floor(chainFocus / 2),
-        weaponCatalog[3].range * stats.lightningRange + weaponStage * 4 + chainFocus * 3
+        weaponCatalog[3].range * stats.lightningRange + weaponStage * 4 + chainFocus * 3 + stormChainLevel * 3.5
       );
       let previous = player.current.pos.clone().add(new THREE.Vector3(0, 1.05, 0));
       const color = getLightningColor(stats, weaponStage);
@@ -795,10 +1352,11 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         const executeBoost = stats.lightningExecute > 0 && enemy.hp / enemy.maxHp < 0.45
           ? 1 + stats.lightningExecute * 0.34
           : 1;
-        const damage = weaponCatalog[3].damage * stats.damage * stats.lightningDamage * overloadDamage * executeBoost * (1 - index * 0.08) * (1 + chainFocus * 0.035);
+        const damage = weaponCatalog[3].damage * stats.damage * stats.lightningDamage * overloadDamage * executeBoost * (1 - index * 0.08) * (1 + chainFocus * 0.035 + stormChainLevel * 0.035);
         const dealt = applyDamageToEnemy(enemy, damage, 'lightning');
+        recordDamage('lightning', dealt);
         enemy.flash = 0.2;
-        enemy.shocked = Math.max(enemy.shocked ?? 0, 0.48 + chainFocus * 0.16);
+        enemy.shocked = Math.max(enemy.shocked ?? 0, 0.48 + chainFocus * 0.16 + stormChainLevel * 0.1);
         enemy.pos.addScaledVector(enemy.pos.clone().sub(player.current.pos).setY(0).normalize(), 0.08);
         addDamageNumber(enemy.pos, Math.ceil(dealt), color, 0.64);
         hitBursts.current.push({
@@ -827,18 +1385,19 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
 
     if (novaTimer.current <= 0 && enemies.current.length > 0) {
       const color = getNovaColor(stats, weaponStage);
-      const radius = weaponCatalog[4].radius * stats.novaRadius * (1 + weaponStage * 0.08 + novaFocus * 0.045);
+      const radius = weaponCatalog[4].radius * stats.novaRadius * (1 + weaponStage * 0.08 + novaFocus * 0.045 + bladeNovaLevel * 0.04);
       const pulseBoost = 1 + stats.novaPulse * 0.12;
-      const damage = weaponCatalog[4].damage * stats.damage * stats.novaDamage * pulseBoost * overloadDamage * (1 + novaFocus * 0.04);
+      const damage = weaponCatalog[4].damage * stats.damage * stats.novaDamage * pulseBoost * overloadDamage * (1 + novaFocus * 0.04 + bladeNovaLevel * 0.04);
       let hitCount = 0;
       for (const enemy of enemies.current) {
         const distanceSq = enemy.pos.distanceToSquared(player.current.pos);
         if (distanceSq > radius * radius) continue;
         const falloff = 1 - Math.sqrt(distanceSq) / radius * 0.34;
         const dealt = applyDamageToEnemy(enemy, damage * falloff, 'nova');
+        recordDamage('nova', dealt);
         enemy.flash = 0.16;
         const push = enemy.pos.clone().sub(player.current.pos).setY(0);
-        if (push.lengthSq() > 0.001) enemy.pos.addScaledVector(push.normalize(), 0.34 + novaFocus * 0.05);
+        if (push.lengthSq() > 0.001) enemy.pos.addScaledVector(push.normalize(), 0.34 + novaFocus * 0.05 + bladeNovaLevel * 0.04);
         hitCount += 1;
         if (hitCount <= 18) addDamageNumber(enemy.pos, Math.ceil(dealt), color, 0.56);
       }
@@ -880,7 +1439,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         });
       }
       if (hitCount > 0) cameraShake.current = Math.max(cameraShake.current, 0.16);
-      novaTimer.current = Math.max(0.58, weaponCatalog[4].cooldown * stats.cooldown * stats.novaCooldown * overloadCooldown * (1 - weaponStage * 0.05) * (1 - Math.min(0.16, novaFocus * 0.028)));
+      novaTimer.current = Math.max(0.58, weaponCatalog[4].cooldown * stats.cooldown * stats.novaCooldown * overloadCooldown * (1 - weaponStage * 0.05) * (1 - Math.min(0.16, novaFocus * 0.028 + bladeNovaLevel * 0.014)));
     }
   };
 
@@ -899,6 +1458,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         if (enemy.pos.distanceToSquared(bladePos) < enemy.hitRadius ** 2) {
           const bladeDamage = weaponCatalog[2].damage * stats.damage * stats.bladeDamage * overloadDamage * dt * (6 + weaponStage * 0.75 + bladeFocus * 0.32);
           const dealt = applyDamageToEnemy(enemy, bladeDamage, 'blade');
+          recordDamage('blade', dealt);
           enemy.flash = 0.1;
           enemy.bladeNumberTimer = (enemy.bladeNumberTimer ?? 0) - dt;
           if (enemy.bladeNumberTimer <= 0) {
@@ -949,6 +1509,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
     enemy.abilityTimer = Math.max(0, (enemy.abilityTimer ?? 0) - dt);
     enemy.chargeTimer = Math.max(0, (enemy.chargeTimer ?? 0) - dt);
     enemy.bossGuard = Math.max(0, (enemy.bossGuard ?? 0) - dt);
+    enemy.currentPatternTimer = Math.max(0, (enemy.currentPatternTimer ?? 0) - dt);
     const abilityScale = getEnemyAbilityScale(currentGame);
     const summonSlots = () => Math.max(0, MAX_ENEMIES - enemies.current.length - spawnedEnemies.length);
 
@@ -1051,61 +1612,170 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       }
     }
 
+    if ((enemy.summonWindupTimer ?? 0) > 0) {
+      const before = enemy.summonWindupTimer;
+      enemy.summonWindupTimer = Math.max(0, enemy.summonWindupTimer - dt);
+      if (before > 0 && enemy.summonWindupTimer <= 0) {
+        const meta = BOSS_PATTERN_META.summon;
+        const count = Math.min(12, 4 + Math.floor(currentGame.wave / 2) + (currentGame.time >= 180 ? 2 : 0), summonSlots());
+        for (let index = 0; index < count; index += 1) {
+          spawnedEnemies.push(createSummonedRunner(enemy, currentGame.wave + 1, player.current.pos, index));
+        }
+        hitBursts.current.push({
+          pos: enemy.pos.clone(),
+          life: 0.92,
+          maxLife: 0.92,
+          color: meta.color,
+          type: 'summon',
+          stage: 5,
+          radius: 7.8
+        });
+        weaponEffects.current.push({
+          type: 'ring',
+          pos: enemy.pos.clone(),
+          life: 0.68,
+          maxLife: 0.68,
+          color: meta.color,
+          radius: 10.5
+        });
+        cameraShake.current = Math.max(cameraShake.current, 0.22);
+      }
+      return;
+    }
+
+    if ((enemy.guardWindupTimer ?? 0) > 0) {
+      const before = enemy.guardWindupTimer;
+      enemy.guardWindupTimer = Math.max(0, enemy.guardWindupTimer - dt);
+      if (before > 0 && enemy.guardWindupTimer <= 0) {
+        const meta = BOSS_PATTERN_META.guard;
+        enemy.bossGuard = 5.4 + Math.max(0, currentGame.time - 180) * 0.01;
+        hitBursts.current.push({
+          pos: enemy.pos.clone(),
+          life: 1.0,
+          maxLife: 1.0,
+          color: meta.color,
+          type: 'bossGuard',
+          stage: 5,
+          radius: 6.4
+        });
+        weaponEffects.current.push({
+          type: 'ring',
+          pos: enemy.pos.clone(),
+          life: 0.78,
+          maxLife: 0.78,
+          color: meta.color,
+          radius: 9.8
+        });
+        cameraShake.current = Math.max(cameraShake.current, 0.18);
+      }
+      return;
+    }
+
     if (enemy.abilityTimer > 0) return;
-    const pattern = ['shockwave', 'summon', 'guard'][enemy.patternIndex % 3];
+    const pattern = BOSS_PATTERN_ORDER[enemy.patternIndex % BOSS_PATTERN_ORDER.length];
     enemy.patternIndex += 1;
-    enemy.abilityTimer = (pattern === 'guard' ? 6.4 : 7.2) * abilityScale;
+    const bossPhaseScale = enemy.enraged ? 0.76 : 1;
+    enemy.abilityTimer = (pattern === 'guard' ? 6.4 : 7.2) * abilityScale * bossPhaseScale;
     const meta = BOSS_PATTERN_META[pattern];
+    const warningRadius = pattern === 'shockwave'
+      ? 20 + currentGame.wave * 0.8 + Math.max(0, currentGame.time - 180) * 0.025
+      : pattern === 'summon'
+        ? 10.5
+        : 9.8;
+    const warningLife = pattern === 'shockwave' ? 1.35 : 1.08;
+    enemy.currentPattern = pattern;
+    enemy.currentPatternTimer = warningLife;
     spawnWarnings.current.push({
       pos: enemy.pos.clone(),
-      life: 1.0,
-      maxLife: 1.0,
+      life: warningLife,
+      maxLife: warningLife,
       color: meta.color,
-      label: meta.label
+      label: meta.label,
+      radius: warningRadius
     });
+    weaponEffects.current.push({
+      type: 'ring',
+      pos: enemy.pos.clone(),
+      life: warningLife,
+      maxLife: warningLife,
+      color: meta.color,
+      radius: warningRadius
+    });
+    showEncounterAlert(updateGame, {
+      kind: 'boss-pattern',
+      label: meta.label,
+      title: `보스 패턴: ${meta.label}`,
+      hint: meta.hint,
+      color: meta.color,
+      pattern
+    }, 2.5);
 
     if (pattern === 'shockwave') {
-      enemy.shockwaveTimer = 0.95;
+      enemy.shockwaveTimer = 1.35;
+      cameraShake.current = Math.max(cameraShake.current, 0.14);
       return;
     }
 
     if (pattern === 'summon') {
-      const count = Math.min(12, 4 + Math.floor(currentGame.wave / 2) + (currentGame.time >= 180 ? 2 : 0), summonSlots());
-      for (let index = 0; index < count; index += 1) {
-        spawnedEnemies.push(createSummonedRunner(enemy, currentGame.wave + 1, player.current.pos, index));
-      }
-      hitBursts.current.push({
-        pos: enemy.pos.clone(),
-        life: 0.82,
-        maxLife: 0.82,
-        color: meta.color,
-        type: 'summon',
-        stage: 5,
-        radius: 5.2
-      });
+      enemy.summonWindupTimer = 1.05;
+      cameraShake.current = Math.max(cameraShake.current, 0.12);
       return;
     }
 
-    enemy.bossGuard = 5.4 + Math.max(0, currentGame.time - 180) * 0.01;
-    hitBursts.current.push({
-      pos: enemy.pos.clone(),
-      life: 0.92,
-      maxLife: 0.92,
-      color: meta.color,
-      type: 'bossGuard',
-      stage: 5,
-      radius: 4.8
-    });
+    enemy.guardWindupTimer = 1.05;
+    cameraShake.current = Math.max(cameraShake.current, 0.12);
   };
 
   const updateEnemies = (dt, currentGame, updateGame) => {
     const playerPos = player.current.pos;
     let kills = 0;
+    let eliteKills = 0;
+    let bossKills = 0;
     const spawnedEnemies = [];
     for (const enemy of enemies.current) {
       const toPlayer = playerPos.clone().sub(enemy.pos).setY(0);
       const distance = Math.max(0.001, toPlayer.length());
       toPlayer.divideScalar(distance);
+      if (enemy.kind === 'boss' && !enemy.enraged && enemy.hp / enemy.maxHp <= 0.5) {
+        enemy.enraged = true;
+        enemy.speed *= 1.08;
+        enemy.damage *= 1.12;
+        enemy.abilityTimer = Math.min(enemy.abilityTimer ?? 0, 1.2);
+        hitBursts.current.push({
+          pos: enemy.pos.clone(),
+          life: 1.2,
+          maxLife: 1.2,
+          color: '#ff8b72',
+          type: 'bossRage',
+          stage: 5,
+          radius: 8.4
+        });
+        spawnWarnings.current.push({
+          pos: enemy.pos.clone(),
+          life: 1.5,
+          maxLife: 1.5,
+          color: '#ff8b72',
+          label: 'RAGE',
+          radius: 7.0
+        });
+        cameraShake.current = Math.max(cameraShake.current, 0.42);
+        showEncounterAlert(updateGame, {
+          kind: 'boss',
+          label: 'RIFT RAGE',
+          title: '보스 분노 페이즈',
+          hint: '패턴 가속',
+          color: '#ff8b72',
+          threat: {
+            kind: 'boss',
+            label: 'RAGE',
+            name: '분노 보스',
+            weakness: '거리 유지',
+            color: '#ff8b72'
+          },
+          message: '보스 분노: 패턴 가속',
+          flash: 3.2
+        }, 3.6);
+      }
       updateEnemyAbility(enemy, dt, distance, toPlayer, currentGame, updateGame, spawnedEnemies);
       enemy.shocked = Math.max(0, (enemy.shocked ?? 0) - dt);
       const shockMultiplier = enemy.shocked > 0
@@ -1126,6 +1796,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       for (const projectile of projectiles.current) {
         if (projectile.pos.distanceToSquared(enemy.pos) < (enemy.hitRadius + projectile.radius) ** 2) {
           const dealt = applyDamageToEnemy(enemy, projectile.damage, projectile.type);
+          recordDamage(projectile.type, dealt);
           enemy.flash = 0.14;
           projectile.pierce -= 1;
           const push = projectile.type === 'storm'
@@ -1156,6 +1827,8 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
     for (const enemy of enemies.current) {
       if (enemy.hp <= 0) {
         kills += 1;
+        if (enemy.kind === 'elite') eliteKills += 1;
+        if (enemy.kind === 'boss') bossKills += 1;
         const gemPos = enemy.pos.clone();
         gemPos.y += enemy.kind === 'boss' || enemy.kind === 'elite' ? 1.08 : 0.76;
         if (xpGems.current.length < MAX_XP_GEMS) {
@@ -1186,6 +1859,19 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
           enemy.kind === 'boss' || enemy.kind === 'elite' ? getEnemyAccentColor(enemy) : '#9df57a',
           enemy.kind === 'boss' || enemy.kind === 'elite' ? 0.95 : 0.54
         );
+        if (enemy.canSplit && enemies.current.length + spawnedEnemies.length < MAX_ENEMIES - 4) {
+          const splitCount = enemy.kind === 'brute' ? 3 : 2;
+          for (let index = 0; index < splitCount; index += 1) {
+            spawnedEnemies.push(createSplitRunner(enemy, currentGame.wave, player.current.pos, index));
+          }
+          spawnWarnings.current.push({
+            pos: enemy.pos.clone(),
+            life: 0.56,
+            maxLife: 0.56,
+            color: '#d8b2ff',
+            label: 'SPLIT'
+          });
+        }
       } else {
         alive.push(enemy);
       }
@@ -1194,7 +1880,14 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
 
     if (kills > 0) {
       cameraShake.current = Math.max(cameraShake.current, Math.min(0.26, 0.05 + kills * 0.018));
-      updateGame(current => ({ ...current, kills: current.kills + kills }));
+      updateGame(current => ({
+        ...current,
+        kills: current.kills + kills,
+        eliteKills: current.eliteKills + eliteKills,
+        bossKills: current.bossKills + bossKills,
+        activeThreat: eliteKills > 0 || bossKills > 0 ? null : current.activeThreat,
+        lastBossPattern: bossKills > 0 ? null : current.lastBossPattern
+      }));
     }
   };
 
@@ -1303,6 +1996,135 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       });
   };
 
+  const updateShrines = (dt, currentGame, updateGame) => {
+    for (const shrine of shrines.current) {
+      if (shrine.activated) continue;
+      shrine.pulse += dt * 2.6;
+      const distance = shrine.pos.distanceTo(player.current.pos);
+      if (distance < SHRINE_ACTIVATE_RADIUS) {
+        shrine.channel = Math.min(SHRINE_CHANNEL_TIME, shrine.channel + dt);
+        if (!shrine.prompted) {
+          shrine.prompted = true;
+          spawnWarnings.current.push({
+            pos: shrine.pos.clone(),
+            life: 1.0,
+            maxLife: 1.0,
+            color: shrine.color,
+            label: 'SHRINE'
+          });
+          addDamageNumber(shrine.pos, shrine.label, shrine.color, 0.72);
+        }
+      } else {
+        shrine.channel = Math.max(0, shrine.channel - dt * 0.72);
+      }
+
+      if (shrine.channel < SHRINE_CHANNEL_TIME) continue;
+      shrine.activated = true;
+      shrine.channel = SHRINE_CHANNEL_TIME;
+      activateShrine(shrine, currentGame, updateGame);
+    }
+  };
+
+  const activateShrine = (shrine, currentGame, updateGame) => {
+    hitBursts.current.push({
+      pos: shrine.pos.clone(),
+      life: 1.0,
+      maxLife: 1.0,
+      color: shrine.color,
+      type: 'shrine',
+      stage: 5,
+      radius: 7.4
+    });
+    weaponEffects.current.push({
+      type: 'ring',
+      pos: shrine.pos.clone(),
+      life: 0.82,
+      maxLife: 0.82,
+      color: shrine.color,
+      radius: 13.5
+    });
+    cameraShake.current = Math.max(cameraShake.current, 0.2);
+
+    if (shrine.reward === 'cache') {
+      updateGame(current => {
+        let nextGame = withShrineActivation(withItemPickup(current, 'cache'), shrine.id);
+        const boosts = [];
+        const excluded = new Set();
+        for (let index = 0; index < 2; index += 1) {
+          const boost = pickArmoryBoost(nextGame, excluded);
+          if (!boost) break;
+          excluded.add(boost.id);
+          const focusKey = getUpgradeFocusKey(boost);
+          nextGame = {
+            ...nextGame,
+            stats: boost.apply(nextGame.stats),
+            buildFocus: applyBuildFocus(nextGame.buildFocus, focusKey),
+            upgrades: [...nextGame.upgrades, boost.id]
+          };
+          boosts.push(boost);
+        }
+        return {
+          ...nextGame,
+          pickupMessage: `무기 제단: ${boosts.map(boost => boost.title).join(' + ')}`,
+          pickupFlash: 2.8
+        };
+      });
+      addDamageNumber(shrine.pos, '무기 각인 x2', shrine.color, 0.98);
+      return;
+    }
+
+    if (shrine.reward === 'heal') {
+      updateGame(current => ({
+        ...withShrineActivation(withItemPickup(current, 'heal'), shrine.id),
+        pickupMessage: '생명 제단: 최대 체력 회복',
+        pickupFlash: 2.6,
+        stats: {
+          ...current.stats,
+          hp: current.stats.maxHp
+        }
+      }));
+      addDamageNumber(shrine.pos, '완전 회복', shrine.color, 0.98);
+      return;
+    }
+
+    if (shrine.reward === 'upgrade') {
+      updateGame(current => ({
+        ...withShrineActivation(current, shrine.id),
+        pendingUpgrades: (current.pendingUpgrades ?? 0) + 1,
+        pickupMessage: '각인 제단: 보상 선택 +1',
+        pickupFlash: 2.8
+      }));
+      addDamageNumber(shrine.pos, '보상 선택 +1', shrine.color, 0.98);
+      return;
+    }
+
+    let cleared = 0;
+    const clearRadius = 48;
+    for (const enemy of enemies.current) {
+      if (enemy.pos.distanceToSquared(shrine.pos) > clearRadius * clearRadius) continue;
+      enemy.hp = 0;
+      enemy.flash = 0.18;
+      cleared += 1;
+      if (cleared <= 34) {
+        hitBursts.current.push({
+          pos: enemy.pos.clone(),
+          life: 0.42,
+          maxLife: 0.42,
+          color: shrine.color,
+          type: 'purge',
+          stage: 5,
+          radius: enemy.hitRadius + 0.8
+        });
+      }
+    }
+    updateGame(current => ({
+      ...withShrineActivation(withItemPickup(current, 'purge'), shrine.id),
+      pickupMessage: `정화 제단: ${cleared} 소멸`,
+      pickupFlash: 2.6
+    }));
+    addDamageNumber(shrine.pos, `정화 ${cleared}`, shrine.color, 0.98);
+  };
+
   const applyFieldItem = (item, currentGame, updateGame) => {
     if (item.type === 'magnet') {
       xpGems.current.forEach(gem => {
@@ -1319,7 +2141,11 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       });
       addDamageNumber(player.current.pos, `자석 ${xpGems.current.length}`, '#9ff7ff', 0.9);
       cameraShake.current = Math.max(cameraShake.current, 0.18);
-      updateGame(current => ({ ...current, pickupMessage: '자석 룬: XP 흡수', pickupFlash: 2.4 }));
+      updateGame(current => ({
+        ...withItemPickup(current, 'magnet'),
+        pickupMessage: '자석 룬: XP 흡수',
+        pickupFlash: 2.4
+      }));
       return;
     }
 
@@ -1337,7 +2163,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       addDamageNumber(player.current.pos, `회복 +${healAmount}`, FIELD_ITEM_META.heal.color, 0.9);
       cameraShake.current = Math.max(cameraShake.current, 0.12);
       updateGame(current => ({
-        ...current,
+        ...withItemPickup(current, 'heal'),
         pickupMessage: '생명 결정: 체력 회복',
         pickupFlash: 2.4,
         stats: {
@@ -1370,7 +2196,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       addDamageNumber(player.current.pos, '과부하 8초', color, 0.98);
       cameraShake.current = Math.max(cameraShake.current, 0.22);
       updateGame(current => ({
-        ...current,
+        ...withItemPickup(current, 'overload'),
         overloadTimer: OVERLOAD_DURATION,
         pickupMessage: '과부하 룬: 무기 폭주',
         pickupFlash: 2.4
@@ -1399,7 +2225,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       });
       cameraShake.current = Math.max(cameraShake.current, 0.18);
       updateGame(current => {
-        let nextGame = current;
+        let nextGame = withItemPickup(current, 'cache');
         const boosts = [];
         const excluded = new Set();
         const boostCount = current.time < 90 ? 2 : current.time > 210 ? 3 : 2;
@@ -1463,20 +2289,25 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
     });
     addDamageNumber(player.current.pos, `정화 ${cleared}`, '#ffdf6e', 0.96);
     cameraShake.current = Math.max(cameraShake.current, 0.36);
-    updateGame(current => ({ ...current, pickupMessage: '정화 폭발: 근처 적 소멸', pickupFlash: 2.4 }));
+    updateGame(current => ({
+      ...withItemPickup(current, 'purge'),
+      pickupMessage: '정화 폭발: 근처 적 소멸',
+      pickupFlash: 2.4
+    }));
   };
 
   const updateBursts = dt => {
     hitBursts.current = hitBursts.current
       .map(burst => ({ ...burst, life: burst.life - dt }))
-      .filter(burst => burst.life > 0);
+      .filter(burst => burst.life > 0)
+      .slice(-MAX_HIT_BURSTS);
   };
 
   const updateWeaponEffects = dt => {
     weaponEffects.current = weaponEffects.current
       .map(effect => ({ ...effect, life: effect.life - dt }))
       .filter(effect => effect.life > 0)
-      .slice(-48);
+      .slice(-MAX_WEAPON_EFFECTS);
   };
 
   const updateDamageNumbers = dt => {
@@ -1488,14 +2319,14 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         pos: number.pos.clone().add(new THREE.Vector3(0, dt * 0.9, 0))
       }))
       .filter(number => number.life > 0)
-      .slice(-90);
+      .slice(-MAX_DAMAGE_NUMBERS);
   };
 
   const updateSpawnWarnings = dt => {
     spawnWarnings.current = spawnWarnings.current
       .map(warning => ({ ...warning, life: warning.life - dt }))
       .filter(warning => warning.life > 0)
-      .slice(-28);
+      .slice(-MAX_SPAWN_WARNINGS);
   };
 
   const addDamageNumber = (pos, value, color, size = 0.56) => {
@@ -1599,6 +2430,7 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       </instancedMesh>
       <GemBeacons gemsRef={xpGems} />
       <FieldPickupItems itemsRef={fieldItems} />
+      <RuneShrineSites shrinesRef={shrines} />
       <SourceProjectileInstances projectilesRef={projectiles} type="orb" url={PROJECTILE_MODEL_URLS.orb} scaleMultiplier={1.25} />
       <SourceProjectileInstances projectilesRef={projectiles} type="storm" url={PROJECTILE_MODEL_URLS.storm} scaleMultiplier={1.85} />
       <ProjectileAuraRings projectilesRef={projectiles} game={game} />
@@ -1656,18 +2488,22 @@ function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 1, mate
           const clone = item.clone();
           clone.color?.lerp(tone, 0.24);
           clone.roughness = Math.min(0.96, clone.roughness ?? 0.8);
-          clone.emissive = clone.emissive ?? new THREE.Color('#000000');
-          clone.emissive.lerp(tone, 0.18);
-          clone.emissiveIntensity = Math.max(clone.emissiveIntensity ?? 0, 0.08);
+          if ('emissive' in clone) {
+            clone.emissive = clone.emissive ?? new THREE.Color('#000000');
+            clone.emissive.lerp(tone, 0.18);
+            clone.emissiveIntensity = Math.max(clone.emissiveIntensity ?? 0, 0.08);
+          }
           return clone;
         })
         : part.material.clone();
       if (!Array.isArray(material)) {
         material.color?.lerp(tone, 0.24);
         material.roughness = Math.min(0.96, material.roughness ?? 0.8);
-        material.emissive = material.emissive ?? new THREE.Color('#000000');
-        material.emissive.lerp(tone, 0.18);
-        material.emissiveIntensity = Math.max(material.emissiveIntensity ?? 0, 0.08);
+        if ('emissive' in material) {
+          material.emissive = material.emissive ?? new THREE.Color('#000000');
+          material.emissive.lerp(tone, 0.18);
+          material.emissiveIntensity = Math.max(material.emissiveIntensity ?? 0, 0.08);
+        }
       }
       return { ...part, material };
     });
@@ -2351,6 +3187,170 @@ function FieldPickupItems({ itemsRef }) {
         <meshBasicMaterial vertexColors transparent opacity={0.38} depthWrite={false} toneMapped={false} />
       </instancedMesh>
     </>
+  );
+}
+
+function RuneShrineSites({ shrinesRef }) {
+  const coreMesh = useRef();
+  const ringMesh = useRef();
+  const chargeMesh = useRef();
+  const usedMesh = useRef();
+  const beamMesh = useRef();
+  const labels = useMemo(() => createInitialShrines(), []);
+  const scratch = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useFrame(() => {
+    const spin = performance.now() * 0.0018;
+    let activeCount = 0;
+    let usedCount = 0;
+    let beamCount = 0;
+    let chargeCount = 0;
+
+    for (const shrine of shrinesRef.current) {
+      const progress = shrine.activated ? 1 : THREE.MathUtils.clamp(shrine.channel / SHRINE_CHANNEL_TIME, 0, 1);
+      const pulse = 1 + Math.sin(shrine.pulse) * 0.06;
+      const pos = shrine.pos;
+
+      if (shrine.activated) {
+        if (usedMesh.current) {
+          scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, spin));
+          scratch.matrix.compose(
+            new THREE.Vector3(pos.x, pos.y + 0.1, pos.z),
+            scratch.quat,
+            scratch.scale.setScalar(2.4 * pulse)
+          );
+          usedMesh.current.setMatrixAt(usedCount, scratch.matrix);
+          scratch.color.set(shrine.color);
+          usedMesh.current.setColorAt(usedCount, scratch.color);
+          usedCount += 1;
+        }
+        continue;
+      }
+
+      if (coreMesh.current) {
+        scratch.quat.setFromEuler(new THREE.Euler(0.38, spin * 1.8, 0.2));
+        scratch.matrix.compose(
+          new THREE.Vector3(pos.x, pos.y + 0.82 + Math.sin(shrine.pulse) * 0.08, pos.z),
+          scratch.quat,
+          scratch.scale.setScalar(0.62 + progress * 0.26)
+        );
+        coreMesh.current.setMatrixAt(activeCount, scratch.matrix);
+        scratch.color.set(shrine.color);
+        coreMesh.current.setColorAt(activeCount, scratch.color);
+      }
+
+      if (ringMesh.current) {
+        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, spin));
+        scratch.matrix.compose(
+          new THREE.Vector3(pos.x, pos.y + 0.08, pos.z),
+          scratch.quat,
+          scratch.scale.setScalar(2.25 * pulse)
+        );
+        ringMesh.current.setMatrixAt(activeCount, scratch.matrix);
+        scratch.color.set(shrine.color);
+        ringMesh.current.setColorAt(activeCount, scratch.color);
+      }
+
+      if (beamMesh.current) {
+        scratch.quat.identity();
+        scratch.matrix.compose(
+          new THREE.Vector3(pos.x, pos.y + 1.42, pos.z),
+          scratch.quat,
+          scratch.scale.set(0.1 + progress * 0.06, 2.5 + progress * 1.2, 0.1 + progress * 0.06)
+        );
+        beamMesh.current.setMatrixAt(beamCount, scratch.matrix);
+        scratch.color.set(shrine.color);
+        beamMesh.current.setColorAt(beamCount, scratch.color);
+        beamCount += 1;
+      }
+
+      if (chargeMesh.current && progress > 0) {
+        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -spin * 2.2));
+        scratch.matrix.compose(
+          new THREE.Vector3(pos.x, pos.y + 0.13, pos.z),
+          scratch.quat,
+          scratch.scale.setScalar(1.0 + progress * 2.2)
+        );
+        chargeMesh.current.setMatrixAt(chargeCount, scratch.matrix);
+        scratch.color.set(shrine.color);
+        chargeMesh.current.setColorAt(chargeCount, scratch.color);
+        chargeCount += 1;
+      }
+
+      activeCount += 1;
+    }
+
+    if (coreMesh.current) {
+      coreMesh.current.count = activeCount;
+      coreMesh.current.instanceMatrix.needsUpdate = true;
+      if (coreMesh.current.instanceColor) coreMesh.current.instanceColor.needsUpdate = true;
+    }
+    if (ringMesh.current) {
+      ringMesh.current.count = activeCount;
+      ringMesh.current.instanceMatrix.needsUpdate = true;
+      if (ringMesh.current.instanceColor) ringMesh.current.instanceColor.needsUpdate = true;
+    }
+    if (beamMesh.current) {
+      beamMesh.current.count = beamCount;
+      beamMesh.current.instanceMatrix.needsUpdate = true;
+      if (beamMesh.current.instanceColor) beamMesh.current.instanceColor.needsUpdate = true;
+    }
+    if (chargeMesh.current) {
+      chargeMesh.current.count = chargeCount;
+      chargeMesh.current.instanceMatrix.needsUpdate = true;
+      if (chargeMesh.current.instanceColor) chargeMesh.current.instanceColor.needsUpdate = true;
+    }
+    if (usedMesh.current) {
+      usedMesh.current.count = usedCount;
+      usedMesh.current.instanceMatrix.needsUpdate = true;
+      if (usedMesh.current.instanceColor) usedMesh.current.instanceColor.needsUpdate = true;
+    }
+  });
+
+  return (
+    <group>
+      <instancedMesh ref={beamMesh} args={[null, null, SHRINE_SITES.length]} frustumCulled={false}>
+        <cylinderGeometry args={[1, 1, 1, 10, 1, true]} />
+        <meshBasicMaterial vertexColors transparent opacity={0.24} depthWrite={false} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={ringMesh} args={[null, null, SHRINE_SITES.length]} frustumCulled={false}>
+        <torusGeometry args={[1, 0.025, 8, 64]} />
+        <meshBasicMaterial vertexColors transparent opacity={0.7} depthWrite={false} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={chargeMesh} args={[null, null, SHRINE_SITES.length]} frustumCulled={false}>
+        <ringGeometry args={[0.8, 1, 64]} />
+        <meshBasicMaterial vertexColors transparent opacity={0.44} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={usedMesh} args={[null, null, SHRINE_SITES.length]} frustumCulled={false}>
+        <ringGeometry args={[0.88, 1, 6]} />
+        <meshBasicMaterial vertexColors transparent opacity={0.28} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={coreMesh} args={[null, null, SHRINE_SITES.length]} frustumCulled={false} castShadow>
+        <octahedronGeometry args={[1, 0]} />
+        <meshStandardMaterial vertexColors emissive="#ffffff" emissiveIntensity={0.42} roughness={0.18} toneMapped={false} />
+      </instancedMesh>
+      {labels.map(shrine => (
+        <Text
+          key={`shrine-label-${shrine.id}`}
+          position={[shrine.pos.x, shrine.pos.y + 2.35, shrine.pos.z]}
+          rotation={[-0.86, 0, 0]}
+          fontSize={0.52}
+          anchorX="center"
+          anchorY="middle"
+          color={shrine.color}
+          fillOpacity={0.72}
+          outlineWidth={0.025}
+          outlineColor="#07100f"
+        >
+          {shrine.label}
+        </Text>
+      ))}
+    </group>
   );
 }
 
@@ -3299,7 +4299,7 @@ function OrbitBlades({ player, game }) {
           ref={node => {
             meshRefs.current[index] = node;
           }}
-          args={[part.geometry, part.material, 8]}
+          args={[part.geometry, part.material, MAX_ORBIT_BLADES]}
           frustumCulled={false}
           castShadow
         />
@@ -3374,17 +4374,20 @@ function SpawnWarning({ warning }) {
   const progress = 1 - warning.life / warning.maxLife;
   const pulse = 1 + Math.sin(progress * Math.PI * 8) * 0.08;
   const opacity = Math.max(0, 0.75 - progress * 0.55);
+  const radius = warning.radius ?? (pulse + progress * 1.8);
+  const innerRadius = warning.radius ? Math.max(0.72, warning.radius * 0.42) : 0.75 + progress * 0.5;
+  const towerScale = warning.radius ? Math.min(2.4, 0.8 + warning.radius * 0.045) : 0.22 + progress * 0.2;
   return (
     <group position={[warning.pos.x, 0.1, warning.pos.z]}>
-      <mesh position={[0, 0.85, 0]} scale={[0.22 + progress * 0.2, 1.6 - progress * 0.55, 0.22 + progress * 0.2]}>
+      <mesh position={[0, 0.85, 0]} scale={[towerScale, 1.6 - progress * 0.55, towerScale]}>
         <cylinderGeometry args={[1, 1, 1, 16, 1, true]} />
         <meshBasicMaterial color={warning.color} transparent opacity={Math.max(0, 0.24 - progress * 0.08)} depthWrite={false} toneMapped={false} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[pulse + progress * 1.8, pulse + progress * 1.8, 1]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[radius, radius, 1]}>
         <ringGeometry args={[0.62, 0.72, 36]} />
         <meshBasicMaterial color={warning.color} transparent opacity={opacity} depthWrite={false} toneMapped={false} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} scale={[0.75 + progress * 0.5, 0.75 + progress * 0.5, 1]}>
+      <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} scale={[innerRadius, innerRadius, 1]}>
         <ringGeometry args={[0.2, 0.24, 4]} />
         <meshBasicMaterial color={warning.color} transparent opacity={opacity * 0.8} depthWrite={false} toneMapped={false} />
       </mesh>
@@ -3412,13 +4415,14 @@ function SpawnWarning({ warning }) {
   );
 }
 
-function HUD({ game, onRestart }) {
+function HUD({ game, onRestart, onPause }) {
   const hpPct = Math.max(0, game.stats.hp / game.stats.maxHp) * 100;
   const xpPct = Math.min(100, (game.xp / game.xpToNext) * 100);
   const runPct = Math.min(100, (game.time / RUN_DURATION) * 100);
   const timeRemaining = Math.max(0, RUN_DURATION - game.time);
   const waveProfile = getWaveProfile(game.wave);
   const threat = getWaveThreat(game.wave, waveProfile);
+  const combatRhythm = getCombatRhythm(game);
   const weaponStage = getWeaponStage(game);
   const weaponTone = getOrbColor(game.stats, weaponStage);
   const dominantBuild = getDominantBuild(game);
@@ -3427,9 +4431,24 @@ function HUD({ game, onRestart }) {
   const dashCooldownMax = Math.max(0.01, game.dash?.cooldownMax ?? DASH_COOLDOWN);
   const dashPct = Math.max(0, Math.min(100, (1 - dashCooldown / dashCooldownMax) * 100));
   const dashReady = game.dash?.ready ?? dashCooldown <= 0;
+  const shrineHint = getShrineHint(game);
+  const openingObjectives = getOpeningObjectives(game);
+  const completedOpeningObjectives = openingObjectives.filter(objective => objective.complete).length;
+  const activeOpeningObjectives = openingObjectives.filter(objective => !objective.complete).slice(0, 2);
+  const showOpeningObjectives = game.time < 118;
+  const onboardingSteps = getOnboardingSteps(game);
+  const activeOnboardingStep = onboardingSteps.find(step => !step.complete) ?? onboardingSteps[onboardingSteps.length - 1];
+  const completedOnboardingSteps = onboardingSteps.filter(step => step.complete).length;
+  const showOnboardingCoach = game.time < 42 && completedOnboardingSteps < onboardingSteps.length;
+  const encounterAlert = game.encounterAlertTimer > 0 ? game.encounterAlert : null;
+  const activeThreat = game.activeThreat;
+  const bossStatus = game.bossStatus;
+  const bossPatternMeta = game.lastBossPattern ? BOSS_PATTERN_META[game.lastBossPattern] : null;
+  const isThreatened = crisis.level >= 3 || bossStatus?.enraged || encounterAlert?.kind === 'boss' || encounterAlert?.kind === 'boss-pattern';
+  const activeSynergies = getBuildSynergyStates(game).filter(synergy => synergy.level > 0).slice(0, 3);
 
   return (
-    <section className="hud" aria-label="게임 상태">
+    <section className={`hud ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''}`} aria-label="게임 상태">
       <div className="topbar">
         <div className="meterBlock">
           <div className="meterLabel">
@@ -3452,19 +4471,94 @@ function HUD({ game, onRestart }) {
           </div>
           <div className="meter run"><i style={{ width: `${runPct}%` }} /></div>
         </div>
-        <button className="iconButton" type="button" onClick={onRestart} aria-label="다시 시작">↻</button>
+        <div className="hudActions">
+          <button className="iconButton" type="button" onClick={onPause} aria-label={game.phase === 'paused' ? '계속하기' : '일시정지'}>
+            {game.phase === 'paused' ? '▶' : 'Ⅱ'}
+          </button>
+          <button className="iconButton" type="button" onClick={onRestart} aria-label="다시 시작">↻</button>
+        </div>
       </div>
+      {encounterAlert && (
+        <div
+          className={`encounterBanner ${encounterAlert.kind === 'boss' || encounterAlert.kind === 'boss-pattern' ? 'isBoss' : ''}`}
+          style={{ '--tone': encounterAlert.color }}
+        >
+          <span>{encounterAlert.label}</span>
+          <strong>{encounterAlert.title}</strong>
+          <small>{encounterAlert.hint}</small>
+        </div>
+      )}
+      {showOnboardingCoach && activeOnboardingStep && (
+        <div className="onboardingCoach" style={{ '--tone': activeOnboardingStep.color }}>
+          <div className="coachHeader">
+            <span>개시 루트</span>
+            <strong>{activeOnboardingStep.title}</strong>
+            <small>{completedOnboardingSteps} / {onboardingSteps.length}</small>
+          </div>
+          <div className="coachBody">
+            <b>{activeOnboardingStep.label}</b>
+            <i style={{ width: `${activeOnboardingStep.progress * 100}%` }} />
+          </div>
+          <div className="coachSteps">
+            {onboardingSteps.map(step => (
+              <span
+                key={step.id}
+                className={`${step.complete ? 'isComplete' : ''} ${step.id === activeOnboardingStep.id ? 'isActive' : ''}`}
+                style={{ '--tone': step.color }}
+              >
+                {step.title}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {bossStatus && (
+        <div
+          className={`bossBar ${bossStatus.enraged ? 'isEnraged' : ''}`}
+          style={{ '--tone': bossStatus.phaseColor, '--pattern': bossStatus.patternColor }}
+        >
+          <div className="bossBarMeta">
+            <span>RIFT BEAST</span>
+            <strong>{bossStatus.phaseLabel}</strong>
+            <small>Wave {bossStatus.wave}</small>
+          </div>
+          <div className="bossHpTrack" aria-label="보스 체력">
+            <i style={{ width: `${bossStatus.hpPct * 100}%` }} />
+          </div>
+          <div className="bossPatternMeta">
+            <span>{bossStatus.casting ? 'CASTING' : 'NEXT'} <b>{bossStatus.patternLabel}</b></span>
+            <span>Pattern <b>{bossStatus.patternStage}</b></span>
+            <span>{bossStatus.patternHint}</span>
+          </div>
+        </div>
+      )}
       <div className="statusRow">
         <span>생존 {formatTime(game.time)}</span>
         <span>Wave {game.wave}</span>
         <span className="waveName">{waveProfile.name}</span>
+        <span className="waveTrait" style={{ '--tone': waveProfile.accent }}>
+          {waveProfile.trait} <b>{waveProfile.hint}</b>
+        </span>
+        <span className="combatRhythm">리듬 <b>{combatRhythm.label}</b></span>
         <span>위협 {threat}%</span>
         <span className={`dashStatus ${dashReady ? 'isReady' : ''}`}>
           Dash <b>{dashReady ? 'READY' : `${dashCooldown.toFixed(1)}s`}</b>
           <i style={{ width: `${dashPct}%` }} />
         </span>
         {crisis.level > 0 && <span className={`dangerMessage ${crisis.level >= 3 ? 'isCritical' : ''}`}>{crisis.label}</span>}
+        {activeThreat && (
+          <span className="weaknessHint" style={{ '--tone': activeThreat.color }}>
+            {activeThreat.label} <b>{activeThreat.weakness}</b>
+          </span>
+        )}
+        {bossPatternMeta && (
+          <span className="bossPatternHint" style={{ '--tone': bossPatternMeta.color }}>
+            보스 {bossPatternMeta.label} <b>{bossPatternMeta.hint}</b>
+          </span>
+        )}
         <span>{game.kills} KOs</span>
+        <span className="shrineStatus">제단 {game.shrineActivations ?? 0} / {SHRINE_SITES.length}</span>
+        {shrineHint && <span className="shrineHint">{shrineHint.direction} {shrineHint.distance}m {shrineHint.label}</span>}
         {game.overloadTimer > 0 && <span className="overloadMessage">과부하 {game.overloadTimer.toFixed(1)}s</span>}
         {game.pickupFlash > 0 && <span className="pickupMessage">{game.pickupMessage}</span>}
       </div>
@@ -3482,11 +4576,86 @@ function HUD({ game, onRestart }) {
           <small>{dominantBuild.perks[Math.min(dominantBuild.perks.length - 1, dominantBuild.focus - 1)]}</small>
         </div>
       )}
+      {activeSynergies.length > 0 && (
+        <div className="synergyRow" aria-label="빌드 조합">
+          {activeSynergies.map(synergy => (
+            <span key={synergy.id} style={{ '--tone': synergy.color }}>
+              {synergy.title} <b>{formatFocusLevel(synergy.level)}</b>
+            </span>
+          ))}
+        </div>
+      )}
+      {showOpeningObjectives && (
+        <div className="objectiveRow" aria-label="초반 목표">
+          <div className="objectiveSummary">
+            <span>첫 파동 목표</span>
+            <strong>{completedOpeningObjectives} / {openingObjectives.length}</strong>
+          </div>
+          {(activeOpeningObjectives.length > 0 ? activeOpeningObjectives : openingObjectives.slice(-1)).map(objective => (
+            <div
+              key={objective.id}
+              className={`objectiveCard ${objective.complete ? 'isComplete' : ''}`}
+              style={{ '--tone': objective.color }}
+            >
+              <div>
+                <span>{objective.title}</span>
+                <strong>{objective.label}</strong>
+              </div>
+              <small>{objective.displayValue} / {objective.displayTarget}</small>
+              <i style={{ width: `${objective.progress * 100}%` }} />
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PauseOverlay({ game, onResume, onRestart }) {
+  const dominantBuild = getDominantBuild(game);
+  const activeObjectives = getOpeningObjectives(game).filter(objective => !objective.complete).slice(0, 2);
+  return (
+    <section className="modalLayer pauseLayer" aria-label="게임 일시정지">
+      <div className="pausePanel">
+        <div>
+          <p className="eyebrow">Paused</p>
+          <h1>균열이 잠시 멈췄습니다</h1>
+        </div>
+        <div className="pauseStats">
+          <span>생존 <b>{formatTime(game.time)}</b></span>
+          <span>Wave <b>{game.wave}</b></span>
+          <span>KOs <b>{game.kills}</b></span>
+          <span>빌드 <b>{dominantBuild ? dominantBuild.label : '탐색 중'}</b></span>
+        </div>
+        <div className="controlGrid" aria-label="조작 안내">
+          <span><b>WASD</b> 이동</span>
+          <span><b>Space</b> 대시</span>
+          <span><b>P / Esc</b> 일시정지</span>
+          <span><b>마우스</b> 보상 선택</span>
+        </div>
+        {activeObjectives.length > 0 && (
+          <div className="pauseObjectives">
+            {activeObjectives.map(objective => (
+              <span key={objective.id} style={{ '--tone': objective.color }}>
+                {objective.label} <b>{objective.displayValue} / {objective.displayTarget}</b>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="pauseActions">
+          <button className="primaryButton" type="button" onClick={onResume}>계속하기</button>
+          <button className="secondaryButton" type="button" onClick={onRestart}>다시 시작</button>
+        </div>
+      </div>
     </section>
   );
 }
 
 function UpgradeOverlay({ game, choices, onChoose }) {
+  const synergyStates = getBuildSynergyStates(game);
+  const visibleSynergies = synergyStates
+    .filter(synergy => synergy.level > 0 || synergy.progress > 0)
+    .slice(0, 3);
   return (
     <section className="modalLayer" aria-label="레벨업 보상 선택">
       <div className="upgradePanel">
@@ -3495,21 +4664,40 @@ function UpgradeOverlay({ game, choices, onChoose }) {
           {(game.pendingUpgrades ?? 0) > 1 && <span className="upgradeQueue">보상 {game.pendingUpgrades}</span>}
         </div>
         <h1>룬을 하나 선택하세요</h1>
+        {visibleSynergies.length > 0 && (
+          <div className="upgradeSynergyStrip" aria-label="빌드 조합 후보">
+            {visibleSynergies.map(synergy => (
+              <span key={synergy.id} style={{ '--tone': synergy.color }}>
+                <strong>{synergy.title}</strong>
+                <small>{synergy.label} · {synergy.level > 0 ? `공명 ${formatFocusLevel(synergy.level)}` : '후보'}</small>
+              </span>
+            ))}
+          </div>
+        )}
         <div className="upgradeGrid">
-          {choices.map(choice => (
-            <button
-              key={choice.id}
-              className="upgradeCard"
-              type="button"
-              style={{ '--tone': getUpgradeTone(choice) }}
-              onClick={() => onChoose(choice)}
-            >
-              <em>{choice.family} / {choice.branch}</em>
-              <span>{getUpgradeDisplayTitle(game, choice)}</span>
-              <small>{choice.text}</small>
-              <b>{getUpgradeFocusPreview(game, choice)}</b>
-            </button>
-          ))}
+          {choices.map(choice => {
+            const cardMeta = getUpgradeCardMeta(game, choice);
+            return (
+              <button
+                key={choice.id}
+                className={`upgradeCard ${cardMeta.recommended ? 'isRecommended' : ''}`}
+                type="button"
+                style={{ '--tone': getUpgradeTone(choice) }}
+                onClick={() => onChoose(choice)}
+              >
+                <div className="upgradeCardMeta">
+                  <em>{choice.family} / {choice.branch}</em>
+                  <strong>{cardMeta.role}</strong>
+                </div>
+                <span>{getUpgradeDisplayTitle(game, choice)}</span>
+                <small>{choice.text}</small>
+                <div className="upgradeTags">
+                  {cardMeta.tags.map(tag => <i key={tag}>{tag}</i>)}
+                </div>
+                <b>{getUpgradeFocusPreview(game, choice)}</b>
+              </button>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -3518,6 +4706,10 @@ function UpgradeOverlay({ game, choices, onChoose }) {
 
 function EndOverlay({ game, onRestart }) {
   const didWin = game.result === 'victory';
+  const dominantBuild = getDominantBuild(game);
+  const openingObjectives = getOpeningObjectives(game);
+  const completedOpeningObjectives = openingObjectives.filter(objective => objective.complete).length;
+  const resultSummary = getRunResultSummary(game);
   return (
     <section className="modalLayer" aria-label="게임 종료">
       <div className="endPanel">
@@ -3527,6 +4719,34 @@ function EndOverlay({ game, onRestart }) {
           <span>{formatTime(game.time)}</span>
           <span>Level {game.level}</span>
           <span>{game.kills} KOs</span>
+        </div>
+        <div className="resultGrade" style={{ '--tone': resultSummary.gradeColor }}>
+          <span>Run Grade</span>
+          <strong>{resultSummary.grade}</strong>
+          <small>{resultSummary.gradeLabel}</small>
+        </div>
+        <div className="runSummary">
+          <span>첫 파동 목표 <b>{completedOpeningObjectives} / {openingObjectives.length}</b></span>
+          <span>제단 활성화 <b>{game.shrineActivations ?? 0} / {SHRINE_SITES.length}</b></span>
+          <span>정예 처치 <b>{game.eliteKills ?? 0}</b></span>
+          <span>보스 처치 <b>{game.bossKills ?? 0}</b></span>
+          <span>
+            주력 빌드 <b>{dominantBuild ? `${dominantBuild.label} ${formatFocusLevel(dominantBuild.focus)}` : '미완성'}</b>
+          </span>
+        </div>
+        <div className="resultHighlights">
+          <span style={{ '--tone': resultSummary.topWeapon.color }}>
+            최고 DPS <b>{resultSummary.topWeapon.label}</b>
+            <small>{resultSummary.topWeapon.dps} / s</small>
+          </span>
+          <span style={{ '--tone': resultSummary.synergy.color }}>
+            선호 조합 <b>{resultSummary.synergy.title}</b>
+            <small>{resultSummary.synergy.detail}</small>
+          </span>
+          <span style={{ '--tone': '#fff1a6' }}>
+            제단 보상 <b>{resultSummary.shrines}</b>
+            <small>{resultSummary.shrineLabels}</small>
+          </span>
         </div>
         <button className="primaryButton" type="button" onClick={onRestart}>다시 도전</button>
       </div>
@@ -3724,6 +4944,10 @@ function getWaveThreat(wave, waveProfile = getWaveProfile(wave)) {
   return Math.min(99, Math.round(26 + wave * 5.2 + (waveProfile.runner + waveProfile.brute) * 58));
 }
 
+function getCombatRhythm(game) {
+  return COMBAT_RHYTHM.find(phase => game.time < phase.until) ?? COMBAT_RHYTHM[COMBAT_RHYTHM.length - 1];
+}
+
 function getCrisisState(game) {
   if (game.time >= 245) return { level: 4, label: 'FINAL SURGE' };
   if (game.time >= 195) return { level: 3, label: 'ELITE SURGE' };
@@ -3732,41 +4956,50 @@ function getCrisisState(game) {
   return { level: 0, label: '' };
 }
 
+function getBossPhaseMeta(hpPct, enraged = false) {
+  if (enraged || hpPct <= 0.5) return { label: 'RAGE', color: '#ff8b72' };
+  if (hpPct <= 0.75) return { label: 'PRESSURE', color: '#fff1a6' };
+  return { label: 'OPENING', color: '#70d6ff' };
+}
+
 function getDirectorPressure(game) {
   const timePressure = game.time < 45
-    ? 0.86
+    ? 0.82
     : game.time < 90
-      ? 0.96
+      ? 0.94
       : game.time < 180
-        ? 1.02 + (game.time - 90) / 760
-        : Math.min(1.42, 1.18 + (game.time - 180) / 430);
+        ? 1 + (game.time - 90) / 820
+        : Math.min(1.36, 1.14 + (game.time - 180) / 520);
   const buildDepth = Math.max(...Object.values({ ...createEmptyBuildFocus(), ...(game.buildFocus ?? {}) }));
   const buildPressure = buildDepth >= 5 ? 0.08 : buildDepth >= 3 ? 0.05 : buildDepth >= 2 ? 0.03 : 0;
-  return Math.min(1.5, timePressure + buildPressure);
+  return Math.min(1.42, timePressure + buildPressure);
 }
 
 function getEnemyMovePressure(game) {
-  if (game.time >= 245) return 1.32;
-  if (game.time >= 195) return 1.23;
-  if (game.time >= 150) return 1.13;
-  if (game.time >= 120) return 1.04;
-  return 1;
+  const rhythm = getCombatRhythm(game);
+  if (game.time >= 245) return 1.18 * rhythm.move;
+  if (game.time >= 195) return 1.12 * rhythm.move;
+  if (game.time >= 150) return 1.06 * rhythm.move;
+  if (game.time >= 120) return 1.02 * rhythm.move;
+  return rhythm.move;
 }
 
 function getEnemyDamagePressure(game) {
-  if (game.time >= 245) return 1.8;
-  if (game.time >= 195) return 1.55;
-  if (game.time >= 150) return 1.32;
-  if (game.time >= 120) return 1.1;
-  return 1;
+  const rhythm = getCombatRhythm(game);
+  if (game.time >= 245) return 1.42 * rhythm.damage;
+  if (game.time >= 195) return 1.3 * rhythm.damage;
+  if (game.time >= 150) return 1.16 * rhythm.damage;
+  if (game.time >= 120) return 1.06 * rhythm.damage;
+  return rhythm.damage;
 }
 
 function getEnemyAbilityScale(game) {
-  if (game.time >= 245) return 0.58;
-  if (game.time >= 195) return 0.68;
-  if (game.time >= 150) return 0.8;
-  if (game.time >= 120) return 0.92;
-  return 1;
+  const rhythm = getCombatRhythm(game);
+  if (game.time >= 245) return 0.82 * rhythm.ability;
+  if (game.time >= 195) return 0.9 * rhythm.ability;
+  if (game.time >= 150) return 0.96 * rhythm.ability;
+  if (game.time >= 120) return rhythm.ability;
+  return rhythm.ability;
 }
 
 function getSpawnPositionAroundPlayer(playerPos, minDistance = 36, spread = 24) {
@@ -3835,24 +5068,35 @@ function createEnemy(wave, waveProfile = getWaveProfile(wave), playerPos = new T
   const kind = isBrute ? 'brute' : isRunner ? 'runner' : 'golem';
   const hp = (isBrute ? 84 : isRunner ? 32 : 42) + wave * (isBrute ? 8 : isRunner ? 3.8 : 4.8);
   const survivalScale = 1.1 + Math.max(0, wave - 1) * 0.05;
-  const pos = getSpawnPositionAroundPlayer(playerPos, isRunner ? 37 : isBrute ? 42 : 35, 24);
+  const affix = waveProfile.affix ?? 'scout';
+  const statMods = getWaveEnemyMods(affix, kind);
+  const pos = getSpawnPositionAroundPlayer(playerPos, (isRunner ? 37 : isBrute ? 42 : 35) + (affix === 'siege' ? 4 : 0), 24);
   const facingAngle = Math.atan2(playerPos.x - pos.x, playerPos.z - pos.z);
+  const maxHp = hp * survivalScale * statMods.hp;
   return {
     kind,
+    affix,
     pos,
-    hp: hp * survivalScale,
-    maxHp: hp * survivalScale,
-    speed: (isRunner ? 4.15 : isBrute ? 2.08 : 2.9) + wave * 0.07,
-    damage: isBrute ? 6 : isRunner ? 2.5 : 3.5,
-    radius: isBrute ? 1.08 : isRunner ? 0.62 : 0.76,
-    hitRadius: isBrute ? 1.58 : isRunner ? 1.1 : 1.28,
-    xp: isBrute ? 11 : isRunner ? 4 : 5,
-    color: isBrute ? '#e07062' : isRunner ? '#ffd75f' : '#8ee894',
+    hp: maxHp,
+    maxHp,
+    speed: ((isRunner ? 4.15 : isBrute ? 2.08 : 2.9) + wave * 0.07) * statMods.speed,
+    damage: (isBrute ? 6 : isRunner ? 2.5 : 3.5) * statMods.damage,
+    radius: (isBrute ? 1.08 : isRunner ? 0.62 : 0.76) * statMods.size,
+    hitRadius: (isBrute ? 1.58 : isRunner ? 1.1 : 1.28) * statMods.size,
+    xp: Math.ceil((isBrute ? 11 : isRunner ? 4 : 5) * statMods.xp),
+    color: getAffixEnemyColor(affix, kind),
+    canSplit: affix === 'split' && kind !== 'runner' && Math.random() < 0.52,
     flash: 0,
     facingAngle,
     wobble: Math.random() * Math.PI * 2,
     animSpeed: 4 + Math.random() * 3
   };
+}
+
+function applyCombatRhythm(enemy, rhythm = COMBAT_RHYTHM[0]) {
+  enemy.hp *= rhythm.hp;
+  enemy.maxHp *= rhythm.hp;
+  return enemy;
 }
 
 function createElite(minuteMark, wave, playerPos = new THREE.Vector3()) {
@@ -3889,6 +5133,7 @@ function createBoss(wave, playerPos = new THREE.Vector3()) {
   const hp = 280 + wave * 66;
   return {
     kind: 'boss',
+    wave,
     pos,
     hp,
     maxHp: hp,
@@ -3900,6 +5145,9 @@ function createBoss(wave, playerPos = new THREE.Vector3()) {
     color: '#ffdf6e',
     abilityTimer: 2.8,
     patternIndex: 0,
+    currentPattern: BOSS_PATTERN_ORDER[0],
+    currentPatternTimer: 0,
+    enraged: false,
     shockwaveTimer: 0,
     bossGuard: 0,
     flash: 0,
@@ -3941,6 +5189,38 @@ function createSummonedRunner(source, wave, playerPos = new THREE.Vector3(), ind
     facingAngle: Math.atan2(playerPos.x - pos.x, playerPos.z - pos.z),
     wobble: Math.random() * Math.PI * 2,
     animSpeed: 6.2
+  };
+}
+
+function createSplitRunner(source, wave, playerPos = new THREE.Vector3(), index = 0) {
+  const angle = source.wobble + index * Math.PI * 2 / 3 + Math.random() * 0.35;
+  const distance = 2.8 + Math.random() * 2.4;
+  const pos = source.pos.clone().add(new THREE.Vector3(Math.cos(angle) * distance, 0, Math.sin(angle) * distance));
+  const flat = new THREE.Vector2(pos.x, pos.z);
+  if (flat.length() > ARENA_RADIUS - 4) {
+    flat.setLength(ARENA_RADIUS - 4);
+    pos.x = flat.x;
+    pos.z = flat.y;
+  }
+  resolveStaticCollisions(pos, 0.72);
+  pos.y = getEnemyTerrainY(pos.x, pos.z);
+  return {
+    kind: 'runner',
+    affix: 'split',
+    splitSpawn: true,
+    pos,
+    hp: 12 + wave * 2.8,
+    maxHp: 12 + wave * 2.8,
+    speed: 4.8 + wave * 0.05,
+    damage: 2.2,
+    radius: 0.5,
+    hitRadius: 0.88,
+    xp: 1,
+    color: '#d8b2ff',
+    flash: 0,
+    facingAngle: Math.atan2(playerPos.x - pos.x, playerPos.z - pos.z),
+    wobble: Math.random() * Math.PI * 2,
+    animSpeed: 6.4
   };
 }
 
@@ -3987,6 +5267,7 @@ function getEnemyAccentColor(enemy) {
   if (typeof enemy === 'string') return getSpawnColor(enemy);
   if (enemy.kind === 'elite') return ELITE_ROLE_META[enemy.role]?.color ?? FIELD_ITEM_META.overload.color;
   if (enemy.kind === 'boss') return enemy.bossGuard > 0 ? BOSS_PATTERN_META.guard.color : '#ffdf6e';
+  if (enemy.affix) return getAffixEnemyColor(enemy.affix, enemy.kind);
   return getSpawnColor(enemy.kind);
 }
 
@@ -4002,6 +5283,31 @@ function getSpawnColor(kind) {
   if (kind === 'runner') return '#70d6ff';
   if (kind === 'brute') return '#ff8b72';
   return '#70f0b4';
+}
+
+function getAffixEnemyColor(affix, kind) {
+  if (affix === 'pack') return kind === 'runner' ? '#9ff7ff' : '#70d6ff';
+  if (affix === 'stone') return kind === 'brute' ? '#fff1a6' : '#c7d49a';
+  if (affix === 'split') return kind === 'runner' ? '#d8b2ff' : '#f5c7ff';
+  if (affix === 'siege') return kind === 'brute' ? '#ff8b72' : '#ffbf78';
+  return getSpawnColor(kind);
+}
+
+function getWaveEnemyMods(affix, kind) {
+  const mods = { hp: 1, speed: 1, damage: 1, size: 1, xp: 1 };
+  if (affix === 'pack' && kind === 'runner') {
+    return { hp: 0.9, speed: 1.2, damage: 1.08, size: 0.96, xp: 1.05 };
+  }
+  if (affix === 'stone') {
+    return { hp: kind === 'brute' ? 1.28 : 1.16, speed: 0.9, damage: 1.06, size: kind === 'brute' ? 1.08 : 1.02, xp: 1.14 };
+  }
+  if (affix === 'split') {
+    return { hp: 0.92, speed: 1.08, damage: 0.96, size: 0.98, xp: 1.08 };
+  }
+  if (affix === 'siege') {
+    return { hp: kind === 'brute' ? 1.18 : 1.08, speed: 1.04, damage: 1.18, size: kind === 'brute' ? 1.06 : 1, xp: 1.16 };
+  }
+  return mods;
 }
 
 function getWeaponStage(game) {
@@ -4058,7 +5364,7 @@ function getWeaponEvolutionName(stage = 0) {
 }
 
 function getBladeCount(stats, bladeFocus = 0) {
-  return Math.min(12, 2 + stats.bladeBonus + Math.floor(stats.pierce / 2) + Math.floor(bladeFocus / 2) + (stats.damage > 1.5 ? 1 : 0));
+  return Math.min(MAX_ORBIT_BLADES, 2 + stats.bladeBonus + Math.floor(stats.pierce / 2) + Math.floor(bladeFocus / 2) + (stats.damage > 1.5 ? 1 : 0));
 }
 
 function hasUpgrade(game, id) {
@@ -4094,6 +5400,168 @@ function getWeaponBuildLabel(game, family) {
     return `x${game.stats.novaRadius.toFixed(1)}`;
   }
   return stageName;
+}
+
+function createEmptyItemPickups() {
+  return { magnet: 0, purge: 0, heal: 0, overload: 0, cache: 0 };
+}
+
+function createInitialShrines() {
+  return SHRINE_SITES.map(site => {
+    const x = Math.cos(site.angle) * site.radius;
+    const z = Math.sin(site.angle) * site.radius;
+    return {
+      ...site,
+      pos: new THREE.Vector3(x, getPlayerTerrainY(x, z) + 0.06, z),
+      channel: 0,
+      activated: false,
+      prompted: false,
+      pulse: Math.random() * Math.PI * 2
+    };
+  });
+}
+
+function getItemPickupCount(game, type) {
+  return game?.itemPickups?.[type] ?? 0;
+}
+
+function withItemPickup(game, type) {
+  const itemPickups = { ...createEmptyItemPickups(), ...(game.itemPickups ?? {}) };
+  itemPickups[type] = (itemPickups[type] ?? 0) + 1;
+  return { ...game, itemPickups };
+}
+
+function withShrineActivation(game, shrineId) {
+  return {
+    ...game,
+    shrineActivations: (game.shrineActivations ?? 0) + 1,
+    activatedShrines: {
+      ...(game.activatedShrines ?? {}),
+      [shrineId]: true
+    }
+  };
+}
+
+function getShrineHint(game) {
+  if ((game.shrineActivations ?? 0) >= SHRINE_SITES.length) return null;
+  const playerPos = game.playerPos ?? { x: 0, z: 0 };
+  const activeMap = game.activatedShrines ?? {};
+  let nearest = null;
+  for (const shrine of SHRINE_SITES) {
+    if (activeMap[shrine.id]) continue;
+    const x = Math.cos(shrine.angle) * shrine.radius;
+    const z = Math.sin(shrine.angle) * shrine.radius;
+    const dx = x - playerPos.x;
+    const dz = z - playerPos.z;
+    const distance = Math.hypot(dx, dz);
+    if (!nearest || distance < nearest.distance) {
+      nearest = { ...shrine, distance, dx, dz };
+    }
+  }
+  if (!nearest) return null;
+  return {
+    label: nearest.label,
+    distance: Math.round(nearest.distance),
+    direction: formatCompassDirection(nearest.dx, nearest.dz)
+  };
+}
+
+function formatCompassDirection(dx, dz) {
+  const angle = Math.atan2(dz, dx);
+  const directions = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+  const index = Math.round(((angle + Math.PI * 2) % (Math.PI * 2)) / (Math.PI / 4)) % directions.length;
+  return directions[index];
+}
+
+function getOpeningObjectives(game) {
+  return OPENING_OBJECTIVES.map(objective => {
+    const value = Math.min(objective.target, objective.getValue(game));
+    const progress = THREE.MathUtils.clamp(value / objective.target, 0, 1);
+    return {
+      ...objective,
+      value,
+      progress,
+      complete: progress >= 1,
+      displayValue: objective.id === 'first-surge' ? `${Math.floor(value)}s` : Math.floor(value),
+      displayTarget: objective.id === 'first-surge' ? `${objective.target}s` : objective.target
+    };
+  });
+}
+
+function getOnboardingSteps(game) {
+  return ONBOARDING_STEPS.map(step => {
+    const value = Math.min(step.target, step.getValue(game));
+    const progress = THREE.MathUtils.clamp(value / step.target, 0, 1);
+    return {
+      ...step,
+      value,
+      progress,
+      complete: progress >= 1,
+      displayValue: step.id === 'move' ? Math.floor(value) : Math.ceil(value),
+      displayTarget: step.target
+    };
+  });
+}
+
+function createEmptyRunStats() {
+  return {
+    totalDamage: 0,
+    damageBySource: Object.fromEntries(Object.keys(DAMAGE_SOURCE_META).map(source => [source, 0]))
+  };
+}
+
+function getTopDamageSource(game) {
+  const damageBySource = { ...createEmptyRunStats().damageBySource, ...(game?.runStats?.damageBySource ?? {}) };
+  const [source, damage] = Object.entries(damageBySource)
+    .filter(([key]) => key !== 'generic')
+    .sort((a, b) => b[1] - a[1])[0] ?? ['generic', 0];
+  const meta = DAMAGE_SOURCE_META[source] ?? DAMAGE_SOURCE_META.generic;
+  const dps = game?.time > 0 ? damage / Math.max(1, game.time) : 0;
+  return {
+    source,
+    damage,
+    dps: dps.toFixed(1),
+    ...meta
+  };
+}
+
+function getRunGrade(game) {
+  const survivalScore = Math.min(40, game.time / RUN_DURATION * 40);
+  const killScore = Math.min(24, (game.kills ?? 0) / 180 * 24);
+  const bossScore = Math.min(16, (game.bossKills ?? 0) * 8 + (game.eliteKills ?? 0) * 2);
+  const shrineScore = Math.min(10, (game.shrineActivations ?? 0) / SHRINE_SITES.length * 10);
+  const synergyScore = Math.min(10, getBuildSynergyStates(game).filter(synergy => synergy.level > 0).length * 4);
+  const total = survivalScore + killScore + bossScore + shrineScore + synergyScore;
+  if (total >= 88) return { grade: 'S', label: '균열 지배', color: '#fff1a6' };
+  if (total >= 74) return { grade: 'A', label: '전투 완성', color: '#73fbd3' };
+  if (total >= 58) return { grade: 'B', label: '빌드 성립', color: '#70d6ff' };
+  if (total >= 42) return { grade: 'C', label: '성장 중', color: '#d8b2ff' };
+  return { grade: 'D', label: '재정비 필요', color: '#ff8b72' };
+}
+
+function getActivatedShrineLabels(game) {
+  const activated = game?.activatedShrines ?? {};
+  const labels = SHRINE_SITES
+    .filter(shrine => activated[shrine.id])
+    .map(shrine => shrine.label);
+  return labels.length > 0 ? labels.join(' · ') : '미활성';
+}
+
+function getRunResultSummary(game) {
+  const topWeapon = getTopDamageSource(game);
+  const synergy = getBuildSynergyStates(game).find(item => item.level > 0);
+  const grade = getRunGrade(game);
+  return {
+    grade: grade.grade,
+    gradeLabel: grade.label,
+    gradeColor: grade.color,
+    topWeapon,
+    synergy: synergy
+      ? { ...synergy, detail: `${synergy.label} ${formatFocusLevel(synergy.level)}` }
+      : { title: '미완성', label: '조합 없음', detail: '다음 런에서 조합 완성', color: '#d8b2ff' },
+    shrines: `${game.shrineActivations ?? 0} / ${SHRINE_SITES.length}`,
+    shrineLabels: getActivatedShrineLabels(game)
+  };
 }
 
 function createEmptyBuildFocus() {
@@ -4136,6 +5604,51 @@ function getDominantBuild(game) {
   return { key, focus, ...BUILD_FOCUS_META[key] };
 }
 
+function getSynergyLevelFromFocus(game, synergy, focusMap = game?.buildFocus) {
+  const focus = { ...createEmptyBuildFocus(), ...(focusMap ?? {}) };
+  if (synergy.id === 'orb-pierce') {
+    const pierceRanks = getUpgradePickCount(game, 'pierce') + getUpgradePickCount(game, 'orb-lance');
+    return Math.min(4, Math.max(0, focus.orb - 1) + pierceRanks);
+  }
+  return Math.min(4, ...synergy.keys.map(key => focus[key] ?? 0));
+}
+
+function getSynergyLevel(game, synergyId) {
+  const synergy = BUILD_SYNERGIES.find(item => item.id === synergyId);
+  return synergy ? getSynergyLevelFromFocus(game, synergy) : 0;
+}
+
+function getBuildSynergyStates(game) {
+  const focus = { ...createEmptyBuildFocus(), ...(game?.buildFocus ?? {}) };
+  return BUILD_SYNERGIES.map(synergy => {
+    const level = getSynergyLevelFromFocus(game, synergy, focus);
+    const progress = synergy.id === 'orb-pierce'
+      ? Math.min(1, (focus.orb + getUpgradePickCount(game, 'pierce') + getUpgradePickCount(game, 'orb-lance')) / 3)
+      : Math.min(1, synergy.keys.reduce((sum, key) => sum + Math.min(2, focus[key] ?? 0), 0) / (synergy.keys.length * 2));
+    return { ...synergy, level, progress };
+  }).sort((a, b) => (b.level - a.level) || (b.progress - a.progress));
+}
+
+function getUpgradeSynergyMatches(game, upgrade) {
+  const key = getUpgradeFocusKey(upgrade);
+  const nextFocus = applyBuildFocus(game?.buildFocus, key);
+  return BUILD_SYNERGIES
+    .map(synergy => {
+      const currentLevel = getSynergyLevelFromFocus(game, synergy);
+      let nextLevel = getSynergyLevelFromFocus(game, synergy, nextFocus);
+      if (synergy.id === 'orb-pierce' && (upgrade.id === 'pierce' || upgrade.id === 'orb-lance')) {
+        nextLevel = Math.min(4, nextLevel + 1);
+      }
+      return { ...synergy, currentLevel, nextLevel };
+    })
+    .filter(synergy => {
+      if (synergy.nextLevel > synergy.currentLevel) return true;
+      if (synergy.id === 'orb-pierce' && (upgrade.id === 'pierce' || upgrade.id === 'orb-lance')) return true;
+      return key && synergy.keys.includes(key) && synergy.currentLevel > 0;
+    })
+    .sort((a, b) => (b.nextLevel - b.currentLevel) - (a.nextLevel - a.currentLevel));
+}
+
 function getUpgradeTone(upgrade) {
   const key = getUpgradeFocusKey(upgrade);
   return key ? BUILD_FOCUS_META[key].color : '#fff1a6';
@@ -4143,10 +5656,77 @@ function getUpgradeTone(upgrade) {
 
 function getUpgradeFocusPreview(game, upgrade) {
   const key = getUpgradeFocusKey(upgrade);
+  const synergy = getUpgradeSynergyMatches(game, upgrade)[0];
+  if (synergy && synergy.nextLevel > synergy.currentLevel) {
+    return `${synergy.title} ${formatFocusLevel(synergy.nextLevel)} - ${synergy.bonus}`;
+  }
   if (!key) return '공용 강화';
   const focus = getBuildFocus(game, key) + 1;
   const meta = BUILD_FOCUS_META[key];
   return `${meta.title} ${formatFocusLevel(focus)} - ${meta.perks[Math.min(meta.perks.length - 1, focus - 1)]}`;
+}
+
+function getUpgradeCardMeta(game, upgrade) {
+  const key = getUpgradeFocusKey(upgrade);
+  const dominant = getDominantBuild(game);
+  const focus = key ? getBuildFocus(game, key) : 0;
+  const pickCount = getUpgradePickCount(game, upgrade.id);
+  const synergyMatches = getUpgradeSynergyMatches(game, upgrade);
+  const primarySynergy = synergyMatches[0];
+  const improvesSynergy = primarySynergy ? primarySynergy.nextLevel > primarySynergy.currentLevel : false;
+  const tags = [];
+  let role = WEAPON_UPGRADE_IDS.has(upgrade.id) ? '무기 성장' : '공용 강화';
+
+  if (improvesSynergy) {
+    role = '조합 완성';
+    tags.push(primarySynergy.title);
+  } else if (primarySynergy) {
+    role = '조합 강화';
+    tags.push(primarySynergy.label);
+  } else if (key && dominant?.key === key && dominant.focus >= 1) {
+    role = '주력 강화';
+    tags.push('시너지');
+  } else if (key && focus === 0) {
+    role = '새 빌드';
+    tags.push('선택지 확장');
+  } else if (key) {
+    role = '집중 강화';
+    tags.push('빌드 집중');
+  }
+
+  if (upgrade.id === 'maxHp' || upgrade.id === 'dash' || upgrade.id === 'speed') {
+    role = '생존';
+    tags.push('안정');
+  }
+  if (upgrade.id === 'magnet' || upgrade.id === 'luck') {
+    role = '성장';
+    tags.push('XP 가속');
+  }
+  if (upgrade.id === 'damage' || upgrade.id === 'cooldown') {
+    role = '공용 화력';
+    tags.push('전체 무기');
+  }
+
+  if (pickCount > 0) tags.push(`Rank ${formatFocusLevel(pickCount + 1)}`);
+  if (key && focus + 1 >= 3) tags.push('각성 임박');
+  if (improvesSynergy) tags.push(`공명 ${formatFocusLevel(primarySynergy.nextLevel)}`);
+  if (upgrade.id === 'heal' || (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.7)) tags.push('위기 대응');
+  if (tags.length < 2) tags.push(upgrade.branch);
+
+  const recommended = Boolean(
+    improvesSynergy
+    || (key && dominant?.key === key && dominant.focus >= 2)
+    || (key && focus === 0 && game.level <= 5)
+    || (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.72)
+    || (upgrade.id === 'magnet' && game.level <= 4)
+    || ((upgrade.id === 'damage' || upgrade.id === 'cooldown') && game.upgrades.length >= 4)
+  );
+
+  return {
+    role,
+    recommended,
+    tags: [...new Set(tags)].slice(0, 3)
+  };
 }
 
 function getUpgradePickCount(game, id) {
@@ -4212,7 +5792,9 @@ function getUpgradeWeight(game, upgrade) {
 
   if (key) {
     const focus = getBuildFocus(game, key);
+    const synergyDelta = getUpgradeSynergyMatches(game, upgrade).some(synergy => synergy.nextLevel > synergy.currentLevel);
     weight += focus * 0.48;
+    if (synergyDelta) weight += 1.7;
     if (dominant?.key === key) weight += 1.15;
     if (focus === 0 && game.level <= 8) weight += 1.05;
     if (game.level <= 5 && (key === 'orb' || key === 'storm' || key === 'chain' || key === 'nova')) weight += 0.34;
@@ -4253,6 +5835,7 @@ function pickUpgrades(game) {
   if (dominant?.focus >= 2) {
     addDraftChoice(choices, weaponChoices.filter(upgrade => getUpgradeFocusKey(upgrade) === dominant.key), game);
   }
+  addDraftChoice(choices, weaponChoices.filter(upgrade => getUpgradeSynergyMatches(game, upgrade).some(synergy => synergy.nextLevel > synergy.currentLevel)), game);
   if (game.level <= 8) {
     for (let index = 0; index < 2; index += 1) {
       addDraftChoice(choices, weaponChoices.filter(upgrade => {

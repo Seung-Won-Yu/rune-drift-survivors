@@ -7,6 +7,7 @@ export default defineConfig({
   base: process.env.GITHUB_PAGES === 'true' ? `/${repositoryName}/` : '/',
   plugins: [react()],
   build: {
+    chunkSizeWarningLimit: 900,
     rollupOptions: {
       output: {
         manualChunks(id) {

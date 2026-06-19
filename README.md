@@ -1,66 +1,54 @@
 # Rune Drift Survivors
 
-<p align="center">
-  <strong>3D vampire-survivors-like auto-combat roguelite built for the web.</strong>
-</p>
+3D browser survivors game prototype built with React, Three.js, React Three Fiber, and Vite.
 
-<p align="center">
-  <a href="https://seung-won-yu.github.io/rune-drift-survivors/"><strong>Play on GitHub Pages</strong></a>
-</p>
-
-<p align="center">
-  <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?style=flat-square">
-  <img alt="Three.js" src="https://img.shields.io/badge/Three.js-0.181-black?style=flat-square">
-  <img alt="React Three Fiber" src="https://img.shields.io/badge/React%20Three%20Fiber-9.4-73fbd3?style=flat-square">
-  <img alt="Vite" src="https://img.shields.io/badge/Vite-7.3-646cff?style=flat-square">
-  <img alt="GitHub Pages" src="https://img.shields.io/badge/Deploy-GitHub%20Pages-ffdf6e?style=flat-square">
-</p>
-
-## Overview
-
-Rune Drift Survivors is a browser-playable 3D survivors-like prototype inspired by games such as Vampire Survivors and Megabonk.
-
-The current slice focuses on a fast 5-minute run: move through a wide rune ruin field, survive enemy waves, collect XP, pick upgrades, evolve weapons, and use field items at the right moment.
-
-## Live Build
-
-Play the GitHub Pages build here:
+Play:
 
 ```txt
 https://seung-won-yu.github.io/rune-drift-survivors/
 ```
 
-If the link is not active yet, push this project to a GitHub repository named `rune-drift-survivors` and enable GitHub Pages with `GitHub Actions` as the source. The included workflow publishes every push to `main`.
+## Game
 
-## Features
+Rune Drift Survivors is a short 5-minute auto-combat roguelite run.
 
-- 3D auto-combat loop built with React Three Fiber and Three.js.
-- 5-minute survivor run structure with escalating waves.
-- Multiple weapon families: rune orb, storm brand, orbit blade, chain lightning, and solar nova.
-- Level-up choices with build focus and visual weapon progression.
-- Field items such as magnet, purge, heal, overload, and armory cache.
-- Dash with cooldown and short invulnerability.
-- Open-field ruin map with cliffs, blockers, relic landmarks, trees, rocks, and rune lighting.
-- Enemy roles for normal mobs, runners, brutes, elites, and boss-style threats.
-- Rune-stone HUD, level-up cards, and result screen styling.
+You move through a rune ruin field, dodge pressure, collect XP, claim field items, choose upgrades, form weapon synergies, fight elites and bosses, then review your run result.
+
+## Current Features
+
+- 3D open-field arena with terrain, blockers, ruins, trees, rocks, and rune lighting.
+- First-run onboarding for movement, dash, XP pickup, and armory cache.
+- Wave pacing with combat rhythm phases and escalating threat.
+- Auto-combat weapons:
+  - rune orb
+  - storm brand
+  - orbit blade
+  - chain lightning
+  - solar nova
+- Build synergies:
+  - storm + lightning
+  - blade + solar nova
+  - rune orb + pierce
+- Field items:
+  - magnet
+  - purge
+  - heal
+  - overload
+  - armory cache
+- Elite and boss encounters with alerts, boss HP bar, pattern state, and rage phase.
+- Pause, upgrade, and result overlays.
+- Run result summary with grade, top DPS weapon, preferred build, shrine rewards, elite kills, and boss kills.
+- Mobile HUD and modal layout pass.
+- Runtime caps for enemies, projectiles, XP gems, damage numbers, and effects.
 
 ## Controls
 
-| Action | Key |
+| Action | Input |
 | --- | --- |
 | Move | `WASD` or arrow keys |
 | Dash | `Space` |
-| Restart | `↻` button |
-
-## Tech Stack
-
-| Area | Tools |
-| --- | --- |
-| App | React 19, Vite |
-| 3D | Three.js, React Three Fiber, Drei |
-| Effects | React Three Postprocessing |
-| Assets | GLB models, Blender source files, CC0/compatible asset packs |
-| Deployment | GitHub Actions, GitHub Pages |
+| Pause | `P`, `Esc`, or pause button |
+| Restart | restart button |
 
 ## Local Development
 
@@ -70,106 +58,93 @@ Install dependencies:
 npm install
 ```
 
-Run the development server:
+Run locally:
 
 ```bash
 npm run dev
 ```
 
-Build a production bundle:
+Build:
 
 ```bash
 npm run build
 ```
 
-Preview the production build locally:
+Preview the production build:
 
 ```bash
 npm run preview
 ```
 
-## GitHub Pages Deployment
+## GitHub Pages
 
-This repository includes `.github/workflows/deploy.yml`.
+Deployment is handled by `.github/workflows/deploy.yml`.
 
-To publish the game:
-
-1. Create a GitHub repository named `rune-drift-survivors`.
-2. Push this project to the `main` branch.
-3. Open the repository on GitHub.
-4. Go to `Settings` -> `Pages`.
-5. Set `Source` to `GitHub Actions`.
-6. Wait for the `Deploy web game` workflow to finish.
-
-The game will be available at:
-
-```txt
-https://seung-won-yu.github.io/rune-drift-survivors/
-```
-
-If you rename the repository, the deployed path changes to:
-
-```txt
-https://seung-won-yu.github.io/<repository-name>/
-```
-
-## Project Structure
-
-```txt
-rune-drift-survivors/
-├─ .github/workflows/       # GitHub Pages deployment workflow
-├─ assets/                  # Blender sources, references, and source asset notes
-├─ docs/                    # Project structure and internal documentation
-├─ public/models/           # Runtime GLB assets loaded by the game
-├─ scripts/                 # Asset conversion and Blender generation scripts
-├─ src/
-│  ├─ config/assets.js      # Runtime asset manifest
-│  ├─ main.jsx              # Game loop, combat, map, entities, and HUD
-│  └─ styles.css            # Shell, HUD, modal, and game UI styling
-├─ index.html
-├─ package.json
-└─ vite.config.js
-```
-
-## Asset Pipeline
-
-The project uses a mix of downloaded CC0-compatible model packs and local Blender-authored assets.
-
-Useful asset commands:
+On every push to `main`, GitHub Actions runs:
 
 ```bash
-npm run assets:gltf-to-glb
+npm ci
+GITHUB_PAGES=true npm run build
 ```
 
-Primary source notes live in:
+Then it publishes `dist/` to GitHub Pages.
+
+Important: model URLs use `import.meta.env.BASE_URL`, so the game works under the GitHub Pages subpath:
+
+```txt
+/rune-drift-survivors/
+```
+
+## Runtime Files
+
+Files needed for the deployed game:
+
+```txt
+index.html
+package.json
+package-lock.json
+vite.config.js
+src/
+public/models/
+.github/workflows/deploy.yml
+```
+
+The tracked `public/models/` files are the runtime GLB assets loaded by the game.
+
+## Ignored Local Files
+
+These are intentionally not committed:
+
+```txt
+node_modules/
+dist/
+.playwright-cli/
+output/
+.tools/
+assets/source/
+assets/archive/
+assets/blender/*.blend
+*.blend1
+```
+
+Blender source files can stay on the local machine, but the web game does not need them to run.
+
+## QA Notes
+
+Recent checks:
+
+- `npm run build` passes.
+- GitHub Pages build mode passes with `GITHUB_PAGES=true npm run build`.
+- Mobile 390x844 HUD, pause, upgrade, boss, result, and stress screens verified.
+- Stress scenario verified with enemies, projectiles, XP gems, and effects near runtime caps.
+- Console errors and warnings were checked during Playwright smoke tests.
+
+## Asset Notes
+
+Source and license notes live in:
 
 ```txt
 assets/references/asset-sources.md
 ```
 
-The rune drifter character can be regenerated from Blender:
-
-```bash
-/Applications/Blender.app/Contents/MacOS/Blender --factory-startup --background --python scripts/blender/create_rune_drifter.py
-```
-
-## Current Direction
-
-The prototype is being developed toward a high-quality 3D survivors-like:
-
-- wider open-field maps with meaningful terrain height and blockers,
-- clearer monster hierarchy and wave identity,
-- stronger weapon evolution feedback,
-- more readable pickups and XP flow,
-- higher-grade rune ruin art direction,
-- more satisfying 5-minute run pacing.
-
-## Credits
-
-This project uses and reshapes free/compatible game assets as source material.
-
-- Quaternius model packs
-- Kenney game asset packs
-- Local Blender-authored edits and generated GLB outputs
-
-See `assets/references/asset-sources.md` for the working source list and licensing notes.
+The game uses compatible/free asset sources plus local Blender-authored runtime GLB outputs.
