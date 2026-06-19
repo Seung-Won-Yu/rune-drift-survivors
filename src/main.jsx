@@ -15,16 +15,17 @@ const DASH_SPEED = 22;
 const DASH_TIME = 0.2;
 const DASH_COOLDOWN = 1.15;
 const PLAYER_RADIUS = 0.58;
-const MAX_ENEMIES = 168;
+const MAX_ENEMIES = 140;
 const WAVE_DURATION = 22;
-const MAX_FIELD_ITEMS = 22;
-const MAX_XP_GEMS = 480;
-const MAX_PROJECTILES = 230;
-const MAX_HIT_BURSTS = 86;
-const MAX_WEAPON_EFFECTS = 42;
-const MAX_DAMAGE_NUMBERS = 72;
-const MAX_SPAWN_WARNINGS = 24;
+const MAX_FIELD_ITEMS = 16;
+const MAX_XP_GEMS = 340;
+const MAX_PROJECTILES = 170;
+const MAX_HIT_BURSTS = 56;
+const MAX_WEAPON_EFFECTS = 30;
+const MAX_DAMAGE_NUMBERS = 44;
+const MAX_SPAWN_WARNINGS = 14;
 const MAX_ORBIT_BLADES = 12;
+const STATE_SYNC_INTERVAL = 0.08;
 const OVERLOAD_DURATION = 8;
 const XP_BASE_MAGNET_RADIUS = 8.2;
 const XP_PICKUP_RADIUS = 1.3;
@@ -692,8 +693,15 @@ function App() {
         setGame(createInitialGame());
       }
     };
-    if (new URLSearchParams(window.location.search).get('qa') === 'upgrade') {
+    const qaMode = new URLSearchParams(window.location.search).get('qa');
+    if (qaMode === 'upgrade') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.upgrade(), 120);
+    } else if (qaMode === 'stress') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.stress({
+        enemies: MAX_ENEMIES - 6,
+        projectiles: MAX_PROJECTILES - 12,
+        gems: MAX_XP_GEMS - 24
+      }), 120);
     }
     return () => {
       delete window.__RUNE_DRIFT_QA__;
@@ -769,13 +777,15 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
   const gemMesh = useRef();
   const playerMesh = useRef();
   const weaponEffects = useRef([]);
+  const stateSyncElapsed = useRef(0);
   const cameraTarget = useRef(new THREE.Vector3());
   const cameraShake = useRef(0);
   const scratch = useMemo(() => ({
     matrix: new THREE.Matrix4(),
     color: new THREE.Color(),
     scale: new THREE.Vector3(),
-    quat: new THREE.Quaternion()
+    quat: new THREE.Quaternion(),
+    vec: new THREE.Vector3()
   }), []);
 
   useEffect(() => {
@@ -958,41 +968,47 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.033);
     if (game.phase !== 'playing') {
+      stateSyncElapsed.current = 0;
       renderInstances();
       return;
     }
 
-    setGame(current => {
-      const nextTime = current.time + dt;
-      const nextWave = Math.max(1, Math.floor(nextTime / WAVE_DURATION) + 1);
-      const pickupFlash = Math.max(0, (current.pickupFlash ?? 0) - dt);
-      const encounterAlertTimer = Math.max(0, (current.encounterAlertTimer ?? 0) - dt);
-      const dashCooldownMax = DASH_COOLDOWN * current.stats.dashCooldown;
-      const movementDelta = player.current.vel.length() > 0.1 ? player.current.vel.length() * dt : 0;
-      const basePatch = {
-        time: Math.min(nextTime, RUN_DURATION),
-        wave: nextWave,
-        pickupFlash,
-        pickupMessage: pickupFlash > 0 ? current.pickupMessage : '',
-        encounterAlertTimer,
-        encounterAlert: encounterAlertTimer > 0 ? current.encounterAlert : null,
-        bossStatus: getBossStatusSnapshot(),
-        runStats: getRunStatsSnapshot(),
-        overloadTimer: Math.max(0, (current.overloadTimer ?? 0) - dt),
-        onboardingMovement: Math.min(120, (current.onboardingMovement ?? 0) + movementDelta),
-        playerPos: { x: player.current.pos.x, z: player.current.pos.z },
-        dash: {
-          cooldown: Math.min(dashCooldownMax, player.current.dashCd),
-          cooldownMax: dashCooldownMax,
-          active: player.current.dashTimer,
-          ready: player.current.dashCd <= 0
+    stateSyncElapsed.current += dt;
+    if (stateSyncElapsed.current >= STATE_SYNC_INTERVAL || game.time + stateSyncElapsed.current >= RUN_DURATION) {
+      const elapsed = stateSyncElapsed.current;
+      stateSyncElapsed.current = 0;
+      setGame(current => {
+        const nextTime = current.time + elapsed;
+        const nextWave = Math.max(1, Math.floor(nextTime / WAVE_DURATION) + 1);
+        const pickupFlash = Math.max(0, (current.pickupFlash ?? 0) - elapsed);
+        const encounterAlertTimer = Math.max(0, (current.encounterAlertTimer ?? 0) - elapsed);
+        const dashCooldownMax = DASH_COOLDOWN * current.stats.dashCooldown;
+        const movementDelta = player.current.vel.length() > 0.1 ? player.current.vel.length() * elapsed : 0;
+        const basePatch = {
+          time: Math.min(nextTime, RUN_DURATION),
+          wave: nextWave,
+          pickupFlash,
+          pickupMessage: pickupFlash > 0 ? current.pickupMessage : '',
+          encounterAlertTimer,
+          encounterAlert: encounterAlertTimer > 0 ? current.encounterAlert : null,
+          bossStatus: getBossStatusSnapshot(),
+          runStats: getRunStatsSnapshot(),
+          overloadTimer: Math.max(0, (current.overloadTimer ?? 0) - elapsed),
+          onboardingMovement: Math.min(120, (current.onboardingMovement ?? 0) + movementDelta),
+          playerPos: { x: player.current.pos.x, z: player.current.pos.z },
+          dash: {
+            cooldown: Math.min(dashCooldownMax, player.current.dashCd),
+            cooldownMax: dashCooldownMax,
+            active: player.current.dashTimer,
+            ready: player.current.dashCd <= 0
+          }
+        };
+        if (nextTime >= RUN_DURATION) {
+          return { ...current, ...basePatch, phase: 'ended', result: 'victory' };
         }
-      };
-      if (nextTime >= RUN_DURATION) {
-        return { ...current, ...basePatch, phase: 'ended', result: 'victory' };
-      }
-      return { ...current, ...basePatch };
-    });
+        return { ...current, ...basePatch };
+      });
+    }
 
     updatePlayer(dt, game.stats, setGame);
     updateSpawning(dt, game, setGame);
@@ -1503,11 +1519,17 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
       }
     }
 
-    projectiles.current = projectiles.current.filter(projectile => {
+    let projectileWrite = 0;
+    for (const projectile of projectiles.current) {
       projectile.life -= dt;
       projectile.pos.addScaledVector(projectile.vel, dt);
-      return projectile.life > 0 && projectile.pierce >= 0 && !hitsStaticCollider(projectile.pos, projectile.radius * 0.55);
-    }).slice(-MAX_PROJECTILES);
+      if (projectile.life <= 0 || projectile.pierce < 0 || hitsStaticCollider(projectile.pos, projectile.radius * 0.55)) continue;
+      if (projectileWrite < MAX_PROJECTILES) {
+        projectiles.current[projectileWrite] = projectile;
+        projectileWrite += 1;
+      }
+    }
+    projectiles.current.length = projectileWrite;
   };
 
   const damagePlayer = (amount, updateGame, invuln = 0.62) => {
@@ -1919,23 +1941,29 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
   const updateGems = (dt, currentGame, updateGame, levelUp) => {
     const playerPos = player.current.pos;
     let gained = 0;
-    xpGems.current = xpGems.current.filter(gem => {
+    const gemCount = xpGems.current.length;
+    let gemWrite = 0;
+    for (const gem of xpGems.current) {
       gem.pulse += dt * 5;
       const distance = gem.pos.distanceTo(playerPos);
       const passiveReach = Math.min(18, currentGame.level * 0.32 + currentGame.time * 0.052);
-      const crowdReach = xpGems.current.length > 170 ? Math.min(10, (xpGems.current.length - 170) * 0.04) : 0;
+      const crowdReach = gemCount > 170 ? Math.min(10, (gemCount - 170) * 0.04) : 0;
       const magnetDistance = gem.magnetized ? 190 : XP_BASE_MAGNET_RADIUS * currentGame.stats.magnet + passiveReach + crowdReach;
       if (distance < magnetDistance && distance > 0.001) {
-        const pull = playerPos.clone().sub(gem.pos).setY(0).normalize();
+        const pull = scratch.vec.copy(playerPos).sub(gem.pos).setY(0).normalize();
         const pullSpeed = gem.magnetized ? 44 + Math.min(110, distance * 1.35) : 12 + magnetDistance * 1.65;
         gem.pos.addScaledVector(pull, dt * pullSpeed);
       }
       if (distance < XP_PICKUP_RADIUS) {
         gained += gem.value * currentGame.stats.xpGain;
-        return false;
+        continue;
       }
-      return true;
-    });
+      if (gemWrite < MAX_XP_GEMS) {
+        xpGems.current[gemWrite] = gem;
+        gemWrite += 1;
+      }
+    }
+    xpGems.current.length = gemWrite;
 
     if (gained > 0) {
       updateGame(current => {
@@ -2006,19 +2034,24 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
         : Math.max(4.8, 11.5 - currentGame.wave * 0.26 + Math.random() * 3.6);
     }
 
-    fieldItems.current = fieldItems.current
-      .map(item => ({ ...item, pulse: item.pulse + dt * 4.2, life: item.life - dt }))
-      .filter(item => {
-        if (item.life <= 0) return false;
-        const distance = item.pos.distanceTo(player.current.pos);
-        if (distance < FIELD_ITEM_ATTRACT_RADIUS && distance > 0.001) {
-          const pull = player.current.pos.clone().sub(item.pos).setY(0).normalize();
-          item.pos.addScaledVector(pull, dt * (6.2 + (FIELD_ITEM_ATTRACT_RADIUS - distance) * 1.35));
-        }
-        if (distance > FIELD_ITEM_PICKUP_RADIUS) return true;
+    let itemWrite = 0;
+    for (const item of fieldItems.current) {
+      item.pulse += dt * 4.2;
+      item.life -= dt;
+      if (item.life <= 0) continue;
+      const distance = item.pos.distanceTo(player.current.pos);
+      if (distance < FIELD_ITEM_ATTRACT_RADIUS && distance > 0.001) {
+        const pull = scratch.vec.copy(player.current.pos).sub(item.pos).setY(0).normalize();
+        item.pos.addScaledVector(pull, dt * (6.2 + (FIELD_ITEM_ATTRACT_RADIUS - distance) * 1.35));
+      }
+      if (distance <= FIELD_ITEM_PICKUP_RADIUS) {
         applyFieldItem(item, currentGame, updateGame);
-        return false;
-      });
+        continue;
+      }
+      fieldItems.current[itemWrite] = item;
+      itemWrite += 1;
+    }
+    fieldItems.current.length = itemWrite;
   };
 
   const updateShrines = (dt, currentGame, updateGame) => {
@@ -2322,36 +2355,57 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
   };
 
   const updateBursts = dt => {
-    hitBursts.current = hitBursts.current
-      .map(burst => ({ ...burst, life: burst.life - dt }))
-      .filter(burst => burst.life > 0)
-      .slice(-MAX_HIT_BURSTS);
+    let write = 0;
+    for (const burst of hitBursts.current) {
+      burst.life -= dt;
+      if (burst.life <= 0) continue;
+      if (write < MAX_HIT_BURSTS) {
+        hitBursts.current[write] = burst;
+        write += 1;
+      }
+    }
+    hitBursts.current.length = write;
   };
 
   const updateWeaponEffects = dt => {
-    weaponEffects.current = weaponEffects.current
-      .map(effect => ({ ...effect, life: effect.life - dt }))
-      .filter(effect => effect.life > 0)
-      .slice(-MAX_WEAPON_EFFECTS);
+    let write = 0;
+    for (const effect of weaponEffects.current) {
+      effect.life -= dt;
+      if (effect.life <= 0) continue;
+      if (write < MAX_WEAPON_EFFECTS) {
+        weaponEffects.current[write] = effect;
+        write += 1;
+      }
+    }
+    weaponEffects.current.length = write;
   };
 
   const updateDamageNumbers = dt => {
-    damageNumbers.current = damageNumbers.current
-      .map(number => ({
-        ...number,
-        life: number.life - dt,
-        age: number.age + dt,
-        pos: number.pos.clone().add(new THREE.Vector3(0, dt * 0.9, 0))
-      }))
-      .filter(number => number.life > 0)
-      .slice(-MAX_DAMAGE_NUMBERS);
+    let write = 0;
+    for (const number of damageNumbers.current) {
+      number.life -= dt;
+      if (number.life <= 0) continue;
+      number.age += dt;
+      number.pos.y += dt * 0.9;
+      if (write < MAX_DAMAGE_NUMBERS) {
+        damageNumbers.current[write] = number;
+        write += 1;
+      }
+    }
+    damageNumbers.current.length = write;
   };
 
   const updateSpawnWarnings = dt => {
-    spawnWarnings.current = spawnWarnings.current
-      .map(warning => ({ ...warning, life: warning.life - dt }))
-      .filter(warning => warning.life > 0)
-      .slice(-MAX_SPAWN_WARNINGS);
+    let write = 0;
+    for (const warning of spawnWarnings.current) {
+      warning.life -= dt;
+      if (warning.life <= 0) continue;
+      if (write < MAX_SPAWN_WARNINGS) {
+        spawnWarnings.current[write] = warning;
+        write += 1;
+      }
+    }
+    spawnWarnings.current.length = write;
   };
 
   const addDamageNumber = (pos, value, color, size = 0.56) => {
@@ -2544,12 +2598,12 @@ function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 1, mate
   }), []);
 
   useFrame(() => {
-    const enemiesForKind = enemiesRef.current.filter(enemy => enemy.kind === kind);
     styledParts.forEach((part, partIndex) => {
       const mesh = meshRefs.current[partIndex];
       if (!mesh) return;
       let count = 0;
-      for (const enemy of enemiesForKind) {
+      for (const enemy of enemiesRef.current) {
+        if (enemy.kind !== kind) continue;
         if (count >= MAX_ENEMIES) break;
         const bob = kind === 'runner' ? Math.sin(enemy.wobble * 2.3) * 0.1 : Math.sin(enemy.wobble) * 0.035;
         const squash = kind === 'runner' ? 0.9 + Math.sin(enemy.wobble * 2.3) * 0.08 : 1;
@@ -2603,12 +2657,12 @@ function SourceProjectileInstances({ projectilesRef, type, url, scaleMultiplier 
 
   useFrame(() => {
     const timeSpin = performance.now() * 0.006;
-    const projectilesForType = projectilesRef.current.filter(projectile => projectile.type === type);
     parts.forEach((part, partIndex) => {
       const mesh = meshRefs.current[partIndex];
       if (!mesh) return;
       let count = 0;
-      for (const projectile of projectilesForType) {
+      for (const projectile of projectilesRef.current) {
+        if (projectile.type !== type) continue;
         if (count >= MAX_PROJECTILES) break;
         const scale = (type === 'storm' ? 1.7 : 1) * projectile.visualScale * scaleMultiplier;
         local.pos.copy(projectile.pos);
