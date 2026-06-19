@@ -1,16 +1,17 @@
 :root {
-  --ui-void: #030807;
-  --ui-panel: rgba(6, 14, 13, 0.82);
-  --ui-panel-strong: rgba(10, 22, 20, 0.94);
-  --ui-stone: #1d2a25;
-  --ui-stone-light: #405349;
-  --ui-line: rgba(191, 255, 239, 0.2);
-  --ui-line-bright: rgba(148, 255, 228, 0.54);
+  --ui-void: #020607;
+  --ui-panel: rgba(6, 14, 13, 0.84);
+  --ui-panel-strong: rgba(9, 19, 17, 0.96);
+  --ui-stone: #1b2721;
+  --ui-stone-light: #465846;
+  --ui-line: rgba(206, 255, 239, 0.22);
+  --ui-line-bright: rgba(148, 255, 228, 0.6);
   --ui-rune: #73fbd3;
   --ui-cyan: #70d6ff;
   --ui-gold: #ffdf6e;
   --ui-danger: #ff8b72;
   --ui-violet: #d8b2ff;
+  --ui-rift: #7f6cff;
   color: #f2fff9;
   background: var(--ui-void);
   font-family:
@@ -43,9 +44,10 @@ button {
   height: 100%;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 46%, rgba(85, 224, 183, 0.14), transparent 34%),
-    radial-gradient(circle at 80% 18%, rgba(247, 208, 107, 0.08), transparent 27%),
-    linear-gradient(180deg, #030807, #06100e 42%, #030807);
+    radial-gradient(circle at 47% 44%, rgba(112, 214, 255, 0.14), transparent 28%),
+    radial-gradient(circle at 19% 76%, rgba(127, 108, 255, 0.11), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(255, 223, 110, 0.09), transparent 26%),
+    linear-gradient(180deg, #020607, #081310 42%, #020607);
 }
 
 .shell::before,
@@ -59,16 +61,17 @@ button {
 
 .shell::before {
   background:
-    radial-gradient(circle at 50% 52%, transparent 31%, rgba(0, 0, 0, 0.2) 66%, rgba(0, 0, 0, 0.58) 100%),
-    linear-gradient(180deg, rgba(112, 214, 255, 0.05), transparent 18%, transparent 78%, rgba(247, 208, 107, 0.04));
+    radial-gradient(circle at 50% 50%, transparent 27%, rgba(0, 0, 0, 0.22) 64%, rgba(0, 0, 0, 0.68) 100%),
+    linear-gradient(180deg, rgba(112, 214, 255, 0.08), transparent 20%, transparent 72%, rgba(127, 108, 255, 0.06));
   mix-blend-mode: screen;
 }
 
 .shell::after {
   background-image:
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 4px),
-    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.035), transparent 1px);
-  opacity: 0.22;
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 5px),
+    radial-gradient(circle at 20% 30%, rgba(115, 251, 211, 0.05), transparent 1px),
+    radial-gradient(circle at 70% 62%, rgba(127, 108, 255, 0.045), transparent 1px);
+  opacity: 0.28;
 }
 
 .hud {
@@ -92,12 +95,14 @@ button {
   overflow: hidden;
   border: 1px solid var(--ui-line);
   background:
-    linear-gradient(135deg, rgba(115, 251, 211, 0.08), transparent 16%),
-    linear-gradient(315deg, rgba(255, 223, 110, 0.08), transparent 18%),
-    linear-gradient(180deg, rgba(17, 32, 29, 0.92), rgba(4, 11, 10, 0.78));
+    radial-gradient(circle at 10% 10%, rgba(112, 214, 255, 0.18), transparent 22%),
+    linear-gradient(135deg, rgba(115, 251, 211, 0.1), transparent 16%),
+    linear-gradient(315deg, rgba(127, 108, 255, 0.12), transparent 18%),
+    linear-gradient(180deg, rgba(17, 32, 29, 0.94), rgba(4, 11, 10, 0.8));
   clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
   box-shadow:
     0 18px 54px rgba(0, 0, 0, 0.38),
+    0 0 32px rgba(112, 214, 255, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(115, 251, 211, 0.08);
   backdrop-filter: blur(10px);
@@ -1004,10 +1009,11 @@ button {
   padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
   overflow: auto;
   background:
-    radial-gradient(circle at 50% 45%, rgba(115, 251, 211, 0.08), transparent 22%),
-    radial-gradient(circle at 50% 50%, rgba(3, 8, 7, 0.18) 0 30%, rgba(3, 8, 7, 0.72) 64%, rgba(0, 0, 0, 0.88)),
-    rgba(2, 9, 8, 0.82);
-  backdrop-filter: blur(12px) saturate(0.88);
+    radial-gradient(circle at 50% 38%, rgba(112, 214, 255, 0.14), transparent 21%),
+    radial-gradient(circle at 34% 64%, rgba(127, 108, 255, 0.1), transparent 24%),
+    radial-gradient(circle at 50% 50%, rgba(3, 8, 7, 0.16) 0 28%, rgba(3, 8, 7, 0.76) 64%, rgba(0, 0, 0, 0.9)),
+    rgba(2, 9, 8, 0.84);
+  backdrop-filter: blur(14px) saturate(0.92);
   z-index: 3;
 }
 
@@ -1020,14 +1026,17 @@ button {
   overflow: auto;
   border: 1px solid rgba(194, 255, 240, 0.28);
   background:
-    linear-gradient(135deg, rgba(115, 251, 211, 0.08), transparent 22%),
-    linear-gradient(315deg, rgba(255, 223, 110, 0.06), transparent 20%),
-    linear-gradient(180deg, rgba(16, 30, 27, 0.98), rgba(3, 10, 9, 0.98)),
+    radial-gradient(circle at 15% 0%, rgba(112, 214, 255, 0.16), transparent 28%),
+    radial-gradient(circle at 85% 18%, rgba(255, 223, 110, 0.12), transparent 24%),
+    linear-gradient(135deg, rgba(115, 251, 211, 0.1), transparent 22%),
+    linear-gradient(315deg, rgba(127, 108, 255, 0.11), transparent 20%),
+    linear-gradient(180deg, rgba(17, 29, 25, 0.99), rgba(3, 10, 9, 0.99)),
     rgba(7, 20, 18, 0.95);
   clip-path: polygon(22px 0, calc(100% - 22px) 0, 100% 22px, 100% calc(100% - 22px), calc(100% - 22px) 100%, 22px 100%, 0 calc(100% - 22px), 0 22px);
   box-shadow:
     0 28px 90px rgba(0, 0, 0, 0.58),
-    0 0 44px rgba(115, 251, 211, 0.1),
+    0 0 54px rgba(112, 214, 255, 0.12),
+    0 0 80px rgba(127, 108, 255, 0.08),
     inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   padding: 24px;
 }
@@ -1053,7 +1062,9 @@ button {
   height: 2px;
   content: "";
   background: linear-gradient(90deg, transparent, rgba(115, 251, 211, 0.78), rgba(255, 223, 110, 0.48), transparent);
-  box-shadow: 0 0 22px rgba(115, 251, 211, 0.34);
+  box-shadow:
+    0 0 22px rgba(115, 251, 211, 0.34),
+    0 0 40px rgba(127, 108, 255, 0.18);
   pointer-events: none;
 }
 
@@ -1154,13 +1165,16 @@ h1 {
   color: #edfff9;
   text-align: left;
   background:
-    radial-gradient(circle at 82% 10%, color-mix(in srgb, var(--tone, #70d6ff) 18%, transparent), transparent 30%),
-    linear-gradient(180deg, color-mix(in srgb, var(--tone, #70d6ff) 16%, transparent), rgba(0, 0, 0, 0.08)),
-    rgba(5, 17, 15, 0.96);
+    radial-gradient(circle at 82% 10%, color-mix(in srgb, var(--tone, #70d6ff) 22%, transparent), transparent 31%),
+    radial-gradient(circle at 12% 88%, rgba(127, 108, 255, 0.1), transparent 30%),
+    linear-gradient(135deg, color-mix(in srgb, var(--tone, #70d6ff) 13%, transparent), transparent 42%),
+    linear-gradient(180deg, rgba(18, 31, 27, 0.96), rgba(4, 14, 13, 0.98)),
+    rgba(5, 17, 15, 0.98);
   clip-path: polygon(13px 0, calc(100% - 13px) 0, 100% 13px, 100% calc(100% - 13px), calc(100% - 13px) 100%, 13px 100%, 0 calc(100% - 13px), 0 13px);
   cursor: pointer;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -18px 32px rgba(0, 0, 0, 0.18),
     0 16px 34px rgba(0, 0, 0, 0.22);
   transition:
     border-color 150ms ease,
@@ -1170,11 +1184,14 @@ h1 {
 
 .upgradeCard::before {
   position: absolute;
-  inset: 0 0 auto;
-  height: 4px;
+  inset: 0;
+  height: auto;
   content: "";
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--tone, #70d6ff) 72%, white), transparent);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--tone, #70d6ff) 34%, transparent);
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--tone, #70d6ff) 72%, white), transparent) 0 0 / 100% 4px no-repeat,
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.026) 0 1px, transparent 1px 13px);
+  box-shadow: inset 0 0 28px color-mix(in srgb, var(--tone, #70d6ff) 12%, transparent);
+  opacity: 0.9;
 }
 
 .upgradeCard::after {
@@ -1187,6 +1204,7 @@ h1 {
   border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 52%, transparent);
   opacity: 0.32;
   transform: rotate(45deg);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--tone, #70d6ff) 22%, transparent);
 }
 
 .upgradeCard:hover {
@@ -1203,6 +1221,7 @@ h1 {
   box-shadow:
     0 18px 46px rgba(0, 0, 0, 0.34),
     0 0 34px color-mix(in srgb, var(--tone, #70d6ff) 24%, transparent),
+    0 0 70px color-mix(in srgb, var(--tone, #70d6ff) 11%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -1248,7 +1267,7 @@ h1 {
   z-index: 1;
   max-width: 92%;
   color: #ffffff;
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 950;
   line-height: 1.14;
   text-shadow: 0 0 18px color-mix(in srgb, var(--tone, #70d6ff) 24%, transparent);
@@ -1263,7 +1282,9 @@ h1 {
   padding: 10px 10px;
   border: 1px solid rgba(225, 255, 246, 0.1);
   color: rgba(242, 255, 249, 0.9);
-  background: rgba(0, 0, 0, 0.22);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent),
+    rgba(0, 0, 0, 0.24);
   clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
   font-size: 14px;
   font-weight: 750;
@@ -1285,7 +1306,7 @@ h1 {
 .upgradeCard b {
   position: relative;
   z-index: 1;
-  color: color-mix(in srgb, var(--tone, #fff1a6) 72%, white);
+  color: color-mix(in srgb, var(--tone, #fff1a6) 78%, white);
   font-size: 12px;
   font-weight: 900;
   line-height: 1.35;

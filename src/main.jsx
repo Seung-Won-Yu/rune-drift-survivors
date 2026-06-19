@@ -2,7 +2,7 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { ContactShadows, Environment, Text, useGLTF } from '@react-three/drei';
-import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
+import { Bloom, EffectComposer, Noise, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { MODEL_URLS, NATURE_MODEL_URLS, PRELOAD_MODEL_URLS, PROJECTILE_MODEL_URLS } from './config/assets.js';
@@ -44,17 +44,20 @@ const FIELD_ITEM_META = {
 };
 
 const ART_TOKENS = {
-  void: '#030807',
-  terrainLow: '#26352e',
-  terrainMid: '#49634c',
-  terrainHigh: '#737b58',
-  moss: '#286947',
-  oldStone: '#69665a',
-  wornGold: '#d7b85f',
+  void: '#020607',
+  deepVoid: '#07110f',
+  terrainLow: '#273126',
+  terrainMid: '#4d6044',
+  terrainHigh: '#817f58',
+  moss: '#2a7350',
+  oldStone: '#706a5d',
+  wornGold: '#e2bb5d',
+  emberGold: '#ffdf6e',
   runeCyan: '#70d6ff',
   runeMint: '#73fbd3',
   dangerRed: '#ff8b72',
-  elderViolet: '#d8b2ff'
+  elderViolet: '#d8b2ff',
+  riftViolet: '#7f6cff'
 };
 
 const WAVE_PROFILES = [
@@ -737,8 +740,8 @@ function App() {
         camera={{ position: [0, 44, 74], fov: 48, near: 0.1, far: 420 }}
         dpr={[1, 1.45]}
       >
-        <color attach="background" args={['#030807']} />
-        <fog attach="fog" args={['#030807', 92, 320]} />
+        <color attach="background" args={[ART_TOKENS.void]} />
+        <fog attach="fog" args={['#07110f', 68, 255]} />
         <Suspense fallback={null}>
           <GameScene
             refApi={sceneApi}
@@ -750,8 +753,9 @@ function App() {
           <Environment preset="night" />
         </Suspense>
         <EffectComposer>
-          <Bloom luminanceThreshold={0.34} intensity={1.05} mipmapBlur />
-          <Vignette eskil={false} offset={0.18} darkness={0.78} />
+          <Bloom luminanceThreshold={0.28} intensity={1.18} mipmapBlur />
+          <Noise opacity={0.035} />
+          <Vignette eskil={false} offset={0.16} darkness={0.82} />
         </EffectComposer>
       </Canvas>
       <HUD game={game} onRestart={restart} onPause={togglePause} />
@@ -2506,17 +2510,23 @@ function GameScene({ refApi, game, setGame, onLevelUp }) {
 
   return (
     <>
-      <ambientLight intensity={0.44} />
+      <hemisphereLight args={['#8edfff', '#17231b', 0.52]} />
+      <ambientLight intensity={0.24} />
       <directionalLight
         castShadow
-        position={[18, 28, 10]}
-        intensity={3.25}
+        position={[22, 30, 14]}
+        intensity={2.55}
+        color="#f5f0d0"
         shadow-mapSize={[2048, 2048]}
       />
-      <pointLight position={[0, 2.4, 0]} intensity={3.4} color={ART_TOKENS.runeCyan} distance={12} />
-      <pointLight position={[0, 5.8, 0]} intensity={1.05} color={ART_TOKENS.wornGold} distance={34} />
+      <directionalLight position={[-34, 18, -48]} intensity={0.78} color={ART_TOKENS.riftViolet} />
+      <pointLight position={[0, 2.4, 0]} intensity={3.9} color={ART_TOKENS.runeCyan} distance={14} />
+      <pointLight position={[0, 5.8, 0]} intensity={1.25} color={ART_TOKENS.wornGold} distance={38} />
+      <pointLight position={[-42, 3.2, -22]} intensity={1.15} color={ART_TOKENS.riftViolet} distance={42} />
+      <pointLight position={[48, 3.2, 26]} intensity={0.86} color={ART_TOKENS.runeMint} distance={38} />
       <MapBaseArena />
       <ArenaAtmosphere />
+      <RiftSkyMotifs />
       <PlayerAvatar rootRef={playerMesh} game={game} />
       <PlayerPresence player={player} game={game} />
       <OrbitBlades player={player} game={game} />
@@ -3893,6 +3903,7 @@ function MapBaseArena() {
 
       <SculptedRuinTerrain />
       <OpenFieldTerrainIdentity />
+      <RiftFloorSigils />
       <RuneRelicLandmarks />
       <NaturalFieldKit />
 
@@ -3904,6 +3915,59 @@ function MapBaseArena() {
         <ringGeometry args={[ARENA_RADIUS - 8.8, ARENA_RADIUS - 8.55, 224]} />
         <meshBasicMaterial color={ART_TOKENS.wornGold} transparent opacity={0.11} depthWrite={false} toneMapped={false} />
       </mesh>
+    </group>
+  );
+}
+
+function RiftFloorSigils() {
+  const scars = useMemo(() => [
+    { x: -38, z: -18, angle: 0.35, length: 36, width: 1.1, color: ART_TOKENS.riftViolet, opacity: 0.16 },
+    { x: 30, z: 28, angle: -0.55, length: 32, width: 0.92, color: ART_TOKENS.runeCyan, opacity: 0.14 },
+    { x: 6, z: -48, angle: 1.08, length: 40, width: 0.82, color: ART_TOKENS.wornGold, opacity: 0.11 },
+    { x: -64, z: 44, angle: -0.18, length: 28, width: 0.72, color: ART_TOKENS.runeMint, opacity: 0.1 },
+    { x: 66, z: -34, angle: 0.85, length: 26, width: 0.74, color: ART_TOKENS.riftViolet, opacity: 0.12 }
+  ], []);
+
+  const runes = useMemo(() => Array.from({ length: 14 }, (_, index) => {
+    const angle = index * Math.PI * 2 / 14 + (index % 2) * 0.11;
+    const radius = 31 + (index % 4) * 7.5;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    return {
+      x,
+      z,
+      angle,
+      color: index % 3 === 0 ? ART_TOKENS.wornGold : index % 3 === 1 ? ART_TOKENS.runeCyan : ART_TOKENS.riftViolet,
+      scale: 0.82 + (index % 3) * 0.14
+    };
+  }), []);
+
+  return (
+    <group>
+      {scars.map((scar, index) => (
+        <group key={`rift-floor-scar-${index}`} position={[scar.x, getTerrainHeight(scar.x, scar.z) + 0.085, scar.z]} rotation={[-Math.PI / 2, 0, scar.angle]}>
+          <mesh scale={[scar.length, scar.width, 1]}>
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial color={scar.color} transparent opacity={scar.opacity} depthWrite={false} toneMapped={false} />
+          </mesh>
+          <mesh scale={[scar.length * 0.38, scar.width * 2.4, 1]}>
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial color={scar.color} transparent opacity={scar.opacity * 0.32} depthWrite={false} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+
+      {runes.map((rune, index) => (
+        <mesh
+          key={`field-rune-glyph-${index}`}
+          position={[rune.x, getTerrainHeight(rune.x, rune.z) + 0.095, rune.z]}
+          rotation={[-Math.PI / 2, 0, -rune.angle + Math.PI / 4]}
+          scale={[rune.scale, rune.scale, 1]}
+        >
+          <ringGeometry args={[0.34, 0.42, 4]} />
+          <meshBasicMaterial color={rune.color} transparent opacity={0.18} depthWrite={false} toneMapped={false} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -4498,6 +4562,58 @@ function ArenaAtmosphere() {
         <ringGeometry args={[9.2, 9.42, 96]} />
         <meshBasicMaterial color="#f7d06b" transparent opacity={0.035} depthWrite={false} toneMapped={false} />
       </mesh>
+    </group>
+  );
+}
+
+function RiftSkyMotifs() {
+  const dustRef = useRef();
+  const tearRef = useRef();
+  const dustGeometry = useMemo(() => {
+    const positions = [];
+    for (let index = 0; index < 150; index += 1) {
+      const angle = index * 2.399 + (index % 5) * 0.07;
+      const radius = 22 + (index % 44) * 2.05;
+      const height = 4.8 + (index % 19) * 0.62 + Math.sin(index * 1.7) * 0.45;
+      positions.push(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    return geometry;
+  }, []);
+
+  const tears = useMemo(() => [
+    { x: -58, y: 9.4, z: -44, ry: 0.55, s: 4.4, color: ART_TOKENS.riftViolet },
+    { x: 62, y: 8.2, z: 30, ry: -0.82, s: 3.3, color: ART_TOKENS.runeCyan },
+    { x: 8, y: 11.5, z: -78, ry: 0.12, s: 3.7, color: ART_TOKENS.wornGold }
+  ], []);
+
+  useFrame((_, dt) => {
+    if (dustRef.current) dustRef.current.rotation.y += dt * 0.018;
+    if (tearRef.current) {
+      tearRef.current.rotation.y += dt * 0.055;
+      tearRef.current.position.y = Math.sin(performance.now() * 0.0011) * 0.24;
+    }
+  });
+
+  useEffect(() => () => dustGeometry.dispose(), [dustGeometry]);
+
+  return (
+    <group>
+      <points ref={dustRef} geometry={dustGeometry} frustumCulled={false}>
+        <pointsMaterial color={ART_TOKENS.runeMint} size={0.22} sizeAttenuation transparent opacity={0.28} depthWrite={false} toneMapped={false} />
+      </points>
+      <group ref={tearRef}>
+        {tears.map((tear, index) => (
+          <group key={`sky-rift-tear-${index}`} position={[tear.x, tear.y, tear.z]} rotation={[0.34, tear.ry, 0.08]}>
+            <mesh scale={[tear.s * 0.48, tear.s, tear.s * 0.48]}>
+              <ringGeometry args={[0.18, 0.28, 5]} />
+              <meshBasicMaterial color={tear.color} transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+            </mesh>
+            <pointLight color={tear.color} intensity={0.55} distance={18} />
+          </group>
+        ))}
+      </group>
     </group>
   );
 }
@@ -5968,4 +6084,7 @@ function formatTime(seconds) {
   return `${mins}:${secs}`;
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+const rootNode = document.getElementById('root');
+const root = window.__RUNE_DRIFT_ROOT__ ?? createRoot(rootNode);
+window.__RUNE_DRIFT_ROOT__ = root;
+root.render(<App />);
