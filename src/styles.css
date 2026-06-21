@@ -1225,9 +1225,9 @@ h1 {
   position: relative;
   display: grid;
   min-height: 210px;
-  grid-template-rows: auto auto auto 1fr auto;
+  grid-template-rows: auto auto auto auto 1fr auto;
   align-content: start;
-  gap: 10px;
+  gap: 9px;
   padding: 17px 16px 15px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 48%, rgba(210, 255, 244, 0.34));
@@ -1321,6 +1321,10 @@ h1 {
   text-transform: uppercase;
 }
 
+.upgradeCard em {
+  color: color-mix(in srgb, var(--tone, #fff1a6) 74%, white);
+}
+
 .upgradePickCue strong {
   border-color: rgba(255, 241, 166, 0.68);
   color: #07100f;
@@ -1367,6 +1371,41 @@ h1 {
   font-weight: 950;
   line-height: 1.14;
   text-shadow: 0 0 18px color-mix(in srgb, var(--tone, #70d6ff) 24%, transparent);
+}
+
+.upgradeImpactRow {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.upgradeImpactRow span {
+  min-width: 0;
+  padding: 7px 8px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 32%, rgba(210, 255, 244, 0.12));
+  color: color-mix(in srgb, var(--tone, #70d6ff) 78%, white);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--tone, #70d6ff) 18%, transparent), transparent),
+    rgba(0, 0, 0, 0.26);
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.upgradeImpactRow span:last-child {
+  border-color: rgba(255, 241, 166, 0.26);
+  color: #fff1a6;
+  background:
+    linear-gradient(90deg, rgba(255, 223, 110, 0.13), transparent),
+    rgba(26, 20, 8, 0.32);
 }
 
 .upgradeCard small {
@@ -2018,7 +2057,7 @@ h1 {
   }
 
   .upgradeCard {
-    min-height: 108px;
+    min-height: 124px;
     gap: 6px;
     padding: 12px 11px 11px;
   }
@@ -2036,6 +2075,15 @@ h1 {
 
   .upgradeTitleRow span {
     font-size: 18px;
+  }
+
+  .upgradeImpactRow {
+    gap: 5px;
+  }
+
+  .upgradeImpactRow span {
+    padding: 6px 7px;
+    font-size: 10px;
   }
 
   .upgradeCard small {

@@ -5242,11 +5242,15 @@ function UpgradeOverlay({ game, choices, onChoose }) {
               >
                 <div className="upgradePickCue">
                   <em>{choice.family}</em>
-                  <strong>{cardMeta.recommended ? `추천 · ${cardMeta.role}` : cardMeta.role}</strong>
+                  <strong>{cardMeta.recommended ? `추천 · ${cardMeta.role}` : cardMeta.badge}</strong>
                 </div>
                 <div className="upgradeTitleRow">
                   <i className="upgradeSigil" aria-hidden="true">{iconMeta.glyph}</i>
                   <span>{displayTitle}</span>
+                </div>
+                <div className="upgradeImpactRow" aria-label="강화 방향">
+                  <span>{cardMeta.impact}</span>
+                  <span>{cardMeta.reason}</span>
                 </div>
                 <small>{choice.text}</small>
                 <b>{focusPreview}</b>
@@ -6249,6 +6253,21 @@ function getUpgradeFocusPreview(game, upgrade) {
   return `${meta.title} ${formatFocusLevel(focus)} - ${meta.perks[Math.min(meta.perks.length - 1, focus - 1)]}`;
 }
 
+function getUpgradeImpactLabel(upgrade) {
+  if (upgrade.id.includes('count') || upgrade.id.includes('fan') || upgrade.id.includes('volley') || upgrade.id.includes('plus') || upgrade.id.includes('web')) {
+    return '타수 증가';
+  }
+  if (upgrade.id.includes('burst') || upgrade.id.includes('carpet') || upgrade.id.includes('nova') || upgrade.id.includes('reaper')) {
+    return '범위 압박';
+  }
+  if (upgrade.id.includes('lance') || upgrade.id === 'pierce') return '관통 강화';
+  if (upgrade.id.includes('guard') || upgrade.id === 'maxHp') return '생존 보강';
+  if (upgrade.id.includes('smite') || upgrade.id === 'damage') return '피해 상승';
+  if (upgrade.id === 'cooldown' || upgrade.id === 'dash' || upgrade.id === 'speed') return '속도 상승';
+  if (upgrade.id === 'magnet' || upgrade.id === 'luck') return '성장 가속';
+  return upgrade.branch;
+}
+
 function getUpgradeCardMeta(game, upgrade) {
   const key = getUpgradeFocusKey(upgrade);
   const dominant = getDominantBuild(game);
@@ -6312,9 +6331,31 @@ function getUpgradeCardMeta(game, upgrade) {
     || (upgrade.id === 'magnet' && game.level <= 4)
     || ((upgrade.id === 'damage' || upgrade.id === 'cooldown') && game.upgrades.length >= 4)
   );
+  const reason = unlocksWeapon
+    ? '새 무기'
+    : improvesSynergy
+      ? '조합 완성'
+      : key && dominant?.key === key && dominant.focus >= 2
+        ? '주력 빌드'
+        : key && focus === 0
+          ? '빌드 확장'
+          : upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.72
+            ? '위기 대응'
+            : upgrade.id === 'magnet' && game.level <= 4
+              ? '초반 성장'
+              : upgrade.id === 'cooldown' || upgrade.id === 'damage'
+                ? '전체 효율'
+                : pickCount > 0
+                  ? `중첩 ${formatFocusLevel(pickCount + 1)}`
+                  : key
+                    ? BUILD_FOCUS_META[key].label
+                    : upgrade.branch;
 
   return {
     role,
+    badge: role === upgrade.family ? reason : role,
+    impact: getUpgradeImpactLabel(upgrade),
+    reason,
     recommended,
     tags: [...new Set(tags.filter(tag => tag !== upgrade.branch))].slice(0, 2)
   };
