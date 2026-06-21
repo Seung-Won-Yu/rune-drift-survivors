@@ -5584,6 +5584,13 @@ function HUD({ game, onRestart, onPause }) {
   const bossStatus = game.bossStatus;
   const bossPatternMeta = game.lastBossPattern ? BOSS_PATTERN_META[game.lastBossPattern] : null;
   const isThreatened = crisis.level >= 3 || bossStatus?.enraged || encounterAlert?.kind === 'boss' || encounterAlert?.kind === 'boss-pattern';
+  const onboardingSteps = getOnboardingSteps(game);
+  const openingObjectives = getOpeningObjectives(game);
+  const activeObjectives = openingObjectives.filter(objective => !objective.complete).slice(0, 2);
+  const completedOpeningObjectives = openingObjectives.filter(objective => objective.complete).length;
+  const firstSessionCue = getFirstSessionCue(game, onboardingSteps, activeObjectives);
+  const showFirstSessionCoach = !bossStatus && firstSessionCue && game.time < 128;
+  const showOpeningObjectives = !bossStatus && activeObjectives.length > 0 && game.time < 155;
 
   return (
     <section className={`hud ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''} ${bossStatus?.casting ? 'isCasting' : ''}`} aria-label="게임 상태">
@@ -5630,6 +5637,49 @@ function HUD({ game, onRestart, onPause }) {
         {bossPatternMeta && <span className="tickerAlert bossPatternPill" style={{ '--tone': bossPatternMeta.color }}>{bossPatternMeta.label} · {bossPatternMeta.cue}</span>}
         {game.pickupFlash > 0 && <span className="tickerPickup">{game.pickupMessage}</span>}
       </div>
+      {showFirstSessionCoach && (
+        <div className="onboardingCoach" style={{ '--tone': firstSessionCue.color }} aria-label="초반 안내">
+          <div className="coachHeader">
+            <span>First Run</span>
+            <strong>{firstSessionCue.title}</strong>
+            <small>{firstSessionCue.action}</small>
+          </div>
+          <div className="coachBody">
+            <b>{firstSessionCue.body}</b>
+            <small>{firstSessionCue.detail}</small>
+            <i style={{ width: `${firstSessionCue.progress * 100}%` }} />
+          </div>
+          <div className="coachSteps" aria-label="초반 조작 단계">
+            {onboardingSteps.slice(0, 4).map(step => (
+              <span
+                key={step.id}
+                className={`${step.id === firstSessionCue.stepId ? 'isActive' : ''} ${step.complete ? 'isComplete' : ''}`}
+                style={{ '--tone': step.color }}
+              >
+                {step.title}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {showOpeningObjectives && (
+        <div className="objectiveRow" aria-label="첫 파동 목표">
+          <div className="objectiveSummary">
+            <span>첫 파동 목표</span>
+            <strong>{completedOpeningObjectives} / {openingObjectives.length}</strong>
+          </div>
+          {activeObjectives.map(objective => (
+            <div key={objective.id} className="objectiveCard" style={{ '--tone': objective.color }}>
+              <span>
+                {objective.title}
+                <strong>{objective.label}</strong>
+              </span>
+              <small>{objective.displayValue} / {objective.displayTarget}</small>
+              <i style={{ width: `${objective.progress * 100}%` }} />
+            </div>
+          ))}
+        </div>
+      )}
       {encounterAlert && (
         <div
           className={`encounterBanner ${encounterAlert.kind === 'boss' || encounterAlert.kind === 'boss-pattern' ? 'isBoss' : ''}`}
@@ -6657,6 +6707,120 @@ function getOnboardingSteps(game) {
       displayTarget: step.target
     };
   });
+}
+
+function getFirstSessionCue(game, onboardingSteps, activeObjectives) {
+  const nextStep = onboardingSteps.find(step => !step.complete);
+  const nextObjective = activeObjectives[0];
+  const fallbackProgress = nextObjective?.progress ?? 0;
+
+  if (!nextStep && !nextObjective) return null;
+
+  if (!nextStep) {
+    return getObjectiveCue(nextObjective, fallbackProgress);
+  }
+
+  const base = {
+    stepId: nextStep.id,
+    color: nextStep.color,
+    action: nextStep.label,
+    progress: nextStep.progress
+  };
+
+  if (game.time > 108 && getItemPickupCount(game, 'cache') < 1) {
+    return {
+      ...base,
+      stepId: 'cache',
+      color: '#fff1a6',
+      title: '첫 무기 보급',
+      body: '노란 보급 룬을 지나가면 새 무기 후보가 열립니다',
+      detail: '초반 화력은 무기 수보다 선택 타이밍이 중요합니다',
+      action: '보급 룬 회수',
+      progress: Math.min(1, Math.max(fallbackProgress, (game.time - 108) / 24))
+    };
+  }
+
+  switch (nextStep.id) {
+    case 'move':
+      return {
+        ...base,
+        title: '먼저 움직임',
+        body: '적을 끌고 원을 그리며 안전 공간을 만드세요',
+        detail: '멈추면 포위가 빨라집니다',
+        progress: nextStep.progress
+      };
+    case 'dash':
+      return {
+        ...base,
+        title: '위험하면 대시',
+        body: '포위가 좁아질 때 Space로 한 번 빠져나오세요',
+        detail: 'Ready 표시가 켜지면 다시 쓸 수 있습니다',
+        progress: nextStep.progress
+      };
+    case 'xp':
+      return {
+        ...base,
+        title: '푸른 XP 회수',
+        body: '푸른 조각을 지나가 첫 카드 선택까지 성장하세요',
+        detail: 'XP를 놓치면 초반 화력이 늦게 열립니다',
+        progress: nextStep.progress
+      };
+    case 'cache':
+      return {
+        ...base,
+        title: '무기 보급 찾기',
+        body: '노란 보급 룬을 회수하면 빌드 방향이 정해집니다',
+        detail: '처음부터 강한 무기보다 성장 선택이 핵심입니다',
+        progress: nextStep.progress
+      };
+    default:
+      return getObjectiveCue(nextObjective, fallbackProgress);
+  }
+}
+
+function getObjectiveCue(objective, progress = 0) {
+  if (!objective) return null;
+
+  const cueMap = {
+    'first-blood': {
+      title: '첫 처치 목표',
+      body: '구체가 닿도록 거리를 유지하며 적을 정리하세요',
+      detail: '무리 안으로 들어가지 말고 가장자리를 깎습니다',
+      action: objective.label
+    },
+    'magnet-flow': {
+      title: '자석 룬 회수',
+      body: '푸른 자석 룬은 놓친 XP를 한 번에 당겨옵니다',
+      detail: '레벨업 카드가 늦으면 자석을 먼저 챙기세요',
+      action: objective.label
+    },
+    'armory-seed': {
+      title: '무기 보급 찾기',
+      body: '노란 보급 룬이 보이면 안전한 방향으로 접근하세요',
+      detail: '새 무기는 다음 파동을 버티는 기준점입니다',
+      action: objective.label
+    },
+    'first-etching': {
+      title: '첫 각인 완성',
+      body: '레벨 3까지 성장하면 빌드 색이 뚜렷해집니다',
+      detail: '추천 카드는 현재 화력 부족을 기준으로 표시됩니다',
+      action: objective.label
+    },
+    'first-surge': {
+      title: '첫 파동 버티기',
+      body: '90초까지 살아남으면 초반 흐름이 안정됩니다',
+      detail: '무리 중앙이 아니라 외곽으로 계속 빠지세요',
+      action: objective.label
+    }
+  };
+  const cue = cueMap[objective.id] ?? cueMap['first-blood'];
+
+  return {
+    ...cue,
+    stepId: objective.id,
+    color: objective.color,
+    progress
+  };
 }
 
 function createEmptyRunStats() {
