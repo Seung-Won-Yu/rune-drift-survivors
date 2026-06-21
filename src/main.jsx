@@ -5342,6 +5342,7 @@ function UpgradeOverlay({ game, choices, onChoose }) {
                 className={`upgradeCard family-${focusKey ?? 'utility'} ${cardMeta.recommended ? 'isRecommended' : ''}`}
                 type="button"
                 style={{ '--tone': getUpgradeTone(choice) }}
+                aria-label={`${displayTitle}: ${cardMeta.decision}, ${cardMeta.payoff}`}
                 onClick={() => onChoose(choice)}
               >
                 <div className="upgradePickCue">
@@ -5352,11 +5353,21 @@ function UpgradeOverlay({ game, choices, onChoose }) {
                   <i className="upgradeSigil" aria-hidden="true">{iconMeta.glyph}</i>
                   <span>{displayTitle}</span>
                 </div>
+                <div className="upgradeDecisionRow" aria-label="선택 요약">
+                  <span>
+                    <small>선택 이유</small>
+                    <b>{cardMeta.decision}</b>
+                  </span>
+                  <span>
+                    <small>전투 변화</small>
+                    <b>{cardMeta.payoff}</b>
+                  </span>
+                </div>
                 <div className="upgradeImpactRow" aria-label="강화 방향">
                   <span>{cardMeta.impact}</span>
                   <span>{cardMeta.reason}</span>
                 </div>
-                <small>{choice.text}</small>
+                <small className="upgradeEffectText">{choice.text}</small>
                 <b>{focusPreview}</b>
                 <div className="upgradeTags">
                   <i>{choice.branch}</i>
@@ -6372,6 +6383,38 @@ function getUpgradeImpactLabel(upgrade) {
   return upgrade.branch;
 }
 
+function getUpgradeDecisionCopy(game, upgrade, context) {
+  const { key, dominant, focus, primarySynergy, improvesSynergy, unlocksWeapon, pickCount } = context;
+  if (unlocksWeapon && key) {
+    return { decision: '새 공격 루트', payoff: `${BUILD_FOCUS_META[key].label} 해금` };
+  }
+  if (improvesSynergy && primarySynergy) {
+    return { decision: '공명 단계 상승', payoff: primarySynergy.bonus };
+  }
+  if (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.72) {
+    return { decision: '위험 완화', payoff: '체력 안정' };
+  }
+  if (upgrade.id === 'magnet' && game.level <= 4) {
+    return { decision: '초반 성장', payoff: 'XP 회수 쉬움' };
+  }
+  if (upgrade.id === 'damage' || upgrade.id === 'cooldown') {
+    return { decision: '전체 효율', payoff: '모든 무기 강화' };
+  }
+  if (key && dominant?.key === key && dominant.focus >= 2) {
+    return { decision: '주력 빌드', payoff: `${BUILD_FOCUS_META[key].label} 집중` };
+  }
+  if (key && focus === 0) {
+    return { decision: '새 빌드 후보', payoff: `${BUILD_FOCUS_META[key].label} 시작` };
+  }
+  if (pickCount > 0) {
+    return { decision: '중첩 강화', payoff: `Rank ${formatFocusLevel(pickCount + 1)}` };
+  }
+  if (upgrade.id === 'dash' || upgrade.id === 'speed') return { decision: '회피 안정', payoff: '기동력 증가' };
+  if (upgrade.id === 'luck') return { decision: '성장 투자', payoff: '보상 기대값 증가' };
+  if (key) return { decision: '집중도 상승', payoff: `${BUILD_FOCUS_META[key].label} 강화` };
+  return { decision: upgrade.branch, payoff: getUpgradeImpactLabel(upgrade) };
+}
+
 function getUpgradeCardMeta(game, upgrade) {
   const key = getUpgradeFocusKey(upgrade);
   const dominant = getDominantBuild(game);
@@ -6454,11 +6497,22 @@ function getUpgradeCardMeta(game, upgrade) {
                   : key
                     ? BUILD_FOCUS_META[key].label
                     : upgrade.branch;
+  const decisionCopy = getUpgradeDecisionCopy(game, upgrade, {
+    key,
+    dominant,
+    focus,
+    primarySynergy,
+    improvesSynergy,
+    unlocksWeapon,
+    pickCount
+  });
 
   return {
     role,
     badge: role === upgrade.family ? reason : role,
     impact: getUpgradeImpactLabel(upgrade),
+    decision: decisionCopy.decision,
+    payoff: decisionCopy.payoff,
     reason,
     recommended,
     tags: [...new Set(tags.filter(tag => tag !== upgrade.branch))].slice(0, 2)
