@@ -340,13 +340,55 @@ const WEAPON_UPGRADE_IDS = new Set([
 const STARTING_WEAPON_FAMILIES = new Set(['orb']);
 const UPGRADE_CHOICE_COUNT = 4;
 const VISUAL_BUDGETS = {
-  high: { enemyAuras: 96, enemyAccents: 104, gemBeams: 104, projectileAura: 108, projectileDetail: 68 },
-  balanced: { enemyAuras: 68, enemyAccents: 76, gemBeams: 58, projectileAura: 72, projectileDetail: 34 },
-  low: { enemyAuras: 38, enemyAccents: 44, gemBeams: 0, projectileAura: 42, projectileDetail: 0 }
+  high: {
+    enemyAuras: 96,
+    enemyAccents: 104,
+    gemBeams: 104,
+    projectileAura: 108,
+    projectileDetail: 68,
+    hitBursts: 42,
+    weaponEffects: 24,
+    damageNumbers: 30,
+    spawnWarnings: 10
+  },
+  balanced: {
+    enemyAuras: 68,
+    enemyAccents: 76,
+    gemBeams: 58,
+    projectileAura: 72,
+    projectileDetail: 34,
+    hitBursts: 30,
+    weaponEffects: 18,
+    damageNumbers: 22,
+    spawnWarnings: 8
+  },
+  low: {
+    enemyAuras: 38,
+    enemyAccents: 44,
+    gemBeams: 0,
+    projectileAura: 42,
+    projectileDetail: 0,
+    hitBursts: 18,
+    weaponEffects: 10,
+    damageNumbers: 14,
+    spawnWarnings: 6
+  }
 };
 
 function getVisualBudget(visualQuality = 'high') {
   return VISUAL_BUDGETS[visualQuality] ?? VISUAL_BUDGETS.high;
+}
+
+function getRuntimeVisualQuality(baseQuality = 'high', game = {}) {
+  if (baseQuality === 'low') return 'low';
+  const time = game.time ?? 0;
+  const wave = game.wave ?? 1;
+  const kills = game.kills ?? 0;
+  const latePressure = time >= 235 || wave >= 12 || kills >= 520;
+  const heavyPressure = time >= 170 || wave >= 9 || kills >= 320;
+  if (latePressure) return 'low';
+  if (heavyPressure && baseQuality === 'high') return 'balanced';
+  return baseQuality;
 }
 
 function getVisualQuality() {
@@ -645,9 +687,10 @@ function App() {
   const [upgradeChoices, setUpgradeChoices] = useState([]);
   const sceneApi = useRef(null);
   const visualQuality = useVisualQuality();
+  const runtimeVisualQuality = getRuntimeVisualQuality(visualQuality, game);
   const canvasDpr = useMemo(() => (
-    visualQuality === 'low' ? [1, 1] : visualQuality === 'balanced' ? [1, 1.25] : [1, 1.45]
-  ), [visualQuality]);
+    runtimeVisualQuality === 'low' ? [1, 1] : runtimeVisualQuality === 'balanced' ? [1, 1.25] : [1, 1.45]
+  ), [runtimeVisualQuality]);
 
   const togglePause = () => {
     setGame(current => {
@@ -782,7 +825,7 @@ function App() {
   }, []);
 
   return (
-    <main className={`shell visual-${visualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>
+    <main className={`shell visual-${runtimeVisualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>
       <Canvas
         shadows
         camera={{ position: [0, 44, 74], fov: 48, near: 0.1, far: 420 }}
@@ -796,16 +839,16 @@ function App() {
             game={game}
             setGame={setGame}
             onLevelUp={onLevelUp}
-            visualQuality={visualQuality}
+            visualQuality={runtimeVisualQuality}
           />
-          <ContactShadows position={[0, 0.02, 0]} opacity={0.18} scale={300} blur={2.7} far={14} color="#020605" />
+          {runtimeVisualQuality !== 'low' && <ContactShadows position={[0, 0.02, 0]} opacity={0.18} scale={300} blur={2.7} far={14} color="#020605" />}
           <Environment preset="night" />
         </Suspense>
-        {visualQuality !== 'low' && (
+        {runtimeVisualQuality !== 'low' && (
           <EffectComposer>
-          <Bloom luminanceThreshold={0.28} intensity={visualQuality === 'high' ? 1.18 : 0.82} mipmapBlur />
-          {visualQuality === 'high' && <Noise opacity={0.035} />}
-          <Vignette eskil={false} offset={0.16} darkness={0.82} />
+            <Bloom luminanceThreshold={0.28} intensity={runtimeVisualQuality === 'high' ? 1.18 : 0.82} mipmapBlur />
+            {runtimeVisualQuality === 'high' && <Noise opacity={0.035} />}
+            <Vignette eskil={false} offset={0.16} darkness={0.82} />
           </EffectComposer>
         )}
       </Canvas>
@@ -2457,11 +2500,12 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
   };
 
   const updateBursts = dt => {
+    const budget = getVisualBudget(visualQuality);
     let write = 0;
     for (const burst of hitBursts.current) {
       burst.life -= dt;
       if (burst.life <= 0) continue;
-      if (write < MAX_HIT_BURSTS) {
+      if (write < budget.hitBursts) {
         hitBursts.current[write] = burst;
         write += 1;
       }
@@ -2470,11 +2514,12 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
   };
 
   const updateWeaponEffects = dt => {
+    const budget = getVisualBudget(visualQuality);
     let write = 0;
     for (const effect of weaponEffects.current) {
       effect.life -= dt;
       if (effect.life <= 0) continue;
-      if (write < MAX_WEAPON_EFFECTS) {
+      if (write < budget.weaponEffects) {
         weaponEffects.current[write] = effect;
         write += 1;
       }
@@ -2483,13 +2528,14 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
   };
 
   const updateDamageNumbers = dt => {
+    const budget = getVisualBudget(visualQuality);
     let write = 0;
     for (const number of damageNumbers.current) {
       number.life -= dt;
       if (number.life <= 0) continue;
       number.age += dt;
       number.pos.y += dt * 0.9;
-      if (write < MAX_DAMAGE_NUMBERS) {
+      if (write < budget.damageNumbers) {
         damageNumbers.current[write] = number;
         write += 1;
       }
@@ -2498,11 +2544,12 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
   };
 
   const updateSpawnWarnings = dt => {
+    const budget = getVisualBudget(visualQuality);
     let write = 0;
     for (const warning of spawnWarnings.current) {
       warning.life -= dt;
       if (warning.life <= 0) continue;
-      if (write < MAX_SPAWN_WARNINGS) {
+      if (write < budget.spawnWarnings) {
         spawnWarnings.current[write] = warning;
         write += 1;
       }
