@@ -25,6 +25,8 @@ const MAX_WEAPON_EFFECTS = 24;
 const MAX_DAMAGE_NUMBERS = 30;
 const MAX_SPAWN_WARNINGS = 10;
 const MAX_ORBIT_BLADES = 12;
+const PROJECTILE_GRID_CELL_SIZE = 9;
+const PROJECTILE_GRID_KEY_STRIDE = 1024;
 const STATE_SYNC_INTERVAL = 0.08;
 const OVERLOAD_DURATION = 8;
 const XP_BASE_MAGNET_RADIUS = 8.2;
@@ -377,6 +379,14 @@ const VISUAL_BUDGETS = {
 
 function getVisualBudget(visualQuality = 'high') {
   return VISUAL_BUDGETS[visualQuality] ?? VISUAL_BUDGETS.high;
+}
+
+function getProjectileGridCoord(value) {
+  return Math.floor(value / PROJECTILE_GRID_CELL_SIZE);
+}
+
+function getProjectileGridKey(cellX, cellZ) {
+  return cellX * PROJECTILE_GRID_KEY_STRIDE + cellZ;
 }
 
 function getRuntimeVisualQuality(baseQuality = 'high', game = {}) {
@@ -875,6 +885,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
   const dashQueued = useRef(false);
   const enemies = useRef([]);
   const projectiles = useRef([]);
+  const projectileGrid = useRef({ cells: new Map(), maxRadius: 0, candidates: [] });
   const xpGems = useRef([]);
   const fieldItems = useRef([]);
   const shrines = useRef(createInitialShrines());
@@ -937,6 +948,9 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         dashQueued.current = false;
         enemies.current = [];
         projectiles.current = [];
+        projectileGrid.current.cells.clear();
+        projectileGrid.current.maxRadius = 0;
+        projectileGrid.current.candidates.length = 0;
         xpGems.current = [];
         fieldItems.current = [];
         shrines.current = createInitialShrines();
@@ -1137,6 +1151,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     updateSpawning(dt, game, setGame);
     updateWeapons(dt, game);
     updateProjectiles(dt, game.stats, game);
+    rebuildProjectileGrid();
     updateEnemies(dt, game, setGame);
     updateGems(dt, game, setGame, onLevelUp);
     updateFieldItems(dt, game, setGame);
@@ -1660,6 +1675,49 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     projectiles.current.length = projectileWrite;
   };
 
+  const rebuildProjectileGrid = () => {
+    const grid = projectileGrid.current;
+    grid.cells.clear();
+    grid.maxRadius = 0;
+    grid.candidates.length = 0;
+
+    for (const projectile of projectiles.current) {
+      if (projectile.life <= 0 || projectile.pierce < 0) continue;
+      const cellX = getProjectileGridCoord(projectile.pos.x);
+      const cellZ = getProjectileGridCoord(projectile.pos.z);
+      const key = getProjectileGridKey(cellX, cellZ);
+      let bucket = grid.cells.get(key);
+      if (!bucket) {
+        bucket = [];
+        grid.cells.set(key, bucket);
+      }
+      bucket.push(projectile);
+      grid.maxRadius = Math.max(grid.maxRadius, projectile.radius ?? 0);
+    }
+  };
+
+  const getProjectileCandidatesForEnemy = enemy => {
+    const grid = projectileGrid.current;
+    const candidates = grid.candidates;
+    candidates.length = 0;
+    if (grid.cells.size === 0) return candidates;
+
+    const centerX = getProjectileGridCoord(enemy.pos.x);
+    const centerZ = getProjectileGridCoord(enemy.pos.z);
+    const radius = enemy.hitRadius + grid.maxRadius;
+    const cellRange = Math.max(1, Math.ceil(radius / PROJECTILE_GRID_CELL_SIZE));
+
+    for (let cellX = centerX - cellRange; cellX <= centerX + cellRange; cellX += 1) {
+      for (let cellZ = centerZ - cellRange; cellZ <= centerZ + cellRange; cellZ += 1) {
+        const bucket = grid.cells.get(getProjectileGridKey(cellX, cellZ));
+        if (!bucket) continue;
+        candidates.push(...bucket);
+      }
+    }
+
+    return candidates;
+  };
+
   const damagePlayer = (amount, updateGame, invuln = 0.62) => {
     if (player.current.invuln > 0) return false;
     const bladeFocus = getBuildFocus(game, 'blade');
@@ -1990,7 +2048,9 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         damagePlayer(enemy.damage * getEnemyDamagePressure(currentGame), updateGame);
       }
 
-      for (const projectile of projectiles.current) {
+      const nearbyProjectiles = getProjectileCandidatesForEnemy(enemy);
+      for (const projectile of nearbyProjectiles) {
+        if (projectile.life <= 0 || projectile.pierce < 0) continue;
         if (projectile.pos.distanceToSquared(enemy.pos) < (enemy.hitRadius + projectile.radius) ** 2) {
           const dealt = applyDamageToEnemy(enemy, projectile.damage, projectile.type);
           recordDamage(projectile.type, dealt);
