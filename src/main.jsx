@@ -4160,6 +4160,7 @@ function MapBaseArena() {
 
       <SculptedRuinTerrain />
       <OpenFieldTerrainIdentity />
+      <TerrainStoryDetails />
       <RiftFloorSigils />
       <RuneRelicLandmarks />
       <NaturalFieldKit />
@@ -4435,6 +4436,78 @@ function RuneRelicLandmarks() {
   );
 }
 
+function TerrainStoryDetails() {
+  const details = useMemo(() => {
+    const riftThreads = Array.from({ length: 16 }, (_, index) => {
+      const angle = index * Math.PI * 2 / 16 + (index % 3) * 0.08;
+      const radius = 17 + (index % 5) * 7.8;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      return {
+        position: [x, getTerrainHeight(x, z) + 0.062, z],
+        rotation: -angle + Math.PI / 2 + Math.sin(index * 1.7) * 0.18,
+        scale: [5.4 + (index % 4) * 1.25, 0.18 + (index % 3) * 0.04, 1],
+        color: index % 4 === 0 ? ART_TOKENS.wornGold : index % 2 ? ART_TOKENS.riftViolet : ART_TOKENS.runeCyan,
+        opacity: index % 4 === 0 ? 0.1 : 0.13
+      };
+    });
+
+    const floorChips = Array.from({ length: 34 }, (_, index) => {
+      const angle = index * 1.84 + (index % 5) * 0.12;
+      const radius = 18 + (index % 18) * 3.45;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const frontLane = z < -22 && Math.abs(x) < 38;
+      return {
+        skip: frontLane || radius > ARENA_RADIUS - 10,
+        position: [x, getTerrainHeight(x, z) + 0.07, z],
+        rotation: -angle + (index % 7) * 0.19,
+        scale: [1.15 + (index % 4) * 0.42, 0.34 + (index % 3) * 0.1, 1],
+        color: index % 2 ? '#68715b' : '#4f5d52',
+        opacity: 0.2 + (index % 3) * 0.035
+      };
+    }).filter(item => !item.skip);
+
+    const oldPlazas = [0.52, 2.1, 3.74, 5.18].map((angle, index) => {
+      const radius = 48 + (index % 2) * 6.5;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      return {
+        position: [x, getTerrainHeight(x, z) + 0.054, z],
+        rotation: -angle + Math.PI / 2,
+        scale: [8.2 + index * 0.9, 2.7 + (index % 2) * 0.5, 1],
+        color: index % 2 ? '#636247' : '#4c5a43',
+        opacity: 0.13
+      };
+    });
+
+    return { riftThreads, floorChips, oldPlazas };
+  }, []);
+
+  return (
+    <group>
+      {details.oldPlazas.map((plaza, index) => (
+        <mesh key={`old-field-plaza-${index}`} position={plaza.position} rotation={[-Math.PI / 2, 0, plaza.rotation]} scale={plaza.scale}>
+          <circleGeometry args={[1, 64]} />
+          <meshBasicMaterial color={plaza.color} transparent opacity={plaza.opacity} depthWrite={false} toneMapped={false} />
+        </mesh>
+      ))}
+      {details.riftThreads.map((thread, index) => (
+        <mesh key={`rune-field-thread-${index}`} position={thread.position} rotation={[-Math.PI / 2, 0, thread.rotation]} scale={thread.scale}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial color={thread.color} transparent opacity={thread.opacity} depthWrite={false} toneMapped={false} />
+        </mesh>
+      ))}
+      {details.floorChips.map((chip, index) => (
+        <mesh key={`broken-floor-chip-${index}`} position={chip.position} rotation={[-Math.PI / 2, 0, chip.rotation]} scale={chip.scale}>
+          <ringGeometry args={[0.42, 0.52, 4]} />
+          <meshBasicMaterial color={chip.color} transparent opacity={chip.opacity} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function NaturalFieldKit() {
   const transforms = useMemo(() => {
     const place = (angle, radius, scale, yOffset = 0.03, tilt = 0) => {
@@ -4462,24 +4535,24 @@ function NaturalFieldKit() {
       return place(angle, radius, (1.55 + (index % 5) * 0.34) * distanceScale, 0.02, index % 3 === 0 ? 0.08 : 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 7 && item.position.length() > 34 && sightlineClear(item));
 
-    const ringTrees = Array.from({ length: 58 }, (_, index) => {
-      const angle = index * 0.67 + (index % 5) * 0.13;
-      const radius = 91 + (index % 10) * 2.45;
-      const scale = radius > 106 ? 6.2 + (index % 4) * 0.58 : 4.6 + (index % 4) * 0.42;
+    const ringTrees = Array.from({ length: 48 }, (_, index) => {
+      const angle = index * 0.76 + (index % 5) * 0.13;
+      const radius = 94 + (index % 12) * 2.25;
+      const scale = radius > 108 ? 5.8 + (index % 4) * 0.52 : 4.25 + (index % 4) * 0.34;
       return place(angle, radius, scale, -0.04, 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 2.4 && sightlineClear(item));
 
-    const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: 7 }, (_, index) => {
-      const offset = index - 3;
-      const angle = site.angle + offset * 0.07 + (siteIndex % 2 ? -0.035 : 0.035);
-      const radius = site.radius + 9 + (index % 3) * 3.2;
-      const scale = 3.7 + (index % 4) * 0.52 + siteIndex * 0.08;
+    const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: 5 }, (_, index) => {
+      const offset = index - 2;
+      const angle = site.angle + offset * 0.085 + (siteIndex % 2 ? -0.04 : 0.04);
+      const radius = site.radius + 10.5 + (index % 3) * 3.6;
+      const scale = 3.35 + (index % 4) * 0.44 + siteIndex * 0.08;
       return place(angle, radius, scale, -0.04, 0);
     })).filter(item => item.position.length() < ARENA_RADIUS - 3.5 && sightlineClear(item));
 
     const trees = [...ringTrees, ...groveTrees];
 
-    const bushes = Array.from({ length: 82 }, (_, index) => {
+    const bushes = Array.from({ length: 68 }, (_, index) => {
       const angle = index * 0.97 + 0.17;
       const radius = 38 + (index % 22) * 3.4;
       return place(angle, radius, 1.28 + (index % 4) * 0.16, 0.01, 0);
@@ -4509,7 +4582,39 @@ function NaturalFieldKit() {
       <StaticModelInstances url={NATURE_MODEL_URLS.treeDefault} transforms={treeDefault} castShadow receiveShadow />
       <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} castShadow receiveShadow />
       <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow />
+      <TreeCanopyShadows transforms={transforms.trees} />
     </group>
+  );
+}
+
+function TreeCanopyShadows({ transforms }) {
+  const shadowRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3()
+  }), []);
+
+  useEffect(() => {
+    if (!shadowRef.current) return;
+    transforms.forEach((transform, index) => {
+      local.pos.copy(transform.position);
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + 0.052;
+      local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, transform.rotation));
+      const shadowScale = Math.max(2.2, transform.scale * 0.72);
+      local.matrix.compose(local.pos, local.quat, local.scale.set(shadowScale, shadowScale * 0.68, 1));
+      shadowRef.current.setMatrixAt(index, local.matrix);
+    });
+    shadowRef.current.count = transforms.length;
+    shadowRef.current.instanceMatrix.needsUpdate = true;
+  }, [local, transforms]);
+
+  return (
+    <instancedMesh ref={shadowRef} args={[null, null, transforms.length]} frustumCulled={false}>
+      <circleGeometry args={[1, 28]} />
+      <meshBasicMaterial color="#07110d" transparent opacity={0.18} depthWrite={false} toneMapped={false} />
+    </instancedMesh>
   );
 }
 
