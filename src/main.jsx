@@ -61,9 +61,9 @@ const ART_TOKENS = {
 };
 
 const WAVE_PROFILES = [
-  { name: 'Rift Scouts', trait: '정찰', hint: '균형형 진입', accent: '#70f0b4', affix: 'scout', targetBase: 44, spawnBase: 6, runner: 0.14, brute: 0.02, interval: 0.62 },
-  { name: 'Howling Pack', trait: '추격', hint: '러너 가속', accent: '#70d6ff', affix: 'pack', targetBase: 62, spawnBase: 8, runner: 0.3, brute: 0.05, interval: 0.5 },
-  { name: 'Stone March', trait: '장갑', hint: '체력 높은 행군', accent: '#ffdf6e', affix: 'stone', targetBase: 76, spawnBase: 10, runner: 0.18, brute: 0.19, interval: 0.45 },
+  { name: 'Rift Scouts', trait: '정찰', hint: '균형형 진입', accent: '#70f0b4', affix: 'scout', targetBase: 48, spawnBase: 7, runner: 0.16, brute: 0.02, interval: 0.58 },
+  { name: 'Howling Pack', trait: '추격', hint: '러너 가속', accent: '#70d6ff', affix: 'pack', targetBase: 66, spawnBase: 9, runner: 0.31, brute: 0.05, interval: 0.48 },
+  { name: 'Stone March', trait: '장갑', hint: '체력 높은 행군', accent: '#ffdf6e', affix: 'stone', targetBase: 80, spawnBase: 10, runner: 0.18, brute: 0.2, interval: 0.44 },
   { name: 'Split Swarm', trait: '분열', hint: '일부 적 사망 시 분열', accent: '#d8b2ff', affix: 'split', targetBase: 94, spawnBase: 12, runner: 0.38, brute: 0.14, interval: 0.4 },
   { name: 'Rift Siege', trait: '공성', hint: '피해와 압박 증가', accent: '#ff8b72', affix: 'siege', targetBase: 112, spawnBase: 14, runner: 0.3, brute: 0.28, interval: 0.36 }
 ];
@@ -80,16 +80,16 @@ const COMBAT_RHYTHM = [
 
 const EARLY_FIELD_ITEM_SCHEDULE = [
   { id: 'starter-magnet', time: 5, type: 'magnet', distance: 2.2, spread: 1.1 },
-  { id: 'starter-overload', time: 34, type: 'overload', distance: 5.2, spread: 2.2 },
-  { id: 'starter-cache', time: 74, type: 'cache', distance: 6.4, spread: 2.5 },
-  { id: 'second-magnet', time: 48, type: 'magnet', distance: 5.8, spread: 2.4 },
-  { id: 'starter-purge', time: 68, type: 'purge', distance: 7.0, spread: 2.6 },
-  { id: 'second-cache', time: 136, type: 'cache', distance: 8.2, spread: 3.2 },
-  { id: 'third-magnet', time: 116, type: 'magnet', distance: 8.8, spread: 3.6 },
-  { id: 'third-cache', time: 192, type: 'cache', distance: 9.8, spread: 4.1 },
-  { id: 'second-purge', time: 176, type: 'purge', distance: 10.5, spread: 4.4 },
-  { id: 'second-overload', time: 214, type: 'overload', distance: 11.2, spread: 4.8 },
-  { id: 'final-cache', time: 252, type: 'cache', distance: 12.0, spread: 5.2 }
+  { id: 'second-magnet', time: 54, type: 'magnet', distance: 5.8, spread: 2.4 },
+  { id: 'starter-overload', time: 62, type: 'overload', distance: 5.8, spread: 2.4 },
+  { id: 'starter-purge', time: 82, type: 'purge', distance: 7.2, spread: 2.8 },
+  { id: 'starter-cache', time: 96, type: 'cache', distance: 7.6, spread: 3.0 },
+  { id: 'third-magnet', time: 122, type: 'magnet', distance: 8.8, spread: 3.6 },
+  { id: 'second-cache', time: 158, type: 'cache', distance: 8.8, spread: 3.6 },
+  { id: 'second-purge', time: 184, type: 'purge', distance: 10.5, spread: 4.4 },
+  { id: 'third-cache', time: 218, type: 'cache', distance: 10.4, spread: 4.4 },
+  { id: 'second-overload', time: 236, type: 'overload', distance: 11.2, spread: 4.8 },
+  { id: 'final-cache', time: 268, type: 'cache', distance: 12.0, spread: 5.2 }
 ];
 
 const ELITE_ROLE_META = {
@@ -152,8 +152,8 @@ const weaponCatalog = [
     id: 'rune-orb',
     name: '룬 구체',
     color: '#70d6ff',
-    cooldown: 0.46,
-    damage: 26,
+    cooldown: 0.5,
+    damage: 23,
     speed: 17,
     pierce: 1,
     size: 0.34
@@ -162,8 +162,8 @@ const weaponCatalog = [
     id: 'storm-brand',
     name: '폭풍 낙인',
     color: '#b8f7ff',
-    cooldown: 1.52,
-    damage: 38,
+    cooldown: 1.68,
+    damage: 34,
     speed: 0,
     pierce: 5,
     size: 0.44
@@ -173,7 +173,7 @@ const weaponCatalog = [
     name: '궤도 칼날',
     color: '#f7d06b',
     cooldown: 0,
-    damage: 16,
+    damage: 14,
     speed: 0,
     pierce: 99,
     size: 0.22
@@ -182,8 +182,8 @@ const weaponCatalog = [
     id: 'chain-lightning',
     name: '연쇄 번개',
     color: '#d7b7ff',
-    cooldown: 1.04,
-    damage: 28,
+    cooldown: 1.16,
+    damage: 25,
     range: 34,
     chains: 3
   },
@@ -191,8 +191,8 @@ const weaponCatalog = [
     id: 'solar-nova',
     name: '태양 파동',
     color: '#ff8b72',
-    cooldown: 3.05,
-    damage: 34,
+    cooldown: 3.35,
+    damage: 31,
     radius: 8.4
   }
 ];
@@ -2187,7 +2187,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         let nextGame = withShrineActivation(withItemPickup(current, 'cache'), shrine.id);
         const boosts = [];
         const excluded = new Set();
-        for (let index = 0; index < 2; index += 1) {
+        const boostCount = current.time < 160 ? 1 : 2;
+        for (let index = 0; index < boostCount; index += 1) {
           const boost = pickArmoryBoost(nextGame, excluded);
           if (!boost) break;
           excluded.add(boost.id);
@@ -2206,7 +2207,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           pickupFlash: 2.8
         };
       });
-      addDamageNumber(shrine.pos, '무기 각인 x2', shrine.color, 0.98);
+      addDamageNumber(shrine.pos, currentGame.time < 160 ? '무기 각인 x1' : '무기 각인 x2', shrine.color, 0.98);
       return;
     }
 
@@ -2365,7 +2366,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         let nextGame = withItemPickup(current, 'cache');
         const boosts = [];
         const excluded = new Set();
-        const boostCount = current.time < 120 ? 1 : current.time > 210 ? 3 : 2;
+        const boostCount = current.time < 160 ? 1 : current.time > 235 ? 3 : 2;
         for (let index = 0; index < boostCount; index += 1) {
           const boost = pickArmoryBoost(nextGame, excluded);
           if (!boost) break;
@@ -2388,7 +2389,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           pickupFlash: 2.8
         };
       });
-      addDamageNumber(player.current.pos, currentGame.time < 120 ? '무기 강화 x1' : currentGame.time > 210 ? '무기 강화 x3' : '무기 강화 x2', color, 1.0);
+      addDamageNumber(player.current.pos, currentGame.time < 160 ? '무기 강화 x1' : currentGame.time > 235 ? '무기 강화 x3' : '무기 강화 x2', color, 1.0);
       orbTimer.current = Math.min(orbTimer.current, 0.04);
       stormTimer.current = Math.min(stormTimer.current, 0.08);
       lightningTimer.current = Math.min(lightningTimer.current, 0.06);
@@ -5876,10 +5877,10 @@ function pickFieldItemType(game) {
   const hpRatio = game.stats.hp / game.stats.maxHp;
   const roll = Math.random();
   if (hpRatio < 0.45 && roll < 0.34) return 'heal';
-  if (game.time >= 55 && game.time < 130 && roll < 0.18) return 'cache';
-  if (game.time >= 130 && roll < 0.24) return 'cache';
-  if (roll < 0.46) return 'magnet';
-  if (roll < 0.67) return 'overload';
+  if (game.time >= 90 && game.time < 155 && roll < 0.1) return 'cache';
+  if (game.time >= 155 && roll < 0.18) return 'cache';
+  if (roll < 0.5) return 'magnet';
+  if (roll < (game.time < 75 ? 0.58 : 0.68)) return 'overload';
   if (roll < 0.86) return 'purge';
   return hpRatio < 0.82 ? 'heal' : 'magnet';
 }
@@ -6145,7 +6146,7 @@ function getWaveEnemyMods(affix, kind) {
 }
 
 function getWeaponStage(game) {
-  return Math.min(3, Math.max(0, Math.floor((game.level - 1) / 1.2) + Math.floor(game.upgrades.length / 2)));
+  return Math.min(3, Math.max(0, Math.floor((game.level - 1) / 2.2) + Math.floor(game.upgrades.length / 4)));
 }
 
 function getWeaponTier(stats, stage = 0) {
@@ -6734,7 +6735,7 @@ function isUpgradeDraftable(game, upgrade) {
   if (!key) return true;
   if (isWeaponFamilyUnlocked(game, key)) return true;
   if (key === 'orb') return true;
-  return game.level >= 4 || game.time >= 78 || getItemPickupCount(game, 'cache') > 0 || (game.shrineActivations ?? 0) > 0;
+  return game.level >= 6 || game.time >= 96 || getItemPickupCount(game, 'cache') > 0 || (game.shrineActivations ?? 0) > 0;
 }
 
 function getUpgradeWeight(game, upgrade) {
@@ -6747,11 +6748,11 @@ function getUpgradeWeight(game, upgrade) {
     const focus = getBuildFocus(game, key);
     const synergyDelta = getUpgradeSynergyMatches(game, upgrade).some(synergy => synergy.nextLevel > synergy.currentLevel);
     weight += focus * 0.48;
-    if (!isWeaponFamilyUnlocked(game, key)) weight += game.level <= 7 ? 1.15 : 0.85;
+    if (!isWeaponFamilyUnlocked(game, key)) weight += game.level <= 7 ? 0.72 : 0.9;
     if (synergyDelta) weight += 1.7;
     if (dominant?.key === key) weight += 1.15;
-    if (focus === 0 && game.level <= 8) weight += 1.05;
-    if (game.level <= 5 && (key === 'orb' || key === 'storm' || key === 'chain' || key === 'nova' || key === 'blade')) weight += 0.34;
+    if (focus === 0 && game.level <= 8) weight += key === 'orb' ? 0.96 : 0.62;
+    if (game.level <= 5 && key === 'orb') weight += 0.42;
   } else {
     if (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.72) weight += 1.25;
     if (upgrade.id === 'magnet' && game.level <= 4) weight += 0.55;
@@ -6796,7 +6797,10 @@ function pickUpgrades(game) {
   if (game.level <= 3) {
     addDraftChoice(choices, starterChoices, game);
     addDraftChoice(choices, utilityChoices, game);
-  } else if (game.level <= 6) {
+  } else if (game.level <= 5) {
+    addDraftChoice(choices, starterChoices, game);
+    addDraftChoice(choices, utilityChoices, game);
+  } else if (game.level <= 7) {
     addDraftChoice(choices, starterChoices, game);
     addDraftChoice(choices, lockedWeaponChoices, game);
   }
