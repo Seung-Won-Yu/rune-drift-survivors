@@ -340,9 +340,9 @@ const WEAPON_UPGRADE_IDS = new Set([
 const STARTING_WEAPON_FAMILIES = new Set(['orb']);
 const UPGRADE_CHOICE_COUNT = 4;
 const VISUAL_BUDGETS = {
-  high: { enemyAuras: 104, enemyAccents: 112, gemBeams: 126, projectileAura: 118, projectileDetail: 84 },
-  balanced: { enemyAuras: 78, enemyAccents: 84, gemBeams: 76, projectileAura: 86, projectileDetail: 46 },
-  low: { enemyAuras: 46, enemyAccents: 54, gemBeams: 0, projectileAura: 54, projectileDetail: 0 }
+  high: { enemyAuras: 96, enemyAccents: 104, gemBeams: 104, projectileAura: 108, projectileDetail: 68 },
+  balanced: { enemyAuras: 68, enemyAccents: 76, gemBeams: 58, projectileAura: 72, projectileDetail: 34 },
+  low: { enemyAuras: 38, enemyAccents: 44, gemBeams: 0, projectileAura: 42, projectileDetail: 0 }
 };
 
 function getVisualBudget(visualQuality = 'high') {
@@ -2549,15 +2549,17 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
 
   const nearestEnemies = (limit = 1, maxDistance = Infinity) => {
     const maxDistanceSq = maxDistance * maxDistance;
-    return enemies.current
-      .map(enemy => ({
-        enemy,
-        distance: enemy.pos.distanceToSquared(player.current.pos)
-      }))
-      .filter(item => item.distance <= maxDistanceSq)
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, limit)
-      .map(item => item.enemy);
+    const best = [];
+    for (const enemy of enemies.current) {
+      const distance = enemy.pos.distanceToSquared(player.current.pos);
+      if (distance > maxDistanceSq) continue;
+      let insertAt = best.length;
+      while (insertAt > 0 && best[insertAt - 1].distance > distance) insertAt -= 1;
+      if (insertAt >= limit) continue;
+      best.splice(insertAt, 0, { enemy, distance });
+      if (best.length > limit) best.pop();
+    }
+    return best.map(item => item.enemy);
   };
 
   const renderInstances = () => {
@@ -2590,10 +2592,10 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       <pointLight position={[0, 5.8, 0]} intensity={1.25} color={ART_TOKENS.wornGold} distance={38} />
       <pointLight position={[-42, 3.2, -22]} intensity={1.15} color={ART_TOKENS.riftViolet} distance={42} />
       <pointLight position={[48, 3.2, 26]} intensity={0.86} color={ART_TOKENS.runeMint} distance={38} />
-      <MapBaseArena />
+      <MapBaseArena visualQuality={visualQuality} />
       <ArenaAtmosphere />
       {visualQuality !== 'low' && <RiftSkyMotifs visualQuality={visualQuality} />}
-      <PlayerAvatar rootRef={playerMesh} game={game} />
+      <PlayerAvatar rootRef={playerMesh} game={game} player={player} />
       <PlayerPresence player={player} game={game} />
       <OrbitBlades player={player} game={game} />
       <EnemyGroundAuras enemiesRef={enemies} visualQuality={visualQuality} />
@@ -4127,9 +4129,14 @@ function BossPresence({ enemiesRef }) {
   );
 }
 
-function PlayerAvatar({ rootRef, game }) {
+function PlayerAvatar({ rootRef, game, player }) {
   const runeGroup = useRef();
   const crestGroup = useRef();
+  const cloakMesh = useRef();
+  const leftStrideMesh = useRef();
+  const rightStrideMesh = useRef();
+  const staffTrailMesh = useRef();
+  const shoulderSash = useRef();
   const stage = getWeaponStage(game);
   const dominantBuild = getDominantBuild(game);
   const focus = dominantBuild?.focus ?? 0;
@@ -4137,16 +4144,70 @@ function PlayerAvatar({ rootRef, game }) {
   const runeColor = dominantBuild?.color ?? getOrbColor(game.stats, stage);
 
   useFrame(() => {
+    const now = performance.now();
+    const speed = player?.current?.vel?.length?.() ?? 0;
+    const moveAmount = THREE.MathUtils.clamp(speed / (PLAYER_SPEED * 1.16), 0, 1);
+    const dashPower = player?.current?.dashTimer > 0 ? 1 : 0;
+    const stride = now * 0.013;
     if (runeGroup.current) runeGroup.current.rotation.y += 0.018 + game.stats.cooldown * 0.004;
     if (crestGroup.current) {
       crestGroup.current.rotation.y -= 0.012 + stage * 0.002;
-      crestGroup.current.position.y = 1.55 + Math.sin(performance.now() * 0.004) * 0.05;
+      crestGroup.current.position.y = 1.55 + Math.sin(now * 0.004) * 0.05 + moveAmount * 0.035;
+    }
+    if (cloakMesh.current) {
+      cloakMesh.current.visible = moveAmount > 0.04 || dashPower > 0;
+      cloakMesh.current.position.set(0, 0.75 + Math.sin(stride * 0.5) * 0.035, -0.52 - moveAmount * 0.18 - dashPower * 0.18);
+      cloakMesh.current.rotation.set(0.25 + moveAmount * 0.16, Math.sin(stride * 0.52) * 0.08, Math.sin(stride) * 0.06 * moveAmount);
+      cloakMesh.current.scale.set(0.58 + dashPower * 0.18, 1.0 + moveAmount * 0.34 + dashPower * 0.42, 1);
+    }
+    if (leftStrideMesh.current && rightStrideMesh.current) {
+      const leftStep = Math.max(0, Math.sin(stride));
+      const rightStep = Math.max(0, Math.sin(stride + Math.PI));
+      leftStrideMesh.current.visible = moveAmount > 0.08;
+      rightStrideMesh.current.visible = moveAmount > 0.08;
+      leftStrideMesh.current.position.set(-0.24, 0.18 + leftStep * 0.12, 0.12 + leftStep * 0.2);
+      rightStrideMesh.current.position.set(0.24, 0.18 + rightStep * 0.12, 0.12 + rightStep * 0.2);
+      leftStrideMesh.current.rotation.set(0.72, -0.24 + leftStep * 0.18, -0.28);
+      rightStrideMesh.current.rotation.set(0.72, 0.24 - rightStep * 0.18, 0.28);
+      leftStrideMesh.current.scale.set(0.14 + leftStep * 0.05, 0.5 + leftStep * 0.2 + dashPower * 0.12, 0.1);
+      rightStrideMesh.current.scale.set(0.14 + rightStep * 0.05, 0.5 + rightStep * 0.2 + dashPower * 0.12, 0.1);
+    }
+    if (staffTrailMesh.current) {
+      staffTrailMesh.current.visible = moveAmount > 0.06 || dashPower > 0;
+      staffTrailMesh.current.position.set(0.38 + Math.sin(stride * 0.5) * 0.04, 1.02 + Math.sin(stride) * 0.045, 0.08);
+      staffTrailMesh.current.rotation.set(0.35, -0.18, -0.52 + Math.sin(stride * 0.72) * 0.12);
+      staffTrailMesh.current.scale.set(0.11 + stage * 0.01, 0.62 + moveAmount * 0.24 + dashPower * 0.2, 0.11);
+    }
+    if (shoulderSash.current) {
+      shoulderSash.current.visible = moveAmount > 0.02 || focus > 0;
+      shoulderSash.current.position.y = 1.05 + Math.sin(stride * 0.48) * 0.045;
+      shoulderSash.current.rotation.set(0.16 + moveAmount * 0.1, Math.sin(stride * 0.34) * 0.08, Math.sin(stride) * 0.12 * moveAmount);
     }
   });
 
   return (
     <group ref={rootRef}>
       <RuneDrifterModel />
+      <mesh ref={cloakMesh} position={[0, 0.75, -0.56]} rotation={[0.25, 0, 0]} scale={[0.58, 1.0, 1]} visible={false}>
+        <planeGeometry args={[1, 1.34]} />
+        <meshBasicMaterial color={runeColor} transparent opacity={0.22} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      <mesh ref={shoulderSash} position={[0, 1.05, -0.32]} rotation={[0.16, 0, 0]} scale={[0.64, 0.95, 1]}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial color={ART_TOKENS.wornGold} transparent opacity={0.18} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      <mesh ref={leftStrideMesh} visible={false}>
+        <coneGeometry args={[1, 1, 4]} />
+        <meshBasicMaterial color={runeColor} transparent opacity={0.46} depthWrite={false} toneMapped={false} />
+      </mesh>
+      <mesh ref={rightStrideMesh} visible={false}>
+        <coneGeometry args={[1, 1, 4]} />
+        <meshBasicMaterial color={runeColor} transparent opacity={0.46} depthWrite={false} toneMapped={false} />
+      </mesh>
+      <mesh ref={staffTrailMesh} visible={false}>
+        <octahedronGeometry args={[1, 0]} />
+        <meshBasicMaterial color={runeColor} transparent opacity={0.54} depthWrite={false} toneMapped={false} />
+      </mesh>
       <mesh position={[0, 1.05, -0.18]} scale={[0.24, 0.24, 0.24]}>
         <octahedronGeometry args={[1, 0]} />
         <meshStandardMaterial color={runeColor} emissive={runeColor} emissiveIntensity={2.4} roughness={0.18} toneMapped={false} />
@@ -4215,7 +4276,7 @@ function RuneDrifterModel() {
 
 PRELOAD_MODEL_URLS.forEach(path => useGLTF.preload(path));
 
-function MapBaseArena() {
+function MapBaseArena({ visualQuality = 'high' }) {
   return (
     <group>
       <mesh receiveShadow position={[0, -2.05, 0]}>
@@ -4228,12 +4289,12 @@ function MapBaseArena() {
         <meshStandardMaterial color="#101912" roughness={1} metalness={0} />
       </mesh>
 
-      <SculptedRuinTerrain />
+      <SculptedRuinTerrain visualQuality={visualQuality} />
       <OpenFieldTerrainIdentity />
       <TerrainStoryDetails />
       <RiftFloorSigils />
       <RuneRelicLandmarks />
-      <NaturalFieldKit />
+      <NaturalFieldKit visualQuality={visualQuality} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.07, 0]}>
         <ringGeometry args={[ARENA_RADIUS - 1.35, ARENA_RADIUS - 1.02, 224]} />
@@ -4300,10 +4361,10 @@ function RiftFloorSigils() {
   );
 }
 
-function SculptedRuinTerrain() {
+function SculptedRuinTerrain({ visualQuality = 'high' }) {
   const geometry = useMemo(() => {
     const size = ARENA_RADIUS * 2 + 48;
-    const segments = 160;
+    const segments = visualQuality === 'low' ? 96 : visualQuality === 'balanced' ? 128 : 160;
     const half = size / 2;
     const positions = [];
     const colors = [];
@@ -4364,7 +4425,7 @@ function SculptedRuinTerrain() {
     terrainGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     terrainGeometry.computeVertexNormals();
     return terrainGeometry;
-  }, []);
+  }, [visualQuality]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
@@ -4578,8 +4639,10 @@ function TerrainStoryDetails() {
   );
 }
 
-function NaturalFieldKit() {
+function NaturalFieldKit({ visualQuality = 'high' }) {
   const transforms = useMemo(() => {
+    const density = visualQuality === 'low' ? 0.62 : visualQuality === 'balanced' ? 0.78 : 1;
+    const count = base => Math.max(1, Math.round(base * density));
     const place = (angle, radius, scale, yOffset = 0.03, tilt = 0) => {
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
@@ -4593,55 +4656,66 @@ function NaturalFieldKit() {
 
     const sightlineClear = item => {
       const distance = item.position.length();
-      const frontScreenLane = item.position.z < -14 && Math.abs(item.position.x) < 66;
-      const playLane = item.position.z < 26 && Math.abs(item.position.x) < 34;
-      const nearCenter = distance < 50;
+      const frontScreenLane = item.position.z < -10 && Math.abs(item.position.x) < 72;
+      const playLane = item.position.z < 32 && Math.abs(item.position.x) < 40;
+      const nearCenter = distance < 58;
       return !nearCenter && !frontScreenLane && !playLane;
     };
 
     const lowCoverClear = item => {
-      const lane = item.position.z < -18 && Math.abs(item.position.x) < 40;
+      const lane = item.position.z < -20 && Math.abs(item.position.x) < 44;
       return !lane;
     };
 
-    const rocks = Array.from({ length: 58 }, (_, index) => {
+    const rocks = Array.from({ length: count(58) }, (_, index) => {
       const angle = index * 1.17 + 0.42;
       const radius = 40 + (index % 18) * 4.1;
       const distanceScale = radius > 78 ? 1 : 0.74;
       return place(angle, radius, (1.55 + (index % 5) * 0.34) * distanceScale, 0.02, index % 3 === 0 ? 0.08 : 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 7 && item.position.length() > 38 && lowCoverClear(item));
 
-    const ringTrees = Array.from({ length: 36 }, (_, index) => {
+    const ringTrees = Array.from({ length: count(38) }, (_, index) => {
       const angle = index * 1.02 + (index % 5) * 0.15;
-      const radius = 100 + (index % 10) * 2.05;
-      const scale = radius > 110 ? 4.85 + (index % 4) * 0.42 : 3.55 + (index % 4) * 0.28;
+      const radius = 103 + (index % 10) * 1.82;
+      const scale = radius > 110 ? 4.35 + (index % 4) * 0.34 : 3.15 + (index % 4) * 0.22;
       return place(angle, radius, scale, -0.04, 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 2.8 && sightlineClear(item));
 
-    const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: 3 }, (_, index) => {
+    const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: visualQuality === 'low' ? 2 : 3 }, (_, index) => {
       const offset = index - 1;
       const angle = site.angle + offset * 0.12 + (siteIndex % 2 ? -0.05 : 0.05);
-      const radius = site.radius + 13.5 + (index % 3) * 3.9;
-      const scale = 2.85 + (index % 3) * 0.32 + siteIndex * 0.06;
+      const radius = site.radius + 15.5 + (index % 3) * 3.6;
+      const scale = 2.55 + (index % 3) * 0.24 + siteIndex * 0.04;
       return place(angle, radius, scale, -0.04, 0);
     })).filter(item => item.position.length() < ARENA_RADIUS - 3.5 && sightlineClear(item));
 
     const trees = [...ringTrees, ...groveTrees];
 
-    const bushes = Array.from({ length: 56 }, (_, index) => {
+    const bushes = Array.from({ length: count(62) }, (_, index) => {
       const angle = index * 0.97 + 0.17;
       const radius = 38 + (index % 22) * 3.4;
       return place(angle, radius, 1.02 + (index % 4) * 0.13, 0.01, 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 5.5 && item.position.length() > 36 && lowCoverClear(item));
 
-    const grass = Array.from({ length: 170 }, (_, index) => {
+    const grass = Array.from({ length: count(150) }, (_, index) => {
       const angle = index * 1.61 + (index % 7) * 0.09;
       const radius = 20 + (index % 35) * 2.75;
       return place(angle, radius, 0.62 + (index % 5) * 0.08, 0.025, 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 6 && item.position.length() > 18);
 
-    return { rocks, trees, bushes, grass };
-  }, []);
+    const moss = Array.from({ length: count(82) }, (_, index) => {
+      const angle = index * 2.03 + (index % 5) * 0.07;
+      const radius = 16 + (index % 38) * 2.48;
+      const transform = place(angle, radius, 1.0 + (index % 6) * 0.18, 0.055, 0);
+      transform.width = 1.4 + (index % 5) * 0.32;
+      transform.depth = 0.46 + (index % 4) * 0.12;
+      transform.color = index % 4 === 0 ? ART_TOKENS.wornGold : index % 3 === 0 ? ART_TOKENS.runeCyan : '#425d3f';
+      transform.opacity = index % 4 === 0 ? 0.08 : 0.12;
+      return transform;
+    }).filter(item => item.position.length() < ARENA_RADIUS - 8 && lowCoverClear(item));
+
+    return { rocks, trees, bushes, grass, moss };
+  }, [visualQuality]);
 
   const rockLarge = useMemo(() => transforms.rocks.filter((_, index) => index % 3 !== 0), [transforms]);
   const rockTall = useMemo(() => transforms.rocks.filter((_, index) => index % 3 === 0), [transforms]);
@@ -4658,8 +4732,89 @@ function NaturalFieldKit() {
       <StaticModelInstances url={NATURE_MODEL_URLS.treeDefault} transforms={treeDefault} castShadow receiveShadow />
       <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} castShadow receiveShadow />
       <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow />
+      <FieldMossPatches transforms={transforms.moss} />
       <TreeCanopyShadows transforms={transforms.trees} />
+      {visualQuality !== 'low' && <TreeCanopyHighlights transforms={transforms.trees} />}
     </group>
+  );
+}
+
+function FieldMossPatches({ transforms }) {
+  const patchRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!patchRef.current) return;
+    transforms.forEach((transform, index) => {
+      local.pos.copy(transform.position);
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + 0.064;
+      local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, transform.rotation));
+      local.matrix.compose(
+        local.pos,
+        local.quat,
+        local.scale.set(transform.width * transform.scale, transform.depth * transform.scale, 1)
+      );
+      patchRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.color);
+      patchRef.current.setColorAt(index, local.color);
+    });
+    patchRef.current.count = transforms.length;
+    patchRef.current.instanceMatrix.needsUpdate = true;
+    if (patchRef.current.instanceColor) patchRef.current.instanceColor.needsUpdate = true;
+  }, [local, transforms]);
+
+  return (
+    <instancedMesh ref={patchRef} args={[null, null, transforms.length]} frustumCulled={false}>
+      <planeGeometry args={[1, 1]} />
+      <meshBasicMaterial transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+    </instancedMesh>
+  );
+}
+
+function TreeCanopyHighlights({ transforms }) {
+  const highlightRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!highlightRef.current) return;
+    transforms.forEach((transform, index) => {
+      const side = index % 2 ? -1 : 1;
+      local.pos.copy(transform.position);
+      local.pos.x += Math.cos(transform.rotation + side * 0.52) * transform.scale * 0.18;
+      local.pos.y += transform.scale * (1.22 + (index % 3) * 0.04);
+      local.pos.z += Math.sin(transform.rotation + side * 0.52) * transform.scale * 0.18;
+      local.quat.setFromEuler(new THREE.Euler(0.55, transform.rotation + side * 0.22, side * 0.18));
+      local.matrix.compose(
+        local.pos,
+        local.quat,
+        local.scale.set(transform.scale * 0.22, transform.scale * 0.06, 1)
+      );
+      highlightRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(index % 4 === 0 ? ART_TOKENS.runeCyan : index % 5 === 0 ? ART_TOKENS.wornGold : '#9ad2a6');
+      highlightRef.current.setColorAt(index, local.color);
+    });
+    highlightRef.current.count = transforms.length;
+    highlightRef.current.instanceMatrix.needsUpdate = true;
+    if (highlightRef.current.instanceColor) highlightRef.current.instanceColor.needsUpdate = true;
+  }, [local, transforms]);
+
+  return (
+    <instancedMesh ref={highlightRef} args={[null, null, transforms.length]} frustumCulled={false}>
+      <planeGeometry args={[1, 1]} />
+      <meshBasicMaterial transparent opacity={0.2} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+    </instancedMesh>
   );
 }
 
