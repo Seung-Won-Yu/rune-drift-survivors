@@ -27,6 +27,8 @@ const MAX_SPAWN_WARNINGS = 10;
 const MAX_ORBIT_BLADES = 12;
 const PROJECTILE_GRID_CELL_SIZE = 9;
 const PROJECTILE_GRID_KEY_STRIDE = 1024;
+const STATIC_COLLIDER_GRID_CELL_SIZE = 18;
+const STATIC_COLLIDER_GRID_KEY_STRIDE = 1024;
 const STATE_SYNC_INTERVAL = 0.08;
 const OVERLOAD_DURATION = 8;
 const XP_BASE_MAGNET_RADIUS = 8.2;
@@ -148,6 +150,7 @@ const MAP_CLIFFS = [
 ];
 
 const STATIC_COLLIDERS = makeOpenFieldColliders();
+const STATIC_COLLIDER_GRID = makeStaticColliderGrid(STATIC_COLLIDERS);
 
 const weaponCatalog = [
   {
@@ -387,6 +390,14 @@ function getProjectileGridCoord(value) {
 
 function getProjectileGridKey(cellX, cellZ) {
   return cellX * PROJECTILE_GRID_KEY_STRIDE + cellZ;
+}
+
+function getStaticColliderGridCoord(value) {
+  return Math.floor(value / STATIC_COLLIDER_GRID_CELL_SIZE);
+}
+
+function getStaticColliderGridKey(cellX, cellZ) {
+  return cellX * STATIC_COLLIDER_GRID_KEY_STRIDE + cellZ;
 }
 
 function getRuntimeVisualQuality(baseQuality = 'high', game = {}) {
@@ -2039,7 +2050,14 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       const speedMultiplier = (enemy.chargeTimer > 0 ? 3.1 : enemy.bossGuard > 0 ? 0.72 : 1) * shockMultiplier * getEnemyMovePressure(currentGame);
       enemy.pos.addScaledVector(toPlayer, enemy.speed * speedMultiplier * dt);
       resolveStaticCollisions(enemy.pos, enemy.radius * 0.7);
-      enemy.pos.y += (getEnemyTerrainY(enemy.pos.x, enemy.pos.z) - enemy.pos.y) * Math.min(1, dt * 8);
+      enemy.groundSync = Math.max(0, (enemy.groundSync ?? 0) - dt);
+      if (enemy.groundY === undefined || enemy.groundSync <= 0) {
+        enemy.groundY = getEnemyTerrainY(enemy.pos.x, enemy.pos.z);
+        enemy.groundSync = enemy.kind === 'boss' || enemy.kind === 'elite' || enemy.chargeTimer > 0
+          ? 0.055
+          : 0.11 + (enemy.animSpeed % 1) * 0.035;
+      }
+      enemy.pos.y += (enemy.groundY - enemy.pos.y) * Math.min(1, dt * 8);
       enemy.facingAngle = Math.atan2(toPlayer.x, toPlayer.z);
       enemy.wobble += dt * enemy.animSpeed;
       enemy.flash = Math.max(0, enemy.flash - dt);
@@ -5794,6 +5812,80 @@ function makeOpenFieldColliders() {
   return colliders;
 }
 
+function getStaticColliderBounds(collider, padding = 0) {
+  if (collider.type === 'circle') {
+    const radius = collider.radius + padding;
+    return {
+      minX: collider.x - radius,
+      maxX: collider.x + radius,
+      minZ: collider.z - radius,
+      maxZ: collider.z + radius
+    };
+  }
+
+  const halfW = collider.w / 2 + padding;
+  const halfD = collider.d / 2 + padding;
+  return {
+    minX: collider.x - halfW,
+    maxX: collider.x + halfW,
+    minZ: collider.z - halfD,
+    maxZ: collider.z + halfD
+  };
+}
+
+function makeStaticColliderGrid(colliders) {
+  const cells = new Map();
+  colliders.forEach((collider, index) => {
+    collider.queryId = 0;
+    collider.index = index;
+    const bounds = getStaticColliderBounds(collider);
+    const minCellX = getStaticColliderGridCoord(bounds.minX);
+    const maxCellX = getStaticColliderGridCoord(bounds.maxX);
+    const minCellZ = getStaticColliderGridCoord(bounds.minZ);
+    const maxCellZ = getStaticColliderGridCoord(bounds.maxZ);
+    for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
+      for (let cellZ = minCellZ; cellZ <= maxCellZ; cellZ += 1) {
+        const key = getStaticColliderGridKey(cellX, cellZ);
+        let bucket = cells.get(key);
+        if (!bucket) {
+          bucket = [];
+          cells.set(key, bucket);
+        }
+        bucket.push(collider);
+      }
+    }
+  });
+  return { cells, queryId: 0 };
+}
+
+function forEachStaticColliderNear(pos, radius, visit) {
+  const grid = STATIC_COLLIDER_GRID;
+  grid.queryId += 1;
+  const bounds = {
+    minX: pos.x - radius,
+    maxX: pos.x + radius,
+    minZ: pos.z - radius,
+    maxZ: pos.z + radius
+  };
+  const minCellX = getStaticColliderGridCoord(bounds.minX);
+  const maxCellX = getStaticColliderGridCoord(bounds.maxX);
+  const minCellZ = getStaticColliderGridCoord(bounds.minZ);
+  const maxCellZ = getStaticColliderGridCoord(bounds.maxZ);
+
+  for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
+    for (let cellZ = minCellZ; cellZ <= maxCellZ; cellZ += 1) {
+      const bucket = grid.cells.get(getStaticColliderGridKey(cellX, cellZ));
+      if (!bucket) continue;
+      for (const collider of bucket) {
+        if (collider.queryId === grid.queryId) continue;
+        collider.queryId = grid.queryId;
+        if (visit(collider) === false) return false;
+      }
+    }
+  }
+  return true;
+}
+
 function smoothStep(edge0, edge1, value) {
   const t = THREE.MathUtils.clamp((value - edge0) / (edge1 - edge0), 0, 1);
   return t * t * (3 - 2 * t);
@@ -5866,7 +5958,7 @@ function getEnemyTerrainY(x, z) {
 }
 
 function resolveStaticCollisions(pos, radius) {
-  for (const collider of STATIC_COLLIDERS) {
+  forEachStaticColliderNear(pos, radius, collider => {
     if (collider.type === 'circle') {
       const dx = pos.x - collider.x;
       const dz = pos.z - collider.z;
@@ -5878,7 +5970,7 @@ function resolveStaticCollisions(pos, radius) {
         pos.x += dx * push;
         pos.z += dz * push;
       }
-      continue;
+      return;
     }
 
     const halfW = collider.w / 2 + radius;
@@ -5894,25 +5986,31 @@ function resolveStaticCollisions(pos, radius) {
         pos.z += Math.sign(dz || 1) * overlapZ;
       }
     }
-  }
+  });
 }
 
 function hitsStaticCollider(pos, radius) {
-  for (const collider of STATIC_COLLIDERS) {
+  let hit = false;
+  forEachStaticColliderNear(pos, radius, collider => {
     if (collider.type === 'circle') {
       const dx = pos.x - collider.x;
       const dz = pos.z - collider.z;
       const minDistance = radius + collider.radius;
-      if (dx * dx + dz * dz < minDistance * minDistance) return true;
-      continue;
+      if (dx * dx + dz * dz < minDistance * minDistance) {
+        hit = true;
+        return false;
+      }
+      return true;
     }
     const halfW = collider.w / 2 + radius;
     const halfD = collider.d / 2 + radius;
     if (Math.abs(pos.x - collider.x) < halfW && Math.abs(pos.z - collider.z) < halfD) {
-      return true;
+      hit = true;
+      return false;
     }
-  }
-  return false;
+    return true;
+  });
+  return hit;
 }
 
 function getWaveProfile(wave) {
