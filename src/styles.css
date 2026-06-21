@@ -88,7 +88,7 @@ button {
   position: absolute;
   inset: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) auto max(18px, env(safe-area-inset-left));
   display: grid;
-  gap: 6px;
+  gap: 5px;
   max-height: calc(100dvh - max(36px, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
   overflow: hidden;
   pointer-events: none;
@@ -142,8 +142,12 @@ button {
   flex-wrap: wrap;
   gap: 5px;
   width: fit-content;
-  max-width: min(720px, 100%);
+  max-width: min(560px, 100%);
   pointer-events: none;
+}
+
+.combatTicker .traitPill {
+  display: none;
 }
 
 .combatTicker span,
@@ -1217,18 +1221,20 @@ h1 {
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  counter-reset: upgrade-choice;
+  gap: 12px;
   margin-top: 22px;
 }
 
 .upgradeCard {
   position: relative;
   display: grid;
-  min-height: 210px;
+  min-height: 222px;
   grid-template-rows: auto auto auto auto 1fr auto;
   align-content: start;
   gap: 9px;
-  padding: 17px 16px 15px;
+  counter-increment: upgrade-choice;
+  padding: 18px 16px 15px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 48%, rgba(210, 255, 244, 0.34));
   color: #edfff9;
@@ -1269,11 +1275,19 @@ h1 {
   bottom: 10px;
   width: 28px;
   height: 28px;
-  content: "";
+  display: grid;
+  place-items: center;
+  content: counter(upgrade-choice);
   border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 52%, transparent);
+  color: color-mix(in srgb, var(--tone, #70d6ff) 70%, white);
+  background: rgba(0, 0, 0, 0.18);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   opacity: 0.32;
-  transform: rotate(45deg);
   box-shadow: 0 0 16px color-mix(in srgb, var(--tone, #70d6ff) 22%, transparent);
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1;
+  text-indent: 1px;
 }
 
 .upgradeCard:hover {
@@ -1391,7 +1405,7 @@ h1 {
     linear-gradient(90deg, color-mix(in srgb, var(--tone, #70d6ff) 18%, transparent), transparent),
     rgba(0, 0, 0, 0.26);
   clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 950;
   line-height: 1;
   text-align: center;
@@ -1413,7 +1427,7 @@ h1 {
   z-index: 1;
   display: grid;
   gap: 5px;
-  min-height: 42px;
+  min-height: 48px;
   padding: 10px 10px;
   border: 1px solid rgba(225, 255, 246, 0.1);
   color: rgba(242, 255, 249, 0.9);
@@ -1421,9 +1435,9 @@ h1 {
     linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent),
     rgba(0, 0, 0, 0.24);
   clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 750;
-  line-height: 1.38;
+  line-height: 1.34;
 }
 
 .upgradeCard small::before {
@@ -1441,6 +1455,8 @@ h1 {
 .upgradeCard b {
   position: relative;
   z-index: 1;
+  display: block;
+  padding-right: 30px;
   color: color-mix(in srgb, var(--tone, #fff1a6) 78%, white);
   font-size: 12px;
   font-weight: 900;

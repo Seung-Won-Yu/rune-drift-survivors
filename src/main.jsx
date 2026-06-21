@@ -15,15 +15,15 @@ const DASH_SPEED = 22;
 const DASH_TIME = 0.2;
 const DASH_COOLDOWN = 1.15;
 const PLAYER_RADIUS = 0.58;
-const MAX_ENEMIES = 140;
+const MAX_ENEMIES = 132;
 const WAVE_DURATION = 22;
 const MAX_FIELD_ITEMS = 16;
-const MAX_XP_GEMS = 340;
-const MAX_PROJECTILES = 170;
-const MAX_HIT_BURSTS = 56;
-const MAX_WEAPON_EFFECTS = 30;
-const MAX_DAMAGE_NUMBERS = 44;
-const MAX_SPAWN_WARNINGS = 14;
+const MAX_XP_GEMS = 260;
+const MAX_PROJECTILES = 150;
+const MAX_HIT_BURSTS = 42;
+const MAX_WEAPON_EFFECTS = 24;
+const MAX_DAMAGE_NUMBERS = 30;
+const MAX_SPAWN_WARNINGS = 10;
 const MAX_ORBIT_BLADES = 12;
 const STATE_SYNC_INTERVAL = 0.08;
 const OVERLOAD_DURATION = 8;
@@ -339,6 +339,15 @@ const WEAPON_UPGRADE_IDS = new Set([
 
 const STARTING_WEAPON_FAMILIES = new Set(['orb']);
 const UPGRADE_CHOICE_COUNT = 4;
+const VISUAL_BUDGETS = {
+  high: { enemyAuras: 104, enemyAccents: 112, gemBeams: 126, projectileAura: 118, projectileDetail: 84 },
+  balanced: { enemyAuras: 78, enemyAccents: 84, gemBeams: 76, projectileAura: 86, projectileDetail: 46 },
+  low: { enemyAuras: 46, enemyAccents: 54, gemBeams: 0, projectileAura: 54, projectileDetail: 0 }
+};
+
+function getVisualBudget(visualQuality = 'high') {
+  return VISUAL_BUDGETS[visualQuality] ?? VISUAL_BUDGETS.high;
+}
 
 function getVisualQuality() {
   if (typeof window === 'undefined') return 'high';
@@ -1948,13 +1957,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         if (enemy.kind === 'boss') bossKills += 1;
         const gemPos = enemy.pos.clone();
         gemPos.y += enemy.kind === 'boss' || enemy.kind === 'elite' ? 1.08 : 0.76;
-        if (xpGems.current.length < MAX_XP_GEMS) {
-          xpGems.current.push({
-            pos: gemPos,
-            value: enemy.xp,
-            pulse: Math.random() * Math.PI * 2
-          });
-        }
+        addXpGem(gemPos, enemy.xp);
         if (fieldItemDropLock.current <= 0 && fieldItems.current.length < MAX_FIELD_ITEMS) {
           const dropChance = enemy.kind === 'boss' || enemy.kind === 'elite' ? 1 : enemy.kind === 'brute' ? 0.09 : enemy.kind === 'runner' ? 0.028 : 0.038;
           if (Math.random() < dropChance) {
@@ -2490,6 +2493,23 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     });
   };
 
+  const addXpGem = (pos, value) => {
+    if (xpGems.current.length < MAX_XP_GEMS) {
+      xpGems.current.push({
+        pos,
+        value,
+        pulse: Math.random() * Math.PI * 2
+      });
+      return;
+    }
+
+    const target = xpGems.current[Math.floor(Math.random() * xpGems.current.length)];
+    if (!target) return;
+    target.value += value;
+    target.pulse = Math.random() * Math.PI * 2;
+    target.pos.lerp(pos, 0.28);
+  };
+
   const updateCamera = (camera, dt) => {
     const framedTarget = player.current.pos.clone();
     const frameRadius = ARENA_RADIUS - 38;
@@ -2570,7 +2590,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       <PlayerAvatar rootRef={playerMesh} game={game} />
       <PlayerPresence player={player} game={game} />
       <OrbitBlades player={player} game={game} />
-      <EnemyGroundAuras enemiesRef={enemies} />
+      <EnemyGroundAuras enemiesRef={enemies} visualQuality={visualQuality} />
       <EnemyAccents enemiesRef={enemies} visualQuality={visualQuality} />
       <SourceEnemyInstances enemiesRef={enemies} kind="golem" url={MODEL_URLS.golem} scaleMultiplier={2.42} materialTone="#365042" />
       <SourceEnemyInstances enemiesRef={enemies} kind="runner" url={MODEL_URLS.runner} scaleMultiplier={2.82} materialTone="#24324c" />
@@ -2583,7 +2603,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         <octahedronGeometry args={[0.34, 0]} />
         <meshStandardMaterial color="#9ff7ff" emissive="#38d9ff" emissiveIntensity={3.5} roughness={0.18} toneMapped={false} />
       </instancedMesh>
-      {visualQuality !== 'low' && <GemBeacons gemsRef={xpGems} />}
+      {visualQuality !== 'low' && <GemBeacons gemsRef={xpGems} visualQuality={visualQuality} />}
       <FieldPickupItems itemsRef={fieldItems} />
       <RuneShrineSites shrinesRef={shrines} />
       <SourceProjectileInstances projectilesRef={projectiles} type="orb" url={PROJECTILE_MODEL_URLS.orb} scaleMultiplier={1.25} />
@@ -2892,7 +2912,7 @@ function PlayerPresence({ player, game }) {
   );
 }
 
-function EnemyGroundAuras({ enemiesRef }) {
+function EnemyGroundAuras({ enemiesRef, visualQuality = 'high' }) {
   const auraMesh = useRef();
   const scratch = useMemo(() => ({
     matrix: new THREE.Matrix4(),
@@ -2903,9 +2923,12 @@ function EnemyGroundAuras({ enemiesRef }) {
 
   useFrame(() => {
     if (!auraMesh.current) return;
+    const budget = getVisualBudget(visualQuality);
+    const maxAuras = Math.min(MAX_ENEMIES, budget.enemyAuras);
     const time = performance.now() * 0.003;
     let count = 0;
     for (const enemy of enemiesRef.current) {
+      if (count >= maxAuras && enemy.kind !== 'boss' && enemy.kind !== 'elite') continue;
       if (count >= MAX_ENEMIES) break;
       const pulse = 1 + Math.sin(time + enemy.wobble) * 0.07;
       scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
@@ -2967,10 +2990,13 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
   const showDecor = visualQuality !== 'low';
 
   useFrame(() => {
+    const budget = getVisualBudget(visualQuality);
+    const maxAccents = Math.min(MAX_ENEMIES, budget.enemyAccents);
     const time = performance.now() * 0.004;
     if (coreMesh.current) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
+        if (count >= maxAccents && enemy.kind !== 'boss' && enemy.kind !== 'elite') continue;
         if (count >= MAX_ENEMIES) break;
         const bob = Math.sin(time + enemy.wobble) * 0.08;
         const height = enemy.kind === 'boss' ? 2.55 : enemy.kind === 'elite' ? 1.86 : enemy.kind === 'brute' ? 1.34 : enemy.kind === 'runner' ? 0.92 : 1.04;
@@ -2994,6 +3020,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
     if (eyeMesh.current) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
+        if (count >= maxAccents * 2 && enemy.kind !== 'boss' && enemy.kind !== 'elite') continue;
         if (count >= MAX_ENEMIES * 2) break;
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.right.set(scratch.forward.z, 0, -scratch.forward.x);
@@ -3044,7 +3071,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'runner') continue;
-        if (count >= MAX_ENEMIES) break;
+        if (count >= maxAccents) break;
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.pos.set(enemy.pos.x - scratch.forward.x * 0.62, enemy.pos.y + 0.16, enemy.pos.z - scratch.forward.z * 0.62);
         scratch.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, -enemy.facingAngle));
@@ -3064,7 +3091,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'runner') continue;
-        if (count >= MAX_ENEMIES) break;
+        if (count >= maxAccents) break;
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.pos.set(enemy.pos.x + scratch.forward.x * 0.34, enemy.pos.y + 0.34, enemy.pos.z + scratch.forward.z * 0.34);
         scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -enemy.facingAngle + Math.PI));
@@ -3084,7 +3111,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'brute') continue;
-        if (count >= MAX_ENEMIES) break;
+        if (count >= maxAccents) break;
         scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, enemy.wobble * 0.35));
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.48, enemy.pos.z);
         scratch.matrix.compose(
@@ -3106,6 +3133,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.right.set(scratch.forward.z, 0, -scratch.forward.x);
         for (let side = -1; side <= 1; side += 2) {
+          if (count >= maxAccents * 2) break;
           if (count >= MAX_ENEMIES * 2) break;
           scratch.pos.copy(enemy.pos)
             .addScaledVector(scratch.forward, -0.1)
@@ -3129,7 +3157,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'golem') continue;
-        if (count >= MAX_ENEMIES) break;
+        if (count >= maxAccents) break;
         scratch.quat.setFromEuler(new THREE.Euler(0.45, enemy.facingAngle + Math.PI / 4, 0.2));
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.18 + Math.sin(enemy.wobble) * 0.04, enemy.pos.z);
         scratch.matrix.compose(
@@ -3148,7 +3176,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'golem') continue;
-        if (count >= MAX_ENEMIES) break;
+        if (count >= maxAccents) break;
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.045, enemy.pos.z);
         scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, enemy.facingAngle + Math.PI / 4));
         scratch.matrix.compose(
@@ -3262,7 +3290,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
   );
 }
 
-function GemBeacons({ gemsRef }) {
+function GemBeacons({ gemsRef, visualQuality = 'high' }) {
   const beamMesh = useRef();
   const scratch = useMemo(() => ({
     matrix: new THREE.Matrix4(),
@@ -3272,9 +3300,12 @@ function GemBeacons({ gemsRef }) {
 
   useFrame(() => {
     if (!beamMesh.current) return;
-    const gemCount = Math.min(gemsRef.current.length, MAX_XP_GEMS);
+    const budget = getVisualBudget(visualQuality);
+    const gemCount = Math.min(gemsRef.current.length, budget.gemBeams);
+    const stride = Math.max(1, Math.ceil(gemsRef.current.length / Math.max(1, gemCount)));
     for (let count = 0; count < gemCount; count += 1) {
-      const gem = gemsRef.current[count];
+      const gem = gemsRef.current[count * stride];
+      if (!gem) continue;
       const pulse = 0.82 + Math.sin(gem.pulse) * 0.18;
       scratch.matrix.compose(
         new THREE.Vector3(gem.pos.x, gem.pos.y + 0.92, gem.pos.z),
@@ -3752,6 +3783,9 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
   const showDetail = visualQuality !== 'low';
 
   useFrame(() => {
+    const budget = getVisualBudget(visualQuality);
+    const auraLimit = Math.min(MAX_PROJECTILES, budget.projectileAura);
+    const detailLimit = Math.min(MAX_PROJECTILES, budget.projectileDetail);
     const tier = getWeaponTier(game.stats, getWeaponStage(game));
     const stage = getWeaponStage(game);
     const evolved = stage > 0 || tier > 1.08 || game.stats.pierce > 0 || game.stats.cooldown < 0.96;
@@ -3760,6 +3794,7 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
       if (evolved) {
         for (const projectile of projectilesRef.current) {
           if (projectile.type !== 'orb') continue;
+          if (count >= auraLimit) break;
           local.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, projectile.angle + performance.now() * (0.006 + stage * 0.001)));
           local.matrix.compose(projectile.pos, local.quat, local.scale.setScalar((0.84 + stage * 0.16) * projectile.visualScale));
           orbRing.current.setMatrixAt(count, local.matrix);
@@ -3775,6 +3810,7 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
       if (stage > 1) {
         for (const projectile of projectilesRef.current) {
           if (projectile.type !== 'orb') continue;
+          if (count >= detailLimit) break;
           local.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -projectile.angle + performance.now() * 0.004));
           local.matrix.compose(projectile.pos, local.quat, local.scale.setScalar((1.08 + stage * 0.2) * projectile.visualScale));
           orbHalo.current.setMatrixAt(count, local.matrix);
@@ -3789,6 +3825,7 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
       let count = 0;
       for (const projectile of projectilesRef.current) {
         if (projectile.type !== 'orb') continue;
+        if (count >= auraLimit) break;
         const length = projectile.trailLength ?? 1;
         local.pos.set(
           projectile.pos.x - Math.sin(projectile.angle) * length * 0.42,
@@ -3809,7 +3846,9 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
       if (stage >= 3) {
         for (const projectile of projectilesRef.current) {
           if (projectile.type !== 'orb') continue;
+          if (count >= detailLimit * 3) break;
           for (let i = 0; i < 3; i += 1) {
+            if (count >= detailLimit * 3) break;
             const spin = projectile.angle + performance.now() * 0.008 + i * Math.PI * 2 / 3;
             local.pos.set(
               projectile.pos.x + Math.cos(spin) * 0.42 * projectile.visualScale,
@@ -3831,6 +3870,7 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
       let count = 0;
       for (const projectile of projectilesRef.current) {
         if (projectile.type !== 'storm') continue;
+        if (count >= auraLimit) break;
         local.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, performance.now() * 0.004 + projectile.angle));
         local.matrix.compose(projectile.pos, local.quat, local.scale.setScalar((1.2 + stage * 0.12) * projectile.visualScale * tier));
         stormRing.current.setMatrixAt(count, local.matrix);
@@ -3844,6 +3884,7 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
       let count = 0;
       for (const projectile of projectilesRef.current) {
         if (projectile.type !== 'storm') continue;
+        if (count >= auraLimit) break;
         local.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -performance.now() * 0.003 + projectile.angle));
         local.matrix.compose(projectile.pos, local.quat, local.scale.setScalar(projectile.burstRadius ?? 1.8));
         stormDisk.current.setMatrixAt(count, local.matrix);
@@ -3857,8 +3898,10 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
       let count = 0;
       for (const projectile of projectilesRef.current) {
         if (projectile.type !== 'storm') continue;
+        if (count >= detailLimit * 4) break;
         const radius = projectile.burstRadius ?? 1.8;
         for (let i = 0; i < 4; i += 1) {
+          if (count >= detailLimit * 4) break;
           if (count >= MAX_PROJECTILES * 4) break;
           const spokeAngle = projectile.angle + performance.now() * 0.006 + i * Math.PI / 2;
           local.pos.copy(projectile.pos);
@@ -3877,7 +3920,7 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
       let count = 0;
       for (const projectile of projectilesRef.current) {
         if (projectile.type !== 'storm') continue;
-        if (count >= MAX_PROJECTILES) break;
+        if (count >= detailLimit) break;
         local.pos.copy(projectile.pos);
         local.pos.y += 0.1 + Math.sin(performance.now() * 0.009 + projectile.angle) * 0.03;
         local.quat.setFromEuler(new THREE.Euler(0.52, -performance.now() * 0.008 + projectile.angle, 0.18));
