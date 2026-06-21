@@ -81,12 +81,12 @@ const COMBAT_RHYTHM = [
 const EARLY_FIELD_ITEM_SCHEDULE = [
   { id: 'starter-magnet', time: 5, type: 'magnet', distance: 2.2, spread: 1.1 },
   { id: 'starter-overload', time: 34, type: 'overload', distance: 5.2, spread: 2.2 },
-  { id: 'starter-cache', time: 52, type: 'cache', distance: 5.8, spread: 2.4 },
+  { id: 'starter-cache', time: 74, type: 'cache', distance: 6.4, spread: 2.5 },
   { id: 'second-magnet', time: 48, type: 'magnet', distance: 5.8, spread: 2.4 },
   { id: 'starter-purge', time: 68, type: 'purge', distance: 7.0, spread: 2.6 },
-  { id: 'second-cache', time: 118, type: 'cache', distance: 7.6, spread: 3.0 },
+  { id: 'second-cache', time: 136, type: 'cache', distance: 8.2, spread: 3.2 },
   { id: 'third-magnet', time: 116, type: 'magnet', distance: 8.8, spread: 3.6 },
-  { id: 'third-cache', time: 178, type: 'cache', distance: 9.5, spread: 4.0 },
+  { id: 'third-cache', time: 192, type: 'cache', distance: 9.8, spread: 4.1 },
   { id: 'second-purge', time: 176, type: 'purge', distance: 10.5, spread: 4.4 },
   { id: 'second-overload', time: 214, type: 'overload', distance: 11.2, spread: 4.8 },
   { id: 'final-cache', time: 252, type: 'cache', distance: 12.0, spread: 5.2 }
@@ -412,7 +412,7 @@ function createInitialGame() {
       dashCooldown: 1,
       pierce: 0,
       xpGain: 1,
-      orbCount: 2,
+      orbCount: 1,
       orbDamage: 1,
       orbScale: 1,
       orbSpeed: 1,
@@ -6416,6 +6416,14 @@ function isUpgradeAvailable(game, upgrade) {
   return true;
 }
 
+function isUpgradeDraftable(game, upgrade) {
+  const key = getUpgradeFocusKey(upgrade);
+  if (!key) return true;
+  if (isWeaponFamilyUnlocked(game, key)) return true;
+  if (key === 'orb') return true;
+  return game.level >= 4 || game.time >= 78 || getItemPickupCount(game, 'cache') > 0 || (game.shrineActivations ?? 0) > 0;
+}
+
 function getUpgradeWeight(game, upgrade) {
   const key = getUpgradeFocusKey(upgrade);
   const dominant = getDominantBuild(game);
@@ -6426,7 +6434,7 @@ function getUpgradeWeight(game, upgrade) {
     const focus = getBuildFocus(game, key);
     const synergyDelta = getUpgradeSynergyMatches(game, upgrade).some(synergy => synergy.nextLevel > synergy.currentLevel);
     weight += focus * 0.48;
-    if (!isWeaponFamilyUnlocked(game, key)) weight += game.level <= 7 ? 2.2 : 1.15;
+    if (!isWeaponFamilyUnlocked(game, key)) weight += game.level <= 7 ? 1.15 : 0.85;
     if (synergyDelta) weight += 1.7;
     if (dominant?.key === key) weight += 1.15;
     if (focus === 0 && game.level <= 8) weight += 1.05;
@@ -6461,7 +6469,8 @@ function addDraftChoice(choices, candidates, game) {
 
 function pickUpgrades(game) {
   const available = upgradePool.filter(upgrade => isUpgradeAvailable(game, upgrade));
-  const weaponChoices = available.filter(upgrade => WEAPON_UPGRADE_IDS.has(upgrade.id));
+  const draftable = available.filter(upgrade => isUpgradeDraftable(game, upgrade));
+  const weaponChoices = draftable.filter(upgrade => WEAPON_UPGRADE_IDS.has(upgrade.id));
   const utilityChoices = available.filter(upgrade => !WEAPON_UPGRADE_IDS.has(upgrade.id));
   const starterChoices = weaponChoices.filter(upgrade => getUpgradeFocusKey(upgrade) === 'orb');
   const lockedWeaponChoices = weaponChoices.filter(upgrade => {
@@ -6471,7 +6480,10 @@ function pickUpgrades(game) {
   const dominant = getDominantBuild(game);
   const choices = [];
 
-  if (game.level <= 4) {
+  if (game.level <= 3) {
+    addDraftChoice(choices, starterChoices, game);
+    addDraftChoice(choices, utilityChoices, game);
+  } else if (game.level <= 6) {
     addDraftChoice(choices, starterChoices, game);
     addDraftChoice(choices, lockedWeaponChoices, game);
   }
@@ -6479,7 +6491,7 @@ function pickUpgrades(game) {
     addDraftChoice(choices, weaponChoices.filter(upgrade => getUpgradeFocusKey(upgrade) === dominant.key), game);
   }
   addDraftChoice(choices, weaponChoices.filter(upgrade => getUpgradeSynergyMatches(game, upgrade).some(synergy => synergy.nextLevel > synergy.currentLevel)), game);
-  if (game.level <= 8) {
+  if (game.level >= 4 && game.level <= 8) {
     for (let index = 0; index < 2; index += 1) {
       addDraftChoice(choices, weaponChoices.filter(upgrade => {
         const key = getUpgradeFocusKey(upgrade);
@@ -6489,8 +6501,8 @@ function pickUpgrades(game) {
   }
   addDraftChoice(choices, weaponChoices, game);
   addDraftChoice(choices, utilityChoices, game);
-  while (choices.length < UPGRADE_CHOICE_COUNT && choices.length < available.length) {
-    addDraftChoice(choices, available, game);
+  while (choices.length < UPGRADE_CHOICE_COUNT && choices.length < draftable.length) {
+    addDraftChoice(choices, draftable, game);
   }
 
   return choices.sort(() => Math.random() - 0.5);
