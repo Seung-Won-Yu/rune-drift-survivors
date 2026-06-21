@@ -4790,7 +4790,9 @@ function TerrainStoryDetails() {
 function NaturalFieldKit({ visualQuality = 'high' }) {
   const transforms = useMemo(() => {
     const density = visualQuality === 'low' ? 0.62 : visualQuality === 'balanced' ? 0.78 : 1;
+    const treeDensity = visualQuality === 'low' ? 0.42 : visualQuality === 'balanced' ? 0.56 : 0.68;
     const count = base => Math.max(1, Math.round(base * density));
+    const countTree = base => Math.max(1, Math.round(base * treeDensity));
     const place = (angle, radius, scale, yOffset = 0.03, tilt = 0) => {
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
@@ -4822,18 +4824,18 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return place(angle, radius, (1.55 + (index % 5) * 0.34) * distanceScale, 0.02, index % 3 === 0 ? 0.08 : 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 7 && item.position.length() > 38 && lowCoverClear(item));
 
-    const ringTrees = Array.from({ length: count(38) }, (_, index) => {
-      const angle = index * 1.02 + (index % 5) * 0.15;
-      const radius = 103 + (index % 10) * 1.82;
-      const scale = radius > 110 ? 4.35 + (index % 4) * 0.34 : 3.15 + (index % 4) * 0.22;
+    const ringTrees = Array.from({ length: countTree(26) }, (_, index) => {
+      const angle = index * 1.37 + (index % 4) * 0.18;
+      const radius = 106 + (index % 7) * 1.64;
+      const scale = radius > 112 ? 4.18 + (index % 4) * 0.3 : 3.05 + (index % 4) * 0.18;
       return place(angle, radius, scale, -0.04, 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 2.8 && sightlineClear(item));
 
-    const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: visualQuality === 'low' ? 2 : 3 }, (_, index) => {
-      const offset = index - 1;
-      const angle = site.angle + offset * 0.12 + (siteIndex % 2 ? -0.05 : 0.05);
-      const radius = site.radius + 15.5 + (index % 3) * 3.6;
-      const scale = 2.55 + (index % 3) * 0.24 + siteIndex * 0.04;
+    const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: visualQuality === 'low' ? 1 : 2 }, (_, index) => {
+      const offset = index === 0 ? -1 : 1;
+      const angle = site.angle + offset * 0.16 + (siteIndex % 2 ? -0.05 : 0.05);
+      const radius = site.radius + 19.5 + (index % 2) * 4.2;
+      const scale = 2.45 + (index % 2) * 0.22 + siteIndex * 0.04;
       return place(angle, radius, scale, -0.04, 0);
     })).filter(item => item.position.length() < ARENA_RADIUS - 3.5 && sightlineClear(item));
 
@@ -4862,7 +4864,19 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 8 && lowCoverClear(item));
 
-    return { rocks, trees, bushes, grass, moss };
+    const fallenTrunks = Array.from({ length: count(14) }, (_, index) => {
+      const angle = index * 1.49 + 0.34;
+      const radius = 48 + (index % 14) * 4.5;
+      const transform = place(angle, radius, 1, 0.28, 0);
+      transform.rotation += (index % 2 ? -1 : 1) * (0.72 + (index % 3) * 0.18);
+      transform.length = 3.2 + (index % 4) * 0.52;
+      transform.radius = 0.18 + (index % 3) * 0.035;
+      transform.color = index % 4 === 0 ? '#6f6248' : index % 3 === 0 ? '#4c5b45' : '#684f3f';
+      transform.rootColor = index % 3 === 0 ? ART_TOKENS.runeCyan : '#233427';
+      return transform;
+    }).filter(item => item.position.length() < ARENA_RADIUS - 9 && item.position.length() > 42 && lowCoverClear(item));
+
+    return { rocks, trees, bushes, grass, moss, fallenTrunks };
   }, [visualQuality]);
 
   const rockLarge = useMemo(() => transforms.rocks.filter((_, index) => index % 3 !== 0), [transforms]);
@@ -4880,9 +4894,61 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       <StaticModelInstances url={NATURE_MODEL_URLS.treeDefault} transforms={treeDefault} castShadow receiveShadow />
       <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} castShadow receiveShadow />
       <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow />
+      <FallenTrunkMarks transforms={transforms.fallenTrunks} />
       <FieldMossPatches transforms={transforms.moss} />
       <TreeCanopyShadows transforms={transforms.trees} />
       {visualQuality !== 'low' && <TreeCanopyHighlights transforms={transforms.trees} />}
+    </group>
+  );
+}
+
+function FallenTrunkMarks({ transforms }) {
+  const trunkRef = useRef();
+  const rootRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!trunkRef.current || !rootRef.current) return;
+    transforms.forEach((transform, index) => {
+      local.pos.copy(transform.position);
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + 0.28;
+      local.quat.setFromEuler(new THREE.Euler(0, transform.rotation, Math.PI / 2 + (index % 2 ? 0.05 : -0.04)));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.radius, transform.length, transform.radius));
+      trunkRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.color);
+      trunkRef.current.setColorAt(index, local.color);
+
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + 0.058;
+      local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, transform.rotation));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.length * 0.92, transform.radius * 3.8, 1));
+      rootRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.rootColor);
+      rootRef.current.setColorAt(index, local.color);
+    });
+    trunkRef.current.count = transforms.length;
+    trunkRef.current.instanceMatrix.needsUpdate = true;
+    if (trunkRef.current.instanceColor) trunkRef.current.instanceColor.needsUpdate = true;
+    rootRef.current.count = transforms.length;
+    rootRef.current.instanceMatrix.needsUpdate = true;
+    if (rootRef.current.instanceColor) rootRef.current.instanceColor.needsUpdate = true;
+  }, [local, transforms]);
+
+  return (
+    <group>
+      <instancedMesh ref={rootRef} args={[null, null, transforms.length]} frustumCulled={false}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial transparent opacity={0.14} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={trunkRef} args={[null, null, transforms.length]} frustumCulled={false} castShadow receiveShadow>
+        <cylinderGeometry args={[1, 1, 1, 8]} />
+        <meshStandardMaterial roughness={0.92} metalness={0.02} />
+      </instancedMesh>
     </group>
   );
 }
