@@ -237,30 +237,35 @@ const BUILD_FOCUS_META = {
     label: '룬 구체',
     title: '분열 사격',
     color: '#70d6ff',
+    glyph: '◈',
     perks: ['표적 +1', '부채꼴 보조탄', '룬창 과충전']
   },
   storm: {
     label: '폭풍 낙인',
     title: '낙뢰 지대',
     color: '#b8f7ff',
+    glyph: '↯',
     perks: ['낙뢰 +1', '잔류 시간 증가', '폭풍망 확장']
   },
   blade: {
     label: '궤도 칼날',
     title: '근접 수호',
     color: '#f7d06b',
+    glyph: '◇',
     perks: ['칼날 +1', '접촉 피해 감소', '참격 압박']
   },
   chain: {
     label: '연쇄 번개',
     title: '전류 제어',
     color: '#d7b7ff',
+    glyph: '⌁',
     perks: ['연쇄 +1', '감전 둔화', '부상 처형']
   },
   nova: {
     label: '태양 파동',
     title: '태양 중심',
     color: '#ff8b72',
+    glyph: '☉',
     perks: ['파동 범위 증가', '밀어내기 강화', '쿨다운 압축']
   }
 };
@@ -2773,6 +2778,9 @@ function PlayerPresence({ player, game }) {
   const dashTrail = useRef();
   const dashSpark = useRef();
   const shoulderRune = useRef();
+  const leftFootRune = useRef();
+  const rightFootRune = useRef();
+  const castNeedle = useRef();
   const stage = getWeaponStage(game);
   const dominantBuild = getDominantBuild(game);
   const focus = dominantBuild?.focus ?? 0;
@@ -2782,6 +2790,8 @@ function PlayerPresence({ player, game }) {
     if (!root.current) return;
     const current = player.current;
     const speed = current.vel.length();
+    const moveAmount = THREE.MathUtils.clamp(speed / (PLAYER_SPEED * 1.15), 0, 1);
+    const stride = performance.now() * 0.012;
     const dashPower = current.dashTimer > 0 ? 1 : 0;
     root.current.position.copy(current.pos);
     root.current.rotation.y = Math.atan2(current.facing.x, current.facing.z);
@@ -2803,9 +2813,27 @@ function PlayerPresence({ player, game }) {
       dashSpark.current.rotation.z -= 0.12;
       dashSpark.current.scale.setScalar(0.8 + dashPower * 0.9 + Math.sin(performance.now() * 0.028) * 0.08);
     }
+    if (leftFootRune.current && rightFootRune.current) {
+      const leftPulse = Math.max(0, Math.sin(stride));
+      const rightPulse = Math.max(0, Math.sin(stride + Math.PI));
+      leftFootRune.current.visible = moveAmount > 0.12;
+      rightFootRune.current.visible = moveAmount > 0.12;
+      leftFootRune.current.position.set(-0.28, -0.49, -0.22 + leftPulse * 0.16);
+      rightFootRune.current.position.set(0.28, -0.49, -0.22 + rightPulse * 0.16);
+      leftFootRune.current.scale.setScalar(0.36 + leftPulse * 0.28 + dashPower * 0.28);
+      rightFootRune.current.scale.setScalar(0.36 + rightPulse * 0.28 + dashPower * 0.28);
+      leftFootRune.current.rotation.z += 0.035 + moveAmount * 0.04;
+      rightFootRune.current.rotation.z -= 0.035 + moveAmount * 0.04;
+    }
     if (shoulderRune.current) {
       shoulderRune.current.rotation.y += 0.022 + stage * 0.006;
       shoulderRune.current.rotation.z = Math.sin(performance.now() * 0.004) * 0.18;
+    }
+    if (castNeedle.current) {
+      const pulse = 0.62 + Math.sin(performance.now() * 0.006 + focus) * 0.16 + stage * 0.04;
+      castNeedle.current.position.set(0, 1.12 + Math.sin(performance.now() * 0.005) * 0.04, 0.42);
+      castNeedle.current.scale.set(0.16 + focus * 0.01, pulse, 0.16 + focus * 0.01);
+      castNeedle.current.rotation.z += 0.028 + stage * 0.004;
     }
   });
 
@@ -2823,9 +2851,21 @@ function PlayerPresence({ player, game }) {
         <ringGeometry args={[0.32, 0.4, 4]} />
         <meshBasicMaterial color="#9ff7ff" transparent opacity={0.68} depthWrite={false} toneMapped={false} />
       </mesh>
+      <mesh ref={leftFootRune} rotation={[-Math.PI / 2, 0, Math.PI / 4]} visible={false}>
+        <ringGeometry args={[0.24, 0.32, 4]} />
+        <meshBasicMaterial color={color} transparent opacity={0.34} depthWrite={false} toneMapped={false} />
+      </mesh>
+      <mesh ref={rightFootRune} rotation={[-Math.PI / 2, 0, Math.PI / 4]} visible={false}>
+        <ringGeometry args={[0.24, 0.32, 4]} />
+        <meshBasicMaterial color={color} transparent opacity={0.34} depthWrite={false} toneMapped={false} />
+      </mesh>
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[0, -0.45, 0]} scale={[1.25, 1.25, 1]}>
         <ringGeometry args={[0.18, 0.23, 4]} />
         <meshBasicMaterial color="#fff1a6" transparent opacity={0.34 + stage * 0.06} depthWrite={false} toneMapped={false} />
+      </mesh>
+      <mesh ref={castNeedle} position={[0, 1.12, 0.42]} rotation={[0.64, 0, Math.PI / 4]}>
+        <octahedronGeometry args={[1, 0]} />
+        <meshBasicMaterial color={color} transparent opacity={0.58} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh ref={castHalo} position={[0, 1.58, -0.38]} rotation={[0, 0, 0]} scale={[0.62 + stage * 0.08, 0.62 + stage * 0.08, 1]}>
         <ringGeometry args={[0.52, 0.58, 48]} />
@@ -4908,10 +4948,12 @@ function UpgradeOverlay({ game, choices, onChoose }) {
             const cardMeta = getUpgradeCardMeta(game, choice);
             const displayTitle = getUpgradeDisplayTitle(game, choice);
             const focusPreview = getUpgradeFocusPreview(game, choice);
+            const focusKey = getUpgradeFocusKey(choice);
+            const iconMeta = getUpgradeIconMeta(choice);
             return (
               <button
                 key={choice.id}
-                className={`upgradeCard ${cardMeta.recommended ? 'isRecommended' : ''}`}
+                className={`upgradeCard family-${focusKey ?? 'utility'} ${cardMeta.recommended ? 'isRecommended' : ''}`}
                 type="button"
                 style={{ '--tone': getUpgradeTone(choice) }}
                 onClick={() => onChoose(choice)}
@@ -4920,7 +4962,10 @@ function UpgradeOverlay({ game, choices, onChoose }) {
                   <em>{choice.family}</em>
                   <strong>{cardMeta.recommended ? `추천 · ${cardMeta.role}` : cardMeta.role}</strong>
                 </div>
-                <span>{displayTitle}</span>
+                <div className="upgradeTitleRow">
+                  <i className="upgradeSigil" aria-hidden="true">{iconMeta.glyph}</i>
+                  <span>{displayTitle}</span>
+                </div>
                 <small>{choice.text}</small>
                 <b>{focusPreview}</b>
                 <div className="upgradeTags">
@@ -5897,6 +5942,15 @@ function getUpgradeSynergyMatches(game, upgrade) {
 function getUpgradeTone(upgrade) {
   const key = getUpgradeFocusKey(upgrade);
   return key ? BUILD_FOCUS_META[key].color : '#fff1a6';
+}
+
+function getUpgradeIconMeta(upgrade) {
+  const key = getUpgradeFocusKey(upgrade);
+  if (key && BUILD_FOCUS_META[key]) return BUILD_FOCUS_META[key];
+  if (upgrade.id === 'maxHp') return { glyph: '+', color: '#79f29a' };
+  if (upgrade.id === 'dash' || upgrade.id === 'speed') return { glyph: '›', color: '#73fbd3' };
+  if (upgrade.id === 'magnet' || upgrade.id === 'luck') return { glyph: '✦', color: '#fff1a6' };
+  return { glyph: '✚', color: '#fff1a6' };
 }
 
 function getUpgradeFocusPreview(game, upgrade) {

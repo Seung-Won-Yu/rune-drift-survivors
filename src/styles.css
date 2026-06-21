@@ -1290,7 +1290,34 @@ h1 {
   white-space: nowrap;
 }
 
-.upgradeCard span {
+.upgradeTitleRow {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.upgradeSigil {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 58%, rgba(255, 255, 255, 0.18));
+  color: color-mix(in srgb, var(--tone, #70d6ff) 74%, white);
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--tone, #70d6ff) 28%, transparent), transparent 62%),
+    rgba(0, 0, 0, 0.24);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--tone, #70d6ff) 42%, transparent);
+}
+
+.upgradeTitleRow span {
   position: relative;
   z-index: 1;
   max-width: 92%;
@@ -1881,7 +1908,18 @@ h1 {
     padding: 12px 11px 11px;
   }
 
-  .upgradeCard span {
+  .upgradeTitleRow {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .upgradeSigil {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+
+  .upgradeTitleRow span {
     font-size: 18px;
   }
 
