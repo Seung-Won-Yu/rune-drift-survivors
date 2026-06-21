@@ -99,9 +99,9 @@ const ELITE_ROLE_META = {
 };
 
 const BOSS_PATTERN_META = {
-  shockwave: { label: 'SHOCKWAVE', color: '#ff8b72', hint: '중거리 이탈' },
-  summon: { label: 'SUMMON', color: '#f5c7ff', hint: '소환수 정리' },
-  guard: { label: 'WARD', color: '#fff1a6', hint: '룬/번개 집중' }
+  shockwave: { label: 'SHOCKWAVE', color: '#ff8b72', hint: '중거리 이탈', cue: '바깥 고리 피하기', shape: 'shockwave' },
+  summon: { label: 'SUMMON', color: '#f5c7ff', hint: '소환수 정리', cue: '보스 주변 정리', shape: 'summon' },
+  guard: { label: 'WARD', color: '#fff1a6', hint: '룬/번개 집중', cue: '보호막 집중 공격', shape: 'guard' }
 };
 
 const BOSS_PATTERN_ORDER = ['shockwave', 'summon', 'guard'];
@@ -1132,6 +1132,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       phaseColor: phase.color,
       patternLabel: patternMeta.label,
       patternHint: patternMeta.hint,
+      patternCue: patternMeta.cue,
       patternColor: patternMeta.color,
       patternStage: Math.max(1, boss.patternIndex),
       casting: (boss.currentPatternTimer ?? 0) > 0
@@ -1665,7 +1666,9 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           life: 0.52,
           maxLife: 0.52,
           color: ELITE_ROLE_META.charger.color,
-          label: 'CHARGE'
+          label: 'CHARGE',
+          shape: 'charge',
+          radius: 4.4
         });
         weaponEffects.current.push({
           type: 'beam',
@@ -1692,7 +1695,9 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           life: 0.72,
           maxLife: 0.72,
           color: ELITE_ROLE_META.summoner.color,
-          label: 'SWARM'
+          label: 'SWARM',
+          shape: 'summon',
+          radius: 5.4
         });
         hitBursts.current.push({
           pos: enemy.pos.clone(),
@@ -1817,7 +1822,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       maxLife: warningLife,
       color: meta.color,
       label: meta.label,
-      radius: warningRadius
+      radius: warningRadius,
+      shape: meta.shape
     });
     weaponEffects.current.push({
       type: 'ring',
@@ -5095,24 +5101,52 @@ function DamageNumber({ number }) {
 function SpawnWarning({ warning }) {
   const progress = 1 - warning.life / warning.maxLife;
   const pulse = 1 + Math.sin(progress * Math.PI * 8) * 0.08;
-  const opacity = Math.max(0, 0.75 - progress * 0.55);
+  const shape = warning.shape ?? 'spawn';
+  const isShockwave = shape === 'shockwave';
+  const isSummon = shape === 'summon';
+  const isGuard = shape === 'guard';
+  const isCharge = shape === 'charge';
+  const opacity = Math.max(0, (isShockwave ? 0.86 : 0.75) - progress * 0.55);
   const radius = warning.radius ?? (pulse + progress * 1.8);
   const innerRadius = warning.radius ? Math.max(0.72, warning.radius * 0.42) : 0.75 + progress * 0.5;
   const towerScale = warning.radius ? Math.min(2.4, 0.8 + warning.radius * 0.045) : 0.22 + progress * 0.2;
+  const ringSegments = isGuard ? 4 : isSummon ? 6 : 36;
+  const markerSegments = isCharge ? 3 : isGuard ? 4 : 6;
   return (
     <group position={[warning.pos.x, 0.1, warning.pos.z]}>
       <mesh position={[0, 0.85, 0]} scale={[towerScale, 1.6 - progress * 0.55, towerScale]}>
         <cylinderGeometry args={[1, 1, 1, 16, 1, true]} />
         <meshBasicMaterial color={warning.color} transparent opacity={Math.max(0, 0.24 - progress * 0.08)} depthWrite={false} toneMapped={false} />
       </mesh>
+      {isShockwave && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[radius * 0.74, radius * 0.74, 1]}>
+          <ringGeometry args={[0.94, 1.0, 72]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={opacity * 0.18} depthWrite={false} toneMapped={false} />
+        </mesh>
+      )}
       <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[radius, radius, 1]}>
-        <ringGeometry args={[0.62, 0.72, 36]} />
+        <ringGeometry args={[0.62, 0.72, ringSegments]} />
         <meshBasicMaterial color={warning.color} transparent opacity={opacity} depthWrite={false} toneMapped={false} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} scale={[innerRadius, innerRadius, 1]}>
-        <ringGeometry args={[0.2, 0.24, 4]} />
+      <mesh rotation={[-Math.PI / 2, 0, isGuard ? Math.PI / 4 : Math.PI / 6]} scale={[innerRadius, innerRadius, 1]}>
+        <ringGeometry args={[0.2, 0.24, markerSegments]} />
         <meshBasicMaterial color={warning.color} transparent opacity={opacity * 0.8} depthWrite={false} toneMapped={false} />
       </mesh>
+      {(isSummon || isGuard || isCharge) && Array.from({ length: isCharge ? 3 : 4 }, (_, index) => {
+        const angle = index * Math.PI * 2 / (isCharge ? 3 : 4) + progress * Math.PI * (isGuard ? -0.7 : 0.5);
+        const markerRadius = radius * (isCharge ? 0.68 : 0.52);
+        return (
+          <mesh
+            key={`warning-marker-${index}`}
+            position={[Math.cos(angle) * markerRadius, 0.22, Math.sin(angle) * markerRadius]}
+            rotation={[0.55, -angle, 0.2]}
+            scale={[0.16, isCharge ? 0.58 : 0.38, 0.16]}
+          >
+            <coneGeometry args={[1, 1, isCharge ? 3 : 4]} />
+            <meshBasicMaterial color={warning.color} transparent opacity={opacity * 0.75} depthWrite={false} toneMapped={false} />
+          </mesh>
+        );
+      })}
       <mesh position={[0, 0.36 + progress * 0.35, 0]} rotation={[0.5, progress * Math.PI * 3, 0.2]} scale={[0.18, 0.32, 0.18]}>
         <octahedronGeometry args={[1, 0]} />
         <meshBasicMaterial color={warning.color} transparent opacity={Math.max(0, 0.8 - progress * 0.5)} toneMapped={false} />
@@ -5222,9 +5256,9 @@ function HUD({ game, onRestart, onPause }) {
             <i style={{ width: `${bossStatus.hpPct * 100}%` }} />
           </div>
           <div className="bossPatternMeta">
-            <span>{bossStatus.casting ? 'CASTING' : 'NEXT'} <b>{bossStatus.patternLabel}</b></span>
-            <span className="bossPatternStage">Pattern <b>{bossStatus.patternStage}</b></span>
-            <span className="bossPatternHintPill">{bossStatus.patternHint}</span>
+            <span className="bossPatternCast">{bossStatus.casting ? '시전 중' : '다음'} <b>{bossStatus.patternLabel}</b></span>
+            <span className="bossPatternStage">패턴 <b>{bossStatus.patternStage}</b></span>
+            <span className="bossPatternHintPill">{bossStatus.patternCue ?? bossStatus.patternHint}</span>
           </div>
         </div>
       )}

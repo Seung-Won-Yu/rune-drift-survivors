@@ -551,10 +551,10 @@ button {
 .bossBar {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(126px, 178px) minmax(160px, 1fr) auto;
+  grid-template-columns: minmax(126px, 172px) minmax(150px, 1fr) minmax(250px, auto);
   align-items: center;
   gap: 9px;
-  width: min(620px, 100%);
+  width: min(690px, 100%);
   min-height: 48px;
   padding: 7px 10px 8px 13px;
   overflow: hidden;
@@ -644,24 +644,45 @@ button {
 
 .bossPatternMeta {
   justify-content: flex-end;
+  flex-wrap: nowrap;
   color: rgba(242, 255, 249, 0.7);
 }
 
 .bossPatternMeta span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
   padding: 4px 6px;
   border: 1px solid color-mix(in srgb, var(--pattern, #ff8b72) 26%, transparent);
   background: rgba(2, 8, 7, 0.34);
   clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+  white-space: nowrap;
+}
+
+.bossPatternMeta .bossPatternCast {
+  min-width: 112px;
+  border-color: color-mix(in srgb, var(--pattern, #ff8b72) 38%, transparent);
+}
+
+.bossPatternMeta .bossPatternStage {
+  min-width: 58px;
 }
 
 .bossPatternMeta .bossPatternHintPill {
-  max-width: 132px;
+  min-width: 110px;
+  max-width: 150px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  color: color-mix(in srgb, var(--pattern, #ff8b72) 78%, white);
+  border-color: color-mix(in srgb, var(--pattern, #ff8b72) 46%, transparent);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--pattern, #ff8b72) 18%, transparent), transparent),
+    rgba(2, 8, 7, 0.42);
 }
 
-.hud.isCasting .bossPatternMeta span:first-child {
+.hud.isCasting .bossPatternMeta .bossPatternCast {
   border-color: color-mix(in srgb, var(--pattern, #ff8b72) 58%, transparent);
   color: color-mix(in srgb, var(--pattern, #ff8b72) 82%, white);
   background:
@@ -1920,8 +1941,18 @@ h1 {
   }
 
   .bossPatternMeta span {
+    min-height: 24px;
     padding: 3px 6px;
     font-size: 10px;
+  }
+
+  .bossPatternMeta .bossPatternCast {
+    min-width: 104px;
+  }
+
+  .bossPatternMeta .bossPatternHintPill {
+    min-width: 96px;
+    max-width: none;
   }
 
   .bossPatternMeta .bossPatternStage {
