@@ -2588,7 +2588,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       <RuneShrineSites shrinesRef={shrines} />
       <SourceProjectileInstances projectilesRef={projectiles} type="orb" url={PROJECTILE_MODEL_URLS.orb} scaleMultiplier={1.25} />
       <SourceProjectileInstances projectilesRef={projectiles} type="storm" url={PROJECTILE_MODEL_URLS.storm} scaleMultiplier={1.85} />
-      <ProjectileAuraRings projectilesRef={projectiles} game={game} />
+      <ProjectileAuraRings projectilesRef={projectiles} game={game} visualQuality={visualQuality} />
       <WeaponStrikeEffects effectsRef={weaponEffects} />
       {hitBursts.current.map((burst, index) => (
         <HitBurst key={`${index}-${burst.maxLife}`} burst={burst} />
@@ -2947,15 +2947,22 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
   const flashMesh = useRef();
   const eyeMesh = useRef();
   const runnerTrailMesh = useRef();
+  const runnerChevronMesh = useRef();
   const bruteMarkMesh = useRef();
+  const brutePlateMesh = useRef();
   const golemShardMesh = useRef();
+  const golemGroundMesh = useRef();
   const eliteCrownMesh = useRef();
+  const eliteAuraMesh = useRef();
   const scratch = useMemo(() => ({
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
     scale: new THREE.Vector3(),
     color: new THREE.Color(),
-    pos: new THREE.Vector3()
+    pos: new THREE.Vector3(),
+    forward: new THREE.Vector3(),
+    right: new THREE.Vector3(),
+    yAxis: new THREE.Vector3(0, 1, 0)
   }), []);
   const showDecor = visualQuality !== 'low';
 
@@ -2968,8 +2975,9 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         const bob = Math.sin(time + enemy.wobble) * 0.08;
         const height = enemy.kind === 'boss' ? 2.55 : enemy.kind === 'elite' ? 1.86 : enemy.kind === 'brute' ? 1.34 : enemy.kind === 'runner' ? 0.92 : 1.04;
         scratch.quat.identity();
+        scratch.pos.set(enemy.pos.x, enemy.pos.y + height + bob, enemy.pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(enemy.pos.x, enemy.pos.y + height + bob, enemy.pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.setScalar(enemy.kind === 'boss' ? 0.46 : enemy.kind === 'elite' ? 0.34 : enemy.kind === 'brute' ? 0.24 : enemy.kind === 'runner' ? 0.16 : 0.18)
         );
@@ -2987,16 +2995,16 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (count >= MAX_ENEMIES * 2) break;
-        const forward = new THREE.Vector3(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
-        const right = new THREE.Vector3(forward.z, 0, -forward.x);
+        scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
+        scratch.right.set(scratch.forward.z, 0, -scratch.forward.x);
         const eyeHeight = enemy.kind === 'boss' ? 2.28 : enemy.kind === 'elite' ? 1.62 : enemy.kind === 'brute' ? 1.15 : enemy.kind === 'runner' ? 0.8 : 0.92;
         const spacing = enemy.kind === 'boss' ? 0.52 : enemy.kind === 'elite' ? 0.34 : enemy.kind === 'brute' ? 0.28 : 0.2;
         for (let side = -1; side <= 1; side += 2) {
           scratch.pos.copy(enemy.pos)
-            .addScaledVector(forward, enemy.radius * 0.78)
-            .addScaledVector(right, side * spacing);
+            .addScaledVector(scratch.forward, enemy.radius * 0.78)
+            .addScaledVector(scratch.right, side * spacing);
           scratch.pos.y = enemy.pos.y + eyeHeight;
-          scratch.quat.setFromAxisAngle(new THREE.Vector3(0, 1, 0), enemy.facingAngle);
+          scratch.quat.setFromAxisAngle(scratch.yAxis, enemy.facingAngle);
           scratch.matrix.compose(
             scratch.pos,
             scratch.quat,
@@ -3019,8 +3027,9 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         if (enemy.flash <= 0 || enemy.kind === 'boss') continue;
         if (count >= MAX_ENEMIES) break;
         scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, enemy.wobble));
+        scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.08, enemy.pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(enemy.pos.x, enemy.pos.y + 0.08, enemy.pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.setScalar(enemy.hitRadius * 1.08)
         );
@@ -3036,8 +3045,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'runner') continue;
         if (count >= MAX_ENEMIES) break;
-        const back = new THREE.Vector3(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
-        scratch.pos.set(enemy.pos.x - back.x * 0.62, enemy.pos.y + 0.16, enemy.pos.z - back.z * 0.62);
+        scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
+        scratch.pos.set(enemy.pos.x - scratch.forward.x * 0.62, enemy.pos.y + 0.16, enemy.pos.z - scratch.forward.z * 0.62);
         scratch.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, -enemy.facingAngle));
         scratch.matrix.compose(
           scratch.pos,
@@ -3051,14 +3060,35 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       runnerTrailMesh.current.instanceMatrix.needsUpdate = true;
     }
 
+    if (showDecor && runnerChevronMesh.current) {
+      let count = 0;
+      for (const enemy of enemiesRef.current) {
+        if (enemy.kind !== 'runner') continue;
+        if (count >= MAX_ENEMIES) break;
+        scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
+        scratch.pos.set(enemy.pos.x + scratch.forward.x * 0.34, enemy.pos.y + 0.34, enemy.pos.z + scratch.forward.z * 0.34);
+        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -enemy.facingAngle + Math.PI));
+        scratch.matrix.compose(
+          scratch.pos,
+          scratch.quat,
+          scratch.scale.set(0.34, 0.58 + Math.sin(enemy.wobble * 2.1) * 0.05, 0.28)
+        );
+        runnerChevronMesh.current.setMatrixAt(count, scratch.matrix);
+        count += 1;
+      }
+      runnerChevronMesh.current.count = count;
+      runnerChevronMesh.current.instanceMatrix.needsUpdate = true;
+    }
+
     if (showDecor && bruteMarkMesh.current) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'brute') continue;
         if (count >= MAX_ENEMIES) break;
         scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, enemy.wobble * 0.35));
+        scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.48, enemy.pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(enemy.pos.x, enemy.pos.y + 1.48, enemy.pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.setScalar(0.72 + Math.sin(enemy.wobble) * 0.05)
         );
@@ -3069,14 +3099,41 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       bruteMarkMesh.current.instanceMatrix.needsUpdate = true;
     }
 
+    if (showDecor && brutePlateMesh.current) {
+      let count = 0;
+      for (const enemy of enemiesRef.current) {
+        if (enemy.kind !== 'brute') continue;
+        scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
+        scratch.right.set(scratch.forward.z, 0, -scratch.forward.x);
+        for (let side = -1; side <= 1; side += 2) {
+          if (count >= MAX_ENEMIES * 2) break;
+          scratch.pos.copy(enemy.pos)
+            .addScaledVector(scratch.forward, -0.1)
+            .addScaledVector(scratch.right, side * 0.46);
+          scratch.pos.y = enemy.pos.y + 1.18 + Math.sin(enemy.wobble + side) * 0.035;
+          scratch.quat.setFromAxisAngle(scratch.yAxis, enemy.facingAngle + side * 0.18);
+          scratch.matrix.compose(
+            scratch.pos,
+            scratch.quat,
+            scratch.scale.set(0.38, 0.2, 0.18)
+          );
+          brutePlateMesh.current.setMatrixAt(count, scratch.matrix);
+          count += 1;
+        }
+      }
+      brutePlateMesh.current.count = count;
+      brutePlateMesh.current.instanceMatrix.needsUpdate = true;
+    }
+
     if (showDecor && golemShardMesh.current) {
       let count = 0;
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'golem') continue;
         if (count >= MAX_ENEMIES) break;
         scratch.quat.setFromEuler(new THREE.Euler(0.45, enemy.facingAngle + Math.PI / 4, 0.2));
+        scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.18 + Math.sin(enemy.wobble) * 0.04, enemy.pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(enemy.pos.x, enemy.pos.y + 1.18 + Math.sin(enemy.wobble) * 0.04, enemy.pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.set(0.18, 0.32, 0.18)
         );
@@ -3085,6 +3142,25 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       }
       golemShardMesh.current.count = count;
       golemShardMesh.current.instanceMatrix.needsUpdate = true;
+    }
+
+    if (showDecor && golemGroundMesh.current) {
+      let count = 0;
+      for (const enemy of enemiesRef.current) {
+        if (enemy.kind !== 'golem') continue;
+        if (count >= MAX_ENEMIES) break;
+        scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.045, enemy.pos.z);
+        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, enemy.facingAngle + Math.PI / 4));
+        scratch.matrix.compose(
+          scratch.pos,
+          scratch.quat,
+          scratch.scale.setScalar(1.18 + Math.sin(enemy.wobble * 0.65) * 0.035)
+        );
+        golemGroundMesh.current.setMatrixAt(count, scratch.matrix);
+        count += 1;
+      }
+      golemGroundMesh.current.count = count;
+      golemGroundMesh.current.instanceMatrix.needsUpdate = true;
     }
 
     if (showDecor && eliteCrownMesh.current) {
@@ -3111,6 +3187,25 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       eliteCrownMesh.current.count = count;
       eliteCrownMesh.current.instanceMatrix.needsUpdate = true;
     }
+
+    if (showDecor && eliteAuraMesh.current) {
+      let count = 0;
+      for (const enemy of enemiesRef.current) {
+        if (enemy.kind !== 'elite') continue;
+        if (count >= MAX_ENEMIES) break;
+        scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.07, enemy.pos.z);
+        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -enemy.wobble * 0.28));
+        scratch.matrix.compose(
+          scratch.pos,
+          scratch.quat,
+          scratch.scale.setScalar(1.42 + ((enemy.shield ?? 0) > 0 ? 0.32 : 0) + Math.sin(time + enemy.wobble) * 0.04)
+        );
+        eliteAuraMesh.current.setMatrixAt(count, scratch.matrix);
+        count += 1;
+      }
+      eliteAuraMesh.current.count = count;
+      eliteAuraMesh.current.instanceMatrix.needsUpdate = true;
+    }
   });
 
   return (
@@ -3133,13 +3228,29 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
             <planeGeometry args={[1, 1]} />
             <meshBasicMaterial color="#70d6ff" transparent opacity={0.34} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
           </instancedMesh>
+          <instancedMesh ref={runnerChevronMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+            <coneGeometry args={[1, 1, 3]} />
+            <meshBasicMaterial color="#9ff7ff" transparent opacity={0.76} depthWrite={false} toneMapped={false} />
+          </instancedMesh>
           <instancedMesh ref={bruteMarkMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
             <torusGeometry args={[0.68, 0.045, 8, 28]} />
             <meshBasicMaterial color="#ff8b72" transparent opacity={0.72} depthWrite={false} toneMapped={false} />
           </instancedMesh>
+          <instancedMesh ref={brutePlateMesh} args={[null, null, MAX_ENEMIES * 2]} frustumCulled={false}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshBasicMaterial color="#ffc0a4" transparent opacity={0.76} toneMapped={false} />
+          </instancedMesh>
           <instancedMesh ref={golemShardMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
             <octahedronGeometry args={[1, 0]} />
             <meshBasicMaterial color="#70f0b4" transparent opacity={0.86} toneMapped={false} />
+          </instancedMesh>
+          <instancedMesh ref={golemGroundMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+            <ringGeometry args={[0.48, 0.58, 4]} />
+            <meshBasicMaterial color="#93f5b8" transparent opacity={0.44} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+          </instancedMesh>
+          <instancedMesh ref={eliteAuraMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+            <ringGeometry args={[0.58, 0.76, 4]} />
+            <meshBasicMaterial color={ART_TOKENS.elderViolet} transparent opacity={0.48} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
           </instancedMesh>
           <instancedMesh ref={eliteCrownMesh} args={[null, null, MAX_ENEMIES * 4]} frustumCulled={false}>
             <coneGeometry args={[1, 1, 4]} />
@@ -3574,6 +3685,7 @@ function BeamEffect({ effect }) {
     direction.normalize()
   );
   const opacity = Math.max(0, 0.92 - progress * 0.92);
+  const pulse = 1 + Math.sin(progress * Math.PI) * 0.42;
 
   return (
     <group position={midpoint} quaternion={quaternion}>
@@ -3584,6 +3696,10 @@ function BeamEffect({ effect }) {
       <mesh scale={[effect.width * 2.4, length * 0.96, effect.width * 2.4]}>
         <cylinderGeometry args={[1, 1, 1, 8, 1, true]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={opacity * 0.2} depthWrite={false} toneMapped={false} />
+      </mesh>
+      <mesh position={[0, 0, 0]} scale={[effect.width * 3.2 * pulse, effect.width * 3.2 * pulse, effect.width * 3.2 * pulse]}>
+        <octahedronGeometry args={[1, 0]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={opacity * 0.42} depthWrite={false} toneMapped={false} />
       </mesh>
     </group>
   );
@@ -3600,27 +3716,40 @@ function RingEffect({ effect }) {
         <ringGeometry args={[0.84, 1, 72]} />
         <meshBasicMaterial color={effect.color} transparent opacity={opacity} depthWrite={false} toneMapped={false} />
       </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, -progress * Math.PI * 0.78]} scale={[radius * 0.9, radius * 0.9, 1]}>
+        <ringGeometry args={[0.62, 0.68, 12]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={opacity * 0.24} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
       <mesh rotation={[-Math.PI / 2, 0, -progress * Math.PI * 0.5]} scale={[radius * 0.68, radius * 0.68, 1]}>
         <ringGeometry args={[0.38, 0.46, 6]} />
         <meshBasicMaterial color="#fff1a6" transparent opacity={opacity * 0.44} depthWrite={false} toneMapped={false} />
       </mesh>
+      {effect.type === 'ring' && (
+        <mesh position={[0, 0.18 + progress * 0.28, 0]} scale={[0.24 + progress * 0.1, 0.24 + progress * 0.1, 0.24 + progress * 0.1]}>
+          <octahedronGeometry args={[1, 0]} />
+          <meshBasicMaterial color={effect.color} transparent opacity={opacity * 0.58} depthWrite={false} toneMapped={false} />
+        </mesh>
+      )}
     </group>
   );
 }
 
-function ProjectileAuraRings({ projectilesRef, game }) {
+function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
   const orbRing = useRef();
   const orbHalo = useRef();
   const orbTrail = useRef();
   const orbCrown = useRef();
   const stormRing = useRef();
   const stormDisk = useRef();
+  const stormSpoke = useRef();
+  const stormCore = useRef();
   const local = useMemo(() => ({
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
     scale: new THREE.Vector3(),
     pos: new THREE.Vector3()
   }), []);
+  const showDetail = visualQuality !== 'low';
 
   useFrame(() => {
     const tier = getWeaponTier(game.stats, getWeaponStage(game));
@@ -3723,6 +3852,42 @@ function ProjectileAuraRings({ projectilesRef, game }) {
       stormDisk.current.count = count;
       stormDisk.current.instanceMatrix.needsUpdate = true;
     }
+
+    if (showDetail && stormSpoke.current) {
+      let count = 0;
+      for (const projectile of projectilesRef.current) {
+        if (projectile.type !== 'storm') continue;
+        const radius = projectile.burstRadius ?? 1.8;
+        for (let i = 0; i < 4; i += 1) {
+          if (count >= MAX_PROJECTILES * 4) break;
+          const spokeAngle = projectile.angle + performance.now() * 0.006 + i * Math.PI / 2;
+          local.pos.copy(projectile.pos);
+          local.pos.y += 0.04;
+          local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, -spokeAngle));
+          local.matrix.compose(local.pos, local.quat, local.scale.set(0.12 + stage * 0.015, radius * 0.92, 1));
+          stormSpoke.current.setMatrixAt(count, local.matrix);
+          count += 1;
+        }
+      }
+      stormSpoke.current.count = count;
+      stormSpoke.current.instanceMatrix.needsUpdate = true;
+    }
+
+    if (showDetail && stormCore.current) {
+      let count = 0;
+      for (const projectile of projectilesRef.current) {
+        if (projectile.type !== 'storm') continue;
+        if (count >= MAX_PROJECTILES) break;
+        local.pos.copy(projectile.pos);
+        local.pos.y += 0.1 + Math.sin(performance.now() * 0.009 + projectile.angle) * 0.03;
+        local.quat.setFromEuler(new THREE.Euler(0.52, -performance.now() * 0.008 + projectile.angle, 0.18));
+        local.matrix.compose(local.pos, local.quat, local.scale.setScalar((0.22 + stage * 0.045) * projectile.visualScale));
+        stormCore.current.setMatrixAt(count, local.matrix);
+        count += 1;
+      }
+      stormCore.current.count = count;
+      stormCore.current.instanceMatrix.needsUpdate = true;
+    }
   });
 
   return (
@@ -3751,6 +3916,18 @@ function ProjectileAuraRings({ projectilesRef, game }) {
         <torusGeometry args={[0.92, 0.022, 8, 40]} />
         <meshBasicMaterial color={getStormColor(game.stats, getWeaponStage(game))} transparent opacity={0.62} toneMapped={false} />
       </instancedMesh>
+      {showDetail && (
+        <>
+          <instancedMesh ref={stormSpoke} args={[null, null, MAX_PROJECTILES * 4]} frustumCulled={false}>
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.26} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+          </instancedMesh>
+          <instancedMesh ref={stormCore} args={[null, null, MAX_PROJECTILES]} frustumCulled={false}>
+            <octahedronGeometry args={[1, 0]} />
+            <meshBasicMaterial color={getStormColor(game.stats, getWeaponStage(game))} transparent opacity={0.82} toneMapped={false} />
+          </instancedMesh>
+        </>
+      )}
     </>
   );
 }
