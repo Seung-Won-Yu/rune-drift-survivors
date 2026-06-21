@@ -99,9 +99,9 @@ const ELITE_ROLE_META = {
 };
 
 const BOSS_PATTERN_META = {
-  shockwave: { label: 'SHOCKWAVE', color: '#ff8b72', hint: '중거리 이탈', cue: '바깥 고리 피하기', shape: 'shockwave' },
-  summon: { label: 'SUMMON', color: '#f5c7ff', hint: '소환수 정리', cue: '보스 주변 정리', shape: 'summon' },
-  guard: { label: 'WARD', color: '#fff1a6', hint: '룬/번개 집중', cue: '보호막 집중 공격', shape: 'guard' }
+  shockwave: { label: 'SHOCKWAVE', color: '#ff8b72', hint: '충격파 예고', cue: '붉은 원 밖으로', shape: 'shockwave' },
+  summon: { label: 'SUMMON', color: '#f5c7ff', hint: '소환수 진입', cue: '보스 주변 정리', shape: 'summon' },
+  guard: { label: 'WARD', color: '#fff1a6', hint: '보호막 충전', cue: '보호막 집중 공격', shape: 'guard' }
 };
 
 const BOSS_PATTERN_ORDER = ['shockwave', 'summon', 'guard'];
@@ -401,6 +401,8 @@ function createInitialGame() {
     activeThreat: null,
     lastBossPattern: null,
     bossStatus: null,
+    damageFlash: 0,
+    damageMessage: '',
     onboardingMovement: 0,
     dashUses: 0,
     eliteKills: 0,
@@ -780,7 +782,7 @@ function App() {
   }, []);
 
   return (
-    <main className={`shell visual-${visualQuality}`}>
+    <main className={`shell visual-${visualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>
       <Canvas
         shadows
         camera={{ position: [0, 44, 74], fov: 48, near: 0.1, far: 420 }}
@@ -1057,6 +1059,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         const nextWave = Math.max(1, Math.floor(nextTime / WAVE_DURATION) + 1);
         const pickupFlash = Math.max(0, (current.pickupFlash ?? 0) - elapsed);
         const encounterAlertTimer = Math.max(0, (current.encounterAlertTimer ?? 0) - elapsed);
+        const damageFlash = Math.max(0, (current.damageFlash ?? 0) - elapsed);
         const dashCooldownMax = DASH_COOLDOWN * current.stats.dashCooldown;
         const movementDelta = player.current.vel.length() > 0.1 ? player.current.vel.length() * elapsed : 0;
         const basePatch = {
@@ -1066,6 +1069,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           pickupMessage: pickupFlash > 0 ? current.pickupMessage : '',
           encounterAlertTimer,
           encounterAlert: encounterAlertTimer > 0 ? current.encounterAlert : null,
+          damageFlash,
+          damageMessage: damageFlash > 0 ? current.damageMessage : '',
           bossStatus: getBossStatusSnapshot(),
           runStats: getRunStatsSnapshot(),
           overloadTimer: Math.max(0, (current.overloadTimer ?? 0) - elapsed),
@@ -1619,13 +1624,27 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       ? amount * (1 - Math.min(0.28, bladeFocus * 0.055))
       : amount;
     player.current.invuln = invuln;
-    cameraShake.current = Math.max(cameraShake.current, 0.22);
+    cameraShake.current = Math.max(cameraShake.current, 0.28);
+    const damageValue = Math.ceil(guardedAmount);
+    hitBursts.current.push({
+      pos: player.current.pos.clone(),
+      life: 0.42,
+      maxLife: 0.42,
+      color: ART_TOKENS.dangerRed,
+      type: 'playerHit',
+      stage: 4,
+      radius: 3.2
+    });
+    addDamageNumber(player.current.pos, `-${damageValue}`, ART_TOKENS.dangerRed, 0.82);
     updateGame(current => {
       const nextHp = Math.max(0, current.stats.hp - guardedAmount);
+      const hpRatio = nextHp / current.stats.maxHp;
       return {
         ...current,
         phase: nextHp <= 0 ? 'ended' : current.phase,
         result: nextHp <= 0 ? 'defeat' : current.result,
+        damageFlash: 0.62,
+        damageMessage: hpRatio <= 0.34 ? '위험: 체력 낮음' : `피격 -${damageValue}`,
         stats: { ...current.stats, hp: nextHp }
       };
     });
@@ -1667,6 +1686,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           maxLife: 0.52,
           color: ELITE_ROLE_META.charger.color,
           label: 'CHARGE',
+          cue: '돌진선 이탈',
           shape: 'charge',
           radius: 4.4
         });
@@ -1696,6 +1716,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           maxLife: 0.72,
           color: ELITE_ROLE_META.summoner.color,
           label: 'SWARM',
+          cue: '소환수 정리',
           shape: 'summon',
           radius: 5.4
         });
@@ -1822,6 +1843,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       maxLife: warningLife,
       color: meta.color,
       label: meta.label,
+      cue: meta.cue,
       radius: warningRadius,
       shape: meta.shape
     });
@@ -1837,7 +1859,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       kind: 'boss-pattern',
       label: meta.label,
       title: `보스 패턴: ${meta.label}`,
-      hint: meta.hint,
+      hint: meta.cue,
       color: meta.color,
       pattern
     }, 2.5);
@@ -5275,10 +5297,16 @@ function SpawnWarning({ warning }) {
         <meshBasicMaterial color={warning.color} transparent opacity={Math.max(0, 0.24 - progress * 0.08)} depthWrite={false} toneMapped={false} />
       </mesh>
       {isShockwave && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[radius * 0.74, radius * 0.74, 1]}>
-          <ringGeometry args={[0.94, 1.0, 72]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={opacity * 0.18} depthWrite={false} toneMapped={false} />
-        </mesh>
+        <>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[radius * 0.74, radius * 0.74, 1]}>
+            <ringGeometry args={[0.94, 1.0, 72]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={opacity * 0.18} depthWrite={false} toneMapped={false} />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, progress * Math.PI * 0.35]} scale={[radius * 0.48, radius * 0.48, 1]}>
+            <ringGeometry args={[0.82, 1.0, 6]} />
+            <meshBasicMaterial color={warning.color} transparent opacity={opacity * 0.18} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+          </mesh>
+        </>
       )}
       <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[radius, radius, 1]}>
         <ringGeometry args={[0.62, 0.72, ringSegments]} />
@@ -5309,19 +5337,36 @@ function SpawnWarning({ warning }) {
       </mesh>
       <pointLight position={[0, 0.85, 0]} color={warning.color} intensity={0.65} distance={4.5} />
       {warning.label && (
-        <Text
-          position={[0, 1.25 + progress * 0.4, 0]}
-          rotation={[-0.86, 0, 0]}
-          fontSize={0.55}
-          anchorX="center"
-          anchorY="middle"
-          color={warning.color}
-          fillOpacity={Math.max(0, 1 - progress)}
-          outlineWidth={0.025}
-          outlineColor="#07100f"
-        >
-          {warning.label}
-        </Text>
+        <>
+          <Text
+            position={[0, 1.25 + progress * 0.4, 0]}
+            rotation={[-0.86, 0, 0]}
+            fontSize={0.55}
+            anchorX="center"
+            anchorY="middle"
+            color={warning.color}
+            fillOpacity={Math.max(0, 1 - progress)}
+            outlineWidth={0.025}
+            outlineColor="#07100f"
+          >
+            {warning.label}
+          </Text>
+          {warning.cue && (
+            <Text
+              position={[0, 0.82 + progress * 0.28, 0]}
+              rotation={[-0.86, 0, 0]}
+              fontSize={0.3}
+              anchorX="center"
+              anchorY="middle"
+              color="#f8fffc"
+              fillOpacity={Math.max(0, 0.9 - progress * 0.45)}
+              outlineWidth={0.018}
+              outlineColor="#07100f"
+            >
+              {warning.cue}
+            </Text>
+          )}
+        </>
       )}
     </group>
   );
@@ -5329,6 +5374,7 @@ function SpawnWarning({ warning }) {
 
 function HUD({ game, onRestart, onPause }) {
   const hpPct = Math.max(0, game.stats.hp / game.stats.maxHp) * 100;
+  const hpRatio = game.stats.hp / game.stats.maxHp;
   const xpPct = Math.min(100, (game.xp / game.xpToNext) * 100);
   const runPct = Math.min(100, (game.time / RUN_DURATION) * 100);
   const timeRemaining = Math.max(0, RUN_DURATION - game.time);
@@ -5347,7 +5393,7 @@ function HUD({ game, onRestart, onPause }) {
   return (
     <section className={`hud ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''} ${bossStatus?.casting ? 'isCasting' : ''}`} aria-label="게임 상태">
       <div className="topbar">
-        <div className="meterBlock">
+        <div className={`meterBlock hpBlock ${hpRatio <= 0.34 ? 'isLow' : ''} ${game.damageFlash > 0 ? 'isHit' : ''}`}>
           <div className="meterLabel">
             <span>체력</span>
             <strong>{Math.ceil(game.stats.hp)} / {game.stats.maxHp}</strong>
@@ -5384,8 +5430,9 @@ function HUD({ game, onRestart, onPause }) {
           <i style={{ width: `${dashPct}%` }} />
         </span>
         {crisis.level > 0 && <span className={`tickerAlert ${crisis.level >= 3 ? 'isCritical' : ''}`}>{crisis.label}</span>}
+        {game.damageFlash > 0 && <span className="tickerAlert damagePill">{game.damageMessage}</span>}
         {activeThreat && <span className="tickerAlert threatPill" style={{ '--tone': activeThreat.color }}>{activeThreat.label} · {activeThreat.weakness}</span>}
-        {bossPatternMeta && <span className="tickerAlert bossPatternPill" style={{ '--tone': bossPatternMeta.color }}>{bossPatternMeta.label} · {bossPatternMeta.hint}</span>}
+        {bossPatternMeta && <span className="tickerAlert bossPatternPill" style={{ '--tone': bossPatternMeta.color }}>{bossPatternMeta.label} · {bossPatternMeta.cue}</span>}
         {game.pickupFlash > 0 && <span className="tickerPickup">{game.pickupMessage}</span>}
       </div>
       {encounterAlert && (
