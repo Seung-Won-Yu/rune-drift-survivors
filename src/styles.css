@@ -1284,9 +1284,9 @@ h1 {
   position: relative;
   display: grid;
   min-height: 250px;
-  grid-template-rows: auto auto auto auto auto 1fr auto;
+  grid-template-rows: auto auto auto auto 1fr auto auto;
   align-content: start;
-  gap: 8px;
+  gap: 9px;
   padding: 18px 16px 15px;
   counter-increment: upgrade-choice;
   overflow: hidden;
@@ -1441,102 +1441,87 @@ h1 {
   text-shadow: 0 0 18px color-mix(in srgb, var(--tone, #70d6ff) 24%, transparent);
 }
 
-.upgradeDecisionRow {
+.upgradeOutcomeBand {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.upgradeDecisionRow span {
-  min-width: 0;
-  display: grid;
-  gap: 3px;
-  padding: 7px 8px 8px;
-  border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 34%, rgba(210, 255, 244, 0.12));
+  gap: 5px;
+  min-height: 66px;
+  padding: 11px 12px 12px;
+  border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 54%, rgba(255, 241, 166, 0.2));
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--tone, #70d6ff) 13%, transparent), transparent),
-    rgba(0, 0, 0, 0.2);
-  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--tone, #70d6ff) 24%, transparent), transparent 46%),
+    linear-gradient(90deg, color-mix(in srgb, var(--tone, #70d6ff) 20%, transparent), rgba(255, 223, 110, 0.08)),
+    rgba(0, 0, 0, 0.3);
+  clip-path: polygon(9px 0, 100% 0, calc(100% - 9px) 100%, 0 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 0 22px color-mix(in srgb, var(--tone, #70d6ff) 16%, transparent);
 }
 
-.upgradeDecisionRow small {
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  color: rgba(233, 255, 249, 0.58);
-  background: none;
-  clip-path: none;
-  font-size: 9px;
+.upgradeOutcomeBand small {
+  width: fit-content;
+  padding: 3px 6px 4px;
+  border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 44%, transparent);
+  color: color-mix(in srgb, var(--tone, #70d6ff) 78%, white);
+  background: rgba(0, 0, 0, 0.24);
+  clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+  font-size: 10px;
   font-weight: 950;
   letter-spacing: 0;
   line-height: 1;
   text-transform: uppercase;
 }
 
-.upgradeDecisionRow small::before {
-  content: none;
-}
-
-.upgradeDecisionRow b {
+.upgradeOutcomeBand strong {
   min-width: 0;
   display: block;
-  overflow: hidden;
-  padding-right: 0;
-  color: color-mix(in srgb, var(--tone, #70d6ff) 70%, white);
-  font-size: 12px;
-  font-weight: 950;
-  line-height: 1.15;
-  text-overflow: ellipsis;
-  text-transform: none;
-  white-space: nowrap;
-}
-
-.upgradeDecisionRow span:last-child {
-  border-color: rgba(255, 241, 166, 0.24);
-  background:
-    linear-gradient(90deg, rgba(255, 223, 110, 0.1), transparent),
-    rgba(25, 19, 8, 0.22);
-}
-
-.upgradeDecisionRow span:last-child b {
   color: #fff1a6;
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.18;
+  text-shadow: 0 0 16px rgba(255, 223, 110, 0.22);
+  text-transform: none;
 }
 
-.upgradeImpactRow {
+.upgradeReasonLine {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid rgba(225, 255, 246, 0.1);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent),
+    rgba(0, 0, 0, 0.18);
+  clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
 }
 
-.upgradeImpactRow span {
+.upgradeReasonLine span,
+.upgradeReasonLine b {
   min-width: 0;
-  padding: 7px 8px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 32%, rgba(210, 255, 244, 0.12));
-  color: color-mix(in srgb, var(--tone, #70d6ff) 78%, white);
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--tone, #70d6ff) 18%, transparent), transparent),
-    rgba(0, 0, 0, 0.26);
-  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
-  font-size: 12px;
-  font-weight: 950;
-  line-height: 1;
-  text-align: center;
+  line-height: 1.1;
   text-overflow: ellipsis;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.upgradeImpactRow span:last-child {
-  border-color: rgba(255, 241, 166, 0.26);
+.upgradeReasonLine span {
+  color: color-mix(in srgb, var(--tone, #70d6ff) 78%, white);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.upgradeReasonLine b {
+  flex: 0 1 auto;
   color: #fff1a6;
-  background:
-    linear-gradient(90deg, rgba(255, 223, 110, 0.13), transparent),
-    rgba(26, 20, 8, 0.32);
+  font-size: 11px;
+  font-weight: 900;
+  text-align: right;
 }
 
 .upgradeEffectText {
@@ -1569,7 +1554,7 @@ h1 {
   line-height: 1;
 }
 
-.upgradeCard > b {
+.upgradePathText {
   position: relative;
   z-index: 1;
   display: block;
@@ -2220,29 +2205,37 @@ h1 {
     font-size: 18px;
   }
 
-  .upgradeDecisionRow {
-    gap: 5px;
+  .upgradeOutcomeBand {
+    min-height: 58px;
+    padding: 9px 10px 10px;
   }
 
-  .upgradeDecisionRow span {
-    padding: 6px 7px;
+  .upgradeOutcomeBand small {
+    font-size: 9px;
   }
 
-  .upgradeDecisionRow b {
+  .upgradeOutcomeBand strong {
+    font-size: 16px;
+  }
+
+  .upgradeReasonLine {
+    padding: 6px 8px;
+  }
+
+  .upgradeReasonLine span {
     font-size: 11px;
   }
 
-  .upgradeImpactRow {
-    gap: 5px;
-  }
-
-  .upgradeImpactRow span {
-    padding: 6px 7px;
+  .upgradeReasonLine b {
     font-size: 10px;
   }
 
   .upgradeEffectText {
     font-size: 12px;
+  }
+
+  .upgradePathText {
+    font-size: 11px;
   }
 
   .upgradePanel,

@@ -5681,22 +5681,16 @@ function UpgradeOverlay({ game, choices, onChoose }) {
                   <i className="upgradeSigil" aria-hidden="true">{iconMeta.glyph}</i>
                   <span>{displayTitle}</span>
                 </div>
-                <div className="upgradeDecisionRow" aria-label="선택 요약">
-                  <span>
-                    <small>선택 이유</small>
-                    <b>{cardMeta.decision}</b>
-                  </span>
-                  <span>
-                    <small>전투 변화</small>
-                    <b>{cardMeta.payoff}</b>
-                  </span>
+                <div className="upgradeOutcomeBand" aria-label="핵심 변화">
+                  <small>{cardMeta.impact}</small>
+                  <strong>{cardMeta.payoff}</strong>
                 </div>
-                <div className="upgradeImpactRow" aria-label="강화 방향">
-                  <span>{cardMeta.impact}</span>
-                  <span>{cardMeta.reason}</span>
+                <div className="upgradeReasonLine" aria-label="선택 이유">
+                  <span>{cardMeta.decision}</span>
+                  <b>{cardMeta.reason}</b>
                 </div>
                 <small className="upgradeEffectText">{choice.text}</small>
-                <b>{focusPreview}</b>
+                <b className="upgradePathText">{focusPreview}</b>
                 <div className="upgradeTags">
                   <i>{choice.branch}</i>
                   {cardMeta.tags.map(tag => <i key={tag}>{tag}</i>)}
