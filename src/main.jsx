@@ -71,8 +71,8 @@ const WAVE_PROFILES = [
 const BOSS_WAVE_SCHEDULE = [6, 9, 12];
 
 const COMBAT_RHYTHM = [
-  { until: 35, label: '학습', target: 0.72, spawn: 0.72, hp: 0.9, move: 0.92, damage: 0.9, ability: 1.08 },
-  { until: 85, label: '정착', target: 0.88, spawn: 0.9, hp: 0.96, move: 0.98, damage: 0.96, ability: 1.02 },
+  { until: 35, label: '학습', target: 0.76, spawn: 0.78, hp: 0.86, move: 0.92, damage: 0.9, ability: 1.08 },
+  { until: 85, label: '정착', target: 0.9, spawn: 0.92, hp: 0.94, move: 0.98, damage: 0.96, ability: 1.02 },
   { until: 145, label: '검증', target: 1.02, spawn: 1.04, hp: 1.02, move: 1.04, damage: 1.04, ability: 0.94 },
   { until: 210, label: '압박', target: 1.14, spawn: 1.16, hp: 1.08, move: 1.12, damage: 1.12, ability: 0.84 },
   { until: Infinity, label: '붕괴', target: 1.26, spawn: 1.28, hp: 1.14, move: 1.2, damage: 1.24, ability: 0.72 }
@@ -382,7 +382,7 @@ function createInitialGame() {
     phase: 'playing',
     level: 1,
     xp: 0,
-    xpToNext: 34,
+    xpToNext: 30,
     time: 0,
     kills: 0,
     wave: 1,
@@ -745,7 +745,7 @@ function App() {
           phase: 'upgrade',
           level: 2,
           xp: 0,
-          xpToNext: 46,
+          xpToNext: 45,
           pendingUpgrades: 1,
           time: 28,
           kills: 18,
@@ -2025,7 +2025,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     for (const gem of xpGems.current) {
       gem.pulse += dt * 5;
       const distance = gem.pos.distanceTo(playerPos);
-      const passiveReach = Math.min(18, currentGame.level * 0.32 + currentGame.time * 0.052);
+      const passiveReach = Math.min(18, currentGame.level * 0.38 + currentGame.time * 0.06);
       const crowdReach = gemCount > 170 ? Math.min(10, (gemCount - 170) * 0.04) : 0;
       const magnetDistance = gem.magnetized ? 190 : XP_BASE_MAGNET_RADIUS * currentGame.stats.magnet + passiveReach + crowdReach;
       if (distance < magnetDistance && distance > 0.001) {
@@ -2054,7 +2054,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         while (nextXp >= nextXpToNext) {
           nextXp -= nextXpToNext;
           nextLevel += 1;
-          nextXpToNext = Math.floor(nextXpToNext * 1.18 + 12);
+          nextXpToNext = Math.floor(nextXpToNext * 1.16 + 11);
           earnedUpgrades += 1;
           shouldLevel = true;
         }
