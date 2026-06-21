@@ -384,8 +384,30 @@ const VISUAL_BUDGETS = {
   }
 };
 
+const RUNTIME_BUDGETS = {
+  high: {
+    maxEnemies: MAX_ENEMIES,
+    maxProjectiles: MAX_PROJECTILES,
+    maxXpGems: MAX_XP_GEMS
+  },
+  balanced: {
+    maxEnemies: 118,
+    maxProjectiles: 128,
+    maxXpGems: 220
+  },
+  low: {
+    maxEnemies: 98,
+    maxProjectiles: 108,
+    maxXpGems: 190
+  }
+};
+
 function getVisualBudget(visualQuality = 'high') {
   return VISUAL_BUDGETS[visualQuality] ?? VISUAL_BUDGETS.high;
+}
+
+function getRuntimeBudget(visualQuality = 'high') {
+  return RUNTIME_BUDGETS[visualQuality] ?? RUNTIME_BUDGETS.high;
 }
 
 function getProjectileGridCoord(value) {
@@ -852,7 +874,7 @@ function App() {
   return (
     <main className={`shell visual-${runtimeVisualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>
       <Canvas
-        shadows
+        shadows={runtimeVisualQuality !== 'low'}
         camera={{ position: [0, 44, 74], fov: 48, near: 0.1, far: 420 }}
         dpr={canvasDpr}
       >
@@ -933,6 +955,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     quat: new THREE.Quaternion(),
     vec: new THREE.Vector3()
   }), []);
+  const runtimeBudget = getRuntimeBudget(visualQuality);
 
   useEffect(() => {
     const down = event => {
@@ -988,10 +1011,11 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         weaponEffects.current = [];
       },
       stress: (options = {}) => {
+        const stressBudget = getRuntimeBudget(visualQuality);
         const wave = options.wave ?? 12;
-        const enemyCount = Math.min(MAX_ENEMIES - 1, options.enemies ?? 160);
-        const projectileCount = Math.min(MAX_PROJECTILES, options.projectiles ?? 210);
-        const gemCount = Math.min(MAX_XP_GEMS, options.gems ?? 420);
+        const enemyCount = Math.min(stressBudget.maxEnemies - 1, options.enemies ?? 160);
+        const projectileCount = Math.min(stressBudget.maxProjectiles, options.projectiles ?? 210);
+        const gemCount = Math.min(stressBudget.maxXpGems, options.gems ?? 420);
         const profile = getWaveProfile(wave);
         const rhythm = getCombatRhythm({ time: 246, wave });
         player.current.pos.set(0, 0.55, 0);
@@ -1102,7 +1126,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         });
       }
     };
-  }, [refApi]);
+  }, [refApi, visualQuality]);
 
   useEffect(() => {
     if (game.phase === 'playing') {
@@ -1164,10 +1188,12 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
 
     updatePlayer(dt, game.stats, setGame);
     updateSpawning(dt, game, setGame);
+    trimRuntimePools();
     updateWeapons(dt, game);
     updateProjectiles(dt, game.stats, game);
     rebuildProjectileGrid();
     updateEnemies(dt, game, setGame);
+    trimRuntimePools();
     updateGems(dt, game, setGame, onLevelUp);
     updateFieldItems(dt, game, setGame);
     updateShrines(dt, game, setGame);
@@ -1222,6 +1248,53 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     const key = DAMAGE_SOURCE_META[source] ? source : 'generic';
     runStats.current.damageBySource[key] = (runStats.current.damageBySource[key] ?? 0) + amount;
     runStats.current.totalDamage += amount;
+  };
+
+  const addProjectile = projectile => {
+    if (projectiles.current.length < runtimeBudget.maxProjectiles) {
+      projectiles.current.push(projectile);
+      return true;
+    }
+
+    const replaceIndex = projectiles.current.findIndex(existing => (
+      existing.life < 0.14 || (projectile.type === 'storm' && existing.type === 'orb')
+    ));
+    if (replaceIndex < 0) return false;
+    projectiles.current[replaceIndex] = projectile;
+    return true;
+  };
+
+  const trimRuntimePools = () => {
+    if (projectiles.current.length > runtimeBudget.maxProjectiles) {
+      projectiles.current.length = runtimeBudget.maxProjectiles;
+    }
+
+    while (xpGems.current.length > runtimeBudget.maxXpGems) {
+      const gem = xpGems.current.pop();
+      const target = xpGems.current[Math.floor(Math.random() * xpGems.current.length)];
+      if (!gem || !target) continue;
+      target.value += gem.value;
+      target.pos.lerp(gem.pos, 0.18);
+    }
+
+    if (enemies.current.length <= runtimeBudget.maxEnemies) return;
+    const protectedEnemies = [];
+    const regularEnemies = [];
+    const playerPos = player.current.pos;
+    for (const enemy of enemies.current) {
+      if (enemy.kind === 'boss' || enemy.kind === 'elite') {
+        protectedEnemies.push(enemy);
+      } else {
+        regularEnemies.push(enemy);
+      }
+    }
+    regularEnemies.sort((a, b) => (
+      a.pos.distanceToSquared(playerPos) - b.pos.distanceToSquared(playerPos)
+    ));
+    enemies.current = [
+      ...protectedEnemies,
+      ...regularEnemies.slice(0, Math.max(0, runtimeBudget.maxEnemies - protectedEnemies.length))
+    ];
   };
 
   const getRunStatsSnapshot = () => ({
@@ -1321,11 +1394,12 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     const pressure = getDirectorPressure(currentGame);
     const rhythm = getCombatRhythm(currentGame);
     const openingEase = currentGame.time < 30 ? 0.68 + currentGame.time / 30 * 0.26 : 1;
-    const targetCount = Math.min(Math.floor((waveProfile.targetBase + currentGame.wave * 7) * pressure * openingEase * rhythm.target), MAX_ENEMIES - 12);
+    const enemyLimit = runtimeBudget.maxEnemies;
+    const targetCount = Math.min(Math.floor((waveProfile.targetBase + currentGame.wave * 7) * pressure * openingEase * rhythm.target), enemyLimit - 12);
     const minuteMark = Math.floor(currentGame.time / 60);
     const nextSurge = SURGE_EVENTS[surgeIndex.current];
-    if (nextSurge && currentGame.time >= nextSurge.time && enemies.current.length < MAX_ENEMIES - 8) {
-      const count = Math.min(nextSurge.count + Math.floor(currentGame.wave / 2), MAX_ENEMIES - enemies.current.length);
+    if (nextSurge && currentGame.time >= nextSurge.time && enemies.current.length < enemyLimit - 8) {
+      const count = Math.min(nextSurge.count + Math.floor(currentGame.wave / 2), enemyLimit - enemies.current.length);
       for (let i = 0; i < count; i += 1) {
         const enemy = applyCombatRhythm(createEnemy(currentGame.wave + 1, waveProfile, player.current.pos), rhythm);
         enemy.surge = true;
@@ -1433,7 +1507,11 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     if (spawnTimer.current <= 0 && enemies.current.length < targetCount) {
       const missing = targetCount - enemies.current.length;
       const catchUp = missing > 42 ? 6 : missing > 26 ? 4 : missing > 14 ? 2 : 0;
-      const amount = Math.min(18, Math.ceil((waveProfile.spawnBase + Math.floor(currentGame.time / 72) + catchUp) * Math.min(1.24, pressure) * openingEase * rhythm.spawn));
+      const amount = Math.min(
+        18,
+        enemyLimit - enemies.current.length,
+        Math.ceil((waveProfile.spawnBase + Math.floor(currentGame.time / 72) + catchUp) * Math.min(1.24, pressure) * openingEase * rhythm.spawn)
+      );
       for (let i = 0; i < amount; i += 1) {
         const enemy = applyCombatRhythm(createEnemy(currentGame.wave, waveProfile, player.current.pos), rhythm);
         enemies.current.push(enemy);
@@ -1483,7 +1561,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           const dir = target.pos.clone().sub(player.current.pos).setY(0).normalize();
           const spread = (index - (shotTotal - 1) / 2) * (orbFocus >= 2 ? 0.14 : 0.09);
           dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), spread);
-          projectiles.current.push({
+          addProjectile({
             type: 'orb',
             pos: player.current.pos.clone().add(new THREE.Vector3(0, 0.35, 0)),
             vel: dir.multiplyScalar(weaponCatalog[0].speed * stats.orbSpeed * (1 + orbPierceLevel * 0.06)),
@@ -1512,7 +1590,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           ? new THREE.Vector3()
           : new THREE.Vector3((Math.random() - 0.5) * (5.5 + stormFocus * 0.9), 0, (Math.random() - 0.5) * (5.5 + stormFocus * 0.9));
         const strikePos = target.pos.clone().add(offset).add(new THREE.Vector3(0, 0.8, 0));
-        projectiles.current.push({
+        addProjectile({
           type: 'storm',
           pos: strikePos,
           vel: new THREE.Vector3(),
@@ -1682,7 +1760,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       projectile.life -= dt;
       projectile.pos.addScaledVector(projectile.vel, dt);
       if (projectile.life <= 0 || projectile.pierce < 0 || hitsStaticCollider(projectile.pos, projectile.radius * 0.55)) continue;
-      if (projectileWrite < MAX_PROJECTILES) {
+      if (projectileWrite < runtimeBudget.maxProjectiles) {
         projectiles.current[projectileWrite] = projectile;
         projectileWrite += 1;
       }
@@ -1773,7 +1851,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     enemy.bossGuard = Math.max(0, (enemy.bossGuard ?? 0) - dt);
     enemy.currentPatternTimer = Math.max(0, (enemy.currentPatternTimer ?? 0) - dt);
     const abilityScale = getEnemyAbilityScale(currentGame);
-    const summonSlots = () => Math.max(0, MAX_ENEMIES - enemies.current.length - spawnedEnemies.length);
+    const summonSlots = () => Math.max(0, runtimeBudget.maxEnemies - enemies.current.length - spawnedEnemies.length);
 
     if (enemy.kind === 'elite' && enemy.role === 'bulwark') {
       enemy.shield = Math.min(enemy.shieldMax, (enemy.shield ?? 0) + dt * 4.5 * getEnemyDamagePressure(currentGame));
@@ -2132,7 +2210,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           enemy.kind === 'boss' || enemy.kind === 'elite' ? getEnemyAccentColor(enemy) : '#9df57a',
           enemy.kind === 'boss' || enemy.kind === 'elite' ? 0.95 : 0.54
         );
-        if (enemy.canSplit && enemies.current.length + spawnedEnemies.length < MAX_ENEMIES - 4) {
+        if (enemy.canSplit && enemies.current.length + spawnedEnemies.length < runtimeBudget.maxEnemies - 4) {
           const splitCount = enemy.kind === 'brute' ? 3 : 2;
           for (let index = 0; index < splitCount; index += 1) {
             spawnedEnemies.push(createSplitRunner(enemy, currentGame.wave, player.current.pos, index));
@@ -2184,7 +2262,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         gained += gem.value * currentGame.stats.xpGain;
         continue;
       }
-      if (gemWrite < MAX_XP_GEMS) {
+      if (gemWrite < runtimeBudget.maxXpGems) {
         xpGems.current[gemWrite] = gem;
         gemWrite += 1;
       }
@@ -2652,7 +2730,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
   };
 
   const addXpGem = (pos, value) => {
-    if (xpGems.current.length < MAX_XP_GEMS) {
+    if (xpGems.current.length < runtimeBudget.maxXpGems) {
       xpGems.current.push({
         pos,
         value,
@@ -2716,7 +2794,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
 
   const renderInstances = () => {
     if (gemMesh.current) {
-      const gemCount = Math.min(xpGems.current.length, MAX_XP_GEMS);
+      const gemCount = Math.min(xpGems.current.length, runtimeBudget.maxXpGems);
       for (let index = 0; index < gemCount; index += 1) {
         const gem = xpGems.current[index];
         const scale = 1.22 + Math.sin(gem.pulse) * 0.22;
@@ -2733,11 +2811,11 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       <hemisphereLight args={['#8edfff', '#17231b', 0.52]} />
       <ambientLight intensity={0.24} />
       <directionalLight
-        castShadow
+        castShadow={visualQuality !== 'low'}
         position={[22, 30, 14]}
         intensity={2.55}
         color="#f5f0d0"
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={visualQuality === 'high' ? [2048, 2048] : [1024, 1024]}
       />
       <directionalLight position={[-34, 18, -48]} intensity={0.78} color={ART_TOKENS.riftViolet} />
       <pointLight position={[0, 2.4, 0]} intensity={3.9} color={ART_TOKENS.runeCyan} distance={14} />
@@ -2752,11 +2830,11 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       <OrbitBlades player={player} game={game} />
       <EnemyGroundAuras enemiesRef={enemies} visualQuality={visualQuality} />
       <EnemyAccents enemiesRef={enemies} visualQuality={visualQuality} />
-      <SourceEnemyInstances enemiesRef={enemies} kind="golem" url={MODEL_URLS.golem} scaleMultiplier={2.42} materialTone="#365042" />
-      <SourceEnemyInstances enemiesRef={enemies} kind="runner" url={MODEL_URLS.runner} scaleMultiplier={2.82} materialTone="#24324c" />
-      <SourceEnemyInstances enemiesRef={enemies} kind="brute" url={MODEL_URLS.brute} scaleMultiplier={2.92} materialTone="#7b3e32" />
-      <SourceEnemyInstances enemiesRef={enemies} kind="elite" url={MODEL_URLS.boss} scaleMultiplier={1.26} materialTone="#654b8e" />
-      <SourceEnemyInstances enemiesRef={enemies} kind="boss" url={MODEL_URLS.boss} scaleMultiplier={2.05} materialTone="#8d7042" />
+      <SourceEnemyInstances enemiesRef={enemies} kind="golem" url={MODEL_URLS.golem} scaleMultiplier={2.42} materialTone="#365042" visualQuality={visualQuality} />
+      <SourceEnemyInstances enemiesRef={enemies} kind="runner" url={MODEL_URLS.runner} scaleMultiplier={2.82} materialTone="#24324c" visualQuality={visualQuality} />
+      <SourceEnemyInstances enemiesRef={enemies} kind="brute" url={MODEL_URLS.brute} scaleMultiplier={2.92} materialTone="#7b3e32" visualQuality={visualQuality} />
+      <SourceEnemyInstances enemiesRef={enemies} kind="elite" url={MODEL_URLS.boss} scaleMultiplier={1.26} materialTone="#654b8e" visualQuality={visualQuality} />
+      <SourceEnemyInstances enemiesRef={enemies} kind="boss" url={MODEL_URLS.boss} scaleMultiplier={2.05} materialTone="#8d7042" visualQuality={visualQuality} />
       <BossNameplates enemiesRef={enemies} />
       <BossPresence enemiesRef={enemies} />
       <instancedMesh ref={gemMesh} args={[null, null, MAX_XP_GEMS]} frustumCulled={false}>
@@ -2766,8 +2844,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       {visualQuality !== 'low' && <GemBeacons gemsRef={xpGems} visualQuality={visualQuality} />}
       <FieldPickupItems itemsRef={fieldItems} />
       <RuneShrineSites shrinesRef={shrines} />
-      <SourceProjectileInstances projectilesRef={projectiles} type="orb" url={PROJECTILE_MODEL_URLS.orb} scaleMultiplier={1.25} />
-      <SourceProjectileInstances projectilesRef={projectiles} type="storm" url={PROJECTILE_MODEL_URLS.storm} scaleMultiplier={1.85} />
+      <SourceProjectileInstances projectilesRef={projectiles} type="orb" url={PROJECTILE_MODEL_URLS.orb} scaleMultiplier={1.25} visualQuality={visualQuality} />
+      <SourceProjectileInstances projectilesRef={projectiles} type="storm" url={PROJECTILE_MODEL_URLS.storm} scaleMultiplier={1.85} visualQuality={visualQuality} />
       <ProjectileAuraRings projectilesRef={projectiles} game={game} visualQuality={visualQuality} />
       <WeaponStrikeEffects effectsRef={weaponEffects} />
       {hitBursts.current.map((burst, index) => (
@@ -2812,7 +2890,7 @@ function useInstancedModelParts(url) {
   }, [scene]);
 }
 
-function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 1, materialTone }) {
+function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 1, materialTone, visualQuality = 'high' }) {
   const parts = useInstancedModelParts(url);
   const styledParts = useMemo(() => {
     if (!materialTone) return parts;
@@ -2891,16 +2969,17 @@ function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 1, mate
           }}
           args={[part.geometry, part.material, MAX_ENEMIES]}
           frustumCulled={false}
-          castShadow
-          receiveShadow
+          castShadow={visualQuality === 'high'}
+          receiveShadow={visualQuality !== 'low'}
         />
       ))}
     </group>
   );
 }
 
-function SourceProjectileInstances({ projectilesRef, type, url, scaleMultiplier = 1 }) {
+function SourceProjectileInstances({ projectilesRef, type, url, scaleMultiplier = 1, visualQuality = 'high' }) {
   const parts = useInstancedModelParts(url);
+  const projectileLimit = getRuntimeBudget(visualQuality).maxProjectiles;
   const meshRefs = useRef([]);
   const axis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
   const local = useMemo(() => ({
@@ -2919,7 +2998,7 @@ function SourceProjectileInstances({ projectilesRef, type, url, scaleMultiplier 
       let count = 0;
       for (const projectile of projectilesRef.current) {
         if (projectile.type !== type) continue;
-        if (count >= MAX_PROJECTILES) break;
+        if (count >= projectileLimit) break;
         const scale = (type === 'storm' ? 1.7 : 1) * projectile.visualScale * scaleMultiplier;
         local.pos.copy(projectile.pos);
         local.quat.setFromAxisAngle(axis, (projectile.angle ?? 0) + (type === 'storm' ? timeSpin : 0));
@@ -2944,7 +3023,7 @@ function SourceProjectileInstances({ projectilesRef, type, url, scaleMultiplier 
           }}
           args={[part.geometry, part.material, MAX_PROJECTILES]}
           frustumCulled={false}
-          castShadow
+          castShadow={visualQuality === 'high'}
         />
       ))}
     </group>
