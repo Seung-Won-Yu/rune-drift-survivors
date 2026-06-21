@@ -4980,7 +4980,7 @@ function HUD({ game, onRestart, onPause }) {
   const isThreatened = crisis.level >= 3 || bossStatus?.enraged || encounterAlert?.kind === 'boss' || encounterAlert?.kind === 'boss-pattern';
 
   return (
-    <section className={`hud ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''}`} aria-label="게임 상태">
+    <section className={`hud ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''} ${bossStatus?.casting ? 'isCasting' : ''}`} aria-label="게임 상태">
       <div className="topbar">
         <div className="meterBlock">
           <div className="meterLabel">
@@ -5011,16 +5011,16 @@ function HUD({ game, onRestart, onPause }) {
         </div>
       </div>
       <div className="combatTicker">
-        <span>Wave {game.wave}</span>
-        <strong style={{ '--tone': waveProfile.accent }}>{waveProfile.trait}</strong>
-        <span>{game.kills} KOs</span>
+        <span className="wavePill">Wave {game.wave}</span>
+        <strong className="traitPill" style={{ '--tone': waveProfile.accent }}>{waveProfile.trait}</strong>
+        <span className="koPill">{game.kills} KOs</span>
         <span className={`dashPill ${dashReady ? 'isReady' : ''}`}>
           Dash <b>{dashReady ? 'Ready' : `${dashCooldown.toFixed(1)}s`}</b>
           <i style={{ width: `${dashPct}%` }} />
         </span>
         {crisis.level > 0 && <span className={`tickerAlert ${crisis.level >= 3 ? 'isCritical' : ''}`}>{crisis.label}</span>}
-        {activeThreat && <span className="tickerAlert" style={{ '--tone': activeThreat.color }}>{activeThreat.label} · {activeThreat.weakness}</span>}
-        {bossPatternMeta && <span className="tickerAlert" style={{ '--tone': bossPatternMeta.color }}>{bossPatternMeta.label} · {bossPatternMeta.hint}</span>}
+        {activeThreat && <span className="tickerAlert threatPill" style={{ '--tone': activeThreat.color }}>{activeThreat.label} · {activeThreat.weakness}</span>}
+        {bossPatternMeta && <span className="tickerAlert bossPatternPill" style={{ '--tone': bossPatternMeta.color }}>{bossPatternMeta.label} · {bossPatternMeta.hint}</span>}
         {game.pickupFlash > 0 && <span className="tickerPickup">{game.pickupMessage}</span>}
       </div>
       {encounterAlert && (
@@ -5048,8 +5048,8 @@ function HUD({ game, onRestart, onPause }) {
           </div>
           <div className="bossPatternMeta">
             <span>{bossStatus.casting ? 'CASTING' : 'NEXT'} <b>{bossStatus.patternLabel}</b></span>
-            <span>Pattern <b>{bossStatus.patternStage}</b></span>
-            <span>{bossStatus.patternHint}</span>
+            <span className="bossPatternStage">Pattern <b>{bossStatus.patternStage}</b></span>
+            <span className="bossPatternHintPill">{bossStatus.patternHint}</span>
           </div>
         </div>
       )}
