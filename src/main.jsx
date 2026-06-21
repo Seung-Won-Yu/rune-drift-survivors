@@ -2797,6 +2797,8 @@ function PlayerPresence({ player, game }) {
   const castHalo = useRef();
   const dashTrail = useRef();
   const dashSpark = useRef();
+  const focusBeam = useRef();
+  const directionRune = useRef();
   const shoulderRune = useRef();
   const leftFootRune = useRef();
   const rightFootRune = useRef();
@@ -2832,6 +2834,17 @@ function PlayerPresence({ player, game }) {
       dashSpark.current.visible = dashPower > 0;
       dashSpark.current.rotation.z -= 0.12;
       dashSpark.current.scale.setScalar(0.8 + dashPower * 0.9 + Math.sin(performance.now() * 0.028) * 0.08);
+    }
+    if (focusBeam.current) {
+      const beamPulse = 0.82 + Math.sin(performance.now() * 0.006) * 0.08 + Math.min(0.16, focus * 0.015);
+      focusBeam.current.position.set(0, 0.82 + Math.sin(performance.now() * 0.004) * 0.04, 0);
+      focusBeam.current.scale.set(0.28 + stage * 0.018, 1.55 * beamPulse, 0.28 + stage * 0.018);
+    }
+    if (directionRune.current) {
+      directionRune.current.visible = moveAmount > 0.08 || dashPower > 0;
+      directionRune.current.position.set(0, -0.43, 0.86 + Math.min(0.36, speed * 0.025));
+      directionRune.current.scale.set(0.5 + dashPower * 0.24, 0.92 + moveAmount * 0.24 + dashPower * 0.32, 1);
+      directionRune.current.rotation.z = Math.PI / 4 + Math.sin(stride) * 0.08 * moveAmount;
     }
     if (leftFootRune.current && rightFootRune.current) {
       const leftPulse = Math.max(0, Math.sin(stride));
@@ -2870,6 +2883,14 @@ function PlayerPresence({ player, game }) {
       <mesh ref={dashSpark} rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[0, -0.4, -0.18]} scale={[1.1, 1.1, 1]} visible={false}>
         <ringGeometry args={[0.32, 0.4, 4]} />
         <meshBasicMaterial color="#9ff7ff" transparent opacity={0.68} depthWrite={false} toneMapped={false} />
+      </mesh>
+      <mesh ref={directionRune} rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[0, -0.43, 0.86]} scale={[0.5, 0.92, 1]} visible={false}>
+        <coneGeometry args={[0.72, 1.1, 3]} />
+        <meshBasicMaterial color={color} transparent opacity={0.34} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      <mesh ref={focusBeam} position={[0, 0.82, 0]} scale={[0.28, 1.55, 0.28]}>
+        <cylinderGeometry args={[1, 0.42, 1, 8, 1, true]} />
+        <meshBasicMaterial color={color} transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
       </mesh>
       <mesh ref={leftFootRune} rotation={[-Math.PI / 2, 0, Math.PI / 4]} visible={false}>
         <ringGeometry args={[0.24, 0.32, 4]} />
@@ -4566,40 +4587,46 @@ function NaturalFieldKit() {
 
     const sightlineClear = item => {
       const distance = item.position.length();
-      const frontScreenLane = item.position.z < -18 && Math.abs(item.position.x) < 52;
-      const nearCenter = distance < 42;
-      return !nearCenter && !frontScreenLane;
+      const frontScreenLane = item.position.z < -14 && Math.abs(item.position.x) < 66;
+      const playLane = item.position.z < 26 && Math.abs(item.position.x) < 34;
+      const nearCenter = distance < 50;
+      return !nearCenter && !frontScreenLane && !playLane;
     };
 
-    const rocks = Array.from({ length: 68 }, (_, index) => {
+    const lowCoverClear = item => {
+      const lane = item.position.z < -18 && Math.abs(item.position.x) < 40;
+      return !lane;
+    };
+
+    const rocks = Array.from({ length: 58 }, (_, index) => {
       const angle = index * 1.17 + 0.42;
       const radius = 40 + (index % 18) * 4.1;
       const distanceScale = radius > 78 ? 1 : 0.74;
       return place(angle, radius, (1.55 + (index % 5) * 0.34) * distanceScale, 0.02, index % 3 === 0 ? 0.08 : 0);
-    }).filter(item => item.position.length() < ARENA_RADIUS - 7 && item.position.length() > 34 && sightlineClear(item));
+    }).filter(item => item.position.length() < ARENA_RADIUS - 7 && item.position.length() > 38 && lowCoverClear(item));
 
-    const ringTrees = Array.from({ length: 48 }, (_, index) => {
-      const angle = index * 0.76 + (index % 5) * 0.13;
-      const radius = 94 + (index % 12) * 2.25;
-      const scale = radius > 108 ? 5.8 + (index % 4) * 0.52 : 4.25 + (index % 4) * 0.34;
+    const ringTrees = Array.from({ length: 36 }, (_, index) => {
+      const angle = index * 1.02 + (index % 5) * 0.15;
+      const radius = 100 + (index % 10) * 2.05;
+      const scale = radius > 110 ? 4.85 + (index % 4) * 0.42 : 3.55 + (index % 4) * 0.28;
       return place(angle, radius, scale, -0.04, 0);
-    }).filter(item => item.position.length() < ARENA_RADIUS - 2.4 && sightlineClear(item));
+    }).filter(item => item.position.length() < ARENA_RADIUS - 2.8 && sightlineClear(item));
 
-    const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: 5 }, (_, index) => {
-      const offset = index - 2;
-      const angle = site.angle + offset * 0.085 + (siteIndex % 2 ? -0.04 : 0.04);
-      const radius = site.radius + 10.5 + (index % 3) * 3.6;
-      const scale = 3.35 + (index % 4) * 0.44 + siteIndex * 0.08;
+    const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: 3 }, (_, index) => {
+      const offset = index - 1;
+      const angle = site.angle + offset * 0.12 + (siteIndex % 2 ? -0.05 : 0.05);
+      const radius = site.radius + 13.5 + (index % 3) * 3.9;
+      const scale = 2.85 + (index % 3) * 0.32 + siteIndex * 0.06;
       return place(angle, radius, scale, -0.04, 0);
     })).filter(item => item.position.length() < ARENA_RADIUS - 3.5 && sightlineClear(item));
 
     const trees = [...ringTrees, ...groveTrees];
 
-    const bushes = Array.from({ length: 68 }, (_, index) => {
+    const bushes = Array.from({ length: 56 }, (_, index) => {
       const angle = index * 0.97 + 0.17;
       const radius = 38 + (index % 22) * 3.4;
-      return place(angle, radius, 1.28 + (index % 4) * 0.16, 0.01, 0);
-    }).filter(item => item.position.length() < ARENA_RADIUS - 5.5 && item.position.length() > 32 && sightlineClear(item));
+      return place(angle, radius, 1.02 + (index % 4) * 0.13, 0.01, 0);
+    }).filter(item => item.position.length() < ARENA_RADIUS - 5.5 && item.position.length() > 36 && lowCoverClear(item));
 
     const grass = Array.from({ length: 170 }, (_, index) => {
       const angle = index * 1.61 + (index % 7) * 0.09;
