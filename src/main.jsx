@@ -5938,7 +5938,7 @@ function UpgradeOverlay({ game, choices, onChoose }) {
                 className={`upgradeCard family-${focusKey ?? 'utility'} ${cardMeta.recommended ? 'isRecommended' : ''}`}
                 type="button"
                 style={{ '--tone': getUpgradeTone(choice) }}
-                aria-label={`${displayTitle}: ${cardMeta.decision}, ${cardMeta.payoff}`}
+                aria-label={`${displayTitle}: ${cardMeta.quickSummary}, ${cardMeta.statLine}, ${cardMeta.decision}`}
                 onClick={() => onChoose(choice)}
               >
                 <div className="upgradePickCue">
@@ -5950,8 +5950,9 @@ function UpgradeOverlay({ game, choices, onChoose }) {
                   <span>{displayTitle}</span>
                 </div>
                 <div className="upgradeOutcomeBand" aria-label="핵심 변화">
-                  <small>{cardMeta.impact}</small>
-                  <strong>{cardMeta.payoff}</strong>
+                  <small>{cardMeta.quickLead}</small>
+                  <strong>{cardMeta.quickSummary}</strong>
+                  <span className="upgradeStatLine">{cardMeta.statLine}</span>
                 </div>
                 <div className="upgradeReasonLine" aria-label="선택 이유">
                   <span>{cardMeta.decision}</span>
@@ -7199,6 +7200,78 @@ function getUpgradeDecisionCopy(game, upgrade, context) {
   return { decision: upgrade.branch, payoff: getUpgradeImpactLabel(upgrade) };
 }
 
+function getUpgradeStatLine(upgrade) {
+  const statLines = {
+    'orb-count': '룬 구체 +1발',
+    'orb-fan': '구체 +2 / 피해 -6%',
+    'orb-lance': '피해 +32% / 관통 +1',
+    'storm-burst': '범위 +18% / 피해 +8%',
+    'storm-volley': '낙뢰 +1 / 쿨다운 단축',
+    'storm-carpet': '지속 +30% / 범위 +14%',
+    'blade-plus': '칼날 +1',
+    'blade-guard': '칼날 +2 / 근접 방어',
+    'blade-reaper': '피해 +34% / 범위 +18%',
+    'chain-plus': '연쇄 +1 / 피해 +8%',
+    'chain-web': '연쇄 +3 / 사거리 +18%',
+    'chain-smite': '부상 적 추가 피해',
+    'nova-plus': '범위 +20% / 피해 +8%',
+    'nova-pulse': '쿨다운 -14% / 연타',
+    'nova-comet': '피해 +38% / 범위 +12%',
+    damage: '모든 피해 +16%',
+    speed: '이동 속도 +12%',
+    cooldown: '공격 간격 -10%',
+    magnet: 'XP 흡수 거리 +35%',
+    luck: 'XP 획득량 +18%',
+    dash: '대시 쿨다운 -18%',
+    maxHp: '최대 체력 +20',
+    pierce: '구체 관통 +1'
+  };
+  return statLines[upgrade.id] ?? upgrade.text;
+}
+
+function getUpgradeQuickRead(game, upgrade, context, decisionCopy) {
+  const { key, dominant, focus, primarySynergy, improvesSynergy, unlocksWeapon, pickCount } = context;
+  const meta = key ? BUILD_FOCUS_META[key] : null;
+
+  if (unlocksWeapon && meta) {
+    return { quickLead: '새 무기', quickSummary: `${meta.label}가 전장에 추가됩니다` };
+  }
+  if (improvesSynergy && primarySynergy) {
+    return { quickLead: '공명 상승', quickSummary: `${primarySynergy.title} ${formatFocusLevel(primarySynergy.nextLevel)} 발동` };
+  }
+  if (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.72) {
+    return { quickLead: '생존 보강', quickSummary: '죽기 전 버틸 시간을 늘립니다' };
+  }
+  if (upgrade.id === 'magnet' && game.level <= 4) {
+    return { quickLead: '성장 가속', quickSummary: '놓친 XP를 더 쉽게 회수합니다' };
+  }
+  if (upgrade.id === 'damage') {
+    return { quickLead: '전체 화력', quickSummary: '모든 공격의 피해가 오릅니다' };
+  }
+  if (upgrade.id === 'cooldown') {
+    return { quickLead: '공격 속도', quickSummary: '무기들이 더 자주 발동됩니다' };
+  }
+  if (upgrade.id === 'dash' || upgrade.id === 'speed') {
+    return { quickLead: '회피 안정', quickSummary: '포위망에서 빠져나오기 쉬워집니다' };
+  }
+  if (upgrade.id === 'luck') {
+    return { quickLead: '보상 투자', quickSummary: '다음 선택지의 기대값을 올립니다' };
+  }
+  if (meta && dominant?.key === key && dominant.focus >= 2) {
+    return { quickLead: '주력 강화', quickSummary: `${meta.label} 빌드의 힘을 밀어줍니다` };
+  }
+  if (meta && focus === 0) {
+    return { quickLead: '빌드 시작', quickSummary: `${meta.label} 방향으로 전환합니다` };
+  }
+  if (pickCount > 0) {
+    return { quickLead: '중첩 강화', quickSummary: `${upgrade.family} ${formatFocusLevel(pickCount + 1)}단계 상승` };
+  }
+  if (meta) {
+    return { quickLead: getUpgradeImpactLabel(upgrade), quickSummary: `${meta.label} 전투 성능을 높입니다` };
+  }
+  return { quickLead: decisionCopy.decision, quickSummary: decisionCopy.payoff };
+}
+
 function getUpgradeCardMeta(game, upgrade) {
   const key = getUpgradeFocusKey(upgrade);
   const dominant = getDominantBuild(game);
@@ -7281,7 +7354,7 @@ function getUpgradeCardMeta(game, upgrade) {
                   : key
                     ? BUILD_FOCUS_META[key].label
                     : upgrade.branch;
-  const decisionCopy = getUpgradeDecisionCopy(game, upgrade, {
+  const context = {
     key,
     dominant,
     focus,
@@ -7289,7 +7362,9 @@ function getUpgradeCardMeta(game, upgrade) {
     improvesSynergy,
     unlocksWeapon,
     pickCount
-  });
+  };
+  const decisionCopy = getUpgradeDecisionCopy(game, upgrade, context);
+  const quickRead = getUpgradeQuickRead(game, upgrade, context, decisionCopy);
 
   return {
     role,
@@ -7297,6 +7372,9 @@ function getUpgradeCardMeta(game, upgrade) {
     impact: getUpgradeImpactLabel(upgrade),
     decision: decisionCopy.decision,
     payoff: decisionCopy.payoff,
+    quickLead: quickRead.quickLead,
+    quickSummary: quickRead.quickSummary,
+    statLine: getUpgradeStatLine(upgrade),
     reason,
     recommended,
     tags: [...new Set(tags.filter(tag => tag !== upgrade.branch))].slice(0, 2)

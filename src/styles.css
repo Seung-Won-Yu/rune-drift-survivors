@@ -1292,8 +1292,8 @@ h1 {
 .upgradeCard {
   position: relative;
   display: grid;
-  min-height: 250px;
-  grid-template-rows: auto auto auto auto 1fr auto auto;
+  min-height: 270px;
+  grid-template-rows: auto auto minmax(88px, auto) auto 1fr auto auto;
   align-content: start;
   gap: 9px;
   padding: 18px 16px 15px;
@@ -1454,9 +1454,10 @@ h1 {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 5px;
-  min-height: 66px;
-  padding: 11px 12px 12px;
+  gap: 7px;
+  min-height: 88px;
+  align-content: start;
+  padding: 12px 12px 13px;
   border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 54%, rgba(255, 241, 166, 0.2));
   background:
     radial-gradient(circle at 100% 0, color-mix(in srgb, var(--tone, #70d6ff) 24%, transparent), transparent 46%),
@@ -1488,9 +1489,25 @@ h1 {
   color: #fff1a6;
   font-size: 18px;
   font-weight: 950;
-  line-height: 1.18;
+  line-height: 1.16;
+  overflow-wrap: anywhere;
   text-shadow: 0 0 16px rgba(255, 223, 110, 0.22);
   text-transform: none;
+}
+
+.upgradeStatLine {
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px 7px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #edfff9;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent),
+    rgba(0, 0, 0, 0.28);
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1;
 }
 
 .upgradeReasonLine {
@@ -1538,7 +1555,7 @@ h1 {
   z-index: 1;
   display: grid;
   gap: 5px;
-  min-height: 48px;
+  min-height: 44px;
   padding: 10px 10px;
   border: 1px solid rgba(225, 255, 246, 0.1);
   color: rgba(242, 255, 249, 0.9);
@@ -1546,13 +1563,13 @@ h1 {
     linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent),
     rgba(0, 0, 0, 0.24);
   clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 750;
   line-height: 1.34;
 }
 
 .upgradeEffectText::before {
-  content: "효과";
+  content: "상세";
   width: fit-content;
   padding: 2px 5px 3px;
   border: 1px solid color-mix(in srgb, var(--tone, #70d6ff) 42%, transparent);
@@ -1949,7 +1966,7 @@ h1 {
   }
 
   .upgradeCard {
-    min-height: 236px;
+    min-height: 252px;
     padding: 14px 13px;
     box-shadow:
       0 10px 24px rgba(0, 0, 0, 0.28),
@@ -2198,7 +2215,7 @@ h1 {
   }
 
   .upgradeCard {
-    min-height: 220px;
+    min-height: 238px;
     gap: 6px;
     padding: 12px 11px 11px;
   }
@@ -2219,8 +2236,9 @@ h1 {
   }
 
   .upgradeOutcomeBand {
-    min-height: 58px;
+    min-height: 76px;
     padding: 9px 10px 10px;
+    gap: 6px;
   }
 
   .upgradeOutcomeBand small {
@@ -2228,7 +2246,11 @@ h1 {
   }
 
   .upgradeOutcomeBand strong {
-    font-size: 16px;
+    font-size: 15px;
+  }
+
+  .upgradeStatLine {
+    font-size: 10px;
   }
 
   .upgradeReasonLine {
