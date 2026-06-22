@@ -85,15 +85,15 @@ const COMBAT_RHYTHM = [
 const EARLY_FIELD_ITEM_SCHEDULE = [
   { id: 'starter-magnet', time: 5, type: 'magnet', distance: 2.2, spread: 1.1 },
   { id: 'second-magnet', time: 54, type: 'magnet', distance: 5.8, spread: 2.4 },
-  { id: 'starter-overload', time: 62, type: 'overload', distance: 5.8, spread: 2.4 },
-  { id: 'starter-purge', time: 82, type: 'purge', distance: 7.2, spread: 2.8 },
-  { id: 'starter-cache', time: 132, type: 'cache', distance: 7.6, spread: 3.0 },
-  { id: 'third-magnet', time: 122, type: 'magnet', distance: 8.8, spread: 3.6 },
-  { id: 'second-cache', time: 158, type: 'cache', distance: 8.8, spread: 3.6 },
-  { id: 'second-purge', time: 184, type: 'purge', distance: 10.5, spread: 4.4 },
-  { id: 'third-cache', time: 218, type: 'cache', distance: 10.4, spread: 4.4 },
-  { id: 'second-overload', time: 236, type: 'overload', distance: 11.2, spread: 4.8 },
-  { id: 'final-cache', time: 268, type: 'cache', distance: 12.0, spread: 5.2 }
+  { id: 'starter-overload', time: 76, type: 'overload', distance: 6.4, spread: 2.6 },
+  { id: 'starter-purge', time: 98, type: 'purge', distance: 7.4, spread: 2.9 },
+  { id: 'third-magnet', time: 118, type: 'magnet', distance: 8.4, spread: 3.5 },
+  { id: 'starter-cache', time: 146, type: 'cache', distance: 8.2, spread: 3.2 },
+  { id: 'second-cache', time: 188, type: 'cache', distance: 9.2, spread: 3.8 },
+  { id: 'second-purge', time: 208, type: 'purge', distance: 10.5, spread: 4.4 },
+  { id: 'third-cache', time: 244, type: 'cache', distance: 10.8, spread: 4.6 },
+  { id: 'second-overload', time: 262, type: 'overload', distance: 11.2, spread: 4.8 },
+  { id: 'final-cache', time: 286, type: 'cache', distance: 12.0, spread: 5.2 }
 ];
 
 const ELITE_ROLE_META = {
@@ -343,11 +343,19 @@ const WEAPON_UPGRADE_IDS = new Set([
 ]);
 
 const STARTING_WEAPON_FAMILIES = new Set(['orb']);
+const ADVANCED_ORB_UNLOCK_LEVEL = 4;
+const ADVANCED_ORB_UNLOCK_TIME = 72;
+const GLOBAL_POWER_UNLOCK_LEVEL = 6;
+const GLOBAL_POWER_UNLOCK_TIME = 108;
 const NEW_WEAPON_UNLOCK_LEVEL = 7;
 const NEW_WEAPON_UNLOCK_TIME = 128;
 const NEW_WEAPON_UNLOCK_CACHE_COUNT = 2;
 const NEW_WEAPON_UNLOCK_SHRINE_COUNT = 2;
+const ARMORY_DOUBLE_BOOST_TIME = 190;
+const ARMORY_TRIPLE_BOOST_TIME = 260;
 const UPGRADE_CHOICE_COUNT = 4;
+const ADVANCED_ORB_UPGRADE_IDS = new Set(['orb-fan', 'orb-lance']);
+const GLOBAL_POWER_UPGRADE_IDS = new Set(['damage', 'cooldown']);
 const VISUAL_BUDGETS = {
   high: {
     enemyAuras: 96,
@@ -2415,7 +2423,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         let nextGame = withShrineActivation(withItemPickup(current, 'cache'), shrine.id);
         const boosts = [];
         const excluded = new Set();
-        const boostCount = current.time < 160 ? 1 : 2;
+        const boostCount = current.time < ARMORY_DOUBLE_BOOST_TIME ? 1 : 2;
         for (let index = 0; index < boostCount; index += 1) {
           const boost = pickArmoryBoost(nextGame, excluded);
           if (!boost) break;
@@ -2594,7 +2602,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         let nextGame = withItemPickup(current, 'cache');
         const boosts = [];
         const excluded = new Set();
-        const boostCount = current.time < 160 ? 1 : current.time > 235 ? 3 : 2;
+        const boostCount = current.time < ARMORY_DOUBLE_BOOST_TIME ? 1 : current.time > ARMORY_TRIPLE_BOOST_TIME ? 3 : 2;
         for (let index = 0; index < boostCount; index += 1) {
           const boost = pickArmoryBoost(nextGame, excluded);
           if (!boost) break;
@@ -2617,7 +2625,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           pickupFlash: 2.8
         };
       });
-      addDamageNumber(player.current.pos, currentGame.time < 160 ? '무기 강화 x1' : currentGame.time > 235 ? '무기 강화 x3' : '무기 강화 x2', color, 1.0);
+      addDamageNumber(player.current.pos, currentGame.time < ARMORY_DOUBLE_BOOST_TIME ? '무기 강화 x1' : currentGame.time > ARMORY_TRIPLE_BOOST_TIME ? '무기 강화 x3' : '무기 강화 x2', color, 1.0);
       orbTimer.current = Math.min(orbTimer.current, 0.04);
       stormTimer.current = Math.min(stormTimer.current, 0.08);
       lightningTimer.current = Math.min(lightningTimer.current, 0.06);
@@ -6559,8 +6567,8 @@ function pickFieldItemType(game) {
   const hpRatio = game.stats.hp / game.stats.maxHp;
   const roll = Math.random();
   if (hpRatio < 0.45 && roll < 0.34) return 'heal';
-  if (game.time >= 120 && game.time < 170 && roll < 0.07) return 'cache';
-  if (game.time >= 170 && roll < 0.16) return 'cache';
+  if (game.time >= 145 && game.time < 190 && roll < 0.045) return 'cache';
+  if (game.time >= 190 && roll < 0.115) return 'cache';
   if (roll < 0.5) return 'magnet';
   if (roll < (game.time < 75 ? 0.58 : 0.68)) return 'overload';
   if (roll < 0.86) return 'purge';
@@ -7579,13 +7587,14 @@ function pickArmoryBoost(game, excludedIds = new Set()) {
     upgradePool.find(upgrade => upgrade.id === 'nova-plus'),
     upgradePool.find(upgrade => upgrade.id === 'nova-pulse'),
     upgradePool.find(upgrade => upgrade.id === 'nova-comet'),
-    stage >= 2 ? upgradePool.find(upgrade => upgrade.id === 'damage') : null,
-    stage >= 2 ? upgradePool.find(upgrade => upgrade.id === 'cooldown') : null,
+    stage >= 2 && canDraftGlobalPower(game) ? upgradePool.find(upgrade => upgrade.id === 'damage') : null,
+    stage >= 2 && canDraftGlobalPower(game) ? upgradePool.find(upgrade => upgrade.id === 'cooldown') : null,
     game.stats.pierce < 3 ? upgradePool.find(upgrade => upgrade.id === 'pierce') : null
   ].filter(Boolean);
 
   const available = weighted.filter(upgrade => isUpgradeAvailable(game, upgrade) && isUpgradeDraftable(game, upgrade) && !excludedIds.has(upgrade.id));
-  return pickWeightedUpgrade(available, game) ?? upgradePool.find(upgrade => upgrade.id === 'damage');
+  return pickWeightedUpgrade(available, game)
+    ?? upgradePool.find(upgrade => isUpgradeAvailable(game, upgrade) && isUpgradeDraftable(game, upgrade) && !excludedIds.has(upgrade.id));
 }
 
 function isUpgradeAvailable(game, upgrade) {
@@ -7604,11 +7613,27 @@ function isUpgradeAvailable(game, upgrade) {
 }
 
 function isUpgradeDraftable(game, upgrade) {
+  if (!game || !upgrade) return true;
+  if (ADVANCED_ORB_UPGRADE_IDS.has(upgrade.id) && !canDraftAdvancedOrb(game)) return false;
+  if (GLOBAL_POWER_UPGRADE_IDS.has(upgrade.id) && !canDraftGlobalPower(game)) return false;
   const key = getUpgradeFocusKey(upgrade);
   if (!key) return true;
   if (isWeaponFamilyUnlocked(game, key)) return true;
   if (key === 'orb') return true;
   return canDraftNewWeaponFamily(game);
+}
+
+function canDraftAdvancedOrb(game) {
+  return game.level >= ADVANCED_ORB_UNLOCK_LEVEL
+    || game.time >= ADVANCED_ORB_UNLOCK_TIME
+    || getUpgradePickCount(game, 'orb-count') > 0
+    || getUpgradePickCount(game, 'pierce') > 0;
+}
+
+function canDraftGlobalPower(game) {
+  return game.level >= GLOBAL_POWER_UNLOCK_LEVEL
+    || game.time >= GLOBAL_POWER_UNLOCK_TIME
+    || game.upgrades.length >= 6;
 }
 
 function canDraftNewWeaponFamily(game) {
@@ -7665,7 +7690,7 @@ function pickUpgrades(game) {
   const available = upgradePool.filter(upgrade => isUpgradeAvailable(game, upgrade));
   const draftable = available.filter(upgrade => isUpgradeDraftable(game, upgrade));
   const weaponChoices = draftable.filter(upgrade => WEAPON_UPGRADE_IDS.has(upgrade.id));
-  const utilityChoices = available.filter(upgrade => !WEAPON_UPGRADE_IDS.has(upgrade.id));
+  const utilityChoices = draftable.filter(upgrade => !WEAPON_UPGRADE_IDS.has(upgrade.id));
   const starterChoices = weaponChoices.filter(upgrade => getUpgradeFocusKey(upgrade) === 'orb');
   const newWeaponUnlocked = canDraftNewWeaponFamily(game);
   const lockedWeaponChoices = weaponChoices.filter(upgrade => {
