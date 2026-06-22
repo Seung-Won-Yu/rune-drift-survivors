@@ -5721,7 +5721,6 @@ function HUD({ game, onRestart, onPause }) {
   const xpPct = Math.min(100, (game.xp / game.xpToNext) * 100);
   const runPct = Math.min(100, (game.time / RUN_DURATION) * 100);
   const timeRemaining = Math.max(0, RUN_DURATION - game.time);
-  const waveProfile = getWaveProfile(game.wave);
   const crisis = getCrisisState(game);
   const dashCooldown = game.dash?.cooldown ?? 0;
   const dashCooldownMax = Math.max(0.01, game.dash?.cooldownMax ?? DASH_COOLDOWN);
@@ -5739,6 +5738,16 @@ function HUD({ game, onRestart, onPause }) {
   const firstSessionCue = getFirstSessionCue(game, onboardingSteps, activeObjectives);
   const showFirstSessionCoach = !bossStatus && firstSessionCue && game.time < 128;
   const showOpeningObjectives = !bossStatus && activeObjectives.length > 0 && game.time < 155;
+  const showTickerBasics = !bossStatus && game.time < 12;
+  const showDashTicker = showTickerBasics || !dashReady;
+  const tickerHasEvent = Boolean(
+    crisis.level > 0
+    || game.damageFlash > 0
+    || (!bossStatus && activeThreat)
+    || (!bossStatus && bossPatternMeta)
+    || game.pickupFlash > 0
+  );
+  const showCombatTicker = showDashTicker || tickerHasEvent;
 
   return (
     <section className={`hud ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''} ${bossStatus?.casting ? 'isCasting' : ''}`} aria-label="게임 상태">
@@ -5771,20 +5780,23 @@ function HUD({ game, onRestart, onPause }) {
           <button className="iconButton" type="button" onClick={onRestart} aria-label="다시 시작">↻</button>
         </div>
       </div>
-      <div className="combatTicker">
-        <span className="wavePill">Wave {game.wave}</span>
-        <strong className="traitPill" style={{ '--tone': waveProfile.accent }}>{waveProfile.trait}</strong>
-        <span className="koPill">{game.kills} KOs</span>
-        <span className={`dashPill ${dashReady ? 'isReady' : ''}`}>
-          Dash <b>{dashReady ? 'Ready' : `${dashCooldown.toFixed(1)}s`}</b>
-          <i style={{ width: `${dashPct}%` }} />
-        </span>
-        {crisis.level > 0 && <span className={`tickerAlert ${crisis.level >= 3 ? 'isCritical' : ''}`}>{crisis.label}</span>}
-        {game.damageFlash > 0 && <span className="tickerAlert damagePill">{game.damageMessage}</span>}
-        {activeThreat && <span className="tickerAlert threatPill" style={{ '--tone': activeThreat.color }}>{activeThreat.label} · {activeThreat.weakness}</span>}
-        {bossPatternMeta && <span className="tickerAlert bossPatternPill" style={{ '--tone': bossPatternMeta.color }}>{bossPatternMeta.label} · {bossPatternMeta.cue}</span>}
-        {game.pickupFlash > 0 && <span className="tickerPickup">{game.pickupMessage}</span>}
-      </div>
+      {showCombatTicker && (
+        <div className={`combatTicker ${showTickerBasics ? '' : 'isAlertOnly'}`}>
+          {showTickerBasics && <span className="wavePill">Wave {game.wave}</span>}
+          {showTickerBasics && <span className="koPill">{game.kills} KOs</span>}
+          {showDashTicker && (
+            <span className={`dashPill ${dashReady ? 'isReady' : ''}`}>
+              Dash <b>{dashReady ? 'Ready' : `${dashCooldown.toFixed(1)}s`}</b>
+              <i style={{ width: `${dashPct}%` }} />
+            </span>
+          )}
+          {crisis.level > 0 && <span className={`tickerAlert ${crisis.level >= 3 ? 'isCritical' : ''}`}>{crisis.label}</span>}
+          {game.damageFlash > 0 && <span className="tickerAlert damagePill">{game.damageMessage}</span>}
+          {!bossStatus && activeThreat && <span className="tickerAlert threatPill" style={{ '--tone': activeThreat.color }}>{activeThreat.label} · {activeThreat.weakness}</span>}
+          {!bossStatus && bossPatternMeta && <span className="tickerAlert bossPatternPill" style={{ '--tone': bossPatternMeta.color }}>{bossPatternMeta.label} · {bossPatternMeta.cue}</span>}
+          {game.pickupFlash > 0 && <span className="tickerPickup">{game.pickupMessage}</span>}
+        </div>
+      )}
       {showFirstSessionCoach && (
         <div className="onboardingCoach" style={{ '--tone': firstSessionCue.color }} aria-label="초반 안내">
           <div className="coachHeader">
