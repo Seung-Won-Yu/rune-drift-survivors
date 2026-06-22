@@ -1370,20 +1370,23 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       const moveSpeed = player.current.vel.length();
       const moveAmount = THREE.MathUtils.clamp(moveSpeed / (PLAYER_SPEED * 1.2), 0, 1);
       const stride = performance.now() * 0.012;
-      const bob = Math.sin(stride) * 0.055 * moveAmount;
-      const sideSway = Math.sin(stride * 0.5) * 0.045 * moveAmount;
-      const tilt = Math.min(0.22, moveSpeed * 0.018);
-      const dashScale = player.current.dashTimer > 0 ? 1.12 : 1;
+      const step = Math.sin(stride);
+      const stepLift = Math.max(0, step) * moveAmount;
+      const dashPower = player.current.dashTimer > 0 ? 1 : 0;
+      const bob = (Math.abs(step) * 0.09 + stepLift * 0.04) * moveAmount + dashPower * 0.04;
+      const sideSway = Math.sin(stride * 0.5) * 0.072 * moveAmount;
+      const tilt = Math.min(0.32, moveSpeed * 0.022);
+      const dashScale = 1 + dashPower * 0.16;
       playerMesh.current.position.y += bob;
       playerMesh.current.rotation.set(
-        -player.current.facing.z * tilt + Math.sin(stride) * 0.035 * moveAmount,
+        -player.current.facing.z * tilt + step * 0.065 * moveAmount - dashPower * 0.12,
         yaw + sideSway,
-        player.current.facing.x * tilt
+        player.current.facing.x * tilt + Math.sin(stride * 0.5) * 0.055 * moveAmount
       );
       playerMesh.current.scale.set(
-        dashScale * (1 + Math.sin(stride) * 0.025 * moveAmount),
-        dashScale * (1 - Math.sin(stride) * 0.035 * moveAmount),
-        dashScale * (1 + Math.cos(stride) * 0.018 * moveAmount)
+        dashScale * (1 + stepLift * 0.045),
+        dashScale * (1 - stepLift * 0.07 + dashPower * 0.02),
+        dashScale * (1 + moveAmount * 0.035 + dashPower * 0.11)
       );
     }
   };
@@ -2922,11 +2925,11 @@ function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 1, mate
     });
   }, [materialTone, parts]);
   const meshRefs = useRef([]);
-  const axis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
   const local = useMemo(() => ({
     pos: new THREE.Vector3(),
     scale: new THREE.Vector3(),
     quat: new THREE.Quaternion(),
+    euler: new THREE.Euler(),
     base: new THREE.Matrix4(),
     final: new THREE.Matrix4()
   }), []);
@@ -2939,15 +2942,67 @@ function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 1, mate
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== kind) continue;
         if (count >= MAX_ENEMIES) break;
-        const bob = kind === 'runner' ? Math.sin(enemy.wobble * 2.3) * 0.1 : Math.sin(enemy.wobble) * 0.035;
-        const squash = kind === 'runner' ? 0.9 + Math.sin(enemy.wobble * 2.3) * 0.08 : 1;
+        const stride = enemy.wobble * (kind === 'runner' ? 2.1 : kind === 'brute' ? 0.92 : kind === 'boss' ? 0.48 : 1.1);
+        const step = Math.sin(stride);
+        const stepLift = Math.max(0, step);
+        const chargePower = enemy.chargeTimer > 0 ? 1 : 0;
+        const guardPower = enemy.bossGuard > 0 ? 1 : 0;
+        const bob = kind === 'runner'
+          ? stepLift * 0.22 + chargePower * 0.06
+          : kind === 'brute'
+            ? Math.abs(step) * 0.055
+            : kind === 'boss'
+              ? Math.sin(stride) * 0.045
+              : Math.abs(step) * 0.07;
+        const squash = kind === 'runner'
+          ? 0.84 + stepLift * 0.18 + chargePower * 0.08
+          : kind === 'brute'
+            ? 1.0 + Math.max(0, -step) * 0.065
+            : kind === 'elite'
+              ? 1.0 + stepLift * 0.045 + chargePower * 0.05
+              : kind === 'boss'
+                ? 1.0 + Math.sin(stride) * 0.025 - guardPower * 0.08
+                : 1.0 + stepLift * 0.045;
+        const pitch = kind === 'runner'
+          ? -0.16 - stepLift * 0.11 - chargePower * 0.22
+          : kind === 'brute'
+            ? -0.035 + Math.max(0, -step) * 0.06
+            : kind === 'boss'
+              ? guardPower * 0.08
+              : -0.045 + step * 0.035;
+        const roll = kind === 'runner'
+          ? Math.sin(stride * 0.5) * 0.18
+          : kind === 'brute'
+            ? Math.sin(stride * 0.72) * 0.055
+            : kind === 'elite'
+              ? Math.sin(stride * 0.82) * 0.075 + chargePower * 0.08
+              : kind === 'boss'
+                ? Math.sin(stride * 0.62) * 0.035
+                : Math.sin(stride * 0.74) * 0.06;
         local.pos.set(enemy.pos.x, enemy.pos.y + bob, enemy.pos.z);
-        local.quat.setFromAxisAngle(axis, enemy.facingAngle ?? enemy.wobble);
+        local.euler.set(pitch, enemy.facingAngle ?? enemy.wobble, roll);
+        local.quat.setFromEuler(local.euler);
         const bossPulse = kind === 'boss' ? 1 + Math.sin(enemy.wobble * 0.72) * 0.035 : 1;
+        const widthPulse = kind === 'runner'
+          ? 0.92 + stepLift * 0.05
+          : kind === 'brute'
+            ? 1.04 + Math.max(0, -step) * 0.025
+            : kind === 'boss'
+              ? 1.0 + guardPower * 0.08
+              : 1;
+        const depthPulse = kind === 'runner'
+          ? 1.1 + chargePower * 0.16
+          : kind === 'brute'
+            ? 1.02 + stepLift * 0.04
+            : kind === 'elite'
+              ? 1.0 + chargePower * 0.12
+              : kind === 'boss'
+                ? 1.0 + guardPower * 0.06
+                : 1.02;
         local.scale.set(
-          enemy.radius * scaleMultiplier * bossPulse,
+          enemy.radius * scaleMultiplier * widthPulse * bossPulse,
           enemy.radius * scaleMultiplier * squash * bossPulse,
-          enemy.radius * scaleMultiplier * bossPulse
+          enemy.radius * scaleMultiplier * depthPulse * bossPulse
         );
         local.base.compose(local.pos, local.quat, local.scale);
         local.final.multiplyMatrices(local.base, part.localMatrix);
