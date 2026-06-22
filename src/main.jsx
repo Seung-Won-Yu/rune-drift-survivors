@@ -4814,7 +4814,7 @@ function TerrainStoryDetails() {
       };
     });
 
-    const floorChips = Array.from({ length: 34 }, (_, index) => {
+    const floorChips = Array.from({ length: 44 }, (_, index) => {
       const angle = index * 1.84 + (index % 5) * 0.12;
       const radius = 18 + (index % 18) * 3.45;
       const x = Math.cos(angle) * radius;
@@ -4873,7 +4873,7 @@ function TerrainStoryDetails() {
 function NaturalFieldKit({ visualQuality = 'high' }) {
   const transforms = useMemo(() => {
     const density = visualQuality === 'low' ? 0.62 : visualQuality === 'balanced' ? 0.78 : 1;
-    const treeDensity = visualQuality === 'low' ? 0.42 : visualQuality === 'balanced' ? 0.56 : 0.68;
+    const treeDensity = visualQuality === 'low' ? 0.34 : visualQuality === 'balanced' ? 0.48 : 0.58;
     const count = base => Math.max(1, Math.round(base * density));
     const countTree = base => Math.max(1, Math.round(base * treeDensity));
     const place = (angle, radius, scale, yOffset = 0.03, tilt = 0) => {
@@ -4886,21 +4886,26 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
         tilt
       };
     };
+    const withModelScale = (transform, width = 1, height = 1, depth = width) => ({
+      ...transform,
+      modelScale: [transform.scale * width, transform.scale * height, transform.scale * depth]
+    });
 
     const sightlineClear = item => {
       const distance = item.position.length();
-      const frontScreenLane = item.position.z < -10 && Math.abs(item.position.x) < 72;
-      const playLane = item.position.z < 32 && Math.abs(item.position.x) < 40;
-      const nearCenter = distance < 58;
-      return !nearCenter && !frontScreenLane && !playLane;
+      const cameraLane = item.position.z < -6 && Math.abs(item.position.x) < 84;
+      const playLane = item.position.z < 42 && Math.abs(item.position.x) < 54;
+      const nearCenter = distance < 68;
+      return !nearCenter && !cameraLane && !(playLane && distance < 94);
     };
 
     const lowCoverClear = item => {
-      const lane = item.position.z < -20 && Math.abs(item.position.x) < 44;
-      return !lane;
+      const lane = item.position.z < -18 && Math.abs(item.position.x) < 52;
+      const combatCore = item.position.length() < 20;
+      return !lane && !combatCore;
     };
 
-    const rocks = Array.from({ length: count(58) }, (_, index) => {
+    const rocks = Array.from({ length: count(52) }, (_, index) => {
       const angle = index * 1.17 + 0.42;
       const radius = 40 + (index % 18) * 4.1;
       const distanceScale = radius > 78 ? 1 : 0.74;
@@ -4909,17 +4914,19 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
 
     const ringTrees = Array.from({ length: countTree(26) }, (_, index) => {
       const angle = index * 1.37 + (index % 4) * 0.18;
-      const radius = 106 + (index % 7) * 1.64;
-      const scale = radius > 112 ? 4.18 + (index % 4) * 0.3 : 3.05 + (index % 4) * 0.18;
-      return place(angle, radius, scale, -0.04, 0);
+      const radius = 109 + (index % 7) * 1.35;
+      const scale = radius > 113 ? 3.45 + (index % 4) * 0.22 : 2.72 + (index % 4) * 0.16;
+      const tree = place(angle, radius, scale, -0.04, index % 5 === 0 ? 0.035 : 0);
+      return withModelScale(tree, 0.82, radius > 113 ? 0.74 : 0.7, 0.82);
     }).filter(item => item.position.length() < ARENA_RADIUS - 2.8 && sightlineClear(item));
 
     const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: visualQuality === 'low' ? 1 : 2 }, (_, index) => {
       const offset = index === 0 ? -1 : 1;
-      const angle = site.angle + offset * 0.16 + (siteIndex % 2 ? -0.05 : 0.05);
-      const radius = site.radius + 19.5 + (index % 2) * 4.2;
-      const scale = 2.45 + (index % 2) * 0.22 + siteIndex * 0.04;
-      return place(angle, radius, scale, -0.04, 0);
+      const angle = site.angle + offset * 0.22 + (siteIndex % 2 ? -0.06 : 0.06);
+      const radius = site.radius + 22.5 + (index % 2) * 4.8;
+      const scale = 2.14 + (index % 2) * 0.18 + siteIndex * 0.035;
+      const tree = place(angle, radius, scale, -0.04, offset * 0.025);
+      return withModelScale(tree, 0.86, 0.78, 0.86);
     })).filter(item => item.position.length() < ARENA_RADIUS - 3.5 && sightlineClear(item));
 
     const trees = [...ringTrees, ...groveTrees];
@@ -4927,16 +4934,17 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
     const bushes = Array.from({ length: count(62) }, (_, index) => {
       const angle = index * 0.97 + 0.17;
       const radius = 38 + (index % 22) * 3.4;
-      return place(angle, radius, 1.02 + (index % 4) * 0.13, 0.01, 0);
+      const bush = place(angle, radius, 1.02 + (index % 4) * 0.13, 0.01, 0);
+      return withModelScale(bush, 1.32, 0.7, 1.08);
     }).filter(item => item.position.length() < ARENA_RADIUS - 5.5 && item.position.length() > 36 && lowCoverClear(item));
 
-    const grass = Array.from({ length: count(150) }, (_, index) => {
+    const grass = Array.from({ length: count(174) }, (_, index) => {
       const angle = index * 1.61 + (index % 7) * 0.09;
       const radius = 20 + (index % 35) * 2.75;
       return place(angle, radius, 0.62 + (index % 5) * 0.08, 0.025, 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 6 && item.position.length() > 18);
 
-    const moss = Array.from({ length: count(82) }, (_, index) => {
+    const moss = Array.from({ length: count(104) }, (_, index) => {
       const angle = index * 2.03 + (index % 5) * 0.07;
       const radius = 16 + (index % 38) * 2.48;
       const transform = place(angle, radius, 1.0 + (index % 6) * 0.18, 0.055, 0);
@@ -4947,7 +4955,7 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 8 && lowCoverClear(item));
 
-    const fallenTrunks = Array.from({ length: count(14) }, (_, index) => {
+    const fallenTrunks = Array.from({ length: count(18) }, (_, index) => {
       const angle = index * 1.49 + 0.34;
       const radius = 48 + (index % 14) * 4.5;
       const transform = place(angle, radius, 1, 0.28, 0);
@@ -4967,16 +4975,18 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
   const pineTall = useMemo(() => transforms.trees.filter((_, index) => index % 3 === 0), [transforms]);
   const pineRound = useMemo(() => transforms.trees.filter((_, index) => index % 3 === 1), [transforms]);
   const treeDefault = useMemo(() => transforms.trees.filter((_, index) => index % 3 === 2), [transforms]);
+  const castNatureShadows = visualQuality === 'high';
+  const receiveNatureShadows = visualQuality !== 'low';
 
   return (
     <group>
-      <StaticModelInstances url={NATURE_MODEL_URLS.rockLargeA} transforms={rockLarge} castShadow receiveShadow />
-      <StaticModelInstances url={NATURE_MODEL_URLS.rockTall} transforms={rockTall} castShadow receiveShadow />
-      <StaticModelInstances url={NATURE_MODEL_URLS.pineTall} transforms={pineTall} castShadow receiveShadow />
-      <StaticModelInstances url={NATURE_MODEL_URLS.pineRound} transforms={pineRound} castShadow receiveShadow />
-      <StaticModelInstances url={NATURE_MODEL_URLS.treeDefault} transforms={treeDefault} castShadow receiveShadow />
-      <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} castShadow receiveShadow />
-      <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow />
+      <StaticModelInstances url={NATURE_MODEL_URLS.rockLargeA} transforms={rockLarge} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} />
+      <StaticModelInstances url={NATURE_MODEL_URLS.rockTall} transforms={rockTall} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} />
+      <StaticModelInstances url={NATURE_MODEL_URLS.pineTall} transforms={pineTall} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} />
+      <StaticModelInstances url={NATURE_MODEL_URLS.pineRound} transforms={pineRound} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} />
+      <StaticModelInstances url={NATURE_MODEL_URLS.treeDefault} transforms={treeDefault} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} />
+      <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} />
+      <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow={receiveNatureShadows} />
       <FallenTrunkMarks transforms={transforms.fallenTrunks} />
       <FieldMossPatches transforms={transforms.moss} />
       <TreeCanopyShadows transforms={transforms.trees} />
@@ -5346,7 +5356,11 @@ function StaticModelInstances({ url, transforms, castShadow = false, receiveShad
         } else {
           local.quat.setFromAxisAngle(axis, transform.rotation);
         }
-        local.scale.setScalar(transform.scale);
+        if (Array.isArray(transform.modelScale)) {
+          local.scale.set(transform.modelScale[0], transform.modelScale[1], transform.modelScale[2]);
+        } else {
+          local.scale.setScalar(transform.scale);
+        }
         local.base.compose(transform.position, local.quat, local.scale);
         local.final.multiplyMatrices(local.base, part.localMatrix);
         mesh.setMatrixAt(index, local.final);
