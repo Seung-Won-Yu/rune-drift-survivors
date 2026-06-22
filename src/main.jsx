@@ -4948,14 +4948,14 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
 
     const sightlineClear = item => {
       const distance = item.position.length();
-      const cameraLane = item.position.z < -6 && Math.abs(item.position.x) < 84;
-      const playLane = item.position.z < 42 && Math.abs(item.position.x) < 54;
-      const nearCenter = distance < 68;
-      return !nearCenter && !cameraLane && !(playLane && distance < 94);
+      const cameraLane = item.position.z > 8 && Math.abs(item.position.x) < 86;
+      const playLane = Math.abs(item.position.z) < 50 && Math.abs(item.position.x) < 58;
+      const nearCenter = distance < 72;
+      return !nearCenter && !cameraLane && !(playLane && distance < 98);
     };
 
     const lowCoverClear = item => {
-      const lane = item.position.z < -18 && Math.abs(item.position.x) < 52;
+      const lane = item.position.z > 14 && Math.abs(item.position.x) < 58;
       const combatCore = item.position.length() < 20;
       return !lane && !combatCore;
     };
@@ -5010,6 +5010,17 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 8 && lowCoverClear(item));
 
+    const pebbles = Array.from({ length: count(118) }, (_, index) => {
+      const angle = index * 2.41 + (index % 7) * 0.11;
+      const radius = 22 + (index % 42) * 2.2;
+      const transform = place(angle, radius, 1, 0.09, 0);
+      transform.rotation += (index % 2 ? -1 : 1) * 0.24;
+      transform.size = 0.22 + (index % 5) * 0.055;
+      transform.flatness = 0.09 + (index % 3) * 0.025;
+      transform.color = index % 5 === 0 ? '#74694f' : index % 3 === 0 ? '#526151' : '#3f4d43';
+      return transform;
+    }).filter(item => item.position.length() < ARENA_RADIUS - 9 && item.position.length() > 24 && lowCoverClear(item));
+
     const fallenTrunks = Array.from({ length: count(18) }, (_, index) => {
       const angle = index * 1.49 + 0.34;
       const radius = 48 + (index % 14) * 4.5;
@@ -5022,7 +5033,7 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 9 && item.position.length() > 42 && lowCoverClear(item));
 
-    return { rocks, trees, bushes, grass, moss, fallenTrunks };
+    return { rocks, trees, bushes, grass, moss, pebbles, fallenTrunks };
   }, [visualQuality]);
 
   const rockLarge = useMemo(() => transforms.rocks.filter((_, index) => index % 3 !== 0), [transforms]);
@@ -5044,8 +5055,10 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow={receiveNatureShadows} />
       <FallenTrunkMarks transforms={transforms.fallenTrunks} />
       <FieldMossPatches transforms={transforms.moss} />
+      <FieldPebbleScatter transforms={transforms.pebbles} />
       <TreeCanopyShadows transforms={transforms.trees} />
       {visualQuality !== 'low' && <TreeCanopyHighlights transforms={transforms.trees} />}
+      {visualQuality !== 'low' && <TreeRootPatches transforms={transforms.trees} />}
     </group>
   );
 }
@@ -5135,6 +5148,82 @@ function FieldMossPatches({ transforms }) {
     <instancedMesh ref={patchRef} args={[null, null, transforms.length]} frustumCulled={false}>
       <planeGeometry args={[1, 1]} />
       <meshBasicMaterial transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+    </instancedMesh>
+  );
+}
+
+function FieldPebbleScatter({ transforms }) {
+  const pebbleRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!pebbleRef.current) return;
+    transforms.forEach((transform, index) => {
+      local.pos.copy(transform.position);
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + 0.11;
+      local.quat.setFromEuler(new THREE.Euler(0.08, transform.rotation, index % 2 ? 0.1 : -0.06));
+      local.matrix.compose(
+        local.pos,
+        local.quat,
+        local.scale.set(transform.size * 1.8, transform.flatness, transform.size * (1.0 + (index % 3) * 0.18))
+      );
+      pebbleRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.color);
+      pebbleRef.current.setColorAt(index, local.color);
+    });
+    pebbleRef.current.count = transforms.length;
+    pebbleRef.current.instanceMatrix.needsUpdate = true;
+    if (pebbleRef.current.instanceColor) pebbleRef.current.instanceColor.needsUpdate = true;
+  }, [local, transforms]);
+
+  return (
+    <instancedMesh ref={pebbleRef} args={[null, null, transforms.length]} frustumCulled={false} receiveShadow>
+      <dodecahedronGeometry args={[1, 0]} />
+      <meshStandardMaterial color="#56604e" roughness={0.98} metalness={0.01} />
+    </instancedMesh>
+  );
+}
+
+function TreeRootPatches({ transforms }) {
+  const rootPatchRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!rootPatchRef.current) return;
+    transforms.forEach((transform, index) => {
+      local.pos.copy(transform.position);
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + 0.057;
+      local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, transform.rotation + (index % 2 ? 0.2 : -0.16)));
+      local.matrix.compose(
+        local.pos,
+        local.quat,
+        local.scale.set(transform.scale * 0.94, transform.scale * 0.62, 1)
+      );
+      rootPatchRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(index % 4 === 0 ? '#6b6548' : index % 3 === 0 ? '#1b4944' : '#26372b');
+      rootPatchRef.current.setColorAt(index, local.color);
+    });
+    rootPatchRef.current.count = transforms.length;
+    rootPatchRef.current.instanceMatrix.needsUpdate = true;
+    if (rootPatchRef.current.instanceColor) rootPatchRef.current.instanceColor.needsUpdate = true;
+  }, [local, transforms]);
+
+  return (
+    <instancedMesh ref={rootPatchRef} args={[null, null, transforms.length]} frustumCulled={false}>
+      <circleGeometry args={[1, 24]} />
+      <meshBasicMaterial color="#26372b" transparent opacity={0.18} depthWrite={false} toneMapped={false} />
     </instancedMesh>
   );
 }
