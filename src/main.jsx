@@ -353,8 +353,8 @@ const VISUAL_BUDGETS = {
     enemyAuras: 96,
     enemyAccents: 104,
     gemBeams: 104,
-    projectileAura: 108,
-    projectileDetail: 68,
+    projectileAura: 92,
+    projectileDetail: 52,
     hitBursts: 42,
     weaponEffects: 24,
     damageNumbers: 30,
@@ -364,8 +364,8 @@ const VISUAL_BUDGETS = {
     enemyAuras: 68,
     enemyAccents: 76,
     gemBeams: 58,
-    projectileAura: 72,
-    projectileDetail: 34,
+    projectileAura: 58,
+    projectileDetail: 24,
     hitBursts: 30,
     weaponEffects: 18,
     damageNumbers: 22,
@@ -375,7 +375,7 @@ const VISUAL_BUDGETS = {
     enemyAuras: 38,
     enemyAccents: 44,
     gemBeams: 0,
-    projectileAura: 42,
+    projectileAura: 32,
     projectileDetail: 0,
     hitBursts: 18,
     weaponEffects: 10,
@@ -3292,6 +3292,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
   const golemGroundMesh = useRef();
   const eliteCrownMesh = useRef();
   const eliteAuraMesh = useRef();
+  const threatRingMesh = useRef();
+  const chargeTellMesh = useRef();
   const scratch = useMemo(() => ({
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
@@ -3549,10 +3551,74 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       eliteAuraMesh.current.count = count;
       eliteAuraMesh.current.instanceMatrix.needsUpdate = true;
     }
+
+    if (threatRingMesh.current) {
+      let count = 0;
+      for (const enemy of enemiesRef.current) {
+        const isThreat = enemy.kind === 'boss' || enemy.kind === 'elite' || enemy.chargeTimer > 0;
+        if (!isThreat) continue;
+        if (count >= MAX_ENEMIES) break;
+        const chargePulse = enemy.chargeTimer > 0 ? 0.34 : 0;
+        const shieldPulse = (enemy.shield ?? 0) > 0 ? 0.16 : 0;
+        scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.09, enemy.pos.z);
+        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, time * 0.42 + enemy.wobble * 0.16));
+        scratch.matrix.compose(
+          scratch.pos,
+          scratch.quat,
+          scratch.scale.setScalar(
+            enemy.kind === 'boss'
+              ? 3.75 + chargePulse
+              : enemy.kind === 'elite'
+                ? 2.18 + shieldPulse + chargePulse
+                : enemy.hitRadius * 1.45
+          )
+        );
+        threatRingMesh.current.setMatrixAt(count, scratch.matrix);
+        scratch.color.set(getEnemyAccentColor(enemy));
+        threatRingMesh.current.setColorAt(count, scratch.color);
+        count += 1;
+      }
+      threatRingMesh.current.count = count;
+      threatRingMesh.current.instanceMatrix.needsUpdate = true;
+      if (threatRingMesh.current.instanceColor) threatRingMesh.current.instanceColor.needsUpdate = true;
+    }
+
+    if (chargeTellMesh.current) {
+      let count = 0;
+      for (const enemy of enemiesRef.current) {
+        const chargeTimer = enemy.chargeTimer ?? 0;
+        if (chargeTimer <= 0) continue;
+        if (count >= MAX_ENEMIES) break;
+        scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
+        scratch.pos.copy(enemy.pos).addScaledVector(scratch.forward, enemy.hitRadius * 1.45);
+        scratch.pos.y = enemy.pos.y + 0.18;
+        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -enemy.facingAngle + Math.PI));
+        scratch.matrix.compose(
+          scratch.pos,
+          scratch.quat,
+          scratch.scale.set(0.76, 1.46 + chargeTimer * 0.45, 1)
+        );
+        chargeTellMesh.current.setMatrixAt(count, scratch.matrix);
+        scratch.color.set(getEnemyAccentColor(enemy));
+        chargeTellMesh.current.setColorAt(count, scratch.color);
+        count += 1;
+      }
+      chargeTellMesh.current.count = count;
+      chargeTellMesh.current.instanceMatrix.needsUpdate = true;
+      if (chargeTellMesh.current.instanceColor) chargeTellMesh.current.instanceColor.needsUpdate = true;
+    }
   });
 
   return (
     <>
+      <instancedMesh ref={threatRingMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+        <ringGeometry args={[0.86, 1, 4]} />
+        <meshBasicMaterial transparent opacity={0.72} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={chargeTellMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+        <coneGeometry args={[1, 1, 3]} />
+        <meshBasicMaterial transparent opacity={0.52} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </instancedMesh>
       <instancedMesh ref={coreMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
         <octahedronGeometry args={[1, 0]} />
         <meshBasicMaterial transparent opacity={0.82} toneMapped={false} />
@@ -4252,37 +4318,37 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
     <>
       <instancedMesh ref={orbTrail} args={[null, null, MAX_PROJECTILES]} frustumCulled={false}>
         <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial color={getOrbColor(game.stats, getWeaponStage(game))} transparent opacity={0.28 + getWeaponStage(game) * 0.05} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+        <meshBasicMaterial color={getOrbColor(game.stats, getWeaponStage(game))} transparent opacity={0.22 + getWeaponStage(game) * 0.035} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={orbRing} args={[null, null, MAX_PROJECTILES]} frustumCulled={false}>
         <torusGeometry args={[0.45, 0.018, 8, 32]} />
-        <meshBasicMaterial color={getOrbColor(game.stats, getWeaponStage(game))} transparent opacity={0.9} toneMapped={false} />
+        <meshBasicMaterial color={getOrbColor(game.stats, getWeaponStage(game))} transparent opacity={0.74} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={orbHalo} args={[null, null, MAX_PROJECTILES]} frustumCulled={false}>
         <torusGeometry args={[0.68, 0.012, 8, 42]} />
-        <meshBasicMaterial color="#fff1a6" transparent opacity={0.42} toneMapped={false} />
+        <meshBasicMaterial color="#fff1a6" transparent opacity={0.3} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={orbCrown} args={[null, null, MAX_PROJECTILES * 3]} frustumCulled={false}>
         <octahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color="#fff1a6" transparent opacity={0.82} toneMapped={false} />
+        <meshBasicMaterial color="#fff1a6" transparent opacity={0.66} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={stormDisk} args={[null, null, MAX_PROJECTILES]} frustumCulled={false}>
         <circleGeometry args={[1, 56]} />
-        <meshBasicMaterial color={getStormColor(game.stats, getWeaponStage(game))} transparent opacity={0.14 + getWeaponStage(game) * 0.03} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color={getStormColor(game.stats, getWeaponStage(game))} transparent opacity={0.1 + getWeaponStage(game) * 0.02} depthWrite={false} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={stormRing} args={[null, null, MAX_PROJECTILES]} frustumCulled={false}>
         <torusGeometry args={[0.92, 0.022, 8, 40]} />
-        <meshBasicMaterial color={getStormColor(game.stats, getWeaponStage(game))} transparent opacity={0.62} toneMapped={false} />
+        <meshBasicMaterial color={getStormColor(game.stats, getWeaponStage(game))} transparent opacity={0.48} toneMapped={false} />
       </instancedMesh>
       {showDetail && (
         <>
           <instancedMesh ref={stormSpoke} args={[null, null, MAX_PROJECTILES * 4]} frustumCulled={false}>
             <planeGeometry args={[1, 1]} />
-            <meshBasicMaterial color="#ffffff" transparent opacity={0.26} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.18} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
           </instancedMesh>
           <instancedMesh ref={stormCore} args={[null, null, MAX_PROJECTILES]} frustumCulled={false}>
             <octahedronGeometry args={[1, 0]} />
-            <meshBasicMaterial color={getStormColor(game.stats, getWeaponStage(game))} transparent opacity={0.82} toneMapped={false} />
+            <meshBasicMaterial color={getStormColor(game.stats, getWeaponStage(game))} transparent opacity={0.64} toneMapped={false} />
           </instancedMesh>
         </>
       )}
