@@ -5211,7 +5211,57 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 9 && item.position.length() > 42 && lowCoverClear(item));
 
-    return { rocks, trees, bushes, grass, moss, pebbles, fallenTrunks };
+    const leafLitter = Array.from({ length: count(78) }, (_, index) => {
+      const angle = index * 1.91 + 0.28 + (index % 6) * 0.05;
+      const radius = 52 + (index % 25) * 2.45;
+      const transform = place(angle, radius, 1, 0.066, 0);
+      transform.rotation += (index % 4) * 0.27;
+      transform.width = 1.15 + (index % 5) * 0.26;
+      transform.depth = 0.34 + (index % 4) * 0.11;
+      transform.color = index % 5 === 0 ? '#756c4c' : index % 3 === 0 ? '#33563c' : '#4e4b34';
+      transform.opacity = 0.11 + (index % 3) * 0.018;
+      return transform;
+    }).filter(item => item.position.length() < ARENA_RADIUS - 8 && item.position.length() > 48 && lowCoverClear(item));
+
+    const stumps = Array.from({ length: countTree(14) }, (_, index) => {
+      const angle = index * 1.73 + 0.62;
+      const radius = 64 + (index % 13) * 3.8;
+      const transform = place(angle, radius, 1, 0.23, index % 2 ? 0.06 : -0.04);
+      transform.radius = 0.34 + (index % 4) * 0.055;
+      transform.height = 0.48 + (index % 3) * 0.1;
+      transform.color = index % 3 === 0 ? '#6e5940' : '#554936';
+      transform.ringColor = index % 4 === 0 ? ART_TOKENS.wornGold : '#2c3b2d';
+      return transform;
+    }).filter(item => item.position.length() < ARENA_RADIUS - 8 && item.position.length() > 56 && lowCoverClear(item));
+
+    const runeSprouts = Array.from({ length: count(34) }, (_, index) => {
+      const site = SHRINE_SITES[index % SHRINE_SITES.length];
+      const angle = site.angle + (index % 9 - 4) * 0.045 + Math.sin(index * 1.7) * 0.08;
+      const radius = site.radius + 7.5 + (index % 6) * 2.45;
+      const transform = place(angle, radius, 1, 0.11, 0);
+      transform.height = 0.34 + (index % 3) * 0.08;
+      transform.width = 0.08 + (index % 2) * 0.02;
+      transform.color = index % 3 === 0 ? site.color : index % 3 === 1 ? ART_TOKENS.runeMint : ART_TOKENS.wornGold;
+      transform.opacity = 0.52 + (index % 3) * 0.08;
+      return transform;
+    }).filter(item => item.position.length() < ARENA_RADIUS - 7 && lowCoverClear(item));
+
+    const rockLichen = rocks
+      .filter((_, index) => index % 2 === 0)
+      .map((rock, index) => {
+        const transform = {
+          ...rock,
+          position: rock.position.clone(),
+          rotation: rock.rotation + (index % 3) * 0.34,
+          width: 0.44 + (index % 4) * 0.12,
+          depth: 0.22 + (index % 3) * 0.08,
+          color: index % 4 === 0 ? ART_TOKENS.runeCyan : index % 3 === 0 ? '#8f8658' : '#4d704b'
+        };
+        transform.position.y += rock.scale * 0.18 + 0.04;
+        return transform;
+      });
+
+    return { rocks, trees, bushes, grass, moss, pebbles, fallenTrunks, leafLitter, stumps, runeSprouts, rockLichen };
   }, [visualQuality]);
 
   const rockLarge = useMemo(() => transforms.rocks.filter((_, index) => index % 3 !== 0), [transforms]);
@@ -5232,8 +5282,12 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} />
       <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow={receiveNatureShadows} />
       <FallenTrunkMarks transforms={transforms.fallenTrunks} />
+      <ForestStumpClusters transforms={transforms.stumps} />
       <FieldMossPatches transforms={transforms.moss} />
+      <FieldLeafLitter transforms={transforms.leafLitter} />
       <FieldPebbleScatter transforms={transforms.pebbles} />
+      <RockLichenPatches transforms={transforms.rockLichen} />
+      <ShrineRuneSprouts transforms={transforms.runeSprouts} />
       <TreeCanopyShadows transforms={transforms.trees} />
       {visualQuality !== 'low' && <TreeCanopyHighlights transforms={transforms.trees} />}
       {visualQuality !== 'low' && <TreeRootPatches transforms={transforms.trees} />}
@@ -5292,6 +5346,67 @@ function FallenTrunkMarks({ transforms }) {
   );
 }
 
+function ForestStumpClusters({ transforms }) {
+  const stumpRef = useRef();
+  const topRef = useRef();
+  const rootFlareRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!stumpRef.current || !topRef.current || !rootFlareRef.current) return;
+    transforms.forEach((transform, index) => {
+      local.pos.copy(transform.position);
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + transform.height * 0.5;
+      local.quat.setFromEuler(new THREE.Euler(transform.tilt, transform.rotation, transform.tilt * 0.55));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.radius, transform.height, transform.radius * (0.92 + (index % 3) * 0.06)));
+      stumpRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.color);
+      stumpRef.current.setColorAt(index, local.color);
+
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + transform.height + 0.045;
+      local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, transform.rotation));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.radius * 1.1, transform.radius * 0.74, 1));
+      topRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.ringColor);
+      topRef.current.setColorAt(index, local.color);
+
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + 0.06;
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.radius * 2.6, transform.radius * 1.6, 1));
+      rootFlareRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(index % 3 === 0 ? '#233527' : '#18261d');
+      rootFlareRef.current.setColorAt(index, local.color);
+    });
+    [stumpRef.current, topRef.current, rootFlareRef.current].forEach(mesh => {
+      mesh.count = transforms.length;
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    });
+  }, [local, transforms]);
+
+  return (
+    <group>
+      <instancedMesh ref={rootFlareRef} args={[null, null, transforms.length]} frustumCulled={false}>
+        <circleGeometry args={[1, 18]} />
+        <meshBasicMaterial transparent opacity={0.16} depthWrite={false} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={stumpRef} args={[null, null, transforms.length]} frustumCulled={false} castShadow receiveShadow>
+        <cylinderGeometry args={[1, 0.82, 1, 7]} />
+        <meshStandardMaterial roughness={0.94} metalness={0.01} />
+      </instancedMesh>
+      <instancedMesh ref={topRef} args={[null, null, transforms.length]} frustumCulled={false}>
+        <ringGeometry args={[0.42, 0.56, 18]} />
+        <meshBasicMaterial transparent opacity={0.26} depthWrite={false} toneMapped={false} />
+      </instancedMesh>
+    </group>
+  );
+}
+
 function FieldMossPatches({ transforms }) {
   const patchRef = useRef();
   const local = useMemo(() => ({
@@ -5324,6 +5439,40 @@ function FieldMossPatches({ transforms }) {
 
   return (
     <instancedMesh ref={patchRef} args={[null, null, transforms.length]} frustumCulled={false}>
+      <planeGeometry args={[1, 1]} />
+      <meshBasicMaterial transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+    </instancedMesh>
+  );
+}
+
+function FieldLeafLitter({ transforms }) {
+  const leafRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!leafRef.current) return;
+    transforms.forEach((transform, index) => {
+      local.pos.copy(transform.position);
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + 0.066 + (index % 3) * 0.004;
+      local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, transform.rotation));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.width, transform.depth, 1));
+      leafRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.color);
+      leafRef.current.setColorAt(index, local.color);
+    });
+    leafRef.current.count = transforms.length;
+    leafRef.current.instanceMatrix.needsUpdate = true;
+    if (leafRef.current.instanceColor) leafRef.current.instanceColor.needsUpdate = true;
+  }, [local, transforms]);
+
+  return (
+    <instancedMesh ref={leafRef} args={[null, null, transforms.length]} frustumCulled={false}>
       <planeGeometry args={[1, 1]} />
       <meshBasicMaterial transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
     </instancedMesh>
@@ -5365,6 +5514,88 @@ function FieldPebbleScatter({ transforms }) {
       <dodecahedronGeometry args={[1, 0]} />
       <meshStandardMaterial color="#56604e" roughness={0.98} metalness={0.01} />
     </instancedMesh>
+  );
+}
+
+function RockLichenPatches({ transforms }) {
+  const lichenRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!lichenRef.current) return;
+    transforms.forEach((transform, index) => {
+      local.pos.copy(transform.position);
+      local.quat.setFromEuler(new THREE.Euler(-0.72 + (index % 3) * 0.04, transform.rotation, (index % 2 ? -1 : 1) * 0.08));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.width, transform.depth, 1));
+      lichenRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.color);
+      lichenRef.current.setColorAt(index, local.color);
+    });
+    lichenRef.current.count = transforms.length;
+    lichenRef.current.instanceMatrix.needsUpdate = true;
+    if (lichenRef.current.instanceColor) lichenRef.current.instanceColor.needsUpdate = true;
+  }, [local, transforms]);
+
+  return (
+    <instancedMesh ref={lichenRef} args={[null, null, transforms.length]} frustumCulled={false}>
+      <circleGeometry args={[1, 16]} />
+      <meshBasicMaterial transparent opacity={0.22} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+    </instancedMesh>
+  );
+}
+
+function ShrineRuneSprouts({ transforms }) {
+  const sproutRef = useRef();
+  const glowRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!sproutRef.current || !glowRef.current) return;
+    transforms.forEach((transform, index) => {
+      local.pos.copy(transform.position);
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + transform.height * 0.5 + 0.08;
+      local.quat.setFromEuler(new THREE.Euler(0.18, transform.rotation + index * 0.13, (index % 2 ? -1 : 1) * 0.18));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.width, transform.height, transform.width));
+      sproutRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.color);
+      sproutRef.current.setColorAt(index, local.color);
+
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + 0.07;
+      local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, transform.rotation));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(0.42 + (index % 3) * 0.08, 0.42 + (index % 2) * 0.06, 1));
+      glowRef.current.setMatrixAt(index, local.matrix);
+      glowRef.current.setColorAt(index, local.color);
+    });
+    [sproutRef.current, glowRef.current].forEach(mesh => {
+      mesh.count = transforms.length;
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    });
+  }, [local, transforms]);
+
+  return (
+    <group>
+      <instancedMesh ref={glowRef} args={[null, null, transforms.length]} frustumCulled={false}>
+        <ringGeometry args={[0.28, 0.34, 4]} />
+        <meshBasicMaterial transparent opacity={0.18} depthWrite={false} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={sproutRef} args={[null, null, transforms.length]} frustumCulled={false}>
+        <octahedronGeometry args={[1, 0]} />
+        <meshBasicMaterial transparent opacity={0.72} toneMapped={false} />
+      </instancedMesh>
+    </group>
   );
 }
 
