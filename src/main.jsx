@@ -948,6 +948,8 @@ function App() {
         hitBursts: 0,
         weaponEffects: 0
       }), 120);
+    } else if (qaMode === 'victory' || qaMode === 'defeat') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.result(qaMode), 120);
     }
     return () => {
       delete window.__RUNE_DRIFT_QA__;

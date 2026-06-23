@@ -2180,6 +2180,410 @@ h1 {
   box-shadow: 0 0 24px rgba(255, 139, 114, 0.18);
 }
 
+/* Game UI cohesion pass */
+.shell {
+  background:
+    radial-gradient(circle at 50% 48%, rgba(112, 214, 255, 0.13), transparent 27%),
+    radial-gradient(circle at 15% 82%, rgba(255, 223, 110, 0.08), transparent 24%),
+    linear-gradient(180deg, #020607, #07100e 42%, #020607);
+}
+
+.shell::after {
+  background-image:
+    linear-gradient(90deg, rgba(115, 251, 211, 0.2) 0 1px, transparent 1px calc(100% - 1px), rgba(115, 251, 211, 0.2) calc(100% - 1px)),
+    linear-gradient(180deg, rgba(115, 251, 211, 0.2) 0 1px, transparent 1px calc(100% - 1px), rgba(115, 251, 211, 0.2) calc(100% - 1px)),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 5px);
+  opacity: 0.22;
+}
+
+.hud {
+  gap: 7px;
+}
+
+.topbar {
+  grid-template-columns: minmax(156px, 236px) minmax(168px, 1fr) minmax(132px, 190px) 92px;
+  gap: 9px;
+  align-items: center;
+  padding: 9px 12px 10px;
+  border-width: 2px;
+  border-color: rgba(185, 255, 235, 0.36);
+  background:
+    linear-gradient(90deg, rgba(115, 251, 211, 0.12), transparent 20%, rgba(255, 223, 110, 0.08) 76%, transparent),
+    linear-gradient(180deg, rgba(22, 39, 34, 0.92), rgba(3, 10, 9, 0.76)),
+    rgba(4, 12, 11, 0.88);
+  clip-path: polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px);
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, 0.42),
+    0 0 32px rgba(112, 214, 255, 0.1),
+    inset 0 2px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -18px 34px rgba(0, 0, 0, 0.26);
+}
+
+.topbar::before {
+  inset: 6px;
+  border-color: rgba(115, 251, 211, 0.18);
+  clip-path: polygon(15px 0, calc(100% - 15px) 0, 100% 15px, 100% calc(100% - 15px), calc(100% - 15px) 100%, 15px 100%, 0 calc(100% - 15px), 0 15px);
+}
+
+.topbar::after {
+  left: 34px;
+  right: 100px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(115, 251, 211, 0.88), rgba(255, 241, 166, 0.68), transparent);
+}
+
+.meterBlock {
+  min-height: 44px;
+  padding: 3px 0 3px 34px;
+  align-content: center;
+}
+
+.meterBlock::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  content: "HP";
+  border: 1px solid rgba(255, 139, 114, 0.52);
+  color: #ffe2d8;
+  background:
+    radial-gradient(circle, rgba(255, 139, 114, 0.24), transparent 62%),
+    rgba(0, 0, 0, 0.34);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  box-shadow: 0 0 16px rgba(255, 139, 114, 0.22);
+  font-size: 8px;
+  font-weight: 950;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.topbar .meterBlock:nth-child(2)::before {
+  content: "XP";
+  border-color: rgba(112, 214, 255, 0.58);
+  color: #dff7ff;
+  background:
+    radial-gradient(circle, rgba(112, 214, 255, 0.25), transparent 62%),
+    rgba(0, 0, 0, 0.34);
+  box-shadow: 0 0 16px rgba(112, 214, 255, 0.24);
+}
+
+.runBlock::before {
+  content: "T";
+  border-color: rgba(255, 241, 166, 0.6);
+  color: #fff7bd;
+  background:
+    radial-gradient(circle, rgba(255, 223, 110, 0.26), transparent 62%),
+    rgba(0, 0, 0, 0.34);
+  box-shadow: 0 0 16px rgba(255, 223, 110, 0.22);
+}
+
+.meterLabel {
+  gap: 10px;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.meterLabel span {
+  color: rgba(223, 255, 246, 0.68);
+}
+
+.meterLabel strong {
+  font-size: 13px;
+}
+
+.meter {
+  height: 12px;
+  border-width: 2px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 18px),
+    rgba(1, 6, 6, 0.94);
+}
+
+.hudActions {
+  grid-template-columns: repeat(2, 42px);
+  gap: 6px;
+}
+
+.iconButton {
+  width: 42px;
+  height: 42px;
+  border-width: 2px;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.combatTicker {
+  gap: 6px;
+}
+
+.combatTicker span,
+.combatTicker strong {
+  min-height: 27px;
+  padding: 7px 10px;
+  border-width: 2px;
+  background:
+    linear-gradient(90deg, rgba(115, 251, 211, 0.13), transparent),
+    rgba(1, 8, 8, 0.82);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.dashPill {
+  min-width: 112px;
+}
+
+.onboardingCoach {
+  max-width: min(560px, 100%);
+  padding: 13px 16px 15px 18px;
+  border-width: 2px;
+  background:
+    radial-gradient(circle at 12% 0, color-mix(in srgb, var(--tone, #73fbd3) 22%, transparent), transparent 30%),
+    linear-gradient(90deg, color-mix(in srgb, var(--tone, #73fbd3) 22%, transparent), rgba(5, 13, 12, 0.86)),
+    rgba(2, 10, 9, 0.9);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.36),
+    0 0 32px color-mix(in srgb, var(--tone, #73fbd3) 20%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.coachHeader {
+  gap: 10px;
+}
+
+.coachHeader span {
+  padding: 4px 7px;
+  border: 1px solid color-mix(in srgb, var(--tone, #73fbd3) 42%, transparent);
+  background: rgba(0, 0, 0, 0.24);
+  clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+}
+
+.coachBody {
+  min-height: 52px;
+  padding: 9px 10px 12px;
+  border-width: 2px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--tone, #73fbd3) 12%, transparent), transparent),
+    rgba(0, 0, 0, 0.34);
+}
+
+.coachBody b {
+  font-size: 13px;
+}
+
+.coachSteps span {
+  min-height: 25px;
+  border-width: 2px;
+}
+
+.objectiveRow {
+  gap: 8px;
+}
+
+.objectiveSummary,
+.objectiveCard {
+  border-width: 2px;
+  background:
+    radial-gradient(circle at 0 0, color-mix(in srgb, var(--tone, #73fbd3) 18%, transparent), transparent 42%),
+    linear-gradient(90deg, rgba(115, 251, 211, 0.09), transparent),
+    rgba(1, 8, 8, 0.78);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.objectiveCard::before {
+  width: 5px;
+}
+
+.bossBar {
+  min-height: 56px;
+  border-width: 2px;
+  background:
+    radial-gradient(circle at 10% 0, color-mix(in srgb, var(--tone, #70d6ff) 24%, transparent), transparent 30%),
+    linear-gradient(90deg, color-mix(in srgb, var(--tone, #70d6ff) 22%, transparent), rgba(5, 13, 12, 0.9)),
+    rgba(2, 9, 9, 0.92);
+}
+
+.modalLayer {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(112, 214, 255, 0.13), transparent 24%),
+    radial-gradient(circle at 50% 50%, transparent 0 21%, rgba(3, 8, 7, 0.76) 58%, rgba(0, 0, 0, 0.9)),
+    rgba(0, 4, 5, 0.82);
+}
+
+.upgradePanel,
+.endPanel,
+.pausePanel {
+  border-width: 2px;
+  border-color: rgba(197, 255, 239, 0.38);
+  background:
+    radial-gradient(circle at 18% 2%, rgba(112, 214, 255, 0.22), transparent 23%),
+    radial-gradient(circle at 84% 9%, rgba(255, 241, 166, 0.18), transparent 24%),
+    linear-gradient(90deg, rgba(115, 251, 211, 0.08), transparent 38%, rgba(255, 139, 114, 0.05)),
+    linear-gradient(180deg, rgba(24, 38, 32, 0.99), rgba(2, 8, 8, 0.99));
+  box-shadow:
+    0 36px 120px rgba(0, 0, 0, 0.7),
+    0 0 78px rgba(112, 214, 255, 0.16),
+    inset 0 2px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -54px 98px rgba(0, 0, 0, 0.28);
+}
+
+.upgradeHeader {
+  align-items: flex-end;
+  padding-bottom: 12px;
+  border-bottom-color: rgba(180, 255, 236, 0.2);
+}
+
+.eyebrow {
+  color: #8af8e0;
+  font-weight: 950;
+}
+
+.upgradePanel h1,
+.pausePanel h1,
+.endPanel h1 {
+  text-shadow:
+    0 0 20px rgba(115, 251, 211, 0.18),
+    0 2px 0 rgba(0, 0, 0, 0.26);
+}
+
+.upgradeGrid {
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.upgradeCard {
+  min-height: 358px;
+  grid-template-rows: auto auto minmax(124px, auto) auto minmax(48px, auto) auto auto;
+  gap: 11px;
+  padding: 18px 17px 17px;
+  border-width: 2px;
+  border-color: color-mix(in srgb, var(--tone, #70d6ff) 66%, rgba(255, 255, 255, 0.18));
+  background:
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--tone, #70d6ff) 32%, transparent), transparent 31%),
+    linear-gradient(180deg, color-mix(in srgb, var(--tone, #70d6ff) 16%, rgba(34, 48, 42, 0.99)), rgba(3, 11, 10, 0.99) 62%, rgba(1, 5, 5, 0.99)),
+    rgba(4, 13, 12, 0.98);
+  box-shadow:
+    0 22px 52px rgba(0, 0, 0, 0.38),
+    0 0 30px color-mix(in srgb, var(--tone, #70d6ff) 16%, transparent),
+    inset 0 2px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -36px 54px rgba(0, 0, 0, 0.38);
+}
+
+.upgradeCard::before {
+  background:
+    linear-gradient(90deg, transparent 0 7%, color-mix(in srgb, var(--tone, #70d6ff) 84%, white) 16%, color-mix(in srgb, var(--tone, #70d6ff) 48%, transparent) 54%, transparent 93%) 0 0 / 100% 6px no-repeat,
+    radial-gradient(circle at 50% 22%, color-mix(in srgb, var(--tone, #70d6ff) 18%, transparent), transparent 36%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 11px);
+}
+
+.upgradeCard::after {
+  width: 38px;
+  height: 38px;
+  opacity: 0.58;
+}
+
+.upgradePickCue {
+  min-height: 34px;
+}
+
+.upgradeCard em,
+.upgradePickCue strong {
+  border-width: 2px;
+  font-size: 10px;
+}
+
+.upgradeTitleRow {
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 13px;
+  min-height: 66px;
+}
+
+.upgradeSigil {
+  width: 64px;
+  height: 64px;
+  border-width: 2px;
+  font-size: 29px;
+}
+
+.upgradeTitleRow span {
+  font-size: 25px;
+  line-height: 1.08;
+}
+
+.upgradeOutcomeBand {
+  min-height: 124px;
+  padding: 15px 14px 15px;
+  border-width: 2px;
+  background:
+    radial-gradient(circle at 96% 0, color-mix(in srgb, var(--tone, #70d6ff) 38%, transparent), transparent 44%),
+    linear-gradient(135deg, color-mix(in srgb, var(--tone, #70d6ff) 31%, transparent), rgba(255, 241, 166, 0.12)),
+    rgba(0, 0, 0, 0.38);
+}
+
+.upgradeOutcomeBand strong {
+  font-size: 21px;
+  line-height: 1.12;
+}
+
+.upgradeReasonLine,
+.upgradeEffectText {
+  border-width: 2px;
+}
+
+.upgradeReasonLine {
+  min-height: 38px;
+}
+
+.upgradeEffectText {
+  color: rgba(245, 255, 252, 0.78);
+}
+
+.pauseStats span,
+.controlGrid span,
+.pauseObjectives span,
+.resultStats span,
+.runSummary span,
+.resultHighlights span,
+.resultGrade {
+  border-width: 2px;
+  background:
+    linear-gradient(90deg, rgba(115, 251, 211, 0.1), transparent),
+    rgba(0, 0, 0, 0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 10px 22px rgba(0, 0, 0, 0.16);
+}
+
+.primaryButton,
+.secondaryButton {
+  min-height: 52px;
+  border-width: 2px;
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.primaryButton {
+  box-shadow:
+    0 0 30px rgba(112, 214, 255, 0.32),
+    inset 0 2px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -12px 24px rgba(0, 0, 0, 0.16);
+}
+
+.upgradeCard:focus-visible,
+.iconButton:focus-visible,
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: 2px solid #fff1a6;
+  outline-offset: 3px;
+}
+
 @media (max-width: 980px) {
   .upgradeGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2616,5 +3020,113 @@ h1 {
   .endPanel,
   .pausePanel {
     padding: 16px 14px;
+  }
+}
+
+@media (max-width: 700px), (max-aspect-ratio: 3 / 4) {
+  .hud {
+    inset: max(10px, env(safe-area-inset-top)) 0 auto 0;
+    width: 100vw;
+    min-width: 0;
+    padding: 0 max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
+  }
+
+  .topbar,
+  .combatTicker,
+  .onboardingCoach,
+  .objectiveRow,
+  .encounterBanner,
+  .bossBar {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .topbar {
+    padding: 8px 90px 8px 9px;
+  }
+
+  .meterBlock {
+    min-height: 36px;
+    padding-left: 0;
+  }
+
+  .meterBlock::before {
+    display: none;
+  }
+
+  .meterLabel span,
+  .meterLabel strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .combatTicker span,
+  .combatTicker strong {
+    min-height: 24px;
+    padding: 5px 7px;
+    border-width: 1px;
+  }
+
+  .coachSteps span {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .onboardingCoach {
+    padding: 11px 13px 13px 15px;
+  }
+
+  .upgradePanel,
+  .endPanel,
+  .pausePanel {
+    padding: 18px 16px;
+  }
+
+  .upgradeCard {
+    min-height: 278px;
+    grid-template-rows: auto auto minmax(88px, auto) auto minmax(40px, auto) auto auto;
+  }
+
+  .upgradeTitleRow {
+    grid-template-columns: 46px minmax(0, 1fr);
+    min-height: 50px;
+  }
+
+  .upgradeSigil {
+    width: 46px;
+    height: 46px;
+    font-size: 21px;
+  }
+
+  .upgradeTitleRow span {
+    font-size: 21px;
+  }
+
+  .upgradeOutcomeBand {
+    min-height: 88px;
+  }
+
+  .upgradeOutcomeBand strong {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 420px) {
+  .upgradeCard {
+    min-height: 244px;
+  }
+
+  .upgradeTitleRow {
+    grid-template-columns: 34px minmax(0, 1fr);
+    min-height: 40px;
+  }
+
+  .upgradeSigil {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
   }
 }
