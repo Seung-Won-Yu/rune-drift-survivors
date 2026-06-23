@@ -14,11 +14,18 @@ Rune Drift Survivors is a short 5-minute auto-combat roguelite run.
 
 You move through a rune ruin field, dodge pressure, collect XP, claim field items, choose upgrades, form weapon synergies, fight elites and bosses, then review your run result.
 
+Run flow:
+
+```txt
+Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete synergies -> Survive the final surge
+```
+
 ## Current Features
 
 - 3D open-field arena with terrain, blockers, ruins, trees, rocks, and rune lighting.
 - First-run onboarding for movement, dash, XP pickup, and armory cache.
 - Wave pacing with combat rhythm phases and escalating threat.
+- Run phase goals for early, mid, and final survival direction.
 - Auto-combat weapons:
   - rune orb
   - storm brand
@@ -37,6 +44,7 @@ You move through a rune ruin field, dodge pressure, collect XP, claim field item
   - armory cache
 - Elite and boss encounters with alerts, boss HP bar, pattern state, and rage phase.
 - Pause, upgrade, and result overlays.
+- Upgrade cards prioritize recommended picks and show short current-phase reasons.
 - Run result summary with grade, top DPS weapon, preferred build, shrine rewards, elite kills, and boss kills.
 - Mobile HUD and modal layout pass.
 - Runtime caps for enemies, projectiles, XP gems, damage numbers, and effects.
@@ -100,16 +108,26 @@ Important: model URLs use `import.meta.env.BASE_URL`, so the game works under th
 Files needed for the deployed game:
 
 ```txt
+.github/workflows/deploy.yml
 index.html
 package.json
 package-lock.json
 vite.config.js
 src/
 public/models/
-.github/workflows/deploy.yml
 ```
 
 The tracked `public/models/` files are the runtime GLB assets loaded by the game.
+
+Tracked support files:
+
+```txt
+assets/references/asset-sources.md
+docs/project-structure.md
+scripts/
+```
+
+These files are not required by the browser at runtime, but they document asset sources and help rebuild model assets when needed.
 
 ## Ignored Local Files
 
@@ -133,11 +151,11 @@ Blender source files can stay on the local machine, but the web game does not ne
 
 Recent checks:
 
-- `npm run build` passes.
-- GitHub Pages build mode passes with `GITHUB_PAGES=true npm run build`.
-- Mobile 390x844 HUD, pause, upgrade, boss, result, and stress screens verified.
-- Stress scenario verified with enemies, projectiles, XP gems, and effects near runtime caps.
-- Console errors and warnings were checked during Playwright smoke tests.
+- `npm run build` passes locally.
+- GitHub Actions deploy passes on `main`.
+- GitHub Pages build mode uses `GITHUB_PAGES=true npm run build`.
+- Mobile HUD, upgrade cards, boss, result, and stress views have dedicated QA entry points in the app.
+- Runtime caps are in place for enemies, projectiles, XP gems, damage numbers, and effects.
 
 ## Asset Notes
 
