@@ -22,7 +22,7 @@ Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete sy
 
 ## Current Features
 
-- 3D open-field arena with terrain, blockers, ruins, trees, rocks, and rune lighting.
+- 3D forest-ruin arena with terrain, blockers, imported tree clusters, rocks, shrines, and rune lighting.
 - First-run onboarding for movement, dash, XP pickup, and armory cache.
 - Wave pacing with combat rhythm phases and escalating threat.
 - Run phase goals for early, mid, and final survival direction.
@@ -122,12 +122,13 @@ The tracked `public/models/` files are the runtime GLB assets loaded by the game
 Tracked support files:
 
 ```txt
+ASSET_CREDITS.md
 assets/references/asset-sources.md
 docs/project-structure.md
 scripts/
 ```
 
-These files are not required by the browser at runtime, but they document asset sources and help rebuild model assets when needed.
+These files are not required by the browser at runtime, but they document asset sources and help rebuild model assets when needed. Imported third-party environment assets are documented in `ASSET_CREDITS.md`.
 
 ## Ignored Local Files
 

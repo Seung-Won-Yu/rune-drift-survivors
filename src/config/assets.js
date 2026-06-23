@@ -24,6 +24,13 @@ export const NATURE_MODEL_URLS = {
   grassLarge: withBase('models/nature-kit/grass_leafsLarge.glb')
 };
 
+export const IMPORTED_ENV_MODEL_URLS = {
+  birchTrees: withBase('models/quaternius/birch-trees.glb'),
+  pineTrees: withBase('models/quaternius/pine-trees.glb'),
+  rocks: withBase('models/quaternius/rocks.glb'),
+  bushes: withBase('models/quaternius/bushes.glb')
+};
+
 export const PRELOAD_MODEL_URLS = [
   ...Object.values(MODEL_URLS),
   ...Object.values(PROJECTILE_MODEL_URLS),
