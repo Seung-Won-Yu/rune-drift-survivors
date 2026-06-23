@@ -1986,7 +1986,7 @@ h1 {
   }
 
   .modalLayer {
-    place-items: start center;
+    place-items: start;
     padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   }
 
@@ -2057,6 +2057,7 @@ h1 {
   .upgradePanel,
   .endPanel,
   .pausePanel {
+    width: min(350px, 100%);
     padding: 18px;
     max-height: calc(100dvh - 24px);
   }
