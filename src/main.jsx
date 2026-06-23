@@ -399,14 +399,14 @@ const RUNTIME_BUDGETS = {
     maxXpGems: MAX_XP_GEMS
   },
   balanced: {
-    maxEnemies: 118,
-    maxProjectiles: 128,
-    maxXpGems: 220
+    maxEnemies: 108,
+    maxProjectiles: 116,
+    maxXpGems: 190
   },
   low: {
-    maxEnemies: 98,
-    maxProjectiles: 108,
-    maxXpGems: 190
+    maxEnemies: 82,
+    maxProjectiles: 88,
+    maxXpGems: 145
   }
 };
 
@@ -439,8 +439,8 @@ function getRuntimeVisualQuality(baseQuality = 'high', game = {}) {
   const time = game.time ?? 0;
   const wave = game.wave ?? 1;
   const kills = game.kills ?? 0;
-  const latePressure = time >= 235 || wave >= 12 || kills >= 520;
-  const heavyPressure = time >= 170 || wave >= 9 || kills >= 320;
+  const latePressure = time >= 205 || wave >= 11 || kills >= 430;
+  const heavyPressure = time >= 135 || wave >= 7 || kills >= 230;
   if (latePressure) return 'low';
   if (heavyPressure && baseQuality === 'high') return 'balanced';
   return baseQuality;
@@ -961,7 +961,15 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     color: new THREE.Color(),
     scale: new THREE.Vector3(),
     quat: new THREE.Quaternion(),
-    vec: new THREE.Vector3()
+    vec: new THREE.Vector3(),
+    input: new THREE.Vector3(),
+    moveDirection: new THREE.Vector3(),
+    dashDirection: new THREE.Vector3(),
+    velocityTarget: new THREE.Vector3(),
+    enemyDirection: new THREE.Vector3(),
+    projectilePush: new THREE.Vector3(),
+    cameraPosition: new THREE.Vector3(),
+    flat: new THREE.Vector2()
   }), []);
   const runtimeBudget = getRuntimeBudget(visualQuality);
 
@@ -1311,7 +1319,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
   });
 
   const updatePlayer = (dt, stats, updateGame) => {
-    const input = new THREE.Vector3(
+    const input = scratch.input.set(
       Number(keys.current.has('KeyD') || keys.current.has('ArrowRight')) - Number(keys.current.has('KeyA') || keys.current.has('ArrowLeft')),
       0,
       Number(keys.current.has('KeyS') || keys.current.has('ArrowDown')) - Number(keys.current.has('KeyW') || keys.current.has('ArrowUp'))
@@ -1323,7 +1331,9 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     player.current.invuln = Math.max(0, player.current.invuln - dt);
 
     if (dashQueued.current && player.current.dashCd <= 0) {
-      const dashDir = hasInput ? input.clone() : player.current.facing.clone();
+      const dashDir = hasInput
+        ? scratch.dashDirection.copy(input)
+        : scratch.dashDirection.copy(player.current.facing);
       if (dashDir.lengthSq() > 0.001) {
         player.current.facing.copy(dashDir.normalize());
       }
@@ -1356,14 +1366,16 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
 
     if (hasInput && player.current.dashTimer <= 0) player.current.facing.copy(input);
     const isDashing = player.current.dashTimer > 0;
-    const moveDirection = isDashing ? player.current.facing.clone() : input;
+    const moveDirection = isDashing
+      ? scratch.moveDirection.copy(player.current.facing)
+      : scratch.moveDirection.copy(input);
     const speed = isDashing ? DASH_SPEED : PLAYER_SPEED * stats.speed;
     player.current.dashTimer = Math.max(0, player.current.dashTimer - dt);
-    player.current.vel.lerp(moveDirection.multiplyScalar(speed), isDashing ? 0.78 : 0.32);
+    player.current.vel.lerp(scratch.velocityTarget.copy(moveDirection).multiplyScalar(speed), isDashing ? 0.78 : 0.32);
     player.current.pos.addScaledVector(player.current.vel, dt);
     resolveStaticCollisions(player.current.pos, PLAYER_RADIUS);
 
-    const flat = new THREE.Vector2(player.current.pos.x, player.current.pos.z);
+    const flat = scratch.flat.set(player.current.pos.x, player.current.pos.z);
     if (flat.length() > ARENA_RADIUS - 0.8) {
       flat.setLength(ARENA_RADIUS - 0.8);
       player.current.pos.x = flat.x;
@@ -1615,15 +1627,17 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           burstRadius: (1.7 + tier * 0.36 + weaponStage * 0.42 + stormFocus * 0.18) * stats.stormRadius,
           color: getStormColor(stats, weaponStage)
         });
-        hitBursts.current.push({
-          pos: strikePos.clone(),
-          life: (0.5 + weaponStage * 0.05) * Math.min(1.9, stats.stormDuration + stormFocus * 0.08),
-          maxLife: (0.5 + weaponStage * 0.05) * Math.min(1.9, stats.stormDuration + stormFocus * 0.08),
-          color: getStormColor(stats, weaponStage),
-          type: 'storm',
-          stage: weaponStage,
-          radius: 1.35 + tier * 0.24 + stormFocus * 0.12
-        });
+        if (canAddHitBurst(8)) {
+          hitBursts.current.push({
+            pos: strikePos.clone(),
+            life: (0.5 + weaponStage * 0.05) * Math.min(1.9, stats.stormDuration + stormFocus * 0.08),
+            maxLife: (0.5 + weaponStage * 0.05) * Math.min(1.9, stats.stormDuration + stormFocus * 0.08),
+            color: getStormColor(stats, weaponStage),
+            type: 'storm',
+            stage: weaponStage,
+            radius: 1.35 + tier * 0.24 + stormFocus * 0.12
+          });
+        }
       }
       stormTimer.current = Math.max(0.38, weaponCatalog[1].cooldown * stats.cooldown * stats.stormCooldown * overloadCooldown * (1 - weaponStage * 0.06) * (1 - Math.min(0.14, stormFocus * 0.025 + stormChainLevel * 0.018)));
     }
@@ -1646,24 +1660,28 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         enemy.shocked = Math.max(enemy.shocked ?? 0, 0.48 + chainFocus * 0.16 + stormChainLevel * 0.1);
         enemy.pos.addScaledVector(enemy.pos.clone().sub(player.current.pos).setY(0).normalize(), 0.08);
         addDamageNumber(enemy.pos, Math.ceil(dealt), color, 0.64);
-        hitBursts.current.push({
-          pos: enemy.pos.clone(),
-          life: 0.24,
-          maxLife: 0.24,
-          color,
-          type: 'lightning',
-          stage: weaponStage,
-          radius: 0.95 + weaponStage * 0.12
-        });
-        weaponEffects.current.push({
-          type: 'beam',
-          from: previous.clone(),
-          to: enemy.pos.clone().add(new THREE.Vector3(0, 1.0, 0)),
-          life: 0.18,
-          maxLife: 0.18,
-          color,
-          width: 0.11 + weaponStage * 0.015
-        });
+        if (canAddHitBurst(8)) {
+          hitBursts.current.push({
+            pos: enemy.pos.clone(),
+            life: 0.24,
+            maxLife: 0.24,
+            color,
+            type: 'lightning',
+            stage: weaponStage,
+            radius: 0.95 + weaponStage * 0.12
+          });
+        }
+        if (canAddWeaponEffect(6)) {
+          weaponEffects.current.push({
+            type: 'beam',
+            from: previous.clone(),
+            to: enemy.pos.clone().add(new THREE.Vector3(0, 1.0, 0)),
+            life: 0.18,
+            maxLife: 0.18,
+            color,
+            width: 0.11 + weaponStage * 0.015
+          });
+        }
         previous = enemy.pos.clone().add(new THREE.Vector3(0, 1.0, 0));
       });
       if (chainTargets.length > 0) cameraShake.current = Math.max(cameraShake.current, 0.1);
@@ -1752,15 +1770,17 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           if (enemy.bladeNumberTimer <= 0) {
             enemy.bladeNumberTimer = 0.22;
             addDamageNumber(enemy.pos, Math.ceil(dealt * 5), bladeColor, 0.46 + weaponStage * 0.03);
-            hitBursts.current.push({
-              pos: enemy.pos.clone(),
-              life: 0.22 + weaponStage * 0.03,
-              maxLife: 0.22 + weaponStage * 0.03,
-              color: bladeColor,
-              type: 'blade',
-              stage: weaponStage,
-              radius: 0.7 + weaponStage * 0.18
-            });
+            if (canAddHitBurst(8)) {
+              hitBursts.current.push({
+                pos: enemy.pos.clone(),
+                life: 0.22 + weaponStage * 0.03,
+                maxLife: 0.22 + weaponStage * 0.03,
+                color: bladeColor,
+                type: 'blade',
+                stage: weaponStage,
+                radius: 0.7 + weaponStage * 0.18
+              });
+            }
           }
         }
       }
@@ -2092,7 +2112,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     let bossKills = 0;
     const spawnedEnemies = [];
     for (const enemy of enemies.current) {
-      const toPlayer = playerPos.clone().sub(enemy.pos).setY(0);
+      const toPlayer = scratch.enemyDirection.copy(playerPos).sub(enemy.pos).setY(0);
       const distance = Math.max(0.001, toPlayer.length());
       toPlayer.divideScalar(distance);
       if (enemy.kind === 'boss' && !enemy.enraged && enemy.hp / enemy.maxHp <= 0.5) {
@@ -2168,21 +2188,23 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
           enemy.flash = 0.14;
           projectile.pierce -= 1;
           const push = projectile.type === 'storm'
-            ? enemy.pos.clone().sub(player.current.pos).setY(0)
-            : projectile.vel.clone().setY(0);
+            ? scratch.projectilePush.copy(enemy.pos).sub(player.current.pos).setY(0)
+            : scratch.projectilePush.copy(projectile.vel).setY(0);
           if (push.lengthSq() > 0.001) {
             enemy.pos.addScaledVector(push.normalize(), projectile.type === 'storm' ? 0.28 : 0.18);
           }
           addDamageNumber(enemy.pos, Math.ceil(dealt), projectile.color, projectile.type === 'storm' ? 0.82 : 0.62);
-          hitBursts.current.push({
-            pos: enemy.pos.clone(),
-            life: 0.28 + (projectile.stage ?? 0) * 0.04,
-            maxLife: 0.28 + (projectile.stage ?? 0) * 0.04,
-            color: projectile.color,
-            type: projectile.type,
-            stage: projectile.stage ?? 0,
-            radius: projectile.radius
-          });
+          if (canAddHitBurst(8)) {
+            hitBursts.current.push({
+              pos: enemy.pos.clone(),
+              life: 0.28 + (projectile.stage ?? 0) * 0.04,
+              maxLife: 0.28 + (projectile.stage ?? 0) * 0.04,
+              color: projectile.color,
+              type: projectile.type,
+              stage: projectile.stage ?? 0,
+              radius: projectile.radius
+            });
+          }
           cameraShake.current = Math.max(cameraShake.current, projectile.type === 'storm' ? 0.16 : 0.08);
         }
       }
@@ -2214,7 +2236,9 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
             fieldItemDropLock.current = enemy.kind === 'boss' || enemy.kind === 'elite' ? 3.2 : 6.2;
           }
         }
-        hitBursts.current.push({ pos: enemy.pos.clone(), life: 0.36, maxLife: 0.36, color: enemy.kind === 'elite' || enemy.kind === 'boss' ? getEnemyAccentColor(enemy) : '#9df57a' });
+        if (canAddHitBurst(10)) {
+          hitBursts.current.push({ pos: enemy.pos.clone(), life: 0.36, maxLife: 0.36, color: enemy.kind === 'elite' || enemy.kind === 'boss' ? getEnemyAccentColor(enemy) : '#9df57a' });
+        }
         addDamageNumber(
           enemy.pos,
           enemy.kind === 'boss' ? 'BOSS DOWN' : enemy.kind === 'elite' ? 'ELITE DOWN' : `+${enemy.xp}`,
@@ -2728,7 +2752,19 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     spawnWarnings.current.length = write;
   };
 
+  const canAddHitBurst = (overflow = 8) => (
+    hitBursts.current.length < getVisualBudget(visualQuality).hitBursts + overflow
+  );
+
+  const canAddWeaponEffect = (overflow = 6) => (
+    weaponEffects.current.length < getVisualBudget(visualQuality).weaponEffects + overflow
+  );
+
   const addDamageNumber = (pos, value, color, size = 0.56) => {
+    const budget = getVisualBudget(visualQuality).damageNumbers;
+    const isPriority = typeof value === 'string' && /[A-Z가-힣]/.test(value);
+    if (!isPriority && damageNumbers.current.length >= budget + 8) return;
+    if (damageNumbers.current.length >= budget + 14) damageNumbers.current.length = budget + 8;
     damageNumbers.current.push({
       pos: pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.22, 1.05, (Math.random() - 0.5) * 0.22)),
       value,
@@ -2758,9 +2794,9 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
   };
 
   const updateCamera = (camera, dt) => {
-    const framedTarget = player.current.pos.clone();
+    const framedTarget = scratch.vec.copy(player.current.pos);
     const frameRadius = ARENA_RADIUS - 38;
-    const flatTarget = new THREE.Vector2(framedTarget.x, framedTarget.z);
+    const flatTarget = scratch.flat.set(framedTarget.x, framedTarget.z);
     if (flatTarget.length() > frameRadius) {
       flatTarget.setLength(frameRadius);
       framedTarget.x = flatTarget.x;
@@ -2771,7 +2807,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     const shake = cameraShake.current;
     const shakeX = (Math.random() - 0.5) * shake;
     const shakeZ = (Math.random() - 0.5) * shake;
-    camera.position.lerp(new THREE.Vector3(cameraTarget.current.x + shakeX, 44 + cameraTarget.current.y * 0.38, cameraTarget.current.z + 74 + shakeZ), 0.08);
+    camera.position.lerp(scratch.cameraPosition.set(cameraTarget.current.x + shakeX, 44 + cameraTarget.current.y * 0.38, cameraTarget.current.z + 74 + shakeZ), 0.08);
     camera.lookAt(cameraTarget.current.x, 0.62 + cameraTarget.current.y * 0.68, cameraTarget.current.z);
   };
 
