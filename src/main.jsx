@@ -924,6 +924,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     dashTimer: 0,
     dashCd: 0,
     invuln: 0,
+    castPulse: 0,
+    hurtPulse: 0,
     facing: new THREE.Vector3(1, 0, 0)
   });
   const keys = useRef(new Set());
@@ -999,6 +1001,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         player.current.dashTimer = 0;
         player.current.dashCd = 0;
         player.current.invuln = 0;
+        player.current.castPulse = 0;
+        player.current.hurtPulse = 0;
         dashQueued.current = false;
         enemies.current = [];
         projectiles.current = [];
@@ -1266,6 +1270,10 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     runStats.current.totalDamage += amount;
   };
 
+  const pulsePlayerCast = (strength = 0.18) => {
+    player.current.castPulse = Math.max(player.current.castPulse ?? 0, strength);
+  };
+
   const addProjectile = projectile => {
     if (projectiles.current.length < runtimeBudget.maxProjectiles) {
       projectiles.current.push(projectile);
@@ -1329,6 +1337,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
 
     player.current.dashCd = Math.max(0, player.current.dashCd - dt);
     player.current.invuln = Math.max(0, player.current.invuln - dt);
+    player.current.castPulse = Math.max(0, (player.current.castPulse ?? 0) - dt * 3.6);
+    player.current.hurtPulse = Math.max(0, (player.current.hurtPulse ?? 0) - dt * 2.8);
 
     if (dashQueued.current && player.current.dashCd <= 0) {
       const dashDir = hasInput
@@ -1393,20 +1403,22 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       const step = Math.sin(stride);
       const stepLift = Math.max(0, step) * moveAmount;
       const dashPower = player.current.dashTimer > 0 ? 1 : 0;
+      const castPulse = player.current.castPulse ?? 0;
+      const hurtPulse = player.current.hurtPulse ?? 0;
       const bob = (Math.abs(step) * 0.09 + stepLift * 0.04) * moveAmount + dashPower * 0.04;
       const sideSway = Math.sin(stride * 0.5) * 0.072 * moveAmount;
-      const tilt = Math.min(0.32, moveSpeed * 0.022);
+      const tilt = Math.min(0.32, moveSpeed * 0.022) + castPulse * 0.04;
       const dashScale = 1 + dashPower * 0.16;
-      playerMesh.current.position.y += bob;
+      playerMesh.current.position.y += bob + castPulse * 0.04 + hurtPulse * 0.03;
       playerMesh.current.rotation.set(
-        -player.current.facing.z * tilt + step * 0.065 * moveAmount - dashPower * 0.12,
-        yaw + sideSway,
-        player.current.facing.x * tilt + Math.sin(stride * 0.5) * 0.055 * moveAmount
+        -player.current.facing.z * tilt + step * 0.065 * moveAmount - dashPower * 0.12 - hurtPulse * 0.16,
+        yaw + sideSway + hurtPulse * Math.sin(stride * 0.8) * 0.12,
+        player.current.facing.x * tilt + Math.sin(stride * 0.5) * 0.055 * moveAmount + castPulse * 0.12
       );
       playerMesh.current.scale.set(
-        dashScale * (1 + stepLift * 0.045),
-        dashScale * (1 - stepLift * 0.07 + dashPower * 0.02),
-        dashScale * (1 + moveAmount * 0.035 + dashPower * 0.11)
+        dashScale * (1 + stepLift * 0.045 + castPulse * 0.08 + hurtPulse * 0.05),
+        dashScale * (1 - stepLift * 0.07 + dashPower * 0.02 - hurtPulse * 0.08),
+        dashScale * (1 + moveAmount * 0.035 + dashPower * 0.11 + castPulse * 0.05)
       );
     }
   };
@@ -1577,6 +1589,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       const orbCount = Math.min(12, stats.orbCount + Math.floor(orbFocus / 2));
       const targets = nearestEnemies(orbCount, 42 + (stats.orbSpeed - 1) * 24 + orbFocus * 4);
       if (targets.length > 0) {
+        pulsePlayerCast(0.16 + weaponStage * 0.012);
         const tier = getWeaponTier(stats, weaponStage);
         const shotTotal = orbFocus >= 2 ? Math.max(orbCount, targets.length) : targets.length;
         for (let index = 0; index < shotTotal; index += 1) {
@@ -1604,6 +1617,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     }
 
     if (stormUnlocked && stormTimer.current <= 0 && enemies.current.length > 3) {
+      pulsePlayerCast(0.22 + stormFocus * 0.012);
       const tier = getWeaponTier(stats, weaponStage);
       const strikeCount = Math.min(7, Math.max(1, Math.round(stats.stormStrikes) + Math.floor(stormFocus / 2)));
       for (let strike = 0; strike < strikeCount; strike += 1) {
@@ -1643,6 +1657,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     }
 
     if (chainUnlocked && lightningTimer.current <= 0 && enemies.current.length > 0) {
+      pulsePlayerCast(0.18 + chainFocus * 0.01);
       const chainTargets = nearestEnemies(
         stats.lightningChains + Math.floor(weaponStage / 2) + Math.floor(chainFocus / 2),
         weaponCatalog[3].range * stats.lightningRange + weaponStage * 4 + chainFocus * 3 + stormChainLevel * 3.5
@@ -1689,6 +1704,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     }
 
     if (novaUnlocked && novaTimer.current <= 0 && enemies.current.length > 0) {
+      pulsePlayerCast(0.32 + novaFocus * 0.012);
       const color = getNovaColor(stats, weaponStage);
       const radius = weaponCatalog[4].radius * stats.novaRadius * (1 + weaponStage * 0.08 + novaFocus * 0.045 + bladeNovaLevel * 0.04);
       const pulseBoost = 1 + stats.novaPulse * 0.12;
@@ -1849,6 +1865,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
       ? amount * (1 - Math.min(0.28, bladeFocus * 0.055))
       : amount;
     player.current.invuln = invuln;
+    player.current.hurtPulse = Math.max(player.current.hurtPulse ?? 0, 0.44);
     cameraShake.current = Math.max(cameraShake.current, 0.28);
     const damageValue = Math.ceil(guardedAmount);
     hitBursts.current.push({
@@ -2161,6 +2178,10 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
         ? Math.max(0.54, 0.82 - getBuildFocus(currentGame, 'chain') * 0.035)
         : 1;
       const speedMultiplier = (enemy.chargeTimer > 0 ? 3.1 : enemy.bossGuard > 0 ? 0.72 : 1) * shockMultiplier * getEnemyMovePressure(currentGame);
+      enemy.motionSpeed = enemy.speed * speedMultiplier;
+      enemy.motionIntent = distance > enemy.radius + PLAYER_RADIUS
+        ? THREE.MathUtils.clamp(enemy.motionSpeed / 5.4, 0.16, 1.36)
+        : 0.08;
       enemy.pos.addScaledVector(toPlayer, enemy.speed * speedMultiplier * dt);
       resolveStaticCollisions(enemy.pos, enemy.radius * 0.7);
       enemy.groundSync = Math.max(0, (enemy.groundSync ?? 0) - dt);
@@ -2986,60 +3007,63 @@ function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 1, mate
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== kind) continue;
         if (count >= MAX_ENEMIES) break;
-        const stride = enemy.wobble * (kind === 'runner' ? 2.1 : kind === 'brute' ? 0.92 : kind === 'boss' ? 0.48 : 1.1);
+        const motionIntent = enemy.motionIntent ?? 0.55;
+        const hitReact = THREE.MathUtils.clamp((enemy.flash ?? 0) / 0.18, 0, 1);
+        const shockedPower = enemy.shocked > 0 ? 0.18 : 0;
+        const stride = enemy.wobble * (kind === 'runner' ? 2.1 : kind === 'brute' ? 0.92 : kind === 'boss' ? 0.48 : 1.1) * (0.82 + motionIntent * 0.26);
         const step = Math.sin(stride);
         const stepLift = Math.max(0, step);
         const chargePower = enemy.chargeTimer > 0 ? 1 : 0;
         const guardPower = enemy.bossGuard > 0 ? 1 : 0;
         const bob = kind === 'runner'
-          ? stepLift * 0.22 + chargePower * 0.06
+          ? stepLift * (0.16 + motionIntent * 0.16) + chargePower * 0.08
           : kind === 'brute'
-            ? Math.abs(step) * 0.055
+            ? Math.abs(step) * (0.04 + motionIntent * 0.045)
             : kind === 'boss'
-              ? Math.sin(stride) * 0.045
-              : Math.abs(step) * 0.07;
+              ? Math.sin(stride) * 0.045 + guardPower * 0.035
+              : Math.abs(step) * (0.05 + motionIntent * 0.045);
         const squash = kind === 'runner'
-          ? 0.84 + stepLift * 0.18 + chargePower * 0.08
+          ? 0.82 + stepLift * (0.13 + motionIntent * 0.07) + chargePower * 0.08 - hitReact * 0.07
           : kind === 'brute'
-            ? 1.0 + Math.max(0, -step) * 0.065
+            ? 1.0 + Math.max(0, -step) * 0.065 - hitReact * 0.045
             : kind === 'elite'
-              ? 1.0 + stepLift * 0.045 + chargePower * 0.05
+              ? 1.0 + stepLift * 0.045 + chargePower * 0.05 - hitReact * 0.04
               : kind === 'boss'
-                ? 1.0 + Math.sin(stride) * 0.025 - guardPower * 0.08
-                : 1.0 + stepLift * 0.045;
+                ? 1.0 + Math.sin(stride) * 0.025 - guardPower * 0.08 - hitReact * 0.03
+                : 1.0 + stepLift * 0.045 - hitReact * 0.04;
         const pitch = kind === 'runner'
-          ? -0.16 - stepLift * 0.11 - chargePower * 0.22
+          ? -0.13 - stepLift * 0.12 - chargePower * 0.25 - hitReact * 0.1
           : kind === 'brute'
-            ? -0.035 + Math.max(0, -step) * 0.06
+            ? -0.025 + Math.max(0, -step) * 0.07 - hitReact * 0.06
             : kind === 'boss'
-              ? guardPower * 0.08
-              : -0.045 + step * 0.035;
+              ? guardPower * 0.08 - hitReact * 0.04
+              : -0.045 + step * 0.035 - hitReact * 0.055;
         const roll = kind === 'runner'
-          ? Math.sin(stride * 0.5) * 0.18
+          ? Math.sin(stride * 0.5) * (0.13 + motionIntent * 0.08) + hitReact * Math.sin(enemy.wobble * 1.7) * 0.14
           : kind === 'brute'
-            ? Math.sin(stride * 0.72) * 0.055
+            ? Math.sin(stride * 0.72) * 0.055 + hitReact * Math.sin(enemy.wobble * 1.3) * 0.08
             : kind === 'elite'
-              ? Math.sin(stride * 0.82) * 0.075 + chargePower * 0.08
+              ? Math.sin(stride * 0.82) * 0.075 + chargePower * 0.08 + hitReact * 0.06
               : kind === 'boss'
-                ? Math.sin(stride * 0.62) * 0.035
-                : Math.sin(stride * 0.74) * 0.06;
-        local.pos.set(enemy.pos.x, enemy.pos.y + bob, enemy.pos.z);
+                ? Math.sin(stride * 0.62) * 0.035 + hitReact * 0.035
+                : Math.sin(stride * 0.74) * 0.06 + hitReact * Math.sin(enemy.wobble * 1.5) * 0.07;
+        local.pos.set(enemy.pos.x, enemy.pos.y + bob + hitReact * 0.04 + shockedPower * 0.03, enemy.pos.z);
         local.euler.set(pitch, enemy.facingAngle ?? enemy.wobble, roll);
         local.quat.setFromEuler(local.euler);
-        const bossPulse = kind === 'boss' ? 1 + Math.sin(enemy.wobble * 0.72) * 0.035 : 1;
+        const bossPulse = kind === 'boss' ? 1 + Math.sin(enemy.wobble * 0.72) * 0.035 + hitReact * 0.03 : 1;
         const widthPulse = kind === 'runner'
-          ? 0.92 + stepLift * 0.05
+          ? 0.92 + stepLift * 0.05 + hitReact * 0.08
           : kind === 'brute'
-            ? 1.04 + Math.max(0, -step) * 0.025
+            ? 1.04 + Math.max(0, -step) * 0.025 + hitReact * 0.06
             : kind === 'boss'
               ? 1.0 + guardPower * 0.08
-              : 1;
+              : 1 + hitReact * 0.04;
         const depthPulse = kind === 'runner'
-          ? 1.1 + chargePower * 0.16
+          ? 1.06 + motionIntent * 0.06 + chargePower * 0.18
           : kind === 'brute'
-            ? 1.02 + stepLift * 0.04
+            ? 1.02 + stepLift * 0.04 + hitReact * 0.04
             : kind === 'elite'
-              ? 1.0 + chargePower * 0.12
+              ? 1.0 + chargePower * 0.12 + hitReact * 0.04
               : kind === 'boss'
                 ? 1.0 + guardPower * 0.06
                 : 1.02;
@@ -4533,6 +4557,9 @@ function PlayerAvatar({ rootRef, game, player }) {
   const rightStrideMesh = useRef();
   const staffTrailMesh = useRef();
   const shoulderSash = useRef();
+  const bodyShell = useRef();
+  const castArcMesh = useRef();
+  const hurtGuardMesh = useRef();
   const stage = getWeaponStage(game);
   const dominantBuild = getDominantBuild(game);
   const focus = dominantBuild?.focus ?? 0;
@@ -4544,17 +4571,34 @@ function PlayerAvatar({ rootRef, game, player }) {
     const speed = player?.current?.vel?.length?.() ?? 0;
     const moveAmount = THREE.MathUtils.clamp(speed / (PLAYER_SPEED * 1.16), 0, 1);
     const dashPower = player?.current?.dashTimer > 0 ? 1 : 0;
+    const castPulse = player?.current?.castPulse ?? 0;
+    const hurtPulse = player?.current?.hurtPulse ?? 0;
     const stride = now * 0.013;
+    if (bodyShell.current) {
+      const step = Math.sin(stride);
+      bodyShell.current.position.set(0, Math.abs(step) * 0.035 * moveAmount + castPulse * 0.045 + hurtPulse * 0.035, 0);
+      bodyShell.current.rotation.set(
+        -0.04 * moveAmount + castPulse * 0.08 - hurtPulse * 0.12,
+        Math.sin(stride * 0.5) * 0.035 * moveAmount,
+        Math.sin(stride) * 0.045 * moveAmount + castPulse * 0.08
+      );
+      bodyShell.current.scale.set(
+        1 + castPulse * 0.045 + hurtPulse * 0.035,
+        1 - hurtPulse * 0.055,
+        1 + dashPower * 0.04 + castPulse * 0.025
+      );
+    }
     if (runeGroup.current) runeGroup.current.rotation.y += 0.018 + game.stats.cooldown * 0.004;
     if (crestGroup.current) {
-      crestGroup.current.rotation.y -= 0.012 + stage * 0.002;
-      crestGroup.current.position.y = 1.55 + Math.sin(now * 0.004) * 0.05 + moveAmount * 0.035;
+      crestGroup.current.rotation.y -= 0.012 + stage * 0.002 + castPulse * 0.012;
+      crestGroup.current.rotation.z = castPulse * 0.16 - hurtPulse * 0.08;
+      crestGroup.current.position.y = 1.55 + Math.sin(now * 0.004) * 0.05 + moveAmount * 0.035 + castPulse * 0.08;
     }
     if (cloakMesh.current) {
       cloakMesh.current.visible = moveAmount > 0.04 || dashPower > 0;
       cloakMesh.current.position.set(0, 0.75 + Math.sin(stride * 0.5) * 0.035, -0.52 - moveAmount * 0.18 - dashPower * 0.18);
-      cloakMesh.current.rotation.set(0.25 + moveAmount * 0.16, Math.sin(stride * 0.52) * 0.08, Math.sin(stride) * 0.06 * moveAmount);
-      cloakMesh.current.scale.set(0.58 + dashPower * 0.18, 1.0 + moveAmount * 0.34 + dashPower * 0.42, 1);
+      cloakMesh.current.rotation.set(0.25 + moveAmount * 0.16 + castPulse * 0.08, Math.sin(stride * 0.52) * 0.08, Math.sin(stride) * 0.06 * moveAmount);
+      cloakMesh.current.scale.set(0.58 + dashPower * 0.18 + castPulse * 0.08, 1.0 + moveAmount * 0.34 + dashPower * 0.42 + castPulse * 0.16, 1);
     }
     if (leftStrideMesh.current && rightStrideMesh.current) {
       const leftStep = Math.max(0, Math.sin(stride));
@@ -4569,21 +4613,37 @@ function PlayerAvatar({ rootRef, game, player }) {
       rightStrideMesh.current.scale.set(0.14 + rightStep * 0.05, 0.5 + rightStep * 0.2 + dashPower * 0.12, 0.1);
     }
     if (staffTrailMesh.current) {
-      staffTrailMesh.current.visible = moveAmount > 0.06 || dashPower > 0;
-      staffTrailMesh.current.position.set(0.38 + Math.sin(stride * 0.5) * 0.04, 1.02 + Math.sin(stride) * 0.045, 0.08);
-      staffTrailMesh.current.rotation.set(0.35, -0.18, -0.52 + Math.sin(stride * 0.72) * 0.12);
-      staffTrailMesh.current.scale.set(0.11 + stage * 0.01, 0.62 + moveAmount * 0.24 + dashPower * 0.2, 0.11);
+      staffTrailMesh.current.visible = moveAmount > 0.06 || dashPower > 0 || castPulse > 0.02;
+      staffTrailMesh.current.position.set(0.38 + Math.sin(stride * 0.5) * 0.04, 1.02 + Math.sin(stride) * 0.045 + castPulse * 0.12, 0.08 + castPulse * 0.18);
+      staffTrailMesh.current.rotation.set(0.35 + castPulse * 0.18, -0.18, -0.52 + Math.sin(stride * 0.72) * 0.12 - castPulse * 0.34);
+      staffTrailMesh.current.scale.set(0.11 + stage * 0.01 + castPulse * 0.035, 0.62 + moveAmount * 0.24 + dashPower * 0.2 + castPulse * 0.48, 0.11);
+      staffTrailMesh.current.material.opacity = 0.36 + Math.min(0.34, castPulse * 1.2) + dashPower * 0.08;
     }
     if (shoulderSash.current) {
       shoulderSash.current.visible = moveAmount > 0.02 || focus > 0;
       shoulderSash.current.position.y = 1.05 + Math.sin(stride * 0.48) * 0.045;
-      shoulderSash.current.rotation.set(0.16 + moveAmount * 0.1, Math.sin(stride * 0.34) * 0.08, Math.sin(stride) * 0.12 * moveAmount);
+      shoulderSash.current.rotation.set(0.16 + moveAmount * 0.1 + hurtPulse * 0.12, Math.sin(stride * 0.34) * 0.08, Math.sin(stride) * 0.12 * moveAmount + castPulse * 0.08);
+    }
+    if (castArcMesh.current) {
+      castArcMesh.current.visible = castPulse > 0.025;
+      castArcMesh.current.position.set(0.42, 1.04 + castPulse * 0.2, 0.24 + castPulse * 0.18);
+      castArcMesh.current.rotation.set(0.18, -0.36 + castPulse * 0.34, -0.68 + castPulse * 1.7);
+      castArcMesh.current.scale.setScalar(0.62 + castPulse * 1.45 + stage * 0.04);
+      castArcMesh.current.material.opacity = Math.min(0.68, 0.18 + castPulse * 1.85);
+    }
+    if (hurtGuardMesh.current) {
+      hurtGuardMesh.current.visible = hurtPulse > 0.02;
+      hurtGuardMesh.current.rotation.z += 0.06;
+      hurtGuardMesh.current.scale.setScalar(0.72 + hurtPulse * 1.25);
+      hurtGuardMesh.current.material.opacity = Math.min(0.52, hurtPulse * 1.2);
     }
   });
 
   return (
     <group ref={rootRef}>
-      <RuneDrifterModel />
+      <group ref={bodyShell}>
+        <RuneDrifterModel />
+      </group>
       <mesh ref={cloakMesh} position={[0, 0.75, -0.56]} rotation={[0.25, 0, 0]} scale={[0.58, 1.0, 1]} visible={false}>
         <planeGeometry args={[1, 1.34]} />
         <meshBasicMaterial color={runeColor} transparent opacity={0.22} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
@@ -4603,6 +4663,14 @@ function PlayerAvatar({ rootRef, game, player }) {
       <mesh ref={staffTrailMesh} visible={false}>
         <octahedronGeometry args={[1, 0]} />
         <meshBasicMaterial color={runeColor} transparent opacity={0.54} depthWrite={false} toneMapped={false} />
+      </mesh>
+      <mesh ref={castArcMesh} visible={false}>
+        <torusGeometry args={[0.62, 0.024, 8, 48, Math.PI * 1.18]} />
+        <meshBasicMaterial color={runeColor} transparent opacity={0.46} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      <mesh ref={hurtGuardMesh} rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[0, 0.78, 0]} visible={false}>
+        <ringGeometry args={[0.62, 0.78, 40]} />
+        <meshBasicMaterial color={ART_TOKENS.dangerRed} transparent opacity={0.0} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
       </mesh>
       <mesh position={[0, 1.05, -0.18]} scale={[0.24, 0.24, 0.24]}>
         <octahedronGeometry args={[1, 0]} />
