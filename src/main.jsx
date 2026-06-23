@@ -1,8 +1,8 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { ContactShadows, Environment, Text, useGLTF } from '@react-three/drei';
-import { Bloom, EffectComposer, Noise, Vignette } from '@react-three/postprocessing';
+import { Environment, Text, useGLTF } from '@react-three/drei';
+import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { MODEL_URLS, NATURE_MODEL_URLS, PRELOAD_MODEL_URLS, PROJECTILE_MODEL_URLS } from './config/assets.js';
@@ -408,25 +408,25 @@ const ADVANCED_ORB_UPGRADE_IDS = new Set(['orb-fan', 'orb-lance']);
 const GLOBAL_POWER_UPGRADE_IDS = new Set(['damage', 'cooldown']);
 const VISUAL_BUDGETS = {
   high: {
-    enemyAuras: 96,
-    enemyAccents: 104,
-    gemBeams: 104,
-    projectileAura: 92,
-    projectileDetail: 52,
-    hitBursts: 42,
-    weaponEffects: 24,
-    damageNumbers: 30,
-    spawnWarnings: 10
-  },
-  balanced: {
-    enemyAuras: 68,
-    enemyAccents: 76,
-    gemBeams: 58,
-    projectileAura: 58,
-    projectileDetail: 24,
+    enemyAuras: 72,
+    enemyAccents: 82,
+    gemBeams: 42,
+    projectileAura: 66,
+    projectileDetail: 28,
     hitBursts: 30,
     weaponEffects: 18,
     damageNumbers: 22,
+    spawnWarnings: 10
+  },
+  balanced: {
+    enemyAuras: 48,
+    enemyAccents: 58,
+    gemBeams: 0,
+    projectileAura: 42,
+    projectileDetail: 12,
+    hitBursts: 22,
+    weaponEffects: 12,
+    damageNumbers: 16,
     spawnWarnings: 8
   },
   low: {
@@ -449,14 +449,14 @@ const RUNTIME_BUDGETS = {
     maxXpGems: MAX_XP_GEMS
   },
   balanced: {
-    maxEnemies: 108,
-    maxProjectiles: 116,
-    maxXpGems: 190
+    maxEnemies: 96,
+    maxProjectiles: 96,
+    maxXpGems: 160
   },
   low: {
-    maxEnemies: 82,
-    maxProjectiles: 88,
-    maxXpGems: 145
+    maxEnemies: 72,
+    maxProjectiles: 72,
+    maxXpGems: 120
   }
 };
 
@@ -489,8 +489,8 @@ function getRuntimeVisualQuality(baseQuality = 'high', game = {}) {
   const time = game.time ?? 0;
   const wave = game.wave ?? 1;
   const kills = game.kills ?? 0;
-  const latePressure = time >= 185 || wave >= 9 || kills >= 340;
-  const heavyPressure = time >= 105 || wave >= 6 || kills >= 180;
+  const latePressure = time >= 150 || wave >= 8 || kills >= 260;
+  const heavyPressure = time >= 52 || wave >= 3 || kills >= 70;
   if (latePressure) return 'low';
   if (heavyPressure && baseQuality === 'high') return 'balanced';
   return baseQuality;
@@ -810,7 +810,7 @@ function App() {
   const visualQuality = useVisualQuality();
   const runtimeVisualQuality = getRuntimeVisualQuality(visualQuality, game);
   const canvasDpr = useMemo(() => (
-    runtimeVisualQuality === 'low' ? [1, 1] : runtimeVisualQuality === 'balanced' ? [1, 1.25] : [1, 1.45]
+    runtimeVisualQuality === 'low' ? [1, 1] : runtimeVisualQuality === 'balanced' ? [1, 1.08] : [1, 1.22]
   ), [runtimeVisualQuality]);
 
   const togglePause = () => {
@@ -957,7 +957,7 @@ function App() {
   return (
     <main className={`shell visual-${runtimeVisualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>
       <Canvas
-        shadows={runtimeVisualQuality !== 'low'}
+        shadows={false}
         camera={{ position: [0, 44, 74], fov: 48, near: 0.1, far: 420 }}
         dpr={canvasDpr}
       >
@@ -972,14 +972,12 @@ function App() {
             visualQuality={runtimeVisualQuality}
             touchControlsRef={touchControls}
           />
-          {runtimeVisualQuality !== 'low' && <ContactShadows position={[0, 0.02, 0]} opacity={0.18} scale={300} blur={2.7} far={14} color="#020605" />}
           <Environment preset="night" />
         </Suspense>
-        {runtimeVisualQuality !== 'low' && (
+        {runtimeVisualQuality === 'high' && (
           <EffectComposer>
-            <Bloom luminanceThreshold={0.28} intensity={runtimeVisualQuality === 'high' ? 1.18 : 0.82} mipmapBlur />
-            {runtimeVisualQuality === 'high' && <Noise opacity={0.035} />}
-            <Vignette eskil={false} offset={0.16} darkness={0.82} />
+            <Bloom luminanceThreshold={0.34} intensity={0.72} mipmapBlur />
+            <Vignette eskil={false} offset={0.2} darkness={0.62} />
           </EffectComposer>
         )}
       </Canvas>
@@ -2973,11 +2971,10 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
       <hemisphereLight args={['#8edfff', '#17231b', 0.52]} />
       <ambientLight intensity={0.24} />
       <directionalLight
-        castShadow={visualQuality !== 'low'}
+        castShadow={false}
         position={[22, 30, 14]}
         intensity={2.55}
         color="#f5f0d0"
-        shadow-mapSize={visualQuality === 'high' ? [2048, 2048] : [1024, 1024]}
       />
       <directionalLight position={[-34, 18, -48]} intensity={0.78} color={ART_TOKENS.riftViolet} />
       <pointLight position={[0, 2.4, 0]} intensity={3.9} color={ART_TOKENS.runeCyan} distance={14} />
@@ -5069,20 +5066,22 @@ function RiftFloorSigils() {
 function SculptedRuinTerrain({ visualQuality = 'high' }) {
   const geometry = useMemo(() => {
     const size = ARENA_RADIUS * 2 + 48;
-    const segments = visualQuality === 'low' ? 96 : visualQuality === 'balanced' ? 128 : 160;
+    const segments = visualQuality === 'low' ? 72 : visualQuality === 'balanced' ? 96 : 120;
     const half = size / 2;
     const positions = [];
     const colors = [];
     const indices = [];
-    const lowColor = new THREE.Color(ART_TOKENS.terrainLow);
-    const midColor = new THREE.Color(ART_TOKENS.terrainMid);
-    const highColor = new THREE.Color(ART_TOKENS.terrainHigh);
+    const lowColor = new THREE.Color('#25392d');
+    const midColor = new THREE.Color('#5d6d4d');
+    const highColor = new THREE.Color('#8d865d');
     const mossColor = new THREE.Color(ART_TOKENS.moss);
     const edgeColor = new THREE.Color('#08110f');
     const warmStone = new THREE.Color(ART_TOKENS.oldStone);
-    const lowlandMud = new THREE.Color('#394336');
-    const riftBlue = new THREE.Color('#153d3b');
-    const dryGrass = new THREE.Color('#666f45');
+    const lowlandMud = new THREE.Color('#304035');
+    const riftBlue = new THREE.Color('#1b5b54');
+    const dryGrass = new THREE.Color('#77764d');
+    const pathDust = new THREE.Color('#787657');
+    const runeWash = new THREE.Color('#275f5d');
 
     for (let zIndex = 0; zIndex <= segments; zIndex += 1) {
       for (let xIndex = 0; xIndex <= segments; xIndex += 1) {
@@ -5099,14 +5098,20 @@ function SculptedRuinTerrain({ visualQuality = 'high' }) {
         const ridgeBlend = smoothStep(36.0, 52.0, radius) * (1 - smoothStep(60.0, 74.0, radius));
         const riftBlend = smoothStep(0.84, 1.18, Math.abs(Math.sin(angle * 3 + radius * 0.12))) * smoothStep(9.0, 18.0, radius) * (1 - smoothStep(32.0, 39.0, radius));
         const dryBlend = smoothStep(0.2, 1.0, Math.sin(angle * 2.0 - 0.8) * 0.5 + 0.5) * smoothStep(20.0, 42.0, radius);
+        const spokeWear = smoothStep(0.88, 0.995, Math.abs(Math.cos(angle * 4 - 0.34))) * smoothStep(14.0, 28.0, radius) * (1 - smoothStep(92.0, 112.0, radius));
+        const innerRuneRing = (1 - smoothStep(0.0, 2.2, Math.abs(radius - 42.0))) * 0.9;
+        const outerRuinRing = (1 - smoothStep(0.0, 3.6, Math.abs(radius - 76.0))) * 0.55;
+        const laneWash = smoothStep(0.78, 1.0, Math.abs(Math.sin(angle * 2.0 + 0.4))) * smoothStep(34.0, 52.0, radius) * (1 - smoothStep(88.0, 104.0, radius));
 
         const color = new THREE.Color().copy(lowColor).lerp(midColor, 0.72 + mossBlend * 0.35);
         color.lerp(lowlandMud, basinBlend * 0.26);
         color.lerp(highColor, heightBlend * 0.82);
         color.lerp(mossColor, THREE.MathUtils.clamp(mossBlend, 0, 0.42));
-        color.lerp(dryGrass, dryBlend * 0.34);
-        color.lerp(warmStone, Math.max(ruinWear * 0.06, ridgeBlend * 0.28));
-        color.lerp(riftBlue, riftBlend * 0.1);
+        color.lerp(dryGrass, dryBlend * 0.24);
+        color.lerp(pathDust, spokeWear * 0.36);
+        color.lerp(warmStone, Math.max(ruinWear * 0.045, ridgeBlend * 0.24, outerRuinRing * 0.24));
+        color.lerp(runeWash, Math.max(riftBlend * 0.2, innerRuneRing * 0.22, laneWash * 0.12));
+        color.lerp(riftBlue, riftBlend * 0.12);
         color.lerp(edgeColor, edgeBlend);
 
         positions.push(x, y, z);
@@ -5346,8 +5351,8 @@ function TerrainStoryDetails() {
 
 function NaturalFieldKit({ visualQuality = 'high' }) {
   const transforms = useMemo(() => {
-    const density = visualQuality === 'low' ? 0.62 : visualQuality === 'balanced' ? 0.78 : 1;
-    const treeDensity = visualQuality === 'low' ? 0.34 : visualQuality === 'balanced' ? 0.48 : 0.58;
+    const density = visualQuality === 'low' ? 0.46 : visualQuality === 'balanced' ? 0.58 : 0.7;
+    const treeDensity = visualQuality === 'low' ? 0.22 : visualQuality === 'balanced' ? 0.3 : 0.36;
     const count = base => Math.max(1, Math.round(base * density));
     const countTree = base => Math.max(1, Math.round(base * treeDensity));
     const place = (angle, radius, scale, yOffset = 0.03, tilt = 0) => {
@@ -5412,13 +5417,13 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return withModelScale(bush, 1.32, 0.7, 1.08);
     }).filter(item => item.position.length() < ARENA_RADIUS - 5.5 && item.position.length() > 36 && lowCoverClear(item));
 
-    const grass = Array.from({ length: count(210) }, (_, index) => {
+    const grass = Array.from({ length: count(180) }, (_, index) => {
       const angle = index * 1.61 + (index % 7) * 0.09 + Math.sin(index * 0.97) * 0.07;
       const radius = 20 + (index % 35) * 2.75 + Math.sin(index * 1.41) * 1.25;
       return place(angle, radius, 0.62 + (index % 5) * 0.08, 0.025, 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 6 && item.position.length() > 18);
 
-    const moss = Array.from({ length: count(126) }, (_, index) => {
+    const moss = Array.from({ length: count(92) }, (_, index) => {
       const angle = index * 2.03 + (index % 5) * 0.07 + Math.cos(index * 1.17) * 0.06;
       const radius = 16 + (index % 38) * 2.48 + Math.sin(index * 1.83) * 1.2;
       const transform = place(angle, radius, 1.0 + (index % 6) * 0.18, 0.055, 0);
@@ -5429,18 +5434,18 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 8 && lowCoverClear(item));
 
-    const pebbles = Array.from({ length: count(118) }, (_, index) => {
+    const pebbles = Array.from({ length: count(74) }, (_, index) => {
       const angle = index * 2.41 + (index % 7) * 0.11 + Math.sin(index * 0.69) * 0.06;
       const radius = 22 + (index % 42) * 2.2 + Math.cos(index * 1.33) * 1.1;
       const transform = place(angle, radius, 1, 0.09, 0);
       transform.rotation += (index % 2 ? -1 : 1) * 0.24;
       transform.size = 0.22 + (index % 5) * 0.055;
       transform.flatness = 0.09 + (index % 3) * 0.025;
-      transform.color = index % 5 === 0 ? '#74694f' : index % 3 === 0 ? '#526151' : '#3f4d43';
+      transform.color = index % 5 === 0 ? '#8a805e' : index % 3 === 0 ? '#778367' : '#68755f';
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 9 && item.position.length() > 24 && lowCoverClear(item));
 
-    const fallenTrunks = Array.from({ length: count(18) }, (_, index) => {
+    const fallenTrunks = Array.from({ length: count(12) }, (_, index) => {
       const angle = index * 1.49 + 0.34 + Math.sin(index * 1.11) * 0.09;
       const radius = 48 + (index % 14) * 4.5 + Math.cos(index * 1.47) * 1.5;
       const transform = place(angle, radius, 1, 0.28, 0);
@@ -5452,19 +5457,19 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 9 && item.position.length() > 42 && lowCoverClear(item));
 
-    const leafLitter = Array.from({ length: count(116) }, (_, index) => {
+    const leafLitter = Array.from({ length: count(68) }, (_, index) => {
       const angle = index * 1.91 + 0.28 + (index % 6) * 0.05 + Math.sin(index * 1.02) * 0.07;
       const radius = 52 + (index % 25) * 2.45 + Math.cos(index * 1.76) * 1.1;
       const transform = place(angle, radius, 1, 0.066, 0);
       transform.rotation += (index % 4) * 0.27;
       transform.width = 1.15 + (index % 5) * 0.26;
       transform.depth = 0.34 + (index % 4) * 0.11;
-      transform.color = index % 5 === 0 ? '#756c4c' : index % 3 === 0 ? '#33563c' : '#4e4b34';
-      transform.opacity = 0.11 + (index % 3) * 0.018;
+      transform.color = index % 5 === 0 ? '#857b58' : index % 3 === 0 ? '#4f744f' : '#676344';
+      transform.opacity = 0.09 + (index % 3) * 0.014;
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 8 && item.position.length() > 48 && lowCoverClear(item));
 
-    const stumps = Array.from({ length: countTree(18) }, (_, index) => {
+    const stumps = Array.from({ length: countTree(12) }, (_, index) => {
       const angle = index * 1.73 + 0.62 + Math.sin(index * 1.29) * 0.08;
       const radius = 64 + (index % 13) * 3.8 + Math.cos(index * 0.93) * 1.25;
       const transform = place(angle, radius, 1, 0.23, index % 2 ? 0.06 : -0.04);
@@ -5487,7 +5492,7 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 7 && lowCoverClear(item));
 
-    const saplings = Array.from({ length: countTree(42) }, (_, index) => {
+    const saplings = Array.from({ length: countTree(32) }, (_, index) => {
       const site = SHRINE_SITES[index % SHRINE_SITES.length];
       const groveBias = index % 2 === 0;
       const angle = groveBias
@@ -5510,7 +5515,7 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 6 && item.position.length() > 54 && lowCoverClear(item));
 
-    const wildflowers = Array.from({ length: count(74) }, (_, index) => {
+    const wildflowers = Array.from({ length: count(54) }, (_, index) => {
       const site = SHRINE_SITES[index % SHRINE_SITES.length];
       const groveBias = index % 3 === 0;
       const angle = groveBias
@@ -5555,8 +5560,8 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
   const pineTall = useMemo(() => transforms.trees.filter((_, index) => index % 3 === 0), [transforms]);
   const pineRound = useMemo(() => transforms.trees.filter((_, index) => index % 3 === 1), [transforms]);
   const treeDefault = useMemo(() => transforms.trees.filter((_, index) => index % 3 === 2), [transforms]);
-  const castNatureShadows = visualQuality === 'high';
-  const receiveNatureShadows = visualQuality !== 'low';
+  const castNatureShadows = false;
+  const receiveNatureShadows = false;
 
   return (
     <group>
@@ -5865,7 +5870,7 @@ function FieldPebbleScatter({ transforms }) {
   return (
     <instancedMesh ref={pebbleRef} args={[null, null, transforms.length]} frustumCulled={false} receiveShadow>
       <dodecahedronGeometry args={[1, 0]} />
-      <meshStandardMaterial color="#56604e" roughness={0.98} metalness={0.01} />
+      <meshStandardMaterial color="#ffffff" roughness={0.98} metalness={0.01} />
     </instancedMesh>
   );
 }
@@ -6118,8 +6123,8 @@ function OpenFieldTerrainIdentity() {
       return {
         position: [x, getTerrainHeight(x, z) + 0.04, z],
         rotation: -site.angle + Math.PI / 2,
-        scale: [7.4 + (index % 2) * 1.2, 5.1 + (index % 3) * 0.6, 1],
-        color: index % 2 ? '#475842' : '#586145',
+        scale: [8.8 + (index % 2) * 1.4, 5.8 + (index % 3) * 0.68, 1],
+        color: index % 2 ? '#52684d' : '#65714f',
         ring: site.color
       };
     });
@@ -6131,31 +6136,31 @@ function OpenFieldTerrainIdentity() {
       return {
         position: [x, getTerrainHeight(x, z) + 0.044, z],
         rotation: -site.angle + Math.PI / 2,
-        scale: [site.radius * 0.84, 2.4 + (index % 2) * 0.35, 1],
-        color: index % 2 ? '#646846' : '#535d41'
+        scale: [site.radius * 0.9, 3.25 + (index % 2) * 0.45, 1],
+        color: index % 2 ? '#74704d' : '#5d6749'
       };
     });
 
-    const ridges = Array.from({ length: 30 }, (_, index) => {
-      const angle = index * Math.PI * 2 / 30 + (index % 2) * 0.07;
-      const radius = 42 + (index % 5) * 2.1;
+    const ridges = Array.from({ length: 18 }, (_, index) => {
+      const angle = index * Math.PI * 2 / 18 + (index % 2) * 0.07;
+      const radius = 46 + (index % 5) * 2.65;
       return {
         position: [Math.cos(angle) * radius, getTerrainHeight(Math.cos(angle) * radius, Math.sin(angle) * radius) + 0.18, Math.sin(angle) * radius],
         rotation: -angle + Math.PI / 2,
-        scale: [2.4 + (index % 3) * 0.58, 0.48 + (index % 2) * 0.1, 0.92 + (index % 4) * 0.22],
-        color: index % 2 ? '#53604f' : '#3f5044'
+        scale: [3.1 + (index % 3) * 0.68, 0.48 + (index % 2) * 0.1, 1.05 + (index % 4) * 0.24],
+        color: index % 2 ? '#63705c' : '#4c604f'
       };
     });
 
-    const standingStones = [0.28, 1.34, 2.35, 3.48, 4.55, 5.42].map((angle, index) => {
-      const radius = index % 2 ? 34.5 : 39.5;
+    const standingStones = [0.28, 1.05, 1.84, 2.64, 3.48, 4.22, 4.96, 5.62].map((angle, index) => {
+      const radius = index % 2 ? 36.5 : 43.5;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
       return {
         position: [x, getTerrainHeight(x, z) + 0.5, z],
         rotation: -angle + 0.2,
-        scale: [1.05, 1.05 + index * 0.08, 0.76],
-        color: index % 2 ? '#647064' : '#59675d'
+        scale: [1.22, 1.1 + (index % 4) * 0.12, 0.82],
+        color: index % 2 ? '#73796a' : '#5f7063'
       };
     });
 
@@ -6166,23 +6171,53 @@ function OpenFieldTerrainIdentity() {
       return {
         position: [x, getTerrainHeight(x, z) + 0.045, z],
         rotation: -angle + Math.PI / 2,
-        scale: [11 + index * 1.2, 2.2 + (index % 2) * 0.4, 1],
-        color: index % 2 ? '#5a5c43' : '#4f5940'
+        scale: [13 + index * 1.25, 2.9 + (index % 2) * 0.5, 1],
+        color: index % 2 ? '#696747' : '#5d6847'
       };
     });
 
-    return { groveClearings, shrineRoads, ridges, standingStones, wornPaths };
+    const runeArcs = Array.from({ length: 12 }, (_, index) => {
+      const angle = index * Math.PI * 2 / 12 + 0.12;
+      const radius = index % 2 ? 62 : 72;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      return {
+        position: [x, getTerrainHeight(x, z) + 0.058, z],
+        rotation: -angle + Math.PI / 2,
+        scale: [7.8 + (index % 3) * 1.1, 0.38 + (index % 2) * 0.12, 1],
+        color: index % 3 === 0 ? ART_TOKENS.wornGold : index % 3 === 1 ? ART_TOKENS.runeCyan : ART_TOKENS.riftViolet
+      };
+    });
+
+    const sigilPlates = [0.46, 1.72, 2.92, 4.1, 5.24].map((angle, index) => {
+      const radius = 55 + (index % 2) * 13;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      return {
+        position: [x, getTerrainHeight(x, z) + 0.06, z],
+        rotation: -angle + Math.PI / 2,
+        scale: [5.8 + index * 0.32, 1.95 + (index % 2) * 0.32, 1],
+        color: index % 2 ? '#74815b' : '#637451',
+        rune: index % 2 ? ART_TOKENS.runeCyan : ART_TOKENS.wornGold
+      };
+    });
+
+    return { groveClearings, shrineRoads, ridges, standingStones, wornPaths, runeArcs, sigilPlates };
   }, []);
 
   return (
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.038, 0]}>
         <ringGeometry args={[13.5, 13.72, 128]} />
-        <meshBasicMaterial color="#72d7ff" transparent opacity={0.28} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#72d7ff" transparent opacity={0.34} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.046, 0]}>
         <ringGeometry args={[43.0, 43.28, 192]} />
-        <meshBasicMaterial color="#d9b85e" transparent opacity={0.16} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#d9b85e" transparent opacity={0.22} depthWrite={false} toneMapped={false} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, Math.PI / 8]} position={[0, getTerrainHeight(0, 0) + 0.05, 0]}>
+        <ringGeometry args={[75.5, 76.0, 192]} />
+        <meshBasicMaterial color="#93f5b8" transparent opacity={0.16} depthWrite={false} toneMapped={false} />
       </mesh>
 
       {landmarks.shrineRoads.map((pathMark, index) => (
@@ -6196,11 +6231,11 @@ function OpenFieldTerrainIdentity() {
         <group key={`shrine-grove-clearing-${index}`}>
           <mesh position={clearing.position} rotation={[-Math.PI / 2, 0, clearing.rotation]} scale={clearing.scale}>
             <circleGeometry args={[1, 64]} />
-            <meshBasicMaterial color={clearing.color} transparent opacity={0.2} depthWrite={false} toneMapped={false} />
+            <meshBasicMaterial color={clearing.color} transparent opacity={0.24} depthWrite={false} toneMapped={false} />
           </mesh>
           <mesh position={[clearing.position[0], clearing.position[1] + 0.01, clearing.position[2]]} rotation={[-Math.PI / 2, 0, 0]}>
             <ringGeometry args={[5.9, 6.12, 96]} />
-            <meshBasicMaterial color={clearing.ring} transparent opacity={0.14} depthWrite={false} toneMapped={false} />
+            <meshBasicMaterial color={clearing.ring} transparent opacity={0.24} depthWrite={false} toneMapped={false} />
           </mesh>
         </group>
       ))}
@@ -6208,7 +6243,27 @@ function OpenFieldTerrainIdentity() {
       {landmarks.wornPaths.map((pathMark, index) => (
         <mesh key={`worn-field-path-${index}`} position={pathMark.position} rotation={[-Math.PI / 2, 0, pathMark.rotation]} scale={pathMark.scale}>
           <circleGeometry args={[1, 48]} />
-          <meshBasicMaterial color={pathMark.color} transparent opacity={0.2} depthWrite={false} toneMapped={false} />
+          <meshBasicMaterial color={pathMark.color} transparent opacity={0.28} depthWrite={false} toneMapped={false} />
+        </mesh>
+      ))}
+
+      {landmarks.sigilPlates.map((plate, index) => (
+        <group key={`field-sigil-plate-${index}`}>
+          <mesh position={plate.position} rotation={[-Math.PI / 2, 0, plate.rotation]} scale={plate.scale}>
+            <ringGeometry args={[0.42, 0.58, 4]} />
+            <meshBasicMaterial color={plate.color} transparent opacity={0.24} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+          </mesh>
+          <mesh position={[plate.position[0], plate.position[1] + 0.012, plate.position[2]]} rotation={[-Math.PI / 2, 0, plate.rotation + Math.PI / 4]} scale={[plate.scale[0] * 0.42, plate.scale[1] * 0.42, 1]}>
+            <ringGeometry args={[0.36, 0.44, 4]} />
+            <meshBasicMaterial color={plate.rune} transparent opacity={0.2} depthWrite={false} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+
+      {landmarks.runeArcs.map((arc, index) => (
+        <mesh key={`field-rune-arc-${index}`} position={arc.position} rotation={[-Math.PI / 2, 0, arc.rotation]} scale={arc.scale}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial color={arc.color} transparent opacity={0.2} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
         </mesh>
       ))}
 
