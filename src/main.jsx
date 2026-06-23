@@ -6508,7 +6508,7 @@ function UpgradeOverlay({ game, choices, onChoose }) {
               >
                 <div className="upgradePickCue">
                   <em>{choice.family}</em>
-                  <strong>{cardMeta.recommended ? `추천 · ${cardMeta.role}` : cardMeta.badge}</strong>
+                  <strong>{cardMeta.recommended ? `추천 · ${cardMeta.reason}` : cardMeta.badge}</strong>
                 </div>
                 <div className="upgradeTitleRow">
                   <i className="upgradeSigil" aria-hidden="true">{iconMeta.glyph}</i>
@@ -8159,6 +8159,34 @@ function addDraftChoice(choices, candidates, game) {
   if (choice) choices.push(choice);
 }
 
+function getUpgradeChoicePriority(game, upgrade) {
+  const key = getUpgradeFocusKey(upgrade);
+  const dominant = getDominantBuild(game);
+  const cardMeta = getUpgradeCardMeta(game, upgrade);
+  const improvesSynergy = getUpgradeSynergyMatches(game, upgrade).some(synergy => synergy.nextLevel > synergy.currentLevel);
+  let priority = cardMeta.recommended ? 100 : 0;
+
+  if (cardMeta.reason === '새 무기') priority += 24;
+  if (improvesSynergy) priority += 20;
+  if (key && dominant?.key === key) priority += 12;
+  if (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.72) priority += 16;
+  if (upgrade.id === 'magnet' && game.level <= 4) priority += 14;
+  if (upgrade.id === 'damage' || upgrade.id === 'cooldown') priority += Math.min(14, game.upgrades.length * 2);
+
+  return priority;
+}
+
+function orderUpgradeChoices(game, choices) {
+  return choices
+    .map(choice => ({
+      choice,
+      priority: getUpgradeChoicePriority(game, choice),
+      roll: Math.random()
+    }))
+    .sort((a, b) => b.priority - a.priority || a.roll - b.roll)
+    .map(entry => entry.choice);
+}
+
 function pickUpgrades(game) {
   const available = upgradePool.filter(upgrade => isUpgradeAvailable(game, upgrade));
   const draftable = available.filter(upgrade => isUpgradeDraftable(game, upgrade));
@@ -8201,7 +8229,7 @@ function pickUpgrades(game) {
     addDraftChoice(choices, draftable, game);
   }
 
-  return choices.sort(() => Math.random() - 0.5);
+  return orderUpgradeChoices(game, choices);
 }
 
 function formatTime(seconds) {
