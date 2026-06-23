@@ -6725,128 +6725,209 @@ function HUD({ game, onRestart, onPause }) {
   const showCombatTicker = showDashTicker || tickerHasEvent;
 
   return (
-    <section className={`hud ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''} ${bossStatus?.casting ? 'isCasting' : ''}`} aria-label="게임 상태">
-      <div className="topbar">
-        <div className={`meterBlock hpBlock ${hpRatio <= 0.34 ? 'isLow' : ''} ${game.damageFlash > 0 ? 'isHit' : ''}`}>
-          <div className="meterLabel">
-            <span>체력</span>
-            <strong>{Math.ceil(game.stats.hp)} / {game.stats.maxHp}</strong>
-          </div>
-          <div className="meter hp"><i style={{ width: `${hpPct}%` }} /></div>
+    <section className={`hud fantasyHud ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''} ${bossStatus?.casting ? 'isCasting' : ''}`} aria-label="게임 상태">
+      <div className="hudVitals">
+        <HudMeter
+          tone="hp"
+          label="체력"
+          value={`${Math.ceil(game.stats.hp)} / ${game.stats.maxHp}`}
+          pct={hpPct}
+          isLow={hpRatio <= 0.34}
+          isHit={game.damageFlash > 0}
+        />
+        <HudMeter
+          tone="xp"
+          label={`레벨 ${game.level}`}
+          value={`${Math.floor(game.xp)} / ${game.xpToNext}`}
+          pct={xpPct}
+        />
+        <div className="hudTimeSeal" aria-label="생존 시간">
+          <span>생존</span>
+          <strong>{formatTime(timeRemaining)}</strong>
+          <i style={{ width: `${runPct}%` }} />
         </div>
-        <div className="meterBlock">
-          <div className="meterLabel">
-            <span>레벨 {game.level}</span>
-            <strong>{Math.floor(game.xp)} / {game.xpToNext}</strong>
-          </div>
-          <div className="meter xp"><i style={{ width: `${xpPct}%` }} /></div>
-        </div>
-        <div className="meterBlock runBlock">
-          <div className="meterLabel">
-            <span>생존 목표</span>
-            <strong>{formatTime(timeRemaining)}</strong>
-          </div>
-          <div className="meter run"><i style={{ width: `${runPct}%` }} /></div>
-        </div>
-        <div className="hudActions">
-          <button className="iconButton" type="button" onClick={onPause} aria-label={game.phase === 'paused' ? '계속하기' : '일시정지'}>
-            {game.phase === 'paused' ? '▶' : 'Ⅱ'}
-          </button>
-          <button className="iconButton" type="button" onClick={onRestart} aria-label="다시 시작">↻</button>
-        </div>
+        <HudActions game={game} onPause={onPause} onRestart={onRestart} />
       </div>
       {showCombatTicker && (
-        <div className={`combatTicker ${showTickerBasics ? '' : 'isAlertOnly'}`}>
-          {showTickerBasics && <span className="wavePill">Wave {game.wave}</span>}
-          {showTickerBasics && <span className="koPill">{game.kills} KOs</span>}
-          {showDashTicker && (
-            <span className={`dashPill ${dashReady ? 'isReady' : ''}`}>
-              Dash <b>{dashReady ? 'Ready' : `${dashCooldown.toFixed(1)}s`}</b>
-              <i style={{ width: `${dashPct}%` }} />
-            </span>
-          )}
-          {crisis.level > 0 && <span className={`tickerAlert ${crisis.level >= 3 ? 'isCritical' : ''}`}>{crisis.label}</span>}
-          {game.damageFlash > 0 && <span className="tickerAlert damagePill">{game.damageMessage}</span>}
-          {!bossStatus && activeThreat && <span className="tickerAlert threatPill" style={{ '--tone': activeThreat.color }}>{activeThreat.label} · {activeThreat.weakness}</span>}
-          {!bossStatus && bossPatternMeta && <span className="tickerAlert bossPatternPill" style={{ '--tone': bossPatternMeta.color }}>{bossPatternMeta.label} · {bossPatternMeta.cue}</span>}
-          {game.pickupFlash > 0 && <span className="tickerPickup">{game.pickupMessage}</span>}
-        </div>
+        <HudRuneRow
+          game={game}
+          crisis={crisis}
+          activeThreat={activeThreat}
+          bossPatternMeta={bossPatternMeta}
+          bossStatus={bossStatus}
+          dashPct={dashPct}
+          dashReady={dashReady}
+          dashCooldown={dashCooldown}
+          showTickerBasics={showTickerBasics}
+          showDashTicker={showDashTicker}
+        />
       )}
       {showFirstSessionCoach && (
-        <div className="onboardingCoach" style={{ '--tone': firstSessionCue.color }} aria-label="초반 안내">
-          <div className="coachHeader">
-            <span>First Run</span>
-            <strong>{firstSessionCue.title}</strong>
-            <small>{firstSessionCue.action}</small>
-          </div>
-          <div className="coachBody">
-            <b>{firstSessionCue.body}</b>
-            <small>{firstSessionCue.detail}</small>
-            <i style={{ width: `${firstSessionCue.progress * 100}%` }} />
-          </div>
-          <div className="coachSteps" aria-label="초반 조작 단계">
-            {onboardingSteps.slice(0, 4).map(step => (
-              <span
-                key={step.id}
-                className={`${step.id === firstSessionCue.stepId ? 'isActive' : ''} ${step.complete ? 'isComplete' : ''}`}
-                style={{ '--tone': step.color }}
-              >
-                {step.title}
-              </span>
-            ))}
-          </div>
-        </div>
+        <HudPrompt cue={firstSessionCue} steps={onboardingSteps} />
       )}
       {showRunObjectives && (
-        <div className="objectiveRow" aria-label="현재 런 단계 목표">
-          <div className="objectiveSummary">
-            <span>{runPhase.label}</span>
-            <strong>{runPhase.id === 'learn' ? `${completedOpeningObjectives} / ${openingObjectives.length}` : `${completedPhaseObjectives} / ${phaseObjectives.length}`}</strong>
-            <small>{runPhase.goal}</small>
-          </div>
-          {visibleObjectives.map(objective => (
-            <div key={objective.id} className="objectiveCard" style={{ '--tone': objective.color }}>
-              <span>
-                {objective.title}
-                <strong>{objective.label}</strong>
-              </span>
-              <small>{objective.displayValue} / {objective.displayTarget}</small>
-              <i style={{ width: `${objective.progress * 100}%` }} />
-            </div>
-          ))}
-        </div>
+        <HudObjectives
+          runPhase={runPhase}
+          visibleObjectives={visibleObjectives}
+          completedOpeningObjectives={completedOpeningObjectives}
+          completedPhaseObjectives={completedPhaseObjectives}
+          openingObjectiveCount={openingObjectives.length}
+          phaseObjectiveCount={phaseObjectives.length}
+        />
       )}
-      {encounterAlert && (
-        <div
-          className={`encounterBanner ${encounterAlert.kind === 'boss' || encounterAlert.kind === 'boss-pattern' ? 'isBoss' : ''}`}
-          style={{ '--tone': encounterAlert.color }}
-        >
-          <span>{encounterAlert.label}</span>
-          <strong>{encounterAlert.title}</strong>
-          <small>{encounterAlert.hint}</small>
-        </div>
-      )}
-      {bossStatus && (
-        <div
-          className={`bossBar ${bossStatus.enraged ? 'isEnraged' : ''}`}
-          style={{ '--tone': bossStatus.phaseColor, '--pattern': bossStatus.patternColor }}
-        >
-          <div className="bossBarMeta">
-            <span>RIFT BEAST</span>
-            <strong>{bossStatus.phaseLabel}</strong>
-            <small>Wave {bossStatus.wave}</small>
-          </div>
-          <div className="bossHpTrack" aria-label="보스 체력">
-            <i style={{ width: `${bossStatus.hpPct * 100}%` }} />
-          </div>
-          <div className="bossPatternMeta">
-            <span className="bossPatternCast">{bossStatus.casting ? '시전 중' : '다음'} <b>{bossStatus.patternLabel}</b></span>
-            <span className="bossPatternStage">패턴 <b>{bossStatus.patternStage}</b></span>
-            <span className="bossPatternHintPill">{bossStatus.patternCue ?? bossStatus.patternHint}</span>
-          </div>
-        </div>
-      )}
+      {encounterAlert && <HudEncounter alert={encounterAlert} />}
+      {bossStatus && <HudBossBar bossStatus={bossStatus} />}
     </section>
+  );
+}
+
+function HudMeter({ tone, label, value, pct, isLow = false, isHit = false }) {
+  return (
+    <div className={`hudMeter hudMeter-${tone} ${isLow ? 'isLow' : ''} ${isHit ? 'isHit' : ''}`}>
+      <div className="hudMeterText">
+        <span>{label}</span>
+        <strong>{value}</strong>
+      </div>
+      <div className="hudGauge"><i style={{ width: `${pct}%` }} /></div>
+    </div>
+  );
+}
+
+function HudActions({ game, onPause, onRestart }) {
+  return (
+    <div className="hudActions fantasyActions">
+      <button className="iconButton fantasyIconButton" type="button" onClick={onPause} aria-label={game.phase === 'paused' ? '계속하기' : '일시정지'}>
+        {game.phase === 'paused' ? '▶' : 'Ⅱ'}
+      </button>
+      <button className="iconButton fantasyIconButton" type="button" onClick={onRestart} aria-label="다시 시작">↻</button>
+    </div>
+  );
+}
+
+function HudRuneRow({
+  game,
+  crisis,
+  activeThreat,
+  bossPatternMeta,
+  bossStatus,
+  dashPct,
+  dashReady,
+  dashCooldown,
+  showTickerBasics,
+  showDashTicker
+}) {
+  return (
+    <div className={`hudRuneRow ${showTickerBasics ? '' : 'isAlertOnly'}`}>
+      {showTickerBasics && <span className="hudRunePill">Wave {game.wave}</span>}
+      {showTickerBasics && <span className="hudRunePill">{game.kills} KOs</span>}
+      {showDashTicker && (
+        <span className={`hudRunePill hudDashPill ${dashReady ? 'isReady' : ''}`}>
+          Dash <b>{dashReady ? 'Ready' : `${dashCooldown.toFixed(1)}s`}</b>
+          <i style={{ width: `${dashPct}%` }} />
+        </span>
+      )}
+      {crisis.level > 0 && <span className={`hudRunePill isDanger ${crisis.level >= 3 ? 'isCritical' : ''}`}>{crisis.label}</span>}
+      {game.damageFlash > 0 && <span className="hudRunePill isDanger">{game.damageMessage}</span>}
+      {!bossStatus && activeThreat && <span className="hudRunePill isThreat" style={{ '--tone': activeThreat.color }}>{activeThreat.label} · {activeThreat.weakness}</span>}
+      {!bossStatus && bossPatternMeta && <span className="hudRunePill isThreat" style={{ '--tone': bossPatternMeta.color }}>{bossPatternMeta.label} · {bossPatternMeta.cue}</span>}
+      {game.pickupFlash > 0 && <span className="hudRunePill isReward">{game.pickupMessage}</span>}
+    </div>
+  );
+}
+
+function HudPrompt({ cue, steps }) {
+  return (
+    <div className="hudPrompt" style={{ '--tone': cue.color }} aria-label="초반 안내">
+      <div className="hudPromptHeader">
+        <span>First Run</span>
+        <strong>{cue.title}</strong>
+        <small>{cue.action}</small>
+      </div>
+      <div className="hudPromptBody">
+        <b>{cue.body}</b>
+        <small>{cue.detail}</small>
+        <i style={{ width: `${cue.progress * 100}%` }} />
+      </div>
+      <div className="hudPromptSteps" aria-label="초반 조작 단계">
+        {steps.slice(0, 4).map(step => (
+          <span
+            key={step.id}
+            className={`${step.id === cue.stepId ? 'isActive' : ''} ${step.complete ? 'isComplete' : ''}`}
+            style={{ '--tone': step.color }}
+          >
+            {step.title}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HudObjectives({
+  runPhase,
+  visibleObjectives,
+  completedOpeningObjectives,
+  completedPhaseObjectives,
+  openingObjectiveCount,
+  phaseObjectiveCount
+}) {
+  const completed = runPhase.id === 'learn' ? completedOpeningObjectives : completedPhaseObjectives;
+  const total = runPhase.id === 'learn' ? openingObjectiveCount : phaseObjectiveCount;
+
+  return (
+    <div className="hudQuestRow" aria-label="현재 런 단계 목표">
+      <div className="hudQuestSummary">
+        <span>{runPhase.label}</span>
+        <strong>{completed} / {total}</strong>
+        <small>{runPhase.goal}</small>
+      </div>
+      {visibleObjectives.map(objective => (
+        <div key={objective.id} className="hudQuestCard" style={{ '--tone': objective.color }}>
+          <span>
+            {objective.title}
+            <strong>{objective.label}</strong>
+          </span>
+          <small>{objective.displayValue} / {objective.displayTarget}</small>
+          <i style={{ width: `${objective.progress * 100}%` }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HudEncounter({ alert }) {
+  return (
+    <div
+      className={`hudEncounter ${alert.kind === 'boss' || alert.kind === 'boss-pattern' ? 'isBoss' : ''}`}
+      style={{ '--tone': alert.color }}
+    >
+      <span>{alert.label}</span>
+      <strong>{alert.title}</strong>
+      <small>{alert.hint}</small>
+    </div>
+  );
+}
+
+function HudBossBar({ bossStatus }) {
+  return (
+    <div
+      className={`hudBoss ${bossStatus.enraged ? 'isEnraged' : ''}`}
+      style={{ '--tone': bossStatus.phaseColor, '--pattern': bossStatus.patternColor }}
+    >
+      <div className="hudBossName">
+        <span>Rift Beast</span>
+        <strong>{bossStatus.phaseLabel}</strong>
+        <small>Wave {bossStatus.wave}</small>
+      </div>
+      <div className="hudBossHp" aria-label="보스 체력">
+        <i style={{ width: `${bossStatus.hpPct * 100}%` }} />
+      </div>
+      <div className="hudBossPattern">
+        <span>{bossStatus.casting ? '시전 중' : '다음'} <b>{bossStatus.patternLabel}</b></span>
+        <small>패턴 {bossStatus.patternStage}</small>
+        <em>{bossStatus.patternCue ?? bossStatus.patternHint}</em>
+      </div>
+    </div>
   );
 }
 
