@@ -892,8 +892,9 @@ function App() {
       stress: options => {
         const nextGame = createQaStressGame();
         showQaGame(nextGame);
-        window.setTimeout(() => sceneApi.current?.stress?.(options), 120);
-        window.setTimeout(() => sceneApi.current?.stress?.(options), 220);
+        [120, 260, 620].forEach(delay => {
+          window.setTimeout(() => sceneApi.current?.stress?.(options), delay);
+        });
       },
       upgrade: () => {
         const nextGame = {
@@ -938,6 +939,14 @@ function App() {
         enemies: MAX_ENEMIES - 6,
         projectiles: MAX_PROJECTILES - 12,
         gems: MAX_XP_GEMS - 24
+      }), 120);
+    } else if (qaMode === 'silhouette') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.stress({
+        enemies: 92,
+        projectiles: 0,
+        gems: 0,
+        hitBursts: 0,
+        weaponEffects: 0
       }), 120);
     }
     return () => {
@@ -1105,6 +1114,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
         const enemyCount = Math.min(stressBudget.maxEnemies - 1, options.enemies ?? 160);
         const projectileCount = Math.min(stressBudget.maxProjectiles, options.projectiles ?? 210);
         const gemCount = Math.min(stressBudget.maxXpGems, options.gems ?? 420);
+        const hitBurstCount = Math.min(MAX_HIT_BURSTS, options.hitBursts ?? MAX_HIT_BURSTS);
+        const weaponEffectCount = Math.min(MAX_WEAPON_EFFECTS, options.weaponEffects ?? MAX_WEAPON_EFFECTS);
         const profile = getWaveProfile(wave);
         const rhythm = getCombatRhythm({ time: 246, wave });
         player.current.pos.set(0, 0.55, 0);
@@ -1163,7 +1174,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
           pos.y = getPlayerTerrainY(pos.x, pos.z) + 0.72;
           return { pos, value: 4 + (index % 5), pulse: Math.random() * Math.PI * 2 };
         });
-        hitBursts.current = Array.from({ length: MAX_HIT_BURSTS }, (_, index) => {
+        hitBursts.current = Array.from({ length: hitBurstCount }, (_, index) => {
           const angle = index * 1.77;
           const radius = 7 + (index % 16) * 3;
           return {
@@ -1176,7 +1187,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
             radius: 1.2 + (index % 5) * 0.28
           };
         });
-        weaponEffects.current = Array.from({ length: MAX_WEAPON_EFFECTS }, (_, index) => {
+        weaponEffects.current = Array.from({ length: weaponEffectCount }, (_, index) => {
           const angle = index * 1.31;
           const radius = 6 + (index % 12) * 3.4;
           return {
@@ -1341,7 +1352,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
   };
 
   const pulsePlayerCast = (strength = 0.18) => {
-    player.current.castPulse = Math.max(player.current.castPulse ?? 0, strength);
+    player.current.castPulse = Math.max(player.current.castPulse ?? 0, Math.min(0.68, strength * 1.24));
   };
 
   const addProjectile = projectile => {
@@ -1944,7 +1955,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
       ? amount * (1 - Math.min(0.28, bladeFocus * 0.055))
       : amount;
     player.current.invuln = invuln;
-    player.current.hurtPulse = Math.max(player.current.hurtPulse ?? 0, 0.44);
+    player.current.hurtPulse = Math.max(player.current.hurtPulse ?? 0, 0.62);
     cameraShake.current = Math.max(cameraShake.current, 0.28);
     const damageValue = Math.ceil(guardedAmount);
     hitBursts.current.push({
@@ -3185,56 +3196,68 @@ function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 1, mate
         const chargePower = enemy.chargeTimer > 0 ? 1 : 0;
         const guardPower = enemy.bossGuard > 0 ? 1 : 0;
         const bob = kind === 'runner'
-          ? stepLift * (0.16 + motionIntent * 0.16) + chargePower * 0.08
+          ? stepLift * (0.2 + motionIntent * 0.18) + chargePower * 0.1
           : kind === 'brute'
-            ? Math.abs(step) * (0.04 + motionIntent * 0.045)
+            ? Math.abs(step) * (0.032 + motionIntent * 0.035)
             : kind === 'boss'
               ? Math.sin(stride) * 0.045 + guardPower * 0.035
+              : kind === 'golem'
+                ? Math.abs(step) * (0.032 + motionIntent * 0.025)
               : Math.abs(step) * (0.05 + motionIntent * 0.045);
         const squash = kind === 'runner'
-          ? 0.82 + stepLift * (0.13 + motionIntent * 0.07) + chargePower * 0.08 - hitReact * 0.07
+          ? 0.76 + stepLift * (0.16 + motionIntent * 0.08) + chargePower * 0.1 - hitReact * 0.08
           : kind === 'brute'
-            ? 1.0 + Math.max(0, -step) * 0.065 - hitReact * 0.045
+            ? 0.92 + Math.max(0, -step) * 0.05 - hitReact * 0.04
             : kind === 'elite'
               ? 1.0 + stepLift * 0.045 + chargePower * 0.05 - hitReact * 0.04
               : kind === 'boss'
                 ? 1.0 + Math.sin(stride) * 0.025 - guardPower * 0.08 - hitReact * 0.03
+                : kind === 'golem'
+                  ? 1.12 + Math.max(0, -step) * 0.025 - hitReact * 0.035
                 : 1.0 + stepLift * 0.045 - hitReact * 0.04;
         const pitch = kind === 'runner'
-          ? -0.13 - stepLift * 0.12 - chargePower * 0.25 - hitReact * 0.1
+          ? -0.18 - stepLift * 0.14 - chargePower * 0.3 - hitReact * 0.12
           : kind === 'brute'
-            ? -0.025 + Math.max(0, -step) * 0.07 - hitReact * 0.06
+            ? -0.01 + Math.max(0, -step) * 0.045 - hitReact * 0.055
             : kind === 'boss'
               ? guardPower * 0.08 - hitReact * 0.04
+              : kind === 'golem'
+                ? 0.035 + step * 0.018 - hitReact * 0.035
               : -0.045 + step * 0.035 - hitReact * 0.055;
         const roll = kind === 'runner'
-          ? Math.sin(stride * 0.5) * (0.13 + motionIntent * 0.08) + hitReact * Math.sin(enemy.wobble * 1.7) * 0.14
+          ? Math.sin(stride * 0.5) * (0.17 + motionIntent * 0.1) + hitReact * Math.sin(enemy.wobble * 1.7) * 0.16
           : kind === 'brute'
-            ? Math.sin(stride * 0.72) * 0.055 + hitReact * Math.sin(enemy.wobble * 1.3) * 0.08
+            ? Math.sin(stride * 0.72) * 0.036 + hitReact * Math.sin(enemy.wobble * 1.3) * 0.07
             : kind === 'elite'
               ? Math.sin(stride * 0.82) * 0.075 + chargePower * 0.08 + hitReact * 0.06
               : kind === 'boss'
                 ? Math.sin(stride * 0.62) * 0.035 + hitReact * 0.035
+                : kind === 'golem'
+                  ? Math.sin(stride * 0.5) * 0.028 + hitReact * 0.045
                 : Math.sin(stride * 0.74) * 0.06 + hitReact * Math.sin(enemy.wobble * 1.5) * 0.07;
         local.pos.set(enemy.pos.x, enemy.pos.y + bob + hitReact * 0.04 + shockedPower * 0.03, enemy.pos.z);
         local.euler.set(pitch, enemy.facingAngle ?? enemy.wobble, roll);
         local.quat.setFromEuler(local.euler);
         const bossPulse = kind === 'boss' ? 1 + Math.sin(enemy.wobble * 0.72) * 0.035 + hitReact * 0.03 : 1;
         const widthPulse = kind === 'runner'
-          ? 0.92 + stepLift * 0.05 + hitReact * 0.08
+          ? 0.74 + stepLift * 0.06 + hitReact * 0.08
           : kind === 'brute'
-            ? 1.04 + Math.max(0, -step) * 0.025 + hitReact * 0.06
+            ? 1.24 + Math.max(0, -step) * 0.035 + hitReact * 0.08
             : kind === 'boss'
               ? 1.0 + guardPower * 0.08
+              : kind === 'golem'
+                ? 1.02 + Math.max(0, -step) * 0.02 + hitReact * 0.04
               : 1 + hitReact * 0.04;
         const depthPulse = kind === 'runner'
-          ? 1.06 + motionIntent * 0.06 + chargePower * 0.18
+          ? 1.34 + motionIntent * 0.08 + chargePower * 0.24
           : kind === 'brute'
-            ? 1.02 + stepLift * 0.04 + hitReact * 0.04
+            ? 1.16 + stepLift * 0.02 + hitReact * 0.06
             : kind === 'elite'
               ? 1.0 + chargePower * 0.12 + hitReact * 0.04
               : kind === 'boss'
                 ? 1.0 + guardPower * 0.06
+                : kind === 'golem'
+                  ? 0.92 + stepLift * 0.015 + hitReact * 0.035
                 : 1.02;
         local.scale.set(
           enemy.radius * scaleMultiplier * widthPulse * bossPulse,
@@ -3553,13 +3576,29 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         if (count >= maxAccents && enemy.kind !== 'boss' && enemy.kind !== 'elite') continue;
         if (count >= MAX_ENEMIES) break;
         const bob = Math.sin(time + enemy.wobble) * 0.08;
-        const height = enemy.kind === 'boss' ? 2.55 : enemy.kind === 'elite' ? 1.86 : enemy.kind === 'brute' ? 1.34 : enemy.kind === 'runner' ? 0.92 : 1.04;
+        const height = enemy.kind === 'boss'
+          ? 2.55
+          : enemy.kind === 'elite'
+            ? 2.0
+            : enemy.kind === 'brute'
+              ? 1.42
+              : enemy.kind === 'runner'
+                ? 0.82
+                : 1.22;
         scratch.quat.identity();
         scratch.pos.set(enemy.pos.x, enemy.pos.y + height + bob, enemy.pos.z);
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
-          scratch.scale.setScalar(enemy.kind === 'boss' ? 0.46 : enemy.kind === 'elite' ? 0.34 : enemy.kind === 'brute' ? 0.24 : enemy.kind === 'runner' ? 0.16 : 0.18)
+          scratch.scale.setScalar(enemy.kind === 'boss'
+            ? 0.46
+            : enemy.kind === 'elite'
+              ? 0.38
+              : enemy.kind === 'brute'
+                ? 0.29
+                : enemy.kind === 'runner'
+                  ? 0.14
+                  : 0.22)
         );
         coreMesh.current.setMatrixAt(count, scratch.matrix);
         scratch.color.set(getEnemyAccentColor(enemy));
@@ -3578,8 +3617,24 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         if (count >= MAX_ENEMIES * 2) break;
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.right.set(scratch.forward.z, 0, -scratch.forward.x);
-        const eyeHeight = enemy.kind === 'boss' ? 2.28 : enemy.kind === 'elite' ? 1.62 : enemy.kind === 'brute' ? 1.15 : enemy.kind === 'runner' ? 0.8 : 0.92;
-        const spacing = enemy.kind === 'boss' ? 0.52 : enemy.kind === 'elite' ? 0.34 : enemy.kind === 'brute' ? 0.28 : 0.2;
+        const eyeHeight = enemy.kind === 'boss'
+          ? 2.28
+          : enemy.kind === 'elite'
+            ? 1.74
+            : enemy.kind === 'brute'
+              ? 1.18
+              : enemy.kind === 'runner'
+                ? 0.7
+                : 1.02;
+        const spacing = enemy.kind === 'boss'
+          ? 0.52
+          : enemy.kind === 'elite'
+            ? 0.36
+            : enemy.kind === 'brute'
+              ? 0.38
+              : enemy.kind === 'runner'
+                ? 0.16
+                : 0.24;
         for (let side = -1; side <= 1; side += 2) {
           scratch.pos.copy(enemy.pos)
             .addScaledVector(scratch.forward, enemy.radius * 0.78)
@@ -3589,7 +3644,11 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
           scratch.matrix.compose(
             scratch.pos,
             scratch.quat,
-            scratch.scale.set(enemy.kind === 'boss' ? 0.18 : 0.11, enemy.kind === 'boss' ? 0.26 : 0.16, 0.08)
+            scratch.scale.set(
+              enemy.kind === 'boss' ? 0.18 : enemy.kind === 'brute' ? 0.15 : 0.11,
+              enemy.kind === 'boss' ? 0.26 : enemy.kind === 'runner' ? 0.13 : 0.17,
+              0.08
+            )
           );
           eyeMesh.current.setMatrixAt(count, scratch.matrix);
           scratch.color.set(enemy.kind === 'runner' ? ART_TOKENS.runeCyan : enemy.kind === 'brute' ? ART_TOKENS.dangerRed : enemy.kind === 'golem' ? ART_TOKENS.runeMint : getEnemyAccentColor(enemy));
@@ -3627,12 +3686,12 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         if (enemy.kind !== 'runner') continue;
         if (count >= maxAccents) break;
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
-        scratch.pos.set(enemy.pos.x - scratch.forward.x * 0.62, enemy.pos.y + 0.16, enemy.pos.z - scratch.forward.z * 0.62);
+        scratch.pos.set(enemy.pos.x - scratch.forward.x * 0.78, enemy.pos.y + 0.13, enemy.pos.z - scratch.forward.z * 0.78);
         scratch.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, -enemy.facingAngle));
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
-          scratch.scale.set(0.28, 0.98 + Math.sin(enemy.wobble * 1.6) * 0.12, 1)
+          scratch.scale.set(0.2, 1.26 + Math.sin(enemy.wobble * 1.6) * 0.16, 1)
         );
         runnerTrailMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
@@ -3647,12 +3706,12 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         if (enemy.kind !== 'runner') continue;
         if (count >= maxAccents) break;
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
-        scratch.pos.set(enemy.pos.x + scratch.forward.x * 0.34, enemy.pos.y + 0.34, enemy.pos.z + scratch.forward.z * 0.34);
+        scratch.pos.set(enemy.pos.x + scratch.forward.x * 0.42, enemy.pos.y + 0.28, enemy.pos.z + scratch.forward.z * 0.42);
         scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -enemy.facingAngle + Math.PI));
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
-          scratch.scale.set(0.34, 0.58 + Math.sin(enemy.wobble * 2.1) * 0.05, 0.28)
+          scratch.scale.set(0.28, 0.72 + Math.sin(enemy.wobble * 2.1) * 0.07, 0.22)
         );
         runnerChevronMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
@@ -3667,11 +3726,11 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         if (enemy.kind !== 'brute') continue;
         if (count >= maxAccents) break;
         scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, enemy.wobble * 0.35));
-        scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.48, enemy.pos.z);
+        scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.56, enemy.pos.z);
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
-          scratch.scale.setScalar(0.72 + Math.sin(enemy.wobble) * 0.05)
+          scratch.scale.setScalar(0.88 + Math.sin(enemy.wobble) * 0.06)
         );
         bruteMarkMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
@@ -3690,14 +3749,14 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
           if (count >= maxAccents * 2) break;
           if (count >= MAX_ENEMIES * 2) break;
           scratch.pos.copy(enemy.pos)
-            .addScaledVector(scratch.forward, -0.1)
-            .addScaledVector(scratch.right, side * 0.46);
-          scratch.pos.y = enemy.pos.y + 1.18 + Math.sin(enemy.wobble + side) * 0.035;
-          scratch.quat.setFromAxisAngle(scratch.yAxis, enemy.facingAngle + side * 0.18);
+            .addScaledVector(scratch.forward, -0.16)
+            .addScaledVector(scratch.right, side * 0.58);
+          scratch.pos.y = enemy.pos.y + 1.23 + Math.sin(enemy.wobble + side) * 0.035;
+          scratch.quat.setFromAxisAngle(scratch.yAxis, enemy.facingAngle + side * 0.24);
           scratch.matrix.compose(
             scratch.pos,
             scratch.quat,
-            scratch.scale.set(0.38, 0.2, 0.18)
+            scratch.scale.set(0.5, 0.26, 0.2)
           );
           brutePlateMesh.current.setMatrixAt(count, scratch.matrix);
           count += 1;
@@ -3712,12 +3771,12 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'golem') continue;
         if (count >= maxAccents) break;
-        scratch.quat.setFromEuler(new THREE.Euler(0.45, enemy.facingAngle + Math.PI / 4, 0.2));
-        scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.18 + Math.sin(enemy.wobble) * 0.04, enemy.pos.z);
+        scratch.quat.setFromEuler(new THREE.Euler(0.38, enemy.facingAngle + Math.PI / 4, 0.16));
+        scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.36 + Math.sin(enemy.wobble) * 0.035, enemy.pos.z);
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
-          scratch.scale.set(0.18, 0.32, 0.18)
+          scratch.scale.set(0.24, 0.44, 0.2)
         );
         golemShardMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
@@ -3736,7 +3795,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
-          scratch.scale.setScalar(1.18 + Math.sin(enemy.wobble * 0.65) * 0.035)
+          scratch.scale.setScalar(1.36 + Math.sin(enemy.wobble * 0.65) * 0.035)
         );
         golemGroundMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
@@ -3755,12 +3814,12 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
           scratch.quat.setFromEuler(new THREE.Euler(0.35, -angle, 0.25));
           scratch.matrix.compose(
             new THREE.Vector3(
-              enemy.pos.x + Math.cos(angle) * 0.75,
-              enemy.pos.y + 2.1 + Math.sin(time + i) * 0.04,
-              enemy.pos.z + Math.sin(angle) * 0.75
+              enemy.pos.x + Math.cos(angle) * 0.9,
+              enemy.pos.y + 2.28 + Math.sin(time + i) * 0.05,
+              enemy.pos.z + Math.sin(angle) * 0.9
             ),
             scratch.quat,
-            scratch.scale.set(0.12, 0.34, 0.12)
+            scratch.scale.set(0.14, 0.42, 0.14)
           );
           eliteCrownMesh.current.setMatrixAt(count, scratch.matrix);
           count += 1;
@@ -3780,7 +3839,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
-          scratch.scale.setScalar(1.42 + ((enemy.shield ?? 0) > 0 ? 0.32 : 0) + Math.sin(time + enemy.wobble) * 0.04)
+          scratch.scale.setScalar(1.62 + ((enemy.shield ?? 0) > 0 ? 0.36 : 0) + Math.sin(time + enemy.wobble) * 0.05)
         );
         eliteAuraMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
@@ -4729,6 +4788,7 @@ function PlayerAvatar({ rootRef, game, player }) {
   const bodyShell = useRef();
   const castArcMesh = useRef();
   const hurtGuardMesh = useRef();
+  const hurtShardMesh = useRef();
   const stage = getWeaponStage(game);
   const dominantBuild = getDominantBuild(game);
   const focus = dominantBuild?.focus ?? 0;
@@ -4745,16 +4805,16 @@ function PlayerAvatar({ rootRef, game, player }) {
     const stride = now * 0.013;
     if (bodyShell.current) {
       const step = Math.sin(stride);
-      bodyShell.current.position.set(0, Math.abs(step) * 0.035 * moveAmount + castPulse * 0.045 + hurtPulse * 0.035, 0);
+      bodyShell.current.position.set(0, Math.abs(step) * 0.046 * moveAmount + castPulse * 0.06 + hurtPulse * 0.052, 0);
       bodyShell.current.rotation.set(
-        -0.04 * moveAmount + castPulse * 0.08 - hurtPulse * 0.12,
-        Math.sin(stride * 0.5) * 0.035 * moveAmount,
-        Math.sin(stride) * 0.045 * moveAmount + castPulse * 0.08
+        -0.05 * moveAmount + castPulse * 0.12 - hurtPulse * 0.18,
+        Math.sin(stride * 0.5) * 0.044 * moveAmount + hurtPulse * Math.sin(stride * 1.4) * 0.08,
+        Math.sin(stride) * 0.056 * moveAmount + castPulse * 0.13
       );
       bodyShell.current.scale.set(
-        1 + castPulse * 0.045 + hurtPulse * 0.035,
-        1 - hurtPulse * 0.055,
-        1 + dashPower * 0.04 + castPulse * 0.025
+        1 + castPulse * 0.065 + hurtPulse * 0.045,
+        1 - hurtPulse * 0.075,
+        1 + dashPower * 0.052 + castPulse * 0.038
       );
     }
     if (runeGroup.current) runeGroup.current.rotation.y += 0.018 + game.stats.cooldown * 0.004;
@@ -4766,8 +4826,9 @@ function PlayerAvatar({ rootRef, game, player }) {
     if (cloakMesh.current) {
       cloakMesh.current.visible = moveAmount > 0.04 || dashPower > 0;
       cloakMesh.current.position.set(0, 0.75 + Math.sin(stride * 0.5) * 0.035, -0.52 - moveAmount * 0.18 - dashPower * 0.18);
-      cloakMesh.current.rotation.set(0.25 + moveAmount * 0.16 + castPulse * 0.08, Math.sin(stride * 0.52) * 0.08, Math.sin(stride) * 0.06 * moveAmount);
-      cloakMesh.current.scale.set(0.58 + dashPower * 0.18 + castPulse * 0.08, 1.0 + moveAmount * 0.34 + dashPower * 0.42 + castPulse * 0.16, 1);
+      cloakMesh.current.rotation.set(0.25 + moveAmount * 0.2 + castPulse * 0.12 + hurtPulse * 0.1, Math.sin(stride * 0.52) * 0.1, Math.sin(stride) * 0.075 * moveAmount + hurtPulse * 0.08);
+      cloakMesh.current.scale.set(0.58 + dashPower * 0.24 + castPulse * 0.12, 1.0 + moveAmount * 0.42 + dashPower * 0.48 + castPulse * 0.24, 1);
+      cloakMesh.current.material.opacity = 0.2 + moveAmount * 0.08 + dashPower * 0.08 + castPulse * 0.14;
     }
     if (leftStrideMesh.current && rightStrideMesh.current) {
       const leftStep = Math.max(0, Math.sin(stride));
@@ -4784,9 +4845,9 @@ function PlayerAvatar({ rootRef, game, player }) {
     if (staffTrailMesh.current) {
       staffTrailMesh.current.visible = moveAmount > 0.06 || dashPower > 0 || castPulse > 0.02;
       staffTrailMesh.current.position.set(0.38 + Math.sin(stride * 0.5) * 0.04, 1.02 + Math.sin(stride) * 0.045 + castPulse * 0.12, 0.08 + castPulse * 0.18);
-      staffTrailMesh.current.rotation.set(0.35 + castPulse * 0.18, -0.18, -0.52 + Math.sin(stride * 0.72) * 0.12 - castPulse * 0.34);
-      staffTrailMesh.current.scale.set(0.11 + stage * 0.01 + castPulse * 0.035, 0.62 + moveAmount * 0.24 + dashPower * 0.2 + castPulse * 0.48, 0.11);
-      staffTrailMesh.current.material.opacity = 0.36 + Math.min(0.34, castPulse * 1.2) + dashPower * 0.08;
+      staffTrailMesh.current.rotation.set(0.35 + castPulse * 0.28, -0.18, -0.52 + Math.sin(stride * 0.72) * 0.14 - castPulse * 0.48);
+      staffTrailMesh.current.scale.set(0.12 + stage * 0.012 + castPulse * 0.05, 0.7 + moveAmount * 0.28 + dashPower * 0.24 + castPulse * 0.72, 0.12);
+      staffTrailMesh.current.material.opacity = 0.38 + Math.min(0.42, castPulse * 1.45) + dashPower * 0.08;
     }
     if (shoulderSash.current) {
       shoulderSash.current.visible = moveAmount > 0.02 || focus > 0;
@@ -4794,17 +4855,24 @@ function PlayerAvatar({ rootRef, game, player }) {
       shoulderSash.current.rotation.set(0.16 + moveAmount * 0.1 + hurtPulse * 0.12, Math.sin(stride * 0.34) * 0.08, Math.sin(stride) * 0.12 * moveAmount + castPulse * 0.08);
     }
     if (castArcMesh.current) {
-      castArcMesh.current.visible = castPulse > 0.025;
-      castArcMesh.current.position.set(0.42, 1.04 + castPulse * 0.2, 0.24 + castPulse * 0.18);
-      castArcMesh.current.rotation.set(0.18, -0.36 + castPulse * 0.34, -0.68 + castPulse * 1.7);
-      castArcMesh.current.scale.setScalar(0.62 + castPulse * 1.45 + stage * 0.04);
-      castArcMesh.current.material.opacity = Math.min(0.68, 0.18 + castPulse * 1.85);
+      castArcMesh.current.visible = castPulse > 0.018;
+      castArcMesh.current.position.set(0.46, 1.06 + castPulse * 0.24, 0.24 + castPulse * 0.24);
+      castArcMesh.current.rotation.set(0.18, -0.42 + castPulse * 0.42, -0.76 + castPulse * 2.05);
+      castArcMesh.current.scale.setScalar(0.68 + castPulse * 1.75 + stage * 0.05);
+      castArcMesh.current.material.opacity = Math.min(0.78, 0.2 + castPulse * 2.1);
     }
     if (hurtGuardMesh.current) {
       hurtGuardMesh.current.visible = hurtPulse > 0.02;
-      hurtGuardMesh.current.rotation.z += 0.06;
-      hurtGuardMesh.current.scale.setScalar(0.72 + hurtPulse * 1.25);
-      hurtGuardMesh.current.material.opacity = Math.min(0.52, hurtPulse * 1.2);
+      hurtGuardMesh.current.rotation.z += 0.082;
+      hurtGuardMesh.current.scale.setScalar(0.76 + hurtPulse * 1.55);
+      hurtGuardMesh.current.material.opacity = Math.min(0.64, hurtPulse * 1.35);
+    }
+    if (hurtShardMesh.current) {
+      hurtShardMesh.current.visible = hurtPulse > 0.025;
+      hurtShardMesh.current.position.set(0, 1.1 + hurtPulse * 0.18, 0.04);
+      hurtShardMesh.current.rotation.set(0.72 + hurtPulse * 0.38, now * 0.008, Math.PI / 4 + hurtPulse * 1.2);
+      hurtShardMesh.current.scale.set(0.18 + hurtPulse * 0.32, 0.18 + hurtPulse * 0.32, 0.18 + hurtPulse * 0.32);
+      hurtShardMesh.current.material.opacity = Math.min(0.58, hurtPulse * 1.1);
     }
   });
 
@@ -4840,6 +4908,10 @@ function PlayerAvatar({ rootRef, game, player }) {
       <mesh ref={hurtGuardMesh} rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[0, 0.78, 0]} visible={false}>
         <ringGeometry args={[0.62, 0.78, 40]} />
         <meshBasicMaterial color={ART_TOKENS.dangerRed} transparent opacity={0.0} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      <mesh ref={hurtShardMesh} position={[0, 1.1, 0.04]} visible={false}>
+        <octahedronGeometry args={[1, 0]} />
+        <meshBasicMaterial color={ART_TOKENS.dangerRed} transparent opacity={0.0} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh position={[0, 1.05, -0.18]} scale={[0.24, 0.24, 0.24]}>
         <octahedronGeometry args={[1, 0]} />
@@ -5308,25 +5380,25 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
     };
 
     const rocks = Array.from({ length: count(52) }, (_, index) => {
-      const angle = index * 1.17 + 0.42;
-      const radius = 40 + (index % 18) * 4.1;
+      const angle = index * 1.17 + 0.42 + Math.sin(index * 0.73) * 0.08;
+      const radius = 40 + (index % 18) * 4.1 + Math.sin(index * 1.91) * 1.7;
       const distanceScale = radius > 78 ? 1 : 0.74;
       return place(angle, radius, (1.55 + (index % 5) * 0.34) * distanceScale, 0.02, index % 3 === 0 ? 0.08 : 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 7 && item.position.length() > 38 && lowCoverClear(item));
 
     const ringTrees = Array.from({ length: countTree(26) }, (_, index) => {
-      const angle = index * 1.37 + (index % 4) * 0.18;
-      const radius = 109 + (index % 7) * 1.35;
-      const scale = radius > 113 ? 3.45 + (index % 4) * 0.22 : 2.72 + (index % 4) * 0.16;
+      const angle = index * 1.37 + (index % 4) * 0.18 + Math.sin(index * 1.13) * 0.1;
+      const radius = 109 + (index % 7) * 1.35 + Math.sin(index * 0.81) * 1.25;
+      const scale = radius > 113 ? 3.45 + (index % 4) * 0.22 : 2.72 + (index % 4) * 0.16 + Math.sin(index * 1.37) * 0.05;
       const tree = place(angle, radius, scale, -0.04, index % 5 === 0 ? 0.035 : 0);
       return withModelScale(tree, 0.82, radius > 113 ? 0.74 : 0.7, 0.82);
     }).filter(item => item.position.length() < ARENA_RADIUS - 2.8 && sightlineClear(item));
 
     const groveTrees = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: visualQuality === 'low' ? 1 : 2 }, (_, index) => {
       const offset = index === 0 ? -1 : 1;
-      const angle = site.angle + offset * 0.22 + (siteIndex % 2 ? -0.06 : 0.06);
-      const radius = site.radius + 22.5 + (index % 2) * 4.8;
-      const scale = 2.14 + (index % 2) * 0.18 + siteIndex * 0.035;
+      const angle = site.angle + offset * 0.22 + (siteIndex % 2 ? -0.06 : 0.06) + Math.sin(siteIndex * 1.9 + index) * 0.045;
+      const radius = site.radius + 22.5 + (index % 2) * 4.8 + Math.cos(siteIndex * 2.2 + index) * 1.35;
+      const scale = 2.14 + (index % 2) * 0.18 + siteIndex * 0.035 + Math.sin(siteIndex + index * 2.4) * 0.04;
       const tree = place(angle, radius, scale, -0.04, offset * 0.025);
       return withModelScale(tree, 0.86, 0.78, 0.86);
     })).filter(item => item.position.length() < ARENA_RADIUS - 3.5 && sightlineClear(item));
@@ -5334,21 +5406,21 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
     const trees = [...ringTrees, ...groveTrees];
 
     const bushes = Array.from({ length: count(62) }, (_, index) => {
-      const angle = index * 0.97 + 0.17;
-      const radius = 38 + (index % 22) * 3.4;
+      const angle = index * 0.97 + 0.17 + Math.sin(index * 1.23) * 0.1;
+      const radius = 38 + (index % 22) * 3.4 + Math.cos(index * 1.59) * 1.4;
       const bush = place(angle, radius, 1.02 + (index % 4) * 0.13, 0.01, 0);
       return withModelScale(bush, 1.32, 0.7, 1.08);
     }).filter(item => item.position.length() < ARENA_RADIUS - 5.5 && item.position.length() > 36 && lowCoverClear(item));
 
-    const grass = Array.from({ length: count(174) }, (_, index) => {
-      const angle = index * 1.61 + (index % 7) * 0.09;
-      const radius = 20 + (index % 35) * 2.75;
+    const grass = Array.from({ length: count(210) }, (_, index) => {
+      const angle = index * 1.61 + (index % 7) * 0.09 + Math.sin(index * 0.97) * 0.07;
+      const radius = 20 + (index % 35) * 2.75 + Math.sin(index * 1.41) * 1.25;
       return place(angle, radius, 0.62 + (index % 5) * 0.08, 0.025, 0);
     }).filter(item => item.position.length() < ARENA_RADIUS - 6 && item.position.length() > 18);
 
-    const moss = Array.from({ length: count(104) }, (_, index) => {
-      const angle = index * 2.03 + (index % 5) * 0.07;
-      const radius = 16 + (index % 38) * 2.48;
+    const moss = Array.from({ length: count(126) }, (_, index) => {
+      const angle = index * 2.03 + (index % 5) * 0.07 + Math.cos(index * 1.17) * 0.06;
+      const radius = 16 + (index % 38) * 2.48 + Math.sin(index * 1.83) * 1.2;
       const transform = place(angle, radius, 1.0 + (index % 6) * 0.18, 0.055, 0);
       transform.width = 1.4 + (index % 5) * 0.32;
       transform.depth = 0.46 + (index % 4) * 0.12;
@@ -5358,8 +5430,8 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
     }).filter(item => item.position.length() < ARENA_RADIUS - 8 && lowCoverClear(item));
 
     const pebbles = Array.from({ length: count(118) }, (_, index) => {
-      const angle = index * 2.41 + (index % 7) * 0.11;
-      const radius = 22 + (index % 42) * 2.2;
+      const angle = index * 2.41 + (index % 7) * 0.11 + Math.sin(index * 0.69) * 0.06;
+      const radius = 22 + (index % 42) * 2.2 + Math.cos(index * 1.33) * 1.1;
       const transform = place(angle, radius, 1, 0.09, 0);
       transform.rotation += (index % 2 ? -1 : 1) * 0.24;
       transform.size = 0.22 + (index % 5) * 0.055;
@@ -5369,8 +5441,8 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
     }).filter(item => item.position.length() < ARENA_RADIUS - 9 && item.position.length() > 24 && lowCoverClear(item));
 
     const fallenTrunks = Array.from({ length: count(18) }, (_, index) => {
-      const angle = index * 1.49 + 0.34;
-      const radius = 48 + (index % 14) * 4.5;
+      const angle = index * 1.49 + 0.34 + Math.sin(index * 1.11) * 0.09;
+      const radius = 48 + (index % 14) * 4.5 + Math.cos(index * 1.47) * 1.5;
       const transform = place(angle, radius, 1, 0.28, 0);
       transform.rotation += (index % 2 ? -1 : 1) * (0.72 + (index % 3) * 0.18);
       transform.length = 3.2 + (index % 4) * 0.52;
@@ -5380,9 +5452,9 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 9 && item.position.length() > 42 && lowCoverClear(item));
 
-    const leafLitter = Array.from({ length: count(78) }, (_, index) => {
-      const angle = index * 1.91 + 0.28 + (index % 6) * 0.05;
-      const radius = 52 + (index % 25) * 2.45;
+    const leafLitter = Array.from({ length: count(116) }, (_, index) => {
+      const angle = index * 1.91 + 0.28 + (index % 6) * 0.05 + Math.sin(index * 1.02) * 0.07;
+      const radius = 52 + (index % 25) * 2.45 + Math.cos(index * 1.76) * 1.1;
       const transform = place(angle, radius, 1, 0.066, 0);
       transform.rotation += (index % 4) * 0.27;
       transform.width = 1.15 + (index % 5) * 0.26;
@@ -5392,9 +5464,9 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 8 && item.position.length() > 48 && lowCoverClear(item));
 
-    const stumps = Array.from({ length: countTree(14) }, (_, index) => {
-      const angle = index * 1.73 + 0.62;
-      const radius = 64 + (index % 13) * 3.8;
+    const stumps = Array.from({ length: countTree(18) }, (_, index) => {
+      const angle = index * 1.73 + 0.62 + Math.sin(index * 1.29) * 0.08;
+      const radius = 64 + (index % 13) * 3.8 + Math.cos(index * 0.93) * 1.25;
       const transform = place(angle, radius, 1, 0.23, index % 2 ? 0.06 : -0.04);
       transform.radius = 0.34 + (index % 4) * 0.055;
       transform.height = 0.48 + (index % 3) * 0.1;
@@ -5403,10 +5475,10 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 8 && item.position.length() > 56 && lowCoverClear(item));
 
-    const runeSprouts = Array.from({ length: count(34) }, (_, index) => {
+    const runeSprouts = Array.from({ length: count(46) }, (_, index) => {
       const site = SHRINE_SITES[index % SHRINE_SITES.length];
-      const angle = site.angle + (index % 9 - 4) * 0.045 + Math.sin(index * 1.7) * 0.08;
-      const radius = site.radius + 7.5 + (index % 6) * 2.45;
+      const angle = site.angle + (index % 9 - 4) * 0.045 + Math.sin(index * 1.7) * 0.11;
+      const radius = site.radius + 7.5 + (index % 6) * 2.45 + Math.cos(index * 1.4) * 0.9;
       const transform = place(angle, radius, 1, 0.11, 0);
       transform.height = 0.34 + (index % 3) * 0.08;
       transform.width = 0.08 + (index % 2) * 0.02;
@@ -5414,6 +5486,51 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       transform.opacity = 0.52 + (index % 3) * 0.08;
       return transform;
     }).filter(item => item.position.length() < ARENA_RADIUS - 7 && lowCoverClear(item));
+
+    const saplings = Array.from({ length: countTree(42) }, (_, index) => {
+      const site = SHRINE_SITES[index % SHRINE_SITES.length];
+      const groveBias = index % 2 === 0;
+      const angle = groveBias
+        ? site.angle + (index % 11 - 5) * 0.095 + Math.sin(index * 1.08) * 0.05
+        : index * 1.43 + Math.cos(index * 0.93) * 0.08;
+      const radius = groveBias
+        ? site.radius + 16 + (index % 7) * 2.7 + Math.sin(index * 1.4) * 1.1
+        : 62 + (index % 18) * 2.85 + Math.cos(index * 1.21) * 1.25;
+      const transform = place(angle, radius, 1, 0.05, (index % 2 ? -1 : 1) * 0.055);
+      transform.trunkRadius = 0.09 + (index % 3) * 0.018;
+      transform.height = 0.82 + (index % 5) * 0.14;
+      transform.canopyWidth = 0.46 + (index % 4) * 0.09;
+      transform.canopyHeight = 0.68 + (index % 3) * 0.11;
+      transform.trunkColor = index % 3 === 0 ? '#6b5741' : '#584638';
+      transform.canopyColor = index % 5 === 0
+        ? '#5aa592'
+        : index % 3 === 0
+          ? '#3f7b66'
+          : '#47745f';
+      return transform;
+    }).filter(item => item.position.length() < ARENA_RADIUS - 6 && item.position.length() > 54 && lowCoverClear(item));
+
+    const wildflowers = Array.from({ length: count(74) }, (_, index) => {
+      const site = SHRINE_SITES[index % SHRINE_SITES.length];
+      const groveBias = index % 3 === 0;
+      const angle = groveBias
+        ? site.angle + (index % 13 - 6) * 0.07 + Math.sin(index * 1.33) * 0.05
+        : index * 2.29 + (index % 5) * 0.08 + Math.cos(index * 0.86) * 0.06;
+      const radius = groveBias
+        ? site.radius + 13 + (index % 8) * 2.8 + Math.cos(index * 1.16) * 0.9
+        : 34 + (index % 30) * 2.65 + Math.sin(index * 1.52) * 1.1;
+      const transform = place(angle, radius, 1, 0.082, 0);
+      transform.size = 0.09 + (index % 4) * 0.022;
+      transform.color = index % 5 === 0
+        ? ART_TOKENS.wornGold
+        : index % 3 === 0
+          ? ART_TOKENS.riftViolet
+          : index % 2 === 0
+            ? ART_TOKENS.runeMint
+            : '#8fb36d';
+      transform.opacity = 0.22 + (index % 3) * 0.045;
+      return transform;
+    }).filter(item => item.position.length() < ARENA_RADIUS - 8 && item.position.length() > 28 && lowCoverClear(item));
 
     const rockLichen = rocks
       .filter((_, index) => index % 2 === 0)
@@ -5430,7 +5547,7 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
         return transform;
       });
 
-    return { rocks, trees, bushes, grass, moss, pebbles, fallenTrunks, leafLitter, stumps, runeSprouts, rockLichen };
+    return { rocks, trees, bushes, grass, moss, pebbles, fallenTrunks, leafLitter, stumps, runeSprouts, saplings, wildflowers, rockLichen };
   }, [visualQuality]);
 
   const rockLarge = useMemo(() => transforms.rocks.filter((_, index) => index % 3 !== 0), [transforms]);
@@ -5450,16 +5567,83 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       <StaticModelInstances url={NATURE_MODEL_URLS.treeDefault} transforms={treeDefault} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} />
       <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} />
       <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow={receiveNatureShadows} />
+      <FieldSaplingClusters transforms={transforms.saplings} />
       <FallenTrunkMarks transforms={transforms.fallenTrunks} />
       <ForestStumpClusters transforms={transforms.stumps} />
       <FieldMossPatches transforms={transforms.moss} />
       <FieldLeafLitter transforms={transforms.leafLitter} />
       <FieldPebbleScatter transforms={transforms.pebbles} />
+      <FieldWildflowerFlecks transforms={transforms.wildflowers} />
       <RockLichenPatches transforms={transforms.rockLichen} />
       <ShrineRuneSprouts transforms={transforms.runeSprouts} />
       <TreeCanopyShadows transforms={transforms.trees} />
       {visualQuality !== 'low' && <TreeCanopyHighlights transforms={transforms.trees} />}
       {visualQuality !== 'low' && <TreeRootPatches transforms={transforms.trees} />}
+    </group>
+  );
+}
+
+function FieldSaplingClusters({ transforms }) {
+  const trunkRef = useRef();
+  const canopyRef = useRef();
+  const shadowRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!trunkRef.current || !canopyRef.current || !shadowRef.current) return;
+    transforms.forEach((transform, index) => {
+      const groundY = getTerrainHeight(transform.position.x, transform.position.z);
+      local.pos.copy(transform.position);
+      local.pos.y = groundY + transform.height * 0.42;
+      local.quat.setFromEuler(new THREE.Euler(transform.tilt, transform.rotation, transform.tilt * 0.7));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.trunkRadius, transform.height, transform.trunkRadius));
+      trunkRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.trunkColor);
+      trunkRef.current.setColorAt(index, local.color);
+
+      local.pos.copy(transform.position);
+      local.pos.y = groundY + transform.height + transform.canopyHeight * 0.48;
+      local.quat.setFromEuler(new THREE.Euler(transform.tilt * 0.8, transform.rotation + index * 0.17, -transform.tilt * 0.5));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.canopyWidth, transform.canopyHeight, transform.canopyWidth * 0.9));
+      canopyRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.canopyColor);
+      canopyRef.current.setColorAt(index, local.color);
+
+      local.pos.copy(transform.position);
+      local.pos.y = groundY + 0.055;
+      local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, transform.rotation));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.canopyWidth * 1.35, transform.canopyWidth * 0.82, 1));
+      shadowRef.current.setMatrixAt(index, local.matrix);
+      local.color.set('#0d1711');
+      shadowRef.current.setColorAt(index, local.color);
+    });
+    [trunkRef.current, canopyRef.current, shadowRef.current].forEach(mesh => {
+      mesh.count = transforms.length;
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    });
+  }, [local, transforms]);
+
+  return (
+    <group>
+      <instancedMesh ref={shadowRef} args={[null, null, transforms.length]} frustumCulled={false}>
+        <circleGeometry args={[1, 18]} />
+        <meshBasicMaterial transparent opacity={0.16} depthWrite={false} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={trunkRef} args={[null, null, transforms.length]} frustumCulled={false} castShadow receiveShadow>
+        <cylinderGeometry args={[1, 0.78, 1, 6]} />
+        <meshStandardMaterial roughness={0.94} metalness={0.02} />
+      </instancedMesh>
+      <instancedMesh ref={canopyRef} args={[null, null, transforms.length]} frustumCulled={false} castShadow receiveShadow>
+        <coneGeometry args={[1, 1.45, 6]} />
+        <meshStandardMaterial roughness={0.88} metalness={0.01} />
+      </instancedMesh>
     </group>
   );
 }
@@ -5683,6 +5867,54 @@ function FieldPebbleScatter({ transforms }) {
       <dodecahedronGeometry args={[1, 0]} />
       <meshStandardMaterial color="#56604e" roughness={0.98} metalness={0.01} />
     </instancedMesh>
+  );
+}
+
+function FieldWildflowerFlecks({ transforms }) {
+  const flowerRef = useRef();
+  const haloRef = useRef();
+  const local = useMemo(() => ({
+    matrix: new THREE.Matrix4(),
+    quat: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    color: new THREE.Color()
+  }), []);
+
+  useEffect(() => {
+    if (!flowerRef.current || !haloRef.current) return;
+    transforms.forEach((transform, index) => {
+      local.pos.copy(transform.position);
+      local.pos.y = getTerrainHeight(transform.position.x, transform.position.z) + 0.105 + (index % 3) * 0.004;
+      local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, transform.rotation + index * 0.19));
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.size * 1.45, transform.size * 0.9, 1));
+      flowerRef.current.setMatrixAt(index, local.matrix);
+      local.color.set(transform.color);
+      flowerRef.current.setColorAt(index, local.color);
+
+      local.pos.y -= 0.035;
+      local.matrix.compose(local.pos, local.quat, local.scale.set(transform.size * 3.0, transform.size * 1.65, 1));
+      haloRef.current.setMatrixAt(index, local.matrix);
+      haloRef.current.setColorAt(index, local.color);
+    });
+    [flowerRef.current, haloRef.current].forEach(mesh => {
+      mesh.count = transforms.length;
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    });
+  }, [local, transforms]);
+
+  return (
+    <group>
+      <instancedMesh ref={haloRef} args={[null, null, transforms.length]} frustumCulled={false}>
+        <circleGeometry args={[1, 10]} />
+        <meshBasicMaterial transparent opacity={0.11} depthWrite={false} toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={flowerRef} args={[null, null, transforms.length]} frustumCulled={false}>
+        <ringGeometry args={[0.4, 0.78, 5]} />
+        <meshBasicMaterial transparent opacity={0.34} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      </instancedMesh>
+    </group>
   );
 }
 
