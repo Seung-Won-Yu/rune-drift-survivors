@@ -1080,6 +1080,17 @@ button {
   font-size: 14px;
 }
 
+.objectiveSummary small {
+  display: block;
+  max-width: 132px;
+  overflow: hidden;
+  color: rgba(234, 253, 247, 0.58);
+  font-size: 9px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .objectiveCard {
   display: grid;
   grid-template-columns: minmax(128px, 1fr) auto;

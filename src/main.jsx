@@ -116,6 +116,54 @@ const SURGE_EVENTS = [
   { time: 245, label: 'FINAL SURGE', message: '최종 폭주: 생존 압박 최대', color: '#fff1a6', count: 16 }
 ];
 
+const RUN_PHASES = [
+  {
+    id: 'learn',
+    until: 45,
+    label: 'LEARN',
+    title: '움직임 적응',
+    goal: '원을 그리며 XP 회수',
+    cardCue: '초반 안정과 XP 흐름',
+    color: '#73fbd3'
+  },
+  {
+    id: 'anchor',
+    until: 115,
+    label: 'ANCHOR',
+    title: '성장 안정',
+    goal: '레벨과 생존 기반 확보',
+    cardCue: '기본 구체와 성장 보강',
+    color: '#70d6ff'
+  },
+  {
+    id: 'armory',
+    until: 170,
+    label: 'ARMORY',
+    title: '무기 방향',
+    goal: '첫 보급으로 빌드 축 선택',
+    cardCue: '새 무기 또는 주력 강화',
+    color: '#fff1a6'
+  },
+  {
+    id: 'synergy',
+    until: 235,
+    label: 'SYNERGY',
+    title: '조합 완성',
+    goal: '주력 무기 공명 만들기',
+    cardCue: '공명 완성과 주력 집중',
+    color: '#d8b2ff'
+  },
+  {
+    id: 'final',
+    until: Infinity,
+    label: 'FINAL',
+    title: '최종 생존',
+    goal: '빈 공간 유지와 보스 대응',
+    cardCue: '생존 보강과 광역 정리',
+    color: '#ff8b72'
+  }
+];
+
 const OPENING_OBJECTIVES = [
   { id: 'first-blood', title: '균열 정찰', label: '적 12 처치', target: 12, color: '#70f0b4', getValue: game => game.kills },
   { id: 'magnet-flow', title: 'XP 흐름 열기', label: '자석 룬 회수', target: 1, color: '#70d6ff', getValue: game => getItemPickupCount(game, 'magnet') },
@@ -6228,14 +6276,19 @@ function HUD({ game, onRestart, onPause }) {
   const activeThreat = game.activeThreat;
   const bossStatus = game.bossStatus;
   const bossPatternMeta = game.lastBossPattern ? BOSS_PATTERN_META[game.lastBossPattern] : null;
+  const runPhase = getRunPhase(game);
   const isThreatened = crisis.level >= 3 || bossStatus?.enraged || encounterAlert?.kind === 'boss' || encounterAlert?.kind === 'boss-pattern';
   const onboardingSteps = getOnboardingSteps(game);
   const openingObjectives = getOpeningObjectives(game);
-  const activeObjectives = openingObjectives.filter(objective => !objective.complete).slice(0, 2);
+  const openingActiveObjectives = openingObjectives.filter(objective => !objective.complete).slice(0, 2);
+  const phaseObjectives = getRunPhaseObjectives(game, runPhase, openingObjectives);
+  const activeObjectives = phaseObjectives.filter(objective => !objective.complete).slice(0, 2);
+  const visibleObjectives = activeObjectives.length > 0 ? activeObjectives : phaseObjectives.slice(0, 2);
+  const completedPhaseObjectives = phaseObjectives.filter(objective => objective.complete).length;
   const completedOpeningObjectives = openingObjectives.filter(objective => objective.complete).length;
-  const firstSessionCue = getFirstSessionCue(game, onboardingSteps, activeObjectives);
+  const firstSessionCue = getFirstSessionCue(game, onboardingSteps, openingActiveObjectives);
   const showFirstSessionCoach = !bossStatus && firstSessionCue && game.time < 128;
-  const showOpeningObjectives = !bossStatus && activeObjectives.length > 0 && game.time < 155;
+  const showRunObjectives = !bossStatus && !showFirstSessionCoach && visibleObjectives.length > 0 && game.time < 286;
   const showTickerBasics = !bossStatus && game.time < 12;
   const showDashTicker = showTickerBasics || !dashReady;
   const tickerHasEvent = Boolean(
@@ -6320,13 +6373,14 @@ function HUD({ game, onRestart, onPause }) {
           </div>
         </div>
       )}
-      {showOpeningObjectives && (
-        <div className="objectiveRow" aria-label="첫 파동 목표">
+      {showRunObjectives && (
+        <div className="objectiveRow" aria-label="현재 런 단계 목표">
           <div className="objectiveSummary">
-            <span>첫 파동 목표</span>
-            <strong>{completedOpeningObjectives} / {openingObjectives.length}</strong>
+            <span>{runPhase.label}</span>
+            <strong>{runPhase.id === 'learn' ? `${completedOpeningObjectives} / ${openingObjectives.length}` : `${completedPhaseObjectives} / ${phaseObjectives.length}`}</strong>
+            <small>{runPhase.goal}</small>
           </div>
-          {activeObjectives.map(objective => (
+          {visibleObjectives.map(objective => (
             <div key={objective.id} className="objectiveCard" style={{ '--tone': objective.color }}>
               <span>
                 {objective.title}
@@ -6417,14 +6471,15 @@ function UpgradeOverlay({ game, choices, onChoose }) {
   const visibleSynergies = synergyStates
     .filter(synergy => synergy.level > 0 || synergy.progress > 0)
     .slice(0, 3);
+  const runPhase = getRunPhase(game);
   return (
     <section className="modalLayer" aria-label="레벨업 보상 선택">
       <div className="upgradePanel">
         <div className="upgradeHeader">
-          <p className="eyebrow">Level Up</p>
+          <p className="eyebrow">Level Up · {runPhase.label}</p>
           {(game.pendingUpgrades ?? 0) > 1 && <span className="upgradeQueue">보상 {game.pendingUpgrades}</span>}
         </div>
-        <h1>룬을 하나 선택하세요</h1>
+        <h1>{runPhase.cardCue}</h1>
         {visibleSynergies.length > 0 && (
           <div className="upgradeSynergyStrip" aria-label="빌드 조합 후보">
             {visibleSynergies.map(synergy => (
@@ -6805,6 +6860,10 @@ function getWaveThreat(wave, waveProfile = getWaveProfile(wave)) {
 
 function getCombatRhythm(game) {
   return COMBAT_RHYTHM.find(phase => game.time < phase.until) ?? COMBAT_RHYTHM[COMBAT_RHYTHM.length - 1];
+}
+
+function getRunPhase(game) {
+  return RUN_PHASES.find(phase => game.time < phase.until) ?? RUN_PHASES[RUN_PHASES.length - 1];
 }
 
 function getCrisisState(game) {
@@ -7353,6 +7412,67 @@ function getOpeningObjectives(game) {
   });
 }
 
+function makeRunObjective({ id, title, label, value, target, color, displayValue, displayTarget }) {
+  const safeTarget = Math.max(1, target);
+  const cappedValue = Math.min(safeTarget, value);
+  const progress = THREE.MathUtils.clamp(cappedValue / safeTarget, 0, 1);
+  return {
+    id,
+    title,
+    label,
+    value: cappedValue,
+    target: safeTarget,
+    color,
+    progress,
+    complete: progress >= 1,
+    displayValue: displayValue ? displayValue(cappedValue) : Math.floor(cappedValue),
+    displayTarget: displayTarget ?? safeTarget
+  };
+}
+
+function getUnlockedWeaponFamilyCount(game) {
+  return Object.keys(BUILD_FOCUS_META).filter(key => isWeaponFamilyUnlocked(game, key)).length;
+}
+
+function getRunPhaseObjectives(game, runPhase, openingObjectives) {
+  if (runPhase.id === 'learn') return openingObjectives;
+
+  const dominant = getDominantBuild(game);
+  const synergyCount = getBuildSynergyStates(game).filter(synergy => synergy.level > 0).length;
+  const unlockedWeapons = getUnlockedWeaponFamilyCount(game);
+  const cacheCount = getItemPickupCount(game, 'cache');
+
+  if (runPhase.id === 'anchor') {
+    return [
+      makeRunObjective({ id: 'anchor-level', title: '성장 안정', label: '레벨 4 도달', value: game.level, target: 4, color: '#70d6ff' }),
+      makeRunObjective({ id: 'anchor-magnet', title: 'XP 회수', label: '자석 룬 2회', value: getItemPickupCount(game, 'magnet'), target: 2, color: '#73fbd3' }),
+      makeRunObjective({ id: 'anchor-survive', title: '첫 압박', label: '115초 생존', value: game.time, target: 115, color: '#fff1a6', displayValue: value => `${Math.floor(value)}s`, displayTarget: '115s' })
+    ];
+  }
+
+  if (runPhase.id === 'armory') {
+    return [
+      makeRunObjective({ id: 'armory-cache', title: '무기 보급', label: '보급 1회 회수', value: cacheCount, target: 1, color: '#fff1a6' }),
+      makeRunObjective({ id: 'armory-family', title: '빌드 축', label: '무기 2계열 개방', value: unlockedWeapons, target: 2, color: '#d8b2ff' }),
+      makeRunObjective({ id: 'armory-elite', title: '정예 대응', label: '정예 1 처치', value: game.eliteKills ?? 0, target: 1, color: '#ff8b72' })
+    ];
+  }
+
+  if (runPhase.id === 'synergy') {
+    return [
+      makeRunObjective({ id: 'synergy-link', title: '공명 완성', label: '조합 공명 1개', value: synergyCount, target: 1, color: '#d8b2ff' }),
+      makeRunObjective({ id: 'synergy-focus', title: '주력 강화', label: '주력 III 달성', value: dominant?.focus ?? 0, target: 3, color: dominant?.color ?? '#70d6ff' }),
+      makeRunObjective({ id: 'synergy-shrine', title: '제단 활용', label: '제단 2개 활성', value: game.shrineActivations ?? 0, target: 2, color: '#73fbd3' })
+    ];
+  }
+
+  return [
+    makeRunObjective({ id: 'final-survive', title: '최종 생존', label: '300초 생존', value: game.time, target: RUN_DURATION, color: '#ff8b72', displayValue: value => `${Math.floor(value)}s`, displayTarget: `${RUN_DURATION}s` }),
+    makeRunObjective({ id: 'final-boss', title: '보스 대응', label: '보스 2 처치', value: game.bossKills ?? 0, target: 2, color: '#fff1a6' }),
+    makeRunObjective({ id: 'final-space', title: '퇴로 확보', label: '대시 8회 활용', value: game.dashUses ?? 0, target: 8, color: '#70d6ff' })
+  ];
+}
+
 function getOnboardingSteps(game) {
   return ONBOARDING_STEPS.map(step => {
     const value = Math.min(step.target, step.getValue(game));
@@ -7784,6 +7904,7 @@ function getUpgradeQuickRead(game, upgrade, context, decisionCopy) {
 
 function getUpgradeCardMeta(game, upgrade) {
   const key = getUpgradeFocusKey(upgrade);
+  const runPhase = getRunPhase(game);
   const dominant = getDominantBuild(game);
   const focus = key ? getBuildFocus(game, key) : 0;
   const pickCount = getUpgradePickCount(game, upgrade.id);
@@ -7791,6 +7912,12 @@ function getUpgradeCardMeta(game, upgrade) {
   const primarySynergy = synergyMatches[0];
   const improvesSynergy = primarySynergy ? primarySynergy.nextLevel > primarySynergy.currentLevel : false;
   const unlocksWeapon = key && !isWeaponFamilyUnlocked(game, key);
+  const phaseRecommended = Boolean(
+    (runPhase.id === 'anchor' && (key === 'orb' || upgrade.id === 'magnet' || upgrade.id === 'speed' || upgrade.id === 'maxHp'))
+    || (runPhase.id === 'armory' && (unlocksWeapon || key === dominant?.key))
+    || (runPhase.id === 'synergy' && (improvesSynergy || (key && dominant?.key === key && focus >= 2)))
+    || (runPhase.id === 'final' && (upgrade.id === 'maxHp' || upgrade.id === 'dash' || upgrade.id === 'cooldown' || upgrade.id === 'damage'))
+  );
   const tags = [];
   let role = WEAPON_UPGRADE_IDS.has(upgrade.id) ? '무기 성장' : '공용 강화';
 
@@ -7833,12 +7960,14 @@ function getUpgradeCardMeta(game, upgrade) {
   if (pickCount > 0) tags.push(`Rank ${formatFocusLevel(pickCount + 1)}`);
   if (key && focus + 1 >= 3) tags.push('각성 임박');
   if (improvesSynergy) tags.push(`공명 ${formatFocusLevel(primarySynergy.nextLevel)}`);
+  if (phaseRecommended) tags.push(runPhase.title);
   if (upgrade.id === 'heal' || (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.7)) tags.push('위기 대응');
   if (tags.length < 2) tags.push(upgrade.branch);
 
   const recommended = Boolean(
     unlocksWeapon
     || improvesSynergy
+    || phaseRecommended
     || (key && dominant?.key === key && dominant.focus >= 2)
     || (key && focus === 0 && game.level <= 5)
     || (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.72)
@@ -7859,11 +7988,13 @@ function getUpgradeCardMeta(game, upgrade) {
               ? '초반 성장'
               : upgrade.id === 'cooldown' || upgrade.id === 'damage'
                 ? '전체 효율'
-                : pickCount > 0
-                  ? `중첩 ${formatFocusLevel(pickCount + 1)}`
-                  : key
-                    ? BUILD_FOCUS_META[key].label
-                    : upgrade.branch;
+                : phaseRecommended
+                  ? runPhase.title
+                  : pickCount > 0
+                    ? `중첩 ${formatFocusLevel(pickCount + 1)}`
+                    : key
+                      ? BUILD_FOCUS_META[key].label
+                      : upgrade.branch;
   const context = {
     key,
     dominant,
@@ -7980,6 +8111,7 @@ function canDraftNewWeaponFamily(game) {
 
 function getUpgradeWeight(game, upgrade) {
   const key = getUpgradeFocusKey(upgrade);
+  const runPhase = getRunPhase(game);
   const dominant = getDominantBuild(game);
   const pickCount = getUpgradePickCount(game, upgrade.id);
   let weight = WEAPON_UPGRADE_IDS.has(upgrade.id) ? 1.15 : 0.78;
@@ -7993,11 +8125,17 @@ function getUpgradeWeight(game, upgrade) {
     if (dominant?.key === key) weight += 1.15;
     if (focus === 0 && game.level <= 8) weight += key === 'orb' ? 0.96 : 0.62;
     if (game.level <= 5 && key === 'orb') weight += 0.42;
+    if (runPhase.id === 'anchor' && key === 'orb') weight += 0.35;
+    if (runPhase.id === 'armory' && !isWeaponFamilyUnlocked(game, key)) weight += 0.75;
+    if (runPhase.id === 'synergy' && synergyDelta) weight += 0.72;
+    if (runPhase.id === 'final' && dominant?.key === key) weight += 0.35;
   } else {
     if (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.72) weight += 1.25;
     if (upgrade.id === 'magnet' && game.level <= 4) weight += 0.55;
     if (upgrade.id === 'speed' && game.time > 75) weight += 0.35;
     if (upgrade.id === 'cooldown' || upgrade.id === 'damage') weight += Math.min(1.0, game.upgrades.length * 0.08);
+    if (runPhase.id === 'anchor' && (upgrade.id === 'magnet' || upgrade.id === 'speed' || upgrade.id === 'maxHp')) weight += 0.34;
+    if (runPhase.id === 'final' && (upgrade.id === 'maxHp' || upgrade.id === 'dash' || upgrade.id === 'cooldown' || upgrade.id === 'damage')) weight += 0.5;
   }
 
   return Math.max(0.08, weight * Math.max(0.26, 1 - pickCount * 0.2));
