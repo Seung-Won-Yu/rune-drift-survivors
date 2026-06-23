@@ -6905,12 +6905,12 @@ function UpgradeOverlay({ game, choices, onChoose }) {
             const cardMeta = getUpgradeCardMeta(game, choice);
             const displayTitle = getUpgradeDisplayTitle(game, choice);
             const focusPreview = getUpgradeFocusPreview(game, choice);
-            const focusKey = getUpgradeFocusKey(choice);
+            const visualFamilyKey = getUpgradeVisualFamilyKey(choice);
             const iconMeta = getUpgradeIconMeta(choice);
             return (
               <button
                 key={choice.id}
-                className={`upgradeCard family-${focusKey ?? 'utility'} ${cardMeta.recommended ? 'isRecommended' : ''}`}
+                className={`upgradeCard family-${visualFamilyKey} ${cardMeta.recommended ? 'isRecommended' : ''}`}
                 type="button"
                 style={{ '--tone': getUpgradeTone(choice) }}
                 aria-label={`${displayTitle}: ${cardMeta.quickSummary}, ${cardMeta.statLine}, ${cardMeta.decision}`}
@@ -8087,6 +8087,17 @@ function getUpgradeFocusKey(upgrade) {
   return null;
 }
 
+function getUpgradeVisualFamilyKey(upgrade) {
+  const key = getUpgradeFocusKey(upgrade);
+  if (key) return key;
+  if (upgrade.id === 'magnet') return 'magnet';
+  if (upgrade.id === 'luck') return 'growth';
+  if (upgrade.id === 'dash' || upgrade.id === 'speed') return 'mobility';
+  if (upgrade.id === 'maxHp') return 'ward';
+  if (upgrade.family === '공용') return 'power';
+  return 'utility';
+}
+
 function isWeaponFamilyUnlocked(game, key) {
   if (!key) return true;
   if (STARTING_WEAPON_FAMILIES.has(key)) return true;
@@ -8569,6 +8580,48 @@ function addDraftChoice(choices, candidates, game) {
   if (choice) choices.push(choice);
 }
 
+function getUpgradeChoiceGroup(upgrade) {
+  return getUpgradeVisualFamilyKey(upgrade);
+}
+
+function pickDiverseUpgradeReplacement(game, draftable, currentChoices, usedGroups) {
+  const usedIds = new Set(currentChoices.map(choice => choice.id));
+  const diversePool = draftable.filter(upgrade => (
+    !usedIds.has(upgrade.id)
+    && !usedGroups.has(getUpgradeChoiceGroup(upgrade))
+  ));
+  return pickWeightedUpgrade(diversePool, game);
+}
+
+function diversifyUpgradeChoices(game, choices, draftable) {
+  const result = [];
+  const usedGroups = new Set();
+
+  choices.forEach(choice => {
+    if (result.length >= UPGRADE_CHOICE_COUNT) return;
+    const group = getUpgradeChoiceGroup(choice);
+    if (!result.some(picked => picked.id === choice.id) && !usedGroups.has(group)) {
+      result.push(choice);
+      usedGroups.add(group);
+      return;
+    }
+
+    const replacement = pickDiverseUpgradeReplacement(game, draftable, result, usedGroups);
+    const nextChoice = replacement ?? choice;
+    result.push(nextChoice);
+    usedGroups.add(getUpgradeChoiceGroup(nextChoice));
+  });
+
+  while (result.length < UPGRADE_CHOICE_COUNT && result.length < draftable.length) {
+    const replacement = pickDiverseUpgradeReplacement(game, draftable, result, usedGroups);
+    if (!replacement) break;
+    result.push(replacement);
+    usedGroups.add(getUpgradeChoiceGroup(replacement));
+  }
+
+  return result;
+}
+
 function getUpgradeChoicePriority(game, upgrade) {
   const key = getUpgradeFocusKey(upgrade);
   const dominant = getDominantBuild(game);
@@ -8639,7 +8692,7 @@ function pickUpgrades(game) {
     addDraftChoice(choices, draftable, game);
   }
 
-  return orderUpgradeChoices(game, choices);
+  return orderUpgradeChoices(game, diversifyUpgradeChoices(game, choices, draftable));
 }
 
 function formatTime(seconds) {

@@ -3130,3 +3130,1038 @@ h1 {
     font-size: 16px;
   }
 }
+
+/* Fantasy RPG direction pass */
+:root {
+  --rpg-ink: #090807;
+  --rpg-stone: rgba(18, 17, 14, 0.88);
+  --rpg-stone-strong: rgba(23, 20, 17, 0.97);
+  --rpg-bone: #fff1cf;
+  --rpg-gold: #e7b85f;
+  --rpg-copper: #b86442;
+  --rpg-crimson: #b94f43;
+  --rpg-moon: #84d8ff;
+  --rpg-mint: #78f0cc;
+  --rpg-violet: #b991ff;
+}
+
+.shell {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(132, 216, 255, 0.12), transparent 26%),
+    radial-gradient(circle at 20% 78%, rgba(231, 184, 95, 0.1), transparent 23%),
+    linear-gradient(180deg, #060706, #11140f 46%, #050504);
+}
+
+.shell::before {
+  background:
+    radial-gradient(circle at 50% 50%, transparent 29%, rgba(0, 0, 0, 0.3) 66%, rgba(0, 0, 0, 0.76) 100%),
+    linear-gradient(180deg, rgba(231, 184, 95, 0.06), transparent 26%, transparent 74%, rgba(132, 216, 255, 0.045));
+  mix-blend-mode: normal;
+}
+
+.shell::after {
+  background-image:
+    radial-gradient(circle at 18% 28%, rgba(255, 241, 207, 0.05), transparent 1px),
+    radial-gradient(circle at 72% 62%, rgba(231, 184, 95, 0.04), transparent 1px),
+    repeating-linear-gradient(0deg, rgba(255, 241, 207, 0.012) 0 1px, transparent 1px 8px);
+  opacity: 0.2;
+}
+
+.hud {
+  inset: max(16px, env(safe-area-inset-top)) auto auto max(16px, env(safe-area-inset-left));
+  width: min(780px, calc(100vw - 32px));
+  gap: 8px;
+  overflow: visible;
+}
+
+.topbar {
+  width: min(760px, 100%);
+  grid-template-columns: minmax(172px, 210px) minmax(170px, 1fr) minmax(118px, 148px) 88px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid rgba(231, 184, 95, 0.46);
+  color: var(--rpg-bone);
+  background:
+    linear-gradient(90deg, rgba(185, 79, 67, 0.12), transparent 19%, rgba(231, 184, 95, 0.1)),
+    linear-gradient(180deg, rgba(33, 29, 22, 0.92), rgba(9, 9, 8, 0.78)),
+    var(--rpg-stone);
+  clip-path: polygon(16px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 14px), calc(100% - 16px) 100%, 10px 100%, 0 calc(100% - 10px), 0 16px);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.42),
+    0 0 20px rgba(231, 184, 95, 0.1),
+    inset 0 1px 0 rgba(255, 241, 207, 0.12),
+    inset 0 -14px 24px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+.topbar::before {
+  inset: 5px;
+  border-color: rgba(255, 241, 207, 0.1);
+  clip-path: polygon(12px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 9px 100%, 0 calc(100% - 9px), 0 12px);
+}
+
+.topbar::after {
+  left: 22px;
+  right: 22px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(231, 184, 95, 0.86), rgba(132, 216, 255, 0.5), transparent);
+  box-shadow: 0 0 14px rgba(231, 184, 95, 0.24);
+}
+
+.meterBlock {
+  min-height: 38px;
+  gap: 5px;
+  padding: 2px 0 2px 30px;
+}
+
+.meterBlock::before {
+  width: 22px;
+  height: 22px;
+  border-color: rgba(231, 184, 95, 0.55);
+  color: var(--rpg-bone);
+  background:
+    radial-gradient(circle, rgba(231, 184, 95, 0.28), transparent 58%),
+    rgba(7, 6, 5, 0.52);
+  box-shadow: 0 0 12px rgba(231, 184, 95, 0.2);
+}
+
+.topbar .meterBlock:nth-child(2)::before {
+  border-color: rgba(132, 216, 255, 0.54);
+  background:
+    radial-gradient(circle, rgba(132, 216, 255, 0.24), transparent 58%),
+    rgba(7, 6, 5, 0.52);
+}
+
+.runBlock::before {
+  border-color: rgba(255, 241, 207, 0.58);
+  background:
+    radial-gradient(circle, rgba(255, 241, 207, 0.24), transparent 58%),
+    rgba(7, 6, 5, 0.52);
+}
+
+.meterLabel {
+  color: rgba(255, 241, 207, 0.66);
+  font-size: 10px;
+}
+
+.meterLabel strong {
+  color: #fff9e6;
+  font-size: 12px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.32);
+}
+
+.meter {
+  height: 9px;
+  border-color: rgba(255, 241, 207, 0.16);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 241, 207, 0.06) 0 1px, transparent 1px 22px),
+    rgba(4, 4, 3, 0.9);
+}
+
+.meter.hp i {
+  background: linear-gradient(90deg, #d9473d, #ff8c62, #ffd18c);
+}
+
+.meter.xp i {
+  background: linear-gradient(90deg, #65d7ff, #8af0ff, #fff1cf);
+}
+
+.meter.run i {
+  background: linear-gradient(90deg, #e7b85f, #fff1cf);
+}
+
+.hudActions {
+  grid-template-columns: repeat(2, 38px);
+}
+
+.iconButton {
+  width: 38px;
+  height: 38px;
+  border-color: rgba(231, 184, 95, 0.44);
+  color: var(--rpg-bone);
+  background:
+    linear-gradient(180deg, rgba(231, 184, 95, 0.14), rgba(185, 79, 67, 0.08)),
+    rgba(9, 8, 7, 0.78);
+}
+
+.iconButton:hover {
+  border-color: rgba(255, 241, 207, 0.72);
+  background:
+    linear-gradient(180deg, rgba(231, 184, 95, 0.22), rgba(132, 216, 255, 0.1)),
+    rgba(16, 13, 10, 0.86);
+}
+
+.combatTicker {
+  width: fit-content;
+  max-width: min(460px, 100%);
+  margin-left: 5px;
+  gap: 5px;
+}
+
+.combatTicker span,
+.combatTicker strong {
+  min-height: 24px;
+  padding: 6px 9px;
+  border: 1px solid rgba(231, 184, 95, 0.32);
+  color: rgba(255, 241, 207, 0.84);
+  background:
+    linear-gradient(90deg, rgba(231, 184, 95, 0.12), transparent),
+    rgba(8, 8, 7, 0.76);
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+}
+
+.dashPill b,
+.tickerPickup {
+  color: #fff1cf !important;
+}
+
+.dashPill i {
+  background: linear-gradient(90deg, var(--rpg-moon), var(--rpg-gold));
+}
+
+.onboardingCoach {
+  width: min(430px, 100%);
+  max-width: min(430px, 100%);
+  margin-left: 5px;
+  padding: 11px 13px 12px 15px;
+  border: 1px solid rgba(120, 240, 204, 0.48);
+  color: var(--rpg-bone);
+  background:
+    linear-gradient(90deg, rgba(120, 240, 204, 0.16), transparent 54%),
+    linear-gradient(180deg, rgba(18, 25, 20, 0.88), rgba(6, 8, 7, 0.82));
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.36),
+    0 0 22px rgba(120, 240, 204, 0.12);
+}
+
+.onboardingCoach::before {
+  width: 4px;
+}
+
+.coachHeader {
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+}
+
+.coachHeader span {
+  padding: 4px 7px;
+  border-color: rgba(120, 240, 204, 0.42);
+  color: #9effe8;
+  background: rgba(4, 8, 7, 0.42);
+}
+
+.coachHeader strong,
+.coachBody b {
+  color: #dcfff5;
+}
+
+.coachBody {
+  min-height: 44px;
+  padding: 8px 10px 11px;
+  border: 1px solid rgba(120, 240, 204, 0.26);
+  background:
+    linear-gradient(90deg, rgba(120, 240, 204, 0.08), transparent),
+    rgba(0, 0, 0, 0.3);
+}
+
+.coachSteps span {
+  min-height: 23px;
+  border-color: rgba(255, 241, 207, 0.16);
+  color: rgba(255, 241, 207, 0.62);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.coachSteps span.isActive {
+  color: #9effe8;
+  border-color: rgba(120, 240, 204, 0.5);
+}
+
+.coachSteps span.isComplete {
+  color: #080706;
+  background: linear-gradient(90deg, #78f0cc, #fff1cf);
+}
+
+.modalLayer {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(231, 184, 95, 0.12), transparent 24%),
+    radial-gradient(circle at 50% 50%, transparent 0 18%, rgba(6, 5, 5, 0.74) 56%, rgba(0, 0, 0, 0.92)),
+    rgba(0, 0, 0, 0.86);
+}
+
+.upgradePanel,
+.pausePanel,
+.endPanel {
+  border-color: rgba(231, 184, 95, 0.44);
+  color: var(--rpg-bone);
+  background:
+    linear-gradient(90deg, rgba(132, 216, 255, 0.08), transparent 36%, rgba(185, 79, 67, 0.08)),
+    linear-gradient(180deg, rgba(36, 31, 23, 0.98), rgba(7, 7, 6, 0.99));
+  box-shadow:
+    0 36px 110px rgba(0, 0, 0, 0.72),
+    0 0 58px rgba(231, 184, 95, 0.13),
+    inset 0 2px 0 rgba(255, 241, 207, 0.1),
+    inset 0 -42px 88px rgba(0, 0, 0, 0.32);
+}
+
+.upgradePanel {
+  width: min(1100px, calc(100vw - 56px));
+  padding: 28px 30px 30px;
+}
+
+.upgradeHeader {
+  border-bottom-color: rgba(231, 184, 95, 0.22);
+}
+
+.eyebrow {
+  color: #ffd990;
+}
+
+.upgradePanel h1,
+.pausePanel h1,
+.endPanel h1 {
+  color: #fff8e8;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.34),
+    0 0 18px rgba(231, 184, 95, 0.16);
+}
+
+.upgradeQueue,
+.upgradeSynergyStrip span {
+  border-color: rgba(231, 184, 95, 0.38);
+  background:
+    linear-gradient(90deg, rgba(231, 184, 95, 0.13), transparent),
+    rgba(8, 7, 6, 0.56);
+}
+
+.upgradeGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.upgradeCard {
+  --house: var(--tone, #84d8ff);
+  --foil: color-mix(in srgb, var(--house) 58%, #fff1cf);
+  --deep: color-mix(in srgb, var(--house) 18%, #090807);
+  min-height: 366px;
+  grid-template-rows: auto auto minmax(118px, auto) auto minmax(48px, auto) auto auto;
+  gap: 10px;
+  padding: 18px 16px 16px;
+  border: 2px solid color-mix(in srgb, var(--house) 58%, rgba(255, 241, 207, 0.28));
+  color: #fff8e8;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--house) 20%, rgba(50, 41, 28, 0.96)), rgba(8, 7, 6, 0.98) 64%),
+    var(--rpg-stone-strong);
+  clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 16px, 100% calc(100% - 10px), calc(100% - 16px) 100%, 10px 100%, 0 calc(100% - 16px), 0 11px);
+  box-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.42),
+    0 0 24px color-mix(in srgb, var(--house) 18%, transparent),
+    inset 0 2px 0 rgba(255, 241, 207, 0.1),
+    inset 0 -26px 44px rgba(0, 0, 0, 0.36);
+}
+
+.upgradeCard.family-orb {
+  --house: #62cfff;
+  --foil: #d8f7ff;
+  --deep: #071923;
+  --card-mark: "ORB";
+}
+
+.upgradeCard.family-storm {
+  --house: #f2cf66;
+  --foil: #fff1aa;
+  --deep: #21190a;
+  --card-mark: "RUNE";
+}
+
+.upgradeCard.family-blade {
+  --house: #f06c57;
+  --foil: #ffd0b8;
+  --deep: #24100b;
+  --card-mark: "BLADE";
+}
+
+.upgradeCard.family-chain {
+  --house: #b991ff;
+  --foil: #eee2ff;
+  --deep: #1b1224;
+  --card-mark: "CHAIN";
+}
+
+.upgradeCard.family-nova {
+  --house: #ff8ebd;
+  --foil: #ffe1ef;
+  --deep: #25101a;
+  --card-mark: "NOVA";
+}
+
+.upgradeCard.family-utility {
+  --house: #9bdc74;
+  --foil: #e4ffd1;
+  --deep: #111b0c;
+  --card-mark: "CORE";
+}
+
+.upgradeCard.family-growth {
+  --house: #f2cf66;
+  --foil: #fff1aa;
+  --deep: #21190a;
+  --card-mark: "XP";
+}
+
+.upgradeCard.family-survival {
+  --house: #8cf1a6;
+  --foil: #e4ffd1;
+  --deep: #0e1b10;
+  --card-mark: "WARD";
+}
+
+.upgradeCard.family-mobility {
+  --house: #78f0cc;
+  --foil: #d8fff4;
+  --deep: #082019;
+  --card-mark: "DASH";
+}
+
+.upgradeCard.family-ward {
+  --house: #8cf1a6;
+  --foil: #e4ffd1;
+  --deep: #0e1b10;
+  --card-mark: "WARD";
+}
+
+.upgradeCard.family-magnet {
+  --house: #b991ff;
+  --foil: #eee2ff;
+  --deep: #1b1224;
+  --card-mark: "PULL";
+}
+
+.upgradeCard.family-power {
+  --house: #ffad66;
+  --foil: #ffe0ba;
+  --deep: #221208;
+  --card-mark: "FORGE";
+}
+
+.upgradeCard::before {
+  inset: 0;
+  height: auto;
+  background:
+    linear-gradient(90deg, transparent 0 8%, var(--foil) 18%, color-mix(in srgb, var(--house) 42%, transparent) 50%, transparent 92%) 0 0 / 100% 5px no-repeat,
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--house) 34%, transparent), transparent 30%),
+    repeating-linear-gradient(135deg, rgba(255, 241, 207, 0.035) 0 1px, transparent 1px 12px);
+  opacity: 1;
+}
+
+.upgradeCard::after {
+  top: 52px;
+  right: 14px;
+  bottom: auto;
+  width: auto;
+  height: auto;
+  min-width: 44px;
+  padding: 4px 7px;
+  content: var(--card-mark, "RUNE");
+  border: 1px solid color-mix(in srgb, var(--house) 56%, transparent);
+  color: color-mix(in srgb, var(--foil) 82%, white);
+  background: rgba(0, 0, 0, 0.34);
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  font-size: 9px;
+  letter-spacing: 0;
+  opacity: 0.76;
+}
+
+.upgradeCard.family-storm::before {
+  background:
+    linear-gradient(90deg, transparent 0 7%, var(--foil) 16%, rgba(255, 241, 207, 0.16) 48%, transparent 92%) 0 0 / 100% 5px no-repeat,
+    repeating-linear-gradient(115deg, color-mix(in srgb, var(--house) 12%, transparent) 0 7px, transparent 7px 18px),
+    radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--house) 36%, transparent), transparent 30%);
+}
+
+.upgradeCard.family-blade::before {
+  background:
+    linear-gradient(90deg, transparent 0 7%, var(--foil) 16%, rgba(240, 108, 87, 0.34) 56%, transparent 92%) 0 0 / 100% 5px no-repeat,
+    linear-gradient(132deg, transparent 0 41%, rgba(255, 208, 184, 0.18) 41% 45%, transparent 45%),
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--house) 32%, transparent), transparent 30%);
+}
+
+.upgradeCard.family-chain::before {
+  background:
+    linear-gradient(90deg, transparent 0 7%, var(--foil) 16%, rgba(185, 145, 255, 0.28) 56%, transparent 92%) 0 0 / 100% 5px no-repeat,
+    repeating-linear-gradient(90deg, rgba(238, 226, 255, 0.08) 0 2px, transparent 2px 18px),
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--house) 32%, transparent), transparent 30%);
+}
+
+.upgradeCard.family-nova::before {
+  background:
+    linear-gradient(90deg, transparent 0 7%, var(--foil) 16%, rgba(255, 142, 189, 0.28) 56%, transparent 92%) 0 0 / 100% 5px no-repeat,
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--house) 42%, transparent), transparent 24%),
+    radial-gradient(circle at 22% 78%, rgba(255, 225, 239, 0.08), transparent 28%);
+}
+
+.upgradeCard:hover,
+.upgradeCard.isRecommended {
+  transform: translateY(-5px);
+  border-color: color-mix(in srgb, var(--house) 72%, #fff1cf);
+  box-shadow:
+    0 26px 58px rgba(0, 0, 0, 0.48),
+    0 0 34px color-mix(in srgb, var(--house) 26%, transparent),
+    inset 0 2px 0 rgba(255, 241, 207, 0.12),
+    inset 0 -26px 44px rgba(0, 0, 0, 0.36);
+}
+
+.upgradePickCue strong {
+  color: #171008;
+  background: linear-gradient(90deg, var(--foil), color-mix(in srgb, var(--house) 48%, #fff1cf));
+}
+
+.upgradeCard em {
+  border-color: color-mix(in srgb, var(--house) 42%, transparent);
+  color: var(--foil);
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.upgradeTitleRow {
+  grid-template-columns: 58px minmax(0, 1fr);
+  min-height: 66px;
+}
+
+.upgradeSigil {
+  width: 58px;
+  height: 58px;
+  border-color: color-mix(in srgb, var(--house) 62%, rgba(255, 241, 207, 0.24));
+  color: var(--foil);
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--house) 40%, transparent), transparent 60%),
+    rgba(0, 0, 0, 0.36);
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--house) 28%, transparent),
+    inset 0 0 0 1px rgba(255, 241, 207, 0.08);
+}
+
+.family-orb .upgradeSigil {
+  border-radius: 999px;
+  clip-path: none;
+}
+
+.family-storm .upgradeSigil {
+  clip-path: polygon(46% 0, 82% 40%, 60% 40%, 88% 100%, 18% 48%, 40% 48%, 18% 0);
+}
+
+.family-blade .upgradeSigil {
+  clip-path: polygon(50% 0, 72% 34%, 58% 100%, 42% 100%, 28% 34%);
+}
+
+.family-chain .upgradeSigil {
+  border-radius: 16px 3px;
+  clip-path: none;
+}
+
+.family-nova .upgradeSigil {
+  clip-path: polygon(50% 0, 61% 34%, 98% 35%, 68% 55%, 80% 100%, 50% 72%, 20% 100%, 32% 55%, 2% 35%, 39% 34%);
+}
+
+.upgradeTitleRow span {
+  color: #fff9ea;
+  font-size: 24px;
+}
+
+.upgradeOutcomeBand {
+  min-height: 118px;
+  border-color: color-mix(in srgb, var(--house) 54%, rgba(255, 241, 207, 0.22));
+  background:
+    radial-gradient(circle at 90% 0, color-mix(in srgb, var(--house) 26%, transparent), transparent 40%),
+    linear-gradient(135deg, color-mix(in srgb, var(--house) 22%, transparent), rgba(231, 184, 95, 0.08)),
+    rgba(0, 0, 0, 0.36);
+}
+
+.upgradeOutcomeBand small {
+  color: #120f09;
+  background: color-mix(in srgb, var(--foil) 82%, #fff1cf);
+}
+
+.upgradeOutcomeBand strong {
+  color: #fff1cf;
+}
+
+.upgradeReasonLine,
+.upgradeEffectText,
+.upgradeStatLine,
+.upgradeTags i {
+  border-color: color-mix(in srgb, var(--house) 28%, rgba(255, 241, 207, 0.12));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--house) 6%, transparent), transparent),
+    rgba(0, 0, 0, 0.28);
+}
+
+.upgradeReasonLine span,
+.upgradePathText,
+.upgradeTags i {
+  color: color-mix(in srgb, var(--foil) 80%, white);
+}
+
+.pauseStats span,
+.controlGrid span,
+.pauseObjectives span,
+.resultStats span,
+.runSummary span,
+.resultHighlights span,
+.resultGrade {
+  border-color: rgba(231, 184, 95, 0.26);
+  color: rgba(255, 241, 207, 0.78);
+  background:
+    linear-gradient(90deg, rgba(231, 184, 95, 0.08), transparent),
+    rgba(0, 0, 0, 0.28);
+}
+
+.primaryButton {
+  border-color: rgba(255, 241, 207, 0.62);
+  color: #130f08;
+  background: linear-gradient(90deg, #d9a84c, #fff1cf, #84d8ff);
+  box-shadow:
+    0 0 28px rgba(231, 184, 95, 0.28),
+    inset 0 2px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -12px 22px rgba(0, 0, 0, 0.16);
+}
+
+.secondaryButton {
+  border-color: rgba(185, 79, 67, 0.42);
+  color: #fff1cf;
+  background:
+    linear-gradient(90deg, rgba(185, 79, 67, 0.16), transparent),
+    rgba(9, 8, 7, 0.78);
+}
+
+@media (max-width: 980px) {
+  .hud {
+    width: min(720px, calc(100vw - 24px));
+  }
+
+  .topbar {
+    width: 100%;
+    grid-template-columns: minmax(150px, 190px) minmax(150px, 1fr) minmax(110px, 140px) 86px;
+  }
+
+  .upgradePanel {
+    width: min(760px, calc(100vw - 32px));
+  }
+
+  .upgradeGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px), (max-aspect-ratio: 3 / 4) {
+  .hud {
+    inset: max(10px, env(safe-area-inset-top)) 0 auto 0;
+    width: 100vw;
+    padding: 0 max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
+    gap: 5px;
+  }
+
+  .topbar {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px;
+    padding: 7px 84px 7px 8px;
+  }
+
+  .topbar::after {
+    right: 92px;
+  }
+
+  .meterBlock {
+    min-height: 34px;
+    padding-left: 0;
+  }
+
+  .meterBlock::before {
+    display: none;
+  }
+
+  .topbar .meterBlock:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .topbar .runBlock {
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
+
+  .hudActions {
+    top: 7px;
+    right: 8px;
+    grid-template-columns: repeat(2, 34px);
+  }
+
+  .iconButton {
+    width: 34px;
+    height: 34px;
+  }
+
+  .combatTicker,
+  .onboardingCoach,
+  .objectiveRow,
+  .encounterBanner,
+  .bossBar {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .combatTicker span,
+  .combatTicker strong {
+    min-height: 23px;
+    padding: 5px 7px;
+  }
+
+  .onboardingCoach {
+    margin-left: 0;
+  }
+
+  .coachHeader {
+    grid-template-columns: auto 1fr;
+  }
+
+  .coachHeader small {
+    display: none;
+  }
+
+  .upgradePanel {
+    width: min(360px, 100%);
+    padding: 18px 16px;
+  }
+
+  .upgradeGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .upgradeCard {
+    min-height: 286px;
+    grid-template-rows: auto auto minmax(86px, auto) auto minmax(38px, auto) auto auto;
+    padding: 14px 13px;
+  }
+
+  .upgradeTitleRow {
+    grid-template-columns: 44px minmax(0, 1fr);
+    min-height: 48px;
+  }
+
+  .upgradeSigil {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .upgradeTitleRow span {
+    font-size: 21px;
+  }
+
+  .upgradeOutcomeBand {
+    min-height: 86px;
+    padding: 10px 11px;
+  }
+
+  .upgradeOutcomeBand strong {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 420px) {
+  .topbar {
+    padding: 7px 82px 7px 8px;
+  }
+
+  .upgradeCard {
+    min-height: 252px;
+  }
+
+  .upgradeTitleRow {
+    grid-template-columns: 34px minmax(0, 1fr);
+    min-height: 40px;
+  }
+
+  .upgradeSigil {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+}
+
+/* Reward card readability and fantasy shape pass */
+.upgradePanel {
+  width: min(1080px, calc(100vw - 56px));
+}
+
+.upgradeGrid {
+  gap: 20px;
+}
+
+.upgradeCard {
+  min-height: 352px;
+  grid-template-rows: auto minmax(112px, auto) minmax(106px, auto) auto minmax(40px, auto) auto;
+  padding: 15px 15px 14px;
+}
+
+.upgradeCard.family-orb {
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 26px), calc(100% - 32px) 100%, 32px 100%, 0 calc(100% - 26px), 0 14px);
+}
+
+.upgradeCard.family-storm {
+  clip-path: polygon(22px 0, calc(100% - 10px) 0, 100% 22px, calc(100% - 6px) calc(100% - 12px), calc(100% - 28px) 100%, 8px 100%, 0 calc(100% - 22px), 12px 18px);
+}
+
+.upgradeCard.family-blade {
+  clip-path: polygon(28px 0, 100% 0, calc(100% - 20px) 100%, 0 100%, 0 24px);
+}
+
+.upgradeCard.family-chain {
+  clip-path: polygon(8px 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 22px 100%, 0 calc(100% - 22px), 0 8px);
+}
+
+.upgradeCard.family-nova {
+  clip-path: polygon(50% 0, 100% 14px, 100% calc(100% - 22px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 22px), 0 14px);
+}
+
+.upgradeCard.family-utility {
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+}
+
+.upgradeCard.family-growth {
+  clip-path: polygon(50% 0, 100% 12px, 100% calc(100% - 18px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 18px), 0 12px);
+}
+
+.upgradeCard.family-survival {
+  clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 24px), 50% 100%, 0 calc(100% - 24px), 0 18px);
+}
+
+.upgradeCard.family-mobility {
+  clip-path: polygon(10px 0, calc(100% - 30px) 0, 100% 30px, calc(100% - 8px) 100%, 30px 100%, 0 calc(100% - 30px), 0 10px);
+}
+
+.upgradeCard.family-ward {
+  clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 24px), 50% 100%, 0 calc(100% - 24px), 0 18px);
+}
+
+.upgradeCard.family-magnet {
+  clip-path: polygon(50% 0, 100% 18px, calc(100% - 10px) 100%, 10px 100%, 0 18px);
+}
+
+.upgradeCard.family-power {
+  clip-path: polygon(12px 0, calc(100% - 32px) 0, 100% 28px, calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+}
+
+.upgradePickCue {
+  min-height: 28px;
+}
+
+.upgradePickCue strong {
+  max-width: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upgradeTitleRow {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 112px;
+  padding: 10px 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--house) 36%, rgba(255, 241, 207, 0.16));
+  background:
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--house) 30%, transparent), transparent 48%),
+    linear-gradient(180deg, color-mix(in srgb, var(--house) 12%, transparent), rgba(0, 0, 0, 0.2));
+  clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+}
+
+.upgradeSigil {
+  width: 72px;
+  height: 72px;
+  font-size: 32px;
+}
+
+.upgradeTitleRow span {
+  max-width: 100%;
+  font-size: 22px;
+  text-align: center;
+}
+
+.family-orb .upgradeTitleRow {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(216, 247, 255, 0.22), transparent 30%),
+    radial-gradient(circle at 50% 35%, rgba(98, 207, 255, 0.28), transparent 52%),
+    rgba(4, 13, 18, 0.5);
+}
+
+.family-storm .upgradeTitleRow {
+  background:
+    linear-gradient(125deg, transparent 0 44%, rgba(255, 241, 170, 0.18) 44% 49%, transparent 49%),
+    radial-gradient(circle at 50% 30%, rgba(242, 207, 102, 0.28), transparent 48%),
+    rgba(23, 18, 8, 0.52);
+}
+
+.family-blade .upgradeTitleRow {
+  background:
+    linear-gradient(130deg, transparent 0 37%, rgba(255, 208, 184, 0.18) 37% 43%, transparent 43%),
+    radial-gradient(circle at 48% 32%, rgba(240, 108, 87, 0.26), transparent 48%),
+    rgba(22, 8, 6, 0.5);
+}
+
+.family-chain .upgradeTitleRow {
+  background:
+    repeating-linear-gradient(90deg, rgba(238, 226, 255, 0.08) 0 3px, transparent 3px 18px),
+    radial-gradient(circle at 50% 32%, rgba(185, 145, 255, 0.26), transparent 48%),
+    rgba(18, 10, 26, 0.52);
+}
+
+.family-nova .upgradeTitleRow {
+  background:
+    radial-gradient(circle at 50% 32%, rgba(255, 225, 239, 0.22), transparent 22%),
+    radial-gradient(circle at 50% 32%, rgba(255, 142, 189, 0.3), transparent 50%),
+    rgba(24, 8, 16, 0.52);
+}
+
+.family-growth .upgradeTitleRow {
+  background:
+    radial-gradient(circle at 50% 32%, rgba(255, 241, 170, 0.22), transparent 22%),
+    radial-gradient(circle at 50% 32%, rgba(242, 207, 102, 0.3), transparent 50%),
+    rgba(23, 18, 8, 0.52);
+}
+
+.family-survival .upgradeTitleRow {
+  background:
+    linear-gradient(180deg, rgba(140, 241, 166, 0.18), transparent),
+    radial-gradient(circle at 50% 34%, rgba(140, 241, 166, 0.28), transparent 50%),
+    rgba(8, 20, 10, 0.52);
+}
+
+.family-mobility .upgradeTitleRow {
+  background:
+    linear-gradient(125deg, transparent 0 42%, rgba(216, 255, 244, 0.18) 42% 47%, transparent 47%),
+    radial-gradient(circle at 50% 34%, rgba(120, 240, 204, 0.28), transparent 50%),
+    rgba(6, 20, 16, 0.52);
+}
+
+.family-ward .upgradeTitleRow {
+  background:
+    linear-gradient(180deg, rgba(140, 241, 166, 0.2), transparent),
+    radial-gradient(circle at 50% 34%, rgba(140, 241, 166, 0.28), transparent 50%),
+    rgba(8, 20, 10, 0.52);
+}
+
+.family-magnet .upgradeTitleRow {
+  background:
+    repeating-radial-gradient(circle at 50% 34%, rgba(238, 226, 255, 0.13) 0 1px, transparent 1px 15px),
+    radial-gradient(circle at 50% 34%, rgba(185, 145, 255, 0.28), transparent 50%),
+    rgba(17, 10, 26, 0.52);
+}
+
+.family-power .upgradeTitleRow {
+  background:
+    linear-gradient(120deg, transparent 0 40%, rgba(255, 224, 186, 0.18) 40% 46%, transparent 46%),
+    radial-gradient(circle at 50% 32%, rgba(255, 173, 102, 0.28), transparent 50%),
+    rgba(24, 12, 6, 0.52);
+}
+
+.family-growth .upgradeSigil {
+  clip-path: polygon(50% 0, 62% 34%, 100% 38%, 70% 58%, 82% 100%, 50% 76%, 18% 100%, 30% 58%, 0 38%, 38% 34%);
+}
+
+.family-survival .upgradeSigil {
+  clip-path: polygon(50% 0, 86% 16%, 80% 70%, 50% 100%, 20% 70%, 14% 16%);
+}
+
+.family-mobility .upgradeSigil {
+  clip-path: polygon(18% 0, 100% 0, 66% 42%, 100% 42%, 18% 100%, 46% 52%, 0 52%);
+}
+
+.family-ward .upgradeSigil {
+  clip-path: polygon(50% 0, 86% 16%, 80% 70%, 50% 100%, 20% 70%, 14% 16%);
+}
+
+.family-magnet .upgradeSigil {
+  border-radius: 999px;
+  clip-path: none;
+}
+
+.family-power .upgradeSigil {
+  clip-path: polygon(50% 0, 100% 36%, 82% 100%, 18% 100%, 0 36%);
+}
+
+.upgradeOutcomeBand {
+  min-height: 106px;
+  padding: 12px 12px 13px;
+}
+
+.upgradeOutcomeBand strong {
+  font-size: 19px;
+}
+
+.upgradeReasonLine {
+  min-height: 34px;
+  padding: 6px 8px;
+}
+
+.upgradeEffectText {
+  min-height: 36px;
+  padding: 8px 9px;
+  font-size: 12px;
+}
+
+.upgradeEffectText::before {
+  display: none;
+}
+
+.upgradePathText {
+  min-height: 16px;
+  padding-right: 46px;
+  font-size: 11px;
+}
+
+.upgradeTags {
+  min-height: 24px;
+  align-content: end;
+}
+
+@media (max-width: 700px), (max-aspect-ratio: 3 / 4) {
+  .upgradeCard {
+    min-height: 308px;
+    grid-template-rows: auto minmax(94px, auto) minmax(86px, auto) auto minmax(34px, auto) auto;
+  }
+
+  .upgradeTitleRow {
+    min-height: 94px;
+  }
+
+  .upgradeSigil {
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+  }
+
+  .upgradeTitleRow span {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 420px) {
+  .upgradeCard {
+    min-height: 284px;
+  }
+
+  .upgradeTitleRow {
+    min-height: 82px;
+  }
+
+  .upgradeSigil {
+    width: 42px;
+    height: 42px;
+    font-size: 19px;
+  }
+}
