@@ -4165,3 +4165,426 @@ h1 {
     font-size: 19px;
   }
 }
+
+/* Mobile performance pass: keep the playfield visible first, then layer HUD data lightly. */
+@media (pointer: coarse), (max-width: 700px), (max-aspect-ratio: 3 / 4) {
+  .shell {
+    --mobile-glass: rgba(3, 13, 11, 0.58);
+    --mobile-line: rgba(145, 255, 227, 0.26);
+  }
+
+  .shell::before {
+    background:
+      radial-gradient(circle at 50% 56%, transparent 34%, rgba(0, 0, 0, 0.18) 74%, rgba(0, 0, 0, 0.44) 100%);
+  }
+
+  .hud {
+    inset: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) auto max(6px, env(safe-area-inset-left)) !important;
+    width: auto !important;
+    max-height: 25dvh;
+    gap: 3px !important;
+    padding: 0 !important;
+    overflow: visible;
+  }
+
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 58px !important;
+    gap: 4px !important;
+    align-items: stretch;
+    min-height: 0;
+    padding: 5px 6px !important;
+    border-color: var(--mobile-line);
+    background:
+      linear-gradient(180deg, rgba(14, 36, 31, 0.66), rgba(2, 8, 7, 0.46)),
+      var(--mobile-glass);
+    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+    box-shadow:
+      0 8px 18px rgba(0, 0, 0, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: none !important;
+  }
+
+  .topbar::before,
+  .topbar::after,
+  .meterBlock::before {
+    display: none !important;
+  }
+
+  .meterBlock {
+    min-height: 25px !important;
+    gap: 3px;
+    padding: 0 !important;
+  }
+
+  .topbar .meterBlock:nth-child(2) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  .topbar .runBlock {
+    grid-column: 1 / 3 !important;
+    grid-row: 2 !important;
+  }
+
+  .meterLabel {
+    gap: 5px;
+    min-height: 11px;
+    font-size: 8px !important;
+    line-height: 1;
+  }
+
+  .meterLabel span {
+    max-width: 46%;
+    overflow: hidden;
+    color: rgba(225, 255, 247, 0.58);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .meterLabel strong {
+    font-size: 10px !important;
+    line-height: 1;
+    text-shadow: none;
+    white-space: nowrap;
+  }
+
+  .meter {
+    height: 5px !important;
+    border-color: rgba(225, 255, 246, 0.14);
+    box-shadow: none;
+  }
+
+  .meter::after {
+    display: none;
+  }
+
+  .meter i {
+    transition: none;
+  }
+
+  .hudActions {
+    position: static !important;
+    grid-column: 3 !important;
+    grid-row: 1 / 3 !important;
+    display: grid;
+    grid-template-columns: repeat(2, 27px) !important;
+    gap: 4px !important;
+    align-self: stretch;
+  }
+
+  .iconButton {
+    width: 27px !important;
+    height: 100% !important;
+    min-height: 27px;
+    border-color: rgba(210, 255, 244, 0.22);
+    background: rgba(5, 18, 16, 0.72);
+    box-shadow: none;
+    font-size: 13px;
+  }
+
+  .combatTicker {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-wrap: nowrap;
+    gap: 3px !important;
+    overflow: hidden;
+  }
+
+  .combatTicker span,
+  .combatTicker strong {
+    min-height: 18px !important;
+    padding: 4px 6px !important;
+    border-color: rgba(210, 255, 244, 0.14);
+    background: rgba(3, 10, 9, 0.48) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    font-size: 8px !important;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .combatTicker .koPill,
+  .combatTicker .tickerPickup {
+    display: none !important;
+  }
+
+  .dashPill {
+    min-width: 70px !important;
+  }
+
+  .dashPill i {
+    height: 2px;
+    box-shadow: none;
+  }
+
+  .onboardingCoach {
+    width: min(100%, 360px) !important;
+    max-width: 100% !important;
+    gap: 4px !important;
+    margin: 0 !important;
+    padding: 6px 8px 7px 9px !important;
+    border-color: color-mix(in srgb, var(--tone, #73fbd3) 34%, transparent);
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--tone, #73fbd3) 13%, transparent), transparent),
+      rgba(3, 11, 10, 0.54);
+    clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+    backdrop-filter: none !important;
+  }
+
+  .onboardingCoach::before {
+    width: 2px;
+  }
+
+  .coachHeader {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    gap: 5px !important;
+    font-size: 8px !important;
+  }
+
+  .coachHeader span {
+    font-size: 8px !important;
+    letter-spacing: 0;
+  }
+
+  .coachHeader strong {
+    overflow: hidden;
+    font-size: 10px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .coachHeader small,
+  .coachBody small,
+  .coachSteps {
+    display: none !important;
+  }
+
+  .coachBody {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 4px 5px 6px !important;
+    border-color: rgba(210, 255, 244, 0.1);
+    background: rgba(2, 8, 7, 0.3);
+    clip-path: none;
+  }
+
+  .coachBody b {
+    overflow: hidden;
+    font-size: 10px !important;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  .coachBody i {
+    height: 2px;
+    box-shadow: none;
+    transition: none;
+  }
+
+  .touchControls {
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    left: max(10px, env(safe-area-inset-left));
+  }
+
+  .touchStick {
+    width: clamp(72px, 21vw, 88px) !important;
+    border-color: rgba(210, 255, 244, 0.18);
+    background:
+      radial-gradient(circle at 50% 50%, rgba(115, 251, 211, 0.12), transparent 28%),
+      rgba(3, 10, 9, 0.36);
+    box-shadow:
+      0 8px 18px rgba(0, 0, 0, 0.24),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    backdrop-filter: none !important;
+  }
+
+  .touchStick i {
+    box-shadow:
+      0 0 14px rgba(112, 214, 255, 0.28),
+      inset 0 -4px 10px rgba(0, 0, 0, 0.18);
+    transition: none;
+  }
+
+  .touchDashButton {
+    width: clamp(54px, 15vw, 64px) !important;
+    background:
+      radial-gradient(circle at 50% 28%, rgba(255, 241, 166, 0.18), transparent 38%),
+      rgba(8, 16, 14, 0.5);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+    backdrop-filter: none !important;
+  }
+
+  .touchDashButton span {
+    font-size: 21px !important;
+    text-shadow: none;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 420px) {
+  .hud {
+    max-height: 23dvh;
+  }
+
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 52px !important;
+    padding: 4px 5px !important;
+  }
+
+  .hudActions {
+    grid-template-columns: repeat(2, 24px) !important;
+    gap: 3px !important;
+  }
+
+  .iconButton {
+    width: 24px !important;
+    min-height: 24px;
+    font-size: 12px;
+  }
+
+  .meterBlock {
+    min-height: 22px !important;
+  }
+
+  .combatTicker span,
+  .combatTicker strong {
+    min-height: 16px !important;
+    padding: 3px 5px !important;
+    font-size: 7px !important;
+  }
+
+  .onboardingCoach {
+    padding: 5px 7px 6px 8px !important;
+  }
+}
+
+@media (pointer: coarse), (max-width: 700px), (max-aspect-ratio: 3 / 4) {
+  .onboardingCoach {
+    max-width: calc(100vw - 12px) !important;
+    min-height: 0;
+  }
+
+  .coachHeader {
+    min-height: 13px;
+  }
+
+  .coachHeader strong {
+    display: none !important;
+  }
+
+  .coachBody {
+    padding: 2px 3px 5px !important;
+    border: 0;
+    background: transparent;
+  }
+
+  .coachBody b {
+    max-width: calc(100vw - 36px);
+  }
+
+  .encounterBanner {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 24px !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    gap: 6px !important;
+    padding: 5px 8px 6px 10px !important;
+    background: rgba(18, 9, 7, 0.56);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
+  }
+
+  .encounterBanner::before {
+    width: 2px;
+  }
+
+  .encounterBanner span {
+    font-size: 8px !important;
+  }
+
+  .encounterBanner strong {
+    overflow: hidden;
+    font-size: 10px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .encounterBanner small {
+    display: none !important;
+  }
+
+  .bossBar {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    grid-template-columns: 78px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    gap: 3px 6px !important;
+    padding: 5px 7px 6px 9px !important;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--tone, #70d6ff) 13%, transparent), transparent),
+      rgba(14, 8, 7, 0.58);
+    box-shadow: 0 7px 16px rgba(0, 0, 0, 0.24) !important;
+  }
+
+  .bossBar::before {
+    width: 2px;
+  }
+
+  .bossBarMeta {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    align-content: center;
+    gap: 1px !important;
+    font-size: 8px !important;
+  }
+
+  .bossBarMeta span,
+  .bossBarMeta strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .bossBarMeta small {
+    display: none !important;
+  }
+
+  .bossHpTrack {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    height: 6px !important;
+    box-shadow: none;
+  }
+
+  .bossHpTrack i {
+    transition: none;
+  }
+
+  .bossPatternMeta {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-content: flex-start !important;
+    overflow: hidden;
+  }
+
+  .bossPatternMeta span {
+    min-height: 16px !important;
+    padding: 2px 5px !important;
+    font-size: 8px !important;
+  }
+
+  .bossPatternMeta .bossPatternCast {
+    min-width: 0 !important;
+    max-width: 100%;
+  }
+
+  .bossPatternMeta .bossPatternStage,
+  .bossPatternMeta .bossPatternHintPill {
+    display: none !important;
+  }
+}

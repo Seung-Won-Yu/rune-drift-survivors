@@ -15,23 +15,23 @@ const DASH_SPEED = 22;
 const DASH_TIME = 0.2;
 const DASH_COOLDOWN = 1.15;
 const PLAYER_RADIUS = 0.58;
-const MAX_ENEMIES = 132;
+const MAX_ENEMIES = 120;
 const WAVE_DURATION = 22;
 const MAX_FIELD_ITEMS = 16;
-const MAX_XP_GEMS = 260;
-const MAX_PROJECTILES = 150;
-const MAX_HIT_BURSTS = 42;
-const MAX_WEAPON_EFFECTS = 24;
-const MAX_DAMAGE_NUMBERS = 30;
-const MAX_SPAWN_WARNINGS = 10;
+const MAX_XP_GEMS = 220;
+const MAX_PROJECTILES = 128;
+const MAX_HIT_BURSTS = 30;
+const MAX_WEAPON_EFFECTS = 18;
+const MAX_DAMAGE_NUMBERS = 22;
+const MAX_SPAWN_WARNINGS = 8;
 const MAX_ORBIT_BLADES = 12;
 const PROJECTILE_GRID_CELL_SIZE = 9;
 const PROJECTILE_GRID_KEY_STRIDE = 1024;
 const STATIC_COLLIDER_GRID_CELL_SIZE = 18;
 const STATIC_COLLIDER_GRID_KEY_STRIDE = 1024;
 const STATE_SYNC_INTERVAL = 0.08;
-const BALANCED_STATE_SYNC_INTERVAL = 0.1;
-const LOW_STATE_SYNC_INTERVAL = 0.13;
+const BALANCED_STATE_SYNC_INTERVAL = 0.12;
+const LOW_STATE_SYNC_INTERVAL = 0.18;
 const OVERLOAD_DURATION = 8;
 const XP_BASE_MAGNET_RADIUS = 8.2;
 const XP_PICKUP_RADIUS = 1.3;
@@ -408,37 +408,37 @@ const ADVANCED_ORB_UPGRADE_IDS = new Set(['orb-fan', 'orb-lance']);
 const GLOBAL_POWER_UPGRADE_IDS = new Set(['damage', 'cooldown']);
 const VISUAL_BUDGETS = {
   high: {
-    enemyAuras: 72,
-    enemyAccents: 82,
-    gemBeams: 42,
-    projectileAura: 66,
-    projectileDetail: 28,
-    hitBursts: 30,
-    weaponEffects: 18,
-    damageNumbers: 22,
-    spawnWarnings: 10
-  },
-  balanced: {
-    enemyAuras: 48,
-    enemyAccents: 58,
-    gemBeams: 0,
-    projectileAura: 42,
-    projectileDetail: 12,
-    hitBursts: 22,
-    weaponEffects: 12,
-    damageNumbers: 16,
+    enemyAuras: 56,
+    enemyAccents: 64,
+    gemBeams: 24,
+    projectileAura: 46,
+    projectileDetail: 18,
+    hitBursts: 20,
+    weaponEffects: 14,
+    damageNumbers: 18,
     spawnWarnings: 8
   },
-  low: {
-    enemyAuras: 38,
-    enemyAccents: 44,
+  balanced: {
+    enemyAuras: 30,
+    enemyAccents: 38,
     gemBeams: 0,
-    projectileAura: 32,
+    projectileAura: 26,
+    projectileDetail: 6,
+    hitBursts: 14,
+    weaponEffects: 8,
+    damageNumbers: 10,
+    spawnWarnings: 5
+  },
+  low: {
+    enemyAuras: 14,
+    enemyAccents: 18,
+    gemBeams: 0,
+    projectileAura: 12,
     projectileDetail: 0,
-    hitBursts: 18,
-    weaponEffects: 10,
-    damageNumbers: 14,
-    spawnWarnings: 6
+    hitBursts: 8,
+    weaponEffects: 4,
+    damageNumbers: 6,
+    spawnWarnings: 3
   }
 };
 
@@ -449,14 +449,14 @@ const RUNTIME_BUDGETS = {
     maxXpGems: MAX_XP_GEMS
   },
   balanced: {
-    maxEnemies: 96,
-    maxProjectiles: 96,
-    maxXpGems: 160
+    maxEnemies: 86,
+    maxProjectiles: 76,
+    maxXpGems: 130
   },
   low: {
-    maxEnemies: 72,
-    maxProjectiles: 72,
-    maxXpGems: 120
+    maxEnemies: 60,
+    maxProjectiles: 52,
+    maxXpGems: 90
   }
 };
 
@@ -489,9 +489,10 @@ function getRuntimeVisualQuality(baseQuality = 'high', game = {}) {
   const time = game.time ?? 0;
   const wave = game.wave ?? 1;
   const kills = game.kills ?? 0;
-  const latePressure = time >= 150 || wave >= 8 || kills >= 260;
-  const heavyPressure = time >= 52 || wave >= 3 || kills >= 70;
+  const latePressure = time >= 115 || wave >= 6 || kills >= 180;
+  const heavyPressure = time >= 38 || wave >= 2 || kills >= 45;
   if (latePressure) return 'low';
+  if (heavyPressure && baseQuality === 'balanced') return 'low';
   if (heavyPressure && baseQuality === 'high') return 'balanced';
   return baseQuality;
 }
@@ -505,11 +506,14 @@ function getStateSyncInterval(visualQuality = 'high', game = {}) {
 function getVisualQuality() {
   if (typeof window === 'undefined') return 'high';
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false;
   const narrowViewport = window.innerWidth <= 700;
+  const portraitViewport = window.innerWidth <= 820 && window.innerHeight >= window.innerWidth;
+  const highPixelRatio = window.devicePixelRatio >= 2;
   const lowMemory = navigator.deviceMemory !== undefined && navigator.deviceMemory <= 4;
   const lowCore = navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4;
-  if (reducedMotion || (narrowViewport && (lowMemory || lowCore))) return 'low';
-  if (narrowViewport || lowMemory || lowCore) return 'balanced';
+  if (reducedMotion || coarsePointer || (narrowViewport && (highPixelRatio || lowMemory || lowCore))) return 'low';
+  if (portraitViewport || narrowViewport || lowMemory || lowCore) return 'balanced';
   return 'high';
 }
 
@@ -810,8 +814,14 @@ function App() {
   const visualQuality = useVisualQuality();
   const runtimeVisualQuality = getRuntimeVisualQuality(visualQuality, game);
   const canvasDpr = useMemo(() => (
-    runtimeVisualQuality === 'low' ? [1, 1] : runtimeVisualQuality === 'balanced' ? [1, 1.08] : [1, 1.22]
+    runtimeVisualQuality === 'low' ? [0.88, 1] : runtimeVisualQuality === 'balanced' ? [0.95, 1.05] : [1, 1.12]
   ), [runtimeVisualQuality]);
+  const canvasCamera = useMemo(() => ({
+    position: runtimeVisualQuality === 'low' ? [0, 38, 64] : runtimeVisualQuality === 'balanced' ? [0, 42, 70] : [0, 44, 74],
+    fov: runtimeVisualQuality === 'low' ? 50 : 48,
+    near: 0.1,
+    far: 420
+  }), [runtimeVisualQuality]);
 
   const togglePause = () => {
     setGame(current => {
@@ -960,7 +970,7 @@ function App() {
     <main className={`shell visual-${runtimeVisualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>
       <Canvas
         shadows={false}
-        camera={{ position: [0, 44, 74], fov: 48, near: 0.1, far: 420 }}
+        camera={canvasCamera}
         dpr={canvasDpr}
       >
         <color attach="background" args={[ART_TOKENS.void]} />
@@ -1035,6 +1045,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
   const stateSyncElapsed = useRef(0);
   const cameraTarget = useRef(new THREE.Vector3());
   const cameraShake = useRef(0);
+  const compactCamera = typeof window !== 'undefined'
+    && (window.matchMedia?.('(pointer: coarse)').matches || window.innerWidth <= 700);
   const scratch = useMemo(() => ({
     matrix: new THREE.Matrix4(),
     color: new THREE.Color(),
@@ -2922,8 +2934,10 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
     const shake = cameraShake.current;
     const shakeX = (Math.random() - 0.5) * shake;
     const shakeZ = (Math.random() - 0.5) * shake;
-    camera.position.lerp(scratch.cameraPosition.set(cameraTarget.current.x + shakeX, 44 + cameraTarget.current.y * 0.38, cameraTarget.current.z + 74 + shakeZ), 0.08);
-    camera.lookAt(cameraTarget.current.x, 0.62 + cameraTarget.current.y * 0.68, cameraTarget.current.z);
+    const cameraHeight = compactCamera ? 38 : visualQuality === 'balanced' ? 42 : 44;
+    const cameraDepth = compactCamera ? 64 : visualQuality === 'balanced' ? 70 : 74;
+    camera.position.lerp(scratch.cameraPosition.set(cameraTarget.current.x + shakeX, cameraHeight + cameraTarget.current.y * 0.38, cameraTarget.current.z + cameraDepth + shakeZ), 0.08);
+    camera.lookAt(cameraTarget.current.x, (compactCamera ? 0.82 : 0.62) + cameraTarget.current.y * 0.68, cameraTarget.current.z);
   };
 
   const nearestEnemy = () => {
