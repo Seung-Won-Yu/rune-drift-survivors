@@ -58,6 +58,26 @@ Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete sy
 | Pause | `P`, `Esc`, or pause button |
 | Restart | restart button |
 
+## Performance Modes
+
+The default render mode is `balanced` so the game can run longer without pushing laptop GPUs too hard.
+
+Optional URL flags:
+
+```txt
+?quality=low
+?quality=balanced
+?quality=high
+?quality=high&fx=on
+?quality=cinematic
+```
+
+Notes:
+
+- `balanced` lowers DPR, post effects, small terrain clutter, enemy accent extras, and runtime object caps.
+- `low` is intended for mobile, high-DPI small screens, reduced-motion users, or hot laptops.
+- Bloom, vignette, and the HDR environment are opt-in through `?fx=on`, `?env=on`, or `?quality=cinematic`.
+
 ## Local Development
 
 Install dependencies:

@@ -15,23 +15,23 @@ const DASH_SPEED = 22;
 const DASH_TIME = 0.2;
 const DASH_COOLDOWN = 1.15;
 const PLAYER_RADIUS = 0.58;
-const MAX_ENEMIES = 120;
+const MAX_ENEMIES = 96;
 const WAVE_DURATION = 22;
-const MAX_FIELD_ITEMS = 16;
-const MAX_XP_GEMS = 220;
-const MAX_PROJECTILES = 128;
-const MAX_HIT_BURSTS = 30;
-const MAX_WEAPON_EFFECTS = 18;
-const MAX_DAMAGE_NUMBERS = 22;
-const MAX_SPAWN_WARNINGS = 8;
+const MAX_FIELD_ITEMS = 12;
+const MAX_XP_GEMS = 160;
+const MAX_PROJECTILES = 96;
+const MAX_HIT_BURSTS = 20;
+const MAX_WEAPON_EFFECTS = 12;
+const MAX_DAMAGE_NUMBERS = 16;
+const MAX_SPAWN_WARNINGS = 6;
 const MAX_ORBIT_BLADES = 12;
 const PROJECTILE_GRID_CELL_SIZE = 9;
 const PROJECTILE_GRID_KEY_STRIDE = 1024;
 const STATIC_COLLIDER_GRID_CELL_SIZE = 18;
 const STATIC_COLLIDER_GRID_KEY_STRIDE = 1024;
-const STATE_SYNC_INTERVAL = 0.08;
-const BALANCED_STATE_SYNC_INTERVAL = 0.12;
-const LOW_STATE_SYNC_INTERVAL = 0.18;
+const STATE_SYNC_INTERVAL = 0.1;
+const BALANCED_STATE_SYNC_INTERVAL = 0.16;
+const LOW_STATE_SYNC_INTERVAL = 0.24;
 const OVERLOAD_DURATION = 8;
 const XP_BASE_MAGNET_RADIUS = 8.2;
 const XP_PICKUP_RADIUS = 1.3;
@@ -408,37 +408,37 @@ const ADVANCED_ORB_UPGRADE_IDS = new Set(['orb-fan', 'orb-lance']);
 const GLOBAL_POWER_UPGRADE_IDS = new Set(['damage', 'cooldown']);
 const VISUAL_BUDGETS = {
   high: {
-    enemyAuras: 56,
-    enemyAccents: 64,
-    gemBeams: 24,
-    projectileAura: 46,
-    projectileDetail: 18,
-    hitBursts: 20,
-    weaponEffects: 14,
-    damageNumbers: 18,
-    spawnWarnings: 8
-  },
-  balanced: {
-    enemyAuras: 30,
-    enemyAccents: 38,
-    gemBeams: 0,
-    projectileAura: 26,
-    projectileDetail: 6,
+    enemyAuras: 38,
+    enemyAccents: 42,
+    gemBeams: 10,
+    projectileAura: 30,
+    projectileDetail: 8,
     hitBursts: 14,
     weaponEffects: 8,
-    damageNumbers: 10,
+    damageNumbers: 12,
     spawnWarnings: 5
   },
-  low: {
-    enemyAuras: 14,
-    enemyAccents: 18,
+  balanced: {
+    enemyAuras: 18,
+    enemyAccents: 22,
     gemBeams: 0,
-    projectileAura: 12,
-    projectileDetail: 0,
+    projectileAura: 16,
+    projectileDetail: 2,
     hitBursts: 8,
     weaponEffects: 4,
     damageNumbers: 6,
     spawnWarnings: 3
+  },
+  low: {
+    enemyAuras: 8,
+    enemyAccents: 10,
+    gemBeams: 0,
+    projectileAura: 6,
+    projectileDetail: 0,
+    hitBursts: 4,
+    weaponEffects: 2,
+    damageNumbers: 3,
+    spawnWarnings: 2
   }
 };
 
@@ -449,14 +449,14 @@ const RUNTIME_BUDGETS = {
     maxXpGems: MAX_XP_GEMS
   },
   balanced: {
-    maxEnemies: 86,
-    maxProjectiles: 76,
-    maxXpGems: 130
+    maxEnemies: 64,
+    maxProjectiles: 54,
+    maxXpGems: 96
   },
   low: {
-    maxEnemies: 60,
-    maxProjectiles: 52,
-    maxXpGems: 90
+    maxEnemies: 42,
+    maxProjectiles: 34,
+    maxXpGems: 64
   }
 };
 
@@ -503,8 +503,32 @@ function getStateSyncInterval(visualQuality = 'high', game = {}) {
   return STATE_SYNC_INTERVAL;
 }
 
+const VISUAL_QUALITY_VALUES = new Set(['low', 'balanced', 'high']);
+
+function getForcedVisualQuality() {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  const queryQuality = params.get('quality')?.toLowerCase();
+  if (queryQuality === 'cinematic') return 'high';
+  if (VISUAL_QUALITY_VALUES.has(queryQuality)) return queryQuality;
+  try {
+    const savedQuality = window.localStorage?.getItem('rune-drift-quality')?.toLowerCase();
+    return VISUAL_QUALITY_VALUES.has(savedQuality) ? savedQuality : null;
+  } catch {
+    return null;
+  }
+}
+
+function isOptionalRenderFeatureEnabled(name) {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name) === 'on' || params.get('quality') === 'cinematic';
+}
+
 function getVisualQuality() {
-  if (typeof window === 'undefined') return 'high';
+  if (typeof window === 'undefined') return 'balanced';
+  const forcedQuality = getForcedVisualQuality();
+  if (forcedQuality) return forcedQuality;
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false;
   const narrowViewport = window.innerWidth <= 700;
@@ -514,7 +538,7 @@ function getVisualQuality() {
   const lowCore = navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4;
   if (reducedMotion || coarsePointer || (narrowViewport && (highPixelRatio || lowMemory || lowCore))) return 'low';
   if (portraitViewport || narrowViewport || lowMemory || lowCore) return 'balanced';
-  return 'high';
+  return 'balanced';
 }
 
 function useVisualQuality() {
@@ -813,8 +837,14 @@ function App() {
   const touchControls = useRef(createTouchControlsState());
   const visualQuality = useVisualQuality();
   const runtimeVisualQuality = getRuntimeVisualQuality(visualQuality, game);
+  const enablePostFx = useMemo(() => (
+    runtimeVisualQuality === 'high' && isOptionalRenderFeatureEnabled('fx')
+  ), [runtimeVisualQuality]);
+  const enableEnvironment = useMemo(() => (
+    runtimeVisualQuality === 'high' && isOptionalRenderFeatureEnabled('env')
+  ), [runtimeVisualQuality]);
   const canvasDpr = useMemo(() => (
-    runtimeVisualQuality === 'low' ? [0.88, 1] : runtimeVisualQuality === 'balanced' ? [0.95, 1.05] : [1, 1.12]
+    runtimeVisualQuality === 'low' ? [0.62, 0.75] : runtimeVisualQuality === 'balanced' ? [0.72, 0.9] : [0.82, 1]
   ), [runtimeVisualQuality]);
   const canvasCamera = useMemo(() => ({
     position: runtimeVisualQuality === 'low' ? [0, 38, 64] : runtimeVisualQuality === 'balanced' ? [0, 42, 70] : [0, 44, 74],
@@ -822,6 +852,13 @@ function App() {
     near: 0.1,
     far: 420
   }), [runtimeVisualQuality]);
+  const canvasGl = useMemo(() => ({
+    antialias: runtimeVisualQuality === 'high' && enablePostFx,
+    alpha: false,
+    depth: true,
+    stencil: false,
+    powerPreference: runtimeVisualQuality === 'high' && enablePostFx ? 'high-performance' : 'low-power'
+  }), [enablePostFx, runtimeVisualQuality]);
 
   const togglePause = () => {
     setGame(current => {
@@ -972,6 +1009,7 @@ function App() {
         shadows={false}
         camera={canvasCamera}
         dpr={canvasDpr}
+        gl={canvasGl}
       >
         <color attach="background" args={[ART_TOKENS.void]} />
         <fog attach="fog" args={['#07110f', 68, 255]} />
@@ -985,10 +1023,12 @@ function App() {
             touchControlsRef={touchControls}
           />
         </Suspense>
-        <Suspense fallback={null}>
-          <Environment preset="night" />
-        </Suspense>
-        {runtimeVisualQuality === 'high' && (
+        {enableEnvironment && (
+          <Suspense fallback={null}>
+            <Environment preset="night" />
+          </Suspense>
+        )}
+        {enablePostFx && (
           <EffectComposer>
             <Bloom luminanceThreshold={0.34} intensity={0.72} mipmapBlur />
             <Vignette eskil={false} offset={0.2} darkness={0.62} />
@@ -2991,17 +3031,17 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
       <directionalLight
         castShadow={false}
         position={[22, 30, 14]}
-        intensity={2.55}
+        intensity={visualQuality === 'low' ? 2.05 : 2.35}
         color="#f5f0d0"
       />
-      <directionalLight position={[-34, 18, -48]} intensity={0.78} color={ART_TOKENS.riftViolet} />
-      <pointLight position={[0, 2.4, 0]} intensity={3.9} color={ART_TOKENS.runeCyan} distance={14} />
-      <pointLight position={[0, 5.8, 0]} intensity={1.25} color={ART_TOKENS.wornGold} distance={38} />
-      <pointLight position={[-42, 3.2, -22]} intensity={1.15} color={ART_TOKENS.riftViolet} distance={42} />
-      <pointLight position={[48, 3.2, 26]} intensity={0.86} color={ART_TOKENS.runeMint} distance={38} />
+      {visualQuality !== 'low' && <directionalLight position={[-34, 18, -48]} intensity={0.5} color={ART_TOKENS.riftViolet} />}
+      <pointLight position={[0, 2.4, 0]} intensity={visualQuality === 'low' ? 1.6 : 2.2} color={ART_TOKENS.runeCyan} distance={12} />
+      {visualQuality === 'high' && <pointLight position={[0, 5.8, 0]} intensity={1.0} color={ART_TOKENS.wornGold} distance={34} />}
+      {visualQuality === 'high' && <pointLight position={[-42, 3.2, -22]} intensity={0.82} color={ART_TOKENS.riftViolet} distance={38} />}
+      {visualQuality === 'high' && <pointLight position={[48, 3.2, 26]} intensity={0.64} color={ART_TOKENS.runeMint} distance={34} />}
       <MapBaseArena visualQuality={visualQuality} />
-      <ArenaAtmosphere />
-      {visualQuality !== 'low' && <RiftSkyMotifs visualQuality={visualQuality} />}
+      {visualQuality !== 'low' && <ArenaAtmosphere />}
+      {visualQuality === 'high' && <RiftSkyMotifs visualQuality={visualQuality} />}
       <PlayerAvatar rootRef={playerMesh} game={game} player={player} />
       <PlayerPresence player={player} game={game} />
       <OrbitBlades player={player} game={game} />
@@ -3018,7 +3058,7 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
         <octahedronGeometry args={[0.34, 0]} />
         <meshStandardMaterial color="#9ff7ff" emissive="#38d9ff" emissiveIntensity={3.5} roughness={0.18} toneMapped={false} />
       </instancedMesh>
-      {visualQuality !== 'low' && <GemBeacons gemsRef={xpGems} visualQuality={visualQuality} />}
+      {visualQuality === 'high' && <GemBeacons gemsRef={xpGems} visualQuality={visualQuality} />}
       <FieldPickupItems itemsRef={fieldItems} />
       <RuneShrineSites shrinesRef={shrines} />
       <SourceProjectileInstances projectilesRef={projectiles} type="orb" url={PROJECTILE_MODEL_URLS.orb} scaleMultiplier={1.25} visualQuality={visualQuality} />
@@ -3588,7 +3628,7 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
     right: new THREE.Vector3(),
     yAxis: new THREE.Vector3(0, 1, 0)
   }), []);
-  const showDecor = visualQuality !== 'low';
+  const showDecor = visualQuality === 'high';
 
   useFrame(() => {
     const budget = getVisualBudget(visualQuality);
@@ -5006,34 +5046,37 @@ function RuneDrifterModel() {
 PRELOAD_MODEL_URLS.forEach(path => useGLTF.preload(path));
 
 function MapBaseArena({ visualQuality = 'high' }) {
+  const edgeSegments = visualQuality === 'low' ? 112 : visualQuality === 'balanced' ? 144 : 176;
   return (
     <group>
       <mesh receiveShadow position={[0, -2.05, 0]}>
-        <cylinderGeometry args={[ARENA_RADIUS + 18.0, ARENA_RADIUS + 8.0, 1.5, 224]} />
+        <cylinderGeometry args={[ARENA_RADIUS + 18.0, ARENA_RADIUS + 8.0, 1.5, edgeSegments]} />
         <meshStandardMaterial color={ART_TOKENS.void} roughness={0.99} metalness={0.01} />
       </mesh>
 
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.08, 0]}>
-        <circleGeometry args={[ARENA_RADIUS + 42.0, 224]} />
+        <circleGeometry args={[ARENA_RADIUS + 42.0, edgeSegments]} />
         <meshStandardMaterial color="#101912" roughness={1} metalness={0} />
       </mesh>
 
       <SculptedRuinTerrain visualQuality={visualQuality} />
       <OpenFieldTerrainIdentity />
-      <TerrainStoryDetails />
-      <RiftFloorSigils />
+      {visualQuality !== 'low' && <TerrainStoryDetails />}
+      {visualQuality === 'high' && <RiftFloorSigils />}
       <RuneRelicLandmarks />
-      <Suspense fallback={null}>
-        <ImportedForestBattlefield visualQuality={visualQuality} />
-      </Suspense>
+      {visualQuality !== 'low' && (
+        <Suspense fallback={null}>
+          <ImportedForestBattlefield visualQuality={visualQuality} />
+        </Suspense>
+      )}
       <NaturalFieldKit visualQuality={visualQuality} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.07, 0]}>
-        <ringGeometry args={[ARENA_RADIUS - 1.35, ARENA_RADIUS - 1.02, 224]} />
+        <ringGeometry args={[ARENA_RADIUS - 1.35, ARENA_RADIUS - 1.02, edgeSegments]} />
         <meshBasicMaterial color={ART_TOKENS.runeCyan} transparent opacity={0.22} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 10]} position={[0, getTerrainHeight(0, 0) + 0.09, 0]}>
-        <ringGeometry args={[ARENA_RADIUS - 8.8, ARENA_RADIUS - 8.55, 224]} />
+        <ringGeometry args={[ARENA_RADIUS - 8.8, ARENA_RADIUS - 8.55, edgeSegments]} />
         <meshBasicMaterial color={ART_TOKENS.wornGold} transparent opacity={0.11} depthWrite={false} toneMapped={false} />
       </mesh>
     </group>
@@ -5096,7 +5139,7 @@ function RiftFloorSigils() {
 function SculptedRuinTerrain({ visualQuality = 'high' }) {
   const geometry = useMemo(() => {
     const size = ARENA_RADIUS * 2 + 48;
-    const segments = visualQuality === 'low' ? 72 : visualQuality === 'balanced' ? 96 : 120;
+    const segments = visualQuality === 'low' ? 48 : visualQuality === 'balanced' ? 72 : 96;
     const half = size / 2;
     const positions = [];
     const colors = [];
@@ -5383,8 +5426,8 @@ function TerrainStoryDetails() {
 
 function ImportedForestBattlefield({ visualQuality = 'high' }) {
   const transforms = useMemo(() => {
-    const density = visualQuality === 'low' ? 0.5 : visualQuality === 'balanced' ? 0.68 : 0.82;
-    const treeDensity = visualQuality === 'low' ? 0.42 : visualQuality === 'balanced' ? 0.56 : 0.68;
+    const density = visualQuality === 'low' ? 0.28 : visualQuality === 'balanced' ? 0.42 : 0.58;
+    const treeDensity = visualQuality === 'low' ? 0.24 : visualQuality === 'balanced' ? 0.38 : 0.52;
     const count = base => Math.max(1, Math.round(base * density));
     const countTree = base => Math.max(1, Math.round(base * treeDensity));
 
@@ -5417,8 +5460,11 @@ function ImportedForestBattlefield({ visualQuality = 'high' }) {
       return !centerCombat && !foregroundBlock && !upperHudLane && !shrineLane;
     };
 
-    const outerBirches = Array.from({ length: countTree(15) }, (_, index) => {
-      const angle = index * Math.PI * 2 / 15 + 0.14 + Math.sin(index * 1.41) * 0.08;
+    const outerBirchCount = countTree(15);
+    const outerPineCount = countTree(13);
+
+    const outerBirches = Array.from({ length: outerBirchCount }, (_, index) => {
+      const angle = index * Math.PI * 2 / outerBirchCount + 0.14 + Math.sin(index * 1.41) * 0.08;
       const radius = 86 + (index % 5) * 3.0 + Math.cos(index * 0.87) * 1.2;
       const transform = place(angle, radius, 1.12 + (index % 3) * 0.09, -0.04, 0.12);
       transform.shadowWidth = 11.2 + (index % 3) * 1.8;
@@ -5426,8 +5472,8 @@ function ImportedForestBattlefield({ visualQuality = 'high' }) {
       return withModelScale(transform, 0.86, 0.94, 0.86);
     }).filter(readableClear);
 
-    const outerPines = Array.from({ length: countTree(13) }, (_, index) => {
-      const angle = index * Math.PI * 2 / 13 + 0.42 + Math.sin(index * 0.91) * 0.08;
+    const outerPines = Array.from({ length: outerPineCount }, (_, index) => {
+      const angle = index * Math.PI * 2 / outerPineCount + 0.42 + Math.sin(index * 0.91) * 0.08;
       const radius = 90 + (index % 4) * 2.8 + Math.sin(index * 1.16) * 1.1;
       const transform = place(angle, radius, 1.02 + (index % 4) * 0.08, -0.06, 0.1);
       transform.shadowWidth = 11.8 + (index % 3) * 1.5;
@@ -5443,7 +5489,7 @@ function ImportedForestBattlefield({ visualQuality = 'high' }) {
       return withModelScale(transform, 0.74, 0.82, 0.74);
     }).filter(readableClear);
 
-    const shrineGroves = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: visualQuality === 'low' ? 1 : 2 }, (_, index) => {
+    const shrineGroves = SHRINE_SITES.flatMap((site, siteIndex) => Array.from({ length: visualQuality === 'high' ? 2 : 1 }, (_, index) => {
       const side = index === 0 ? -1 : 1;
       const angle = site.angle + side * (0.25 + siteIndex * 0.01) + Math.sin(siteIndex * 1.8 + index) * 0.04;
       const radius = site.radius + 17.5 + (index % 2) * 3.5;
@@ -5493,11 +5539,11 @@ function ImportedForestBattlefield({ visualQuality = 'high' }) {
   return (
     <group>
       <ImportedForestGroundShadows transforms={transforms.ground} />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.birchTrees} transforms={[...transforms.outerBirches, ...transforms.featureGroves.filter((_, index) => index % 2 === 0), ...transforms.shrineGroves.filter((_, index) => index % 2 === 0)]} normalizeOrigin castShadow receiveShadow materialColor="#d3ffe1" />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.pineTrees} transforms={[...transforms.outerPines, ...transforms.featureGroves.filter((_, index) => index % 2 === 1), ...transforms.shrineGroves.filter((_, index) => index % 2 === 1)]} normalizeOrigin castShadow receiveShadow materialColor="#a9dcc2" />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.rocks} transforms={[...transforms.rockClusters, ...transforms.barrierRocks]} normalizeOrigin castShadow receiveShadow materialColor="#c7c0a8" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.birchTrees} transforms={[...transforms.outerBirches, ...transforms.featureGroves.filter((_, index) => index % 2 === 0), ...transforms.shrineGroves.filter((_, index) => index % 2 === 0)]} normalizeOrigin materialColor="#d3ffe1" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.pineTrees} transforms={[...transforms.outerPines, ...transforms.featureGroves.filter((_, index) => index % 2 === 1), ...transforms.shrineGroves.filter((_, index) => index % 2 === 1)]} normalizeOrigin materialColor="#a9dcc2" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.rocks} transforms={[...transforms.rockClusters, ...transforms.barrierRocks]} normalizeOrigin materialColor="#c7c0a8" />
       <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.bushes} transforms={transforms.bushes} normalizeOrigin receiveShadow materialColor="#9ae0a4" />
-      {visualQuality !== 'low' && <ImportedForestLightFlecks transforms={transforms.canopies} />}
+      {visualQuality === 'high' && <ImportedForestLightFlecks transforms={transforms.canopies} />}
     </group>
   );
 }
@@ -5576,8 +5622,8 @@ function ImportedForestLightFlecks({ transforms }) {
 
 function NaturalFieldKit({ visualQuality = 'high' }) {
   const transforms = useMemo(() => {
-    const density = visualQuality === 'low' ? 0.28 : visualQuality === 'balanced' ? 0.36 : 0.44;
-    const treeDensity = visualQuality === 'low' ? 0.08 : visualQuality === 'balanced' ? 0.12 : 0.16;
+    const density = visualQuality === 'low' ? 0.18 : visualQuality === 'balanced' ? 0.26 : 0.34;
+    const treeDensity = visualQuality === 'low' ? 0.05 : visualQuality === 'balanced' ? 0.08 : 0.12;
     const count = base => Math.max(1, Math.round(base * density));
     const countTree = base => Math.max(1, Math.round(base * treeDensity));
     const place = (angle, radius, scale, yOffset = 0.03, tilt = 0) => {
@@ -5798,17 +5844,17 @@ function NaturalFieldKit({ visualQuality = 'high' }) {
       <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} />
       <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow={receiveNatureShadows} />
       <FieldSaplingClusters transforms={transforms.saplings} />
-      <FallenTrunkMarks transforms={transforms.fallenTrunks} />
-      <ForestStumpClusters transforms={transforms.stumps} />
+      {visualQuality !== 'low' && <FallenTrunkMarks transforms={transforms.fallenTrunks} />}
+      {visualQuality !== 'low' && <ForestStumpClusters transforms={transforms.stumps} />}
       <FieldMossPatches transforms={transforms.moss} />
-      <FieldLeafLitter transforms={transforms.leafLitter} />
+      {visualQuality !== 'low' && <FieldLeafLitter transforms={transforms.leafLitter} />}
       <FieldPebbleScatter transforms={transforms.pebbles} />
-      <FieldWildflowerFlecks transforms={transforms.wildflowers} />
-      <RockLichenPatches transforms={transforms.rockLichen} />
+      {visualQuality !== 'low' && <FieldWildflowerFlecks transforms={transforms.wildflowers} />}
+      {visualQuality === 'high' && <RockLichenPatches transforms={transforms.rockLichen} />}
       <ShrineRuneSprouts transforms={transforms.runeSprouts} />
       <TreeCanopyShadows transforms={transforms.trees} />
-      {visualQuality !== 'low' && <TreeCanopyHighlights transforms={transforms.trees} />}
-      {visualQuality !== 'low' && <TreeRootPatches transforms={transforms.trees} />}
+      {visualQuality === 'high' && <TreeCanopyHighlights transforms={transforms.trees} />}
+      {visualQuality === 'high' && <TreeRootPatches transforms={transforms.trees} />}
     </group>
   );
 }
