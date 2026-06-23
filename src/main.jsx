@@ -30,6 +30,8 @@ const PROJECTILE_GRID_KEY_STRIDE = 1024;
 const STATIC_COLLIDER_GRID_CELL_SIZE = 18;
 const STATIC_COLLIDER_GRID_KEY_STRIDE = 1024;
 const STATE_SYNC_INTERVAL = 0.08;
+const BALANCED_STATE_SYNC_INTERVAL = 0.1;
+const LOW_STATE_SYNC_INTERVAL = 0.13;
 const OVERLOAD_DURATION = 8;
 const XP_BASE_MAGNET_RADIUS = 8.2;
 const XP_PICKUP_RADIUS = 1.3;
@@ -487,11 +489,17 @@ function getRuntimeVisualQuality(baseQuality = 'high', game = {}) {
   const time = game.time ?? 0;
   const wave = game.wave ?? 1;
   const kills = game.kills ?? 0;
-  const latePressure = time >= 205 || wave >= 11 || kills >= 430;
-  const heavyPressure = time >= 135 || wave >= 7 || kills >= 230;
+  const latePressure = time >= 185 || wave >= 9 || kills >= 340;
+  const heavyPressure = time >= 105 || wave >= 6 || kills >= 180;
   if (latePressure) return 'low';
   if (heavyPressure && baseQuality === 'high') return 'balanced';
   return baseQuality;
+}
+
+function getStateSyncInterval(visualQuality = 'high', game = {}) {
+  if (visualQuality === 'low') return LOW_STATE_SYNC_INTERVAL;
+  if (visualQuality === 'balanced' || (game.time ?? 0) >= 145) return BALANCED_STATE_SYNC_INTERVAL;
+  return STATE_SYNC_INTERVAL;
 }
 
 function getVisualQuality() {
@@ -1215,7 +1223,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
     }
 
     stateSyncElapsed.current += dt;
-    if (stateSyncElapsed.current >= STATE_SYNC_INTERVAL || game.time + stateSyncElapsed.current >= RUN_DURATION) {
+    const stateSyncInterval = getStateSyncInterval(visualQuality, game);
+    if (stateSyncElapsed.current >= stateSyncInterval || game.time + stateSyncElapsed.current >= RUN_DURATION) {
       const elapsed = stateSyncElapsed.current;
       stateSyncElapsed.current = 0;
       setGame(current => {
@@ -2832,6 +2841,10 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high' })
   const addDamageNumber = (pos, value, color, size = 0.56) => {
     const budget = getVisualBudget(visualQuality).damageNumbers;
     const isPriority = typeof value === 'string' && /[A-Z가-힣]/.test(value);
+    const loadRatio = (enemies.current.length / Math.max(1, runtimeBudget.maxEnemies))
+      + (projectiles.current.length / Math.max(1, runtimeBudget.maxProjectiles));
+    if (!isPriority && visualQuality === 'low' && Math.random() < 0.55) return;
+    if (!isPriority && loadRatio > 1.35 && Math.random() < 0.42) return;
     if (!isPriority && damageNumbers.current.length >= budget + 8) return;
     if (damageNumbers.current.length >= budget + 14) damageNumbers.current.length = budget + 8;
     damageNumbers.current.push({
