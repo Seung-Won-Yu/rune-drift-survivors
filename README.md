@@ -53,8 +53,8 @@ Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete sy
 
 | Action | Input |
 | --- | --- |
-| Move | `WASD` or arrow keys |
-| Dash | `Space` |
+| Move | `WASD`, arrow keys, or mobile joystick |
+| Dash | `Space` or mobile dash button |
 | Pause | `P`, `Esc`, or pause button |
 | Restart | restart button |
 

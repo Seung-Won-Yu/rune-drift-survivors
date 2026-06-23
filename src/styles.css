@@ -107,6 +107,109 @@ button {
   z-index: 2;
 }
 
+.touchControls {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: max(16px, env(safe-area-inset-left));
+  display: none;
+  align-items: flex-end;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.touchStick,
+.touchDashButton {
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.touchStick {
+  position: relative;
+  width: clamp(96px, 26vw, 126px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(210, 255, 244, 0.28);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(115, 251, 211, 0.16), transparent 28%),
+    radial-gradient(circle at 50% 50%, rgba(112, 214, 255, 0.12), rgba(3, 10, 9, 0.58) 62%),
+    rgba(3, 10, 9, 0.42);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.32),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 0 22px rgba(112, 214, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.touchStick::before {
+  position: absolute;
+  inset: 18%;
+  content: "";
+  border: 1px solid rgba(115, 251, 211, 0.18);
+  border-radius: inherit;
+}
+
+.touchStick i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 42%;
+  aspect-ratio: 1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.48), transparent 22%),
+    linear-gradient(135deg, rgba(115, 251, 211, 0.88), rgba(112, 214, 255, 0.72));
+  box-shadow:
+    0 0 22px rgba(112, 214, 255, 0.42),
+    inset 0 -6px 14px rgba(0, 0, 0, 0.22);
+  transform: translate(calc(-50% + var(--stick-x, 0px)), calc(-50% + var(--stick-z, 0px)));
+  transition: transform 80ms ease, box-shadow 120ms ease;
+}
+
+.touchStick.isActive {
+  border-color: rgba(115, 251, 211, 0.58);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.34),
+    0 0 28px rgba(112, 214, 255, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.touchDashButton {
+  display: grid;
+  place-items: center;
+  width: clamp(68px, 18vw, 82px);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid rgba(255, 241, 166, 0.42);
+  border-radius: 999px;
+  color: #fff1a6;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 241, 166, 0.24), transparent 38%),
+    linear-gradient(135deg, rgba(255, 223, 110, 0.18), rgba(255, 139, 114, 0.12)),
+    rgba(8, 16, 14, 0.62);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.36),
+    0 0 24px rgba(255, 223, 110, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.touchDashButton span {
+  font-size: 28px;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 0 16px rgba(255, 241, 166, 0.44);
+}
+
+.touchDashButton:active {
+  transform: translateY(2px) scale(0.97);
+  border-color: rgba(255, 241, 166, 0.72);
+}
+
 .topbar {
   position: relative;
   display: grid;
@@ -1871,7 +1974,13 @@ h1 {
   }
 }
 
-@media (max-width: 700px) {
+@media (pointer: coarse), (max-width: 700px), (max-aspect-ratio: 3 / 4) {
+  .touchControls {
+    display: flex;
+  }
+}
+
+@media (max-width: 700px), (max-aspect-ratio: 3 / 4) {
   .modalLayer {
     backdrop-filter: none;
   }
@@ -2162,6 +2271,12 @@ h1 {
     width: 34px;
     height: 34px;
     min-height: 34px;
+  }
+
+  .touchControls {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: max(12px, env(safe-area-inset-left));
   }
 
   .meter {
