@@ -60,7 +60,7 @@ Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete sy
 
 ## Performance Modes
 
-The default render mode is `balanced` so the game can run longer without pushing laptop GPUs too hard.
+The default render mode is `balanced` so the game keeps a crisp canvas while avoiding avoidable runtime churn.
 
 Optional URL flags:
 
@@ -74,7 +74,8 @@ Optional URL flags:
 
 Notes:
 
-- `balanced` lowers DPR, post effects, small terrain clutter, enemy accent extras, and runtime object caps.
+- `balanced` keeps the normal arena detail and uses a capped but sharp DPR range.
+- Runtime optimization focuses on lower object churn, squared-distance checks, post-effect opt-in, and capped combat object counts.
 - `low` is intended for mobile, high-DPI small screens, reduced-motion users, or hot laptops.
 - Bloom, vignette, and the HDR environment are opt-in through `?fx=on`, `?env=on`, or `?quality=cinematic`.
 

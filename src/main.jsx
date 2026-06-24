@@ -484,16 +484,14 @@ function getStaticColliderGridKey(cellX, cellZ) {
   return cellX * STATIC_COLLIDER_GRID_KEY_STRIDE + cellZ;
 }
 
-function getRuntimeVisualQuality(baseQuality = 'high', game = {}) {
+function getRuntimeVisualQuality(baseQuality = 'balanced', game = {}) {
   if (baseQuality === 'low') return 'low';
+  if (baseQuality === 'balanced') return 'balanced';
   const time = game.time ?? 0;
   const wave = game.wave ?? 1;
   const kills = game.kills ?? 0;
-  const latePressure = time >= 115 || wave >= 6 || kills >= 180;
   const heavyPressure = time >= 38 || wave >= 2 || kills >= 45;
-  if (latePressure) return 'low';
-  if (heavyPressure && baseQuality === 'balanced') return 'low';
-  if (heavyPressure && baseQuality === 'high') return 'balanced';
+  if (heavyPressure) return 'balanced';
   return baseQuality;
 }
 
@@ -844,7 +842,7 @@ function App() {
     runtimeVisualQuality === 'high' && isOptionalRenderFeatureEnabled('env')
   ), [runtimeVisualQuality]);
   const canvasDpr = useMemo(() => (
-    runtimeVisualQuality === 'low' ? [0.62, 0.75] : runtimeVisualQuality === 'balanced' ? [0.72, 0.9] : [0.82, 1]
+    runtimeVisualQuality === 'low' ? [0.85, 0.95] : runtimeVisualQuality === 'balanced' ? [1, 1] : [1, 1.15]
   ), [runtimeVisualQuality]);
   const canvasCamera = useMemo(() => ({
     position: runtimeVisualQuality === 'low' ? [0, 38, 64] : runtimeVisualQuality === 'balanced' ? [0, 42, 70] : [0, 44, 74],
@@ -2449,16 +2447,17 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
     let gemWrite = 0;
     for (const gem of xpGems.current) {
       gem.pulse += dt * 5;
-      const distance = gem.pos.distanceTo(playerPos);
+      const distanceSq = gem.pos.distanceToSquared(playerPos);
       const passiveReach = Math.min(18, currentGame.level * 0.38 + currentGame.time * 0.06);
       const crowdReach = gemCount > 170 ? Math.min(10, (gemCount - 170) * 0.04) : 0;
       const magnetDistance = gem.magnetized ? 190 : XP_BASE_MAGNET_RADIUS * currentGame.stats.magnet + passiveReach + crowdReach;
-      if (distance < magnetDistance && distance > 0.001) {
+      if (distanceSq < magnetDistance * magnetDistance && distanceSq > 0.000001) {
+        const distance = Math.sqrt(distanceSq);
         const pull = scratch.vec.copy(playerPos).sub(gem.pos).setY(0).normalize();
         const pullSpeed = gem.magnetized ? 44 + Math.min(110, distance * 1.35) : 12 + magnetDistance * 1.65;
         gem.pos.addScaledVector(pull, dt * pullSpeed);
       }
-      if (distance < XP_PICKUP_RADIUS) {
+      if (distanceSq < XP_PICKUP_RADIUS * XP_PICKUP_RADIUS) {
         gained += gem.value * currentGame.stats.xpGain;
         continue;
       }
@@ -2543,12 +2542,13 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
       item.pulse += dt * 4.2;
       item.life -= dt;
       if (item.life <= 0) continue;
-      const distance = item.pos.distanceTo(player.current.pos);
-      if (distance < FIELD_ITEM_ATTRACT_RADIUS && distance > 0.001) {
+      const distanceSq = item.pos.distanceToSquared(player.current.pos);
+      if (distanceSq < FIELD_ITEM_ATTRACT_RADIUS * FIELD_ITEM_ATTRACT_RADIUS && distanceSq > 0.000001) {
+        const distance = Math.sqrt(distanceSq);
         const pull = scratch.vec.copy(player.current.pos).sub(item.pos).setY(0).normalize();
         item.pos.addScaledVector(pull, dt * (6.2 + (FIELD_ITEM_ATTRACT_RADIUS - distance) * 1.35));
       }
-      if (distance <= FIELD_ITEM_PICKUP_RADIUS) {
+      if (distanceSq <= FIELD_ITEM_PICKUP_RADIUS * FIELD_ITEM_PICKUP_RADIUS) {
         applyFieldItem(item, currentGame, updateGame);
         continue;
       }
@@ -2562,8 +2562,8 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
     for (const shrine of shrines.current) {
       if (shrine.activated) continue;
       shrine.pulse += dt * 2.6;
-      const distance = shrine.pos.distanceTo(player.current.pos);
-      if (distance < SHRINE_ACTIVATE_RADIUS) {
+      const distanceSq = shrine.pos.distanceToSquared(player.current.pos);
+      if (distanceSq < SHRINE_ACTIVATE_RADIUS * SHRINE_ACTIVATE_RADIUS) {
         shrine.channel = Math.min(SHRINE_CHANNEL_TIME, shrine.channel + dt);
         if (!shrine.prompted) {
           shrine.prompted = true;
@@ -3557,6 +3557,8 @@ function EnemyGroundAuras({ enemiesRef, visualQuality = 'high' }) {
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
     scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    euler: new THREE.Euler(),
     color: new THREE.Color()
   }), []);
 
@@ -3570,9 +3572,11 @@ function EnemyGroundAuras({ enemiesRef, visualQuality = 'high' }) {
       if (count >= maxAuras && enemy.kind !== 'boss' && enemy.kind !== 'elite') continue;
       if (count >= MAX_ENEMIES) break;
       const pulse = 1 + Math.sin(time + enemy.wobble) * 0.07;
-      scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
+      scratch.euler.set(Math.PI / 2, 0, 0);
+      scratch.quat.setFromEuler(scratch.euler);
+      scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.035, enemy.pos.z);
       scratch.matrix.compose(
-        new THREE.Vector3(enemy.pos.x, enemy.pos.y + 0.035, enemy.pos.z),
+        scratch.pos,
         scratch.quat,
         scratch.scale.setScalar((
           enemy.kind === 'boss'
@@ -3624,11 +3628,12 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
     scale: new THREE.Vector3(),
     color: new THREE.Color(),
     pos: new THREE.Vector3(),
+    euler: new THREE.Euler(),
     forward: new THREE.Vector3(),
     right: new THREE.Vector3(),
     yAxis: new THREE.Vector3(0, 1, 0)
   }), []);
-  const showDecor = visualQuality === 'high';
+  const showDecor = visualQuality !== 'low';
 
   useFrame(() => {
     const budget = getVisualBudget(visualQuality);
@@ -3730,7 +3735,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       for (const enemy of enemiesRef.current) {
         if (enemy.flash <= 0 || enemy.kind === 'boss') continue;
         if (count >= MAX_ENEMIES) break;
-        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, enemy.wobble));
+        scratch.euler.set(Math.PI / 2, 0, enemy.wobble);
+        scratch.quat.setFromEuler(scratch.euler);
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.08, enemy.pos.z);
         scratch.matrix.compose(
           scratch.pos,
@@ -3751,7 +3757,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         if (count >= maxAccents) break;
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.pos.set(enemy.pos.x - scratch.forward.x * 0.78, enemy.pos.y + 0.13, enemy.pos.z - scratch.forward.z * 0.78);
-        scratch.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, -enemy.facingAngle));
+        scratch.euler.set(-Math.PI / 2, 0, -enemy.facingAngle);
+        scratch.quat.setFromEuler(scratch.euler);
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
@@ -3771,7 +3778,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         if (count >= maxAccents) break;
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.pos.set(enemy.pos.x + scratch.forward.x * 0.42, enemy.pos.y + 0.28, enemy.pos.z + scratch.forward.z * 0.42);
-        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -enemy.facingAngle + Math.PI));
+        scratch.euler.set(Math.PI / 2, 0, -enemy.facingAngle + Math.PI);
+        scratch.quat.setFromEuler(scratch.euler);
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
@@ -3789,7 +3797,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'brute') continue;
         if (count >= maxAccents) break;
-        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, enemy.wobble * 0.35));
+        scratch.euler.set(Math.PI / 2, 0, enemy.wobble * 0.35);
+        scratch.quat.setFromEuler(scratch.euler);
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.56, enemy.pos.z);
         scratch.matrix.compose(
           scratch.pos,
@@ -3835,7 +3844,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       for (const enemy of enemiesRef.current) {
         if (enemy.kind !== 'golem') continue;
         if (count >= maxAccents) break;
-        scratch.quat.setFromEuler(new THREE.Euler(0.38, enemy.facingAngle + Math.PI / 4, 0.16));
+        scratch.euler.set(0.38, enemy.facingAngle + Math.PI / 4, 0.16);
+        scratch.quat.setFromEuler(scratch.euler);
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.36 + Math.sin(enemy.wobble) * 0.035, enemy.pos.z);
         scratch.matrix.compose(
           scratch.pos,
@@ -3855,7 +3865,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         if (enemy.kind !== 'golem') continue;
         if (count >= maxAccents) break;
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.045, enemy.pos.z);
-        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, enemy.facingAngle + Math.PI / 4));
+        scratch.euler.set(Math.PI / 2, 0, enemy.facingAngle + Math.PI / 4);
+        scratch.quat.setFromEuler(scratch.euler);
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
@@ -3875,13 +3886,15 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         for (let i = 0; i < 4; i += 1) {
           if (count >= MAX_ENEMIES * 4) break;
           const angle = enemy.wobble * 0.6 + i * Math.PI * 2 / 4;
-          scratch.quat.setFromEuler(new THREE.Euler(0.35, -angle, 0.25));
+          scratch.euler.set(0.35, -angle, 0.25);
+          scratch.quat.setFromEuler(scratch.euler);
+          scratch.pos.set(
+            enemy.pos.x + Math.cos(angle) * 0.9,
+            enemy.pos.y + 2.28 + Math.sin(time + i) * 0.05,
+            enemy.pos.z + Math.sin(angle) * 0.9
+          );
           scratch.matrix.compose(
-            new THREE.Vector3(
-              enemy.pos.x + Math.cos(angle) * 0.9,
-              enemy.pos.y + 2.28 + Math.sin(time + i) * 0.05,
-              enemy.pos.z + Math.sin(angle) * 0.9
-            ),
+            scratch.pos,
             scratch.quat,
             scratch.scale.set(0.14, 0.42, 0.14)
           );
@@ -3899,7 +3912,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         if (enemy.kind !== 'elite') continue;
         if (count >= MAX_ENEMIES) break;
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.07, enemy.pos.z);
-        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -enemy.wobble * 0.28));
+        scratch.euler.set(Math.PI / 2, 0, -enemy.wobble * 0.28);
+        scratch.quat.setFromEuler(scratch.euler);
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
@@ -3921,7 +3935,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         const chargePulse = enemy.chargeTimer > 0 ? 0.34 : 0;
         const shieldPulse = (enemy.shield ?? 0) > 0 ? 0.16 : 0;
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.09, enemy.pos.z);
-        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, time * 0.42 + enemy.wobble * 0.16));
+        scratch.euler.set(Math.PI / 2, 0, time * 0.42 + enemy.wobble * 0.16);
+        scratch.quat.setFromEuler(scratch.euler);
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
@@ -3952,7 +3967,8 @@ function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.pos.copy(enemy.pos).addScaledVector(scratch.forward, enemy.hitRadius * 1.45);
         scratch.pos.y = enemy.pos.y + 0.18;
-        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -enemy.facingAngle + Math.PI));
+        scratch.euler.set(Math.PI / 2, 0, -enemy.facingAngle + Math.PI);
+        scratch.quat.setFromEuler(scratch.euler);
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
@@ -4036,7 +4052,8 @@ function GemBeacons({ gemsRef, visualQuality = 'high' }) {
   const scratch = useMemo(() => ({
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3()
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3()
   }), []);
 
   useFrame(() => {
@@ -4048,8 +4065,9 @@ function GemBeacons({ gemsRef, visualQuality = 'high' }) {
       const gem = gemsRef.current[count * stride];
       if (!gem) continue;
       const pulse = 0.82 + Math.sin(gem.pulse) * 0.18;
+      scratch.pos.set(gem.pos.x, gem.pos.y + 0.92, gem.pos.z);
       scratch.matrix.compose(
-        new THREE.Vector3(gem.pos.x, gem.pos.y + 0.92, gem.pos.z),
+        scratch.pos,
         scratch.quat,
         scratch.scale.set(0.055 * pulse, 1.2 + gem.value * 0.025, 0.055 * pulse)
       );
@@ -4083,6 +4101,8 @@ function FieldPickupItems({ itemsRef }) {
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
     scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    euler: new THREE.Euler(),
     color: new THREE.Color()
   }), []);
 
@@ -4132,9 +4152,11 @@ function FieldPickupItems({ itemsRef }) {
       }
 
       if (core) {
-        scratch.quat.setFromEuler(new THREE.Euler(0.35, spin + item.pulse * 0.3, 0.18));
+        scratch.euler.set(0.35, spin + item.pulse * 0.3, 0.18);
+        scratch.quat.setFromEuler(scratch.euler);
+        scratch.pos.set(item.pos.x, item.pos.y + 0.55 + lift, item.pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(item.pos.x, item.pos.y + 0.55 + lift, item.pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.setScalar(coreScale * pulse)
         );
@@ -4142,9 +4164,11 @@ function FieldPickupItems({ itemsRef }) {
       }
 
       if (ring) {
-        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, spin * (item.type === 'magnet' ? 1 : -1)));
+        scratch.euler.set(Math.PI / 2, 0, spin * (item.type === 'magnet' ? 1 : -1));
+        scratch.quat.setFromEuler(scratch.euler);
+        scratch.pos.set(item.pos.x, item.pos.y + 0.12, item.pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(item.pos.x, item.pos.y + 0.12, item.pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.setScalar(ringScale * pulse)
         );
@@ -4153,8 +4177,9 @@ function FieldPickupItems({ itemsRef }) {
 
       if (beamMesh.current) {
         scratch.quat.identity();
+        scratch.pos.set(item.pos.x, item.pos.y + 1.1, item.pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(item.pos.x, item.pos.y + 1.1, item.pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.set(0.07 * pulse, 1.9, 0.07 * pulse)
         );
@@ -4279,6 +4304,8 @@ function RuneShrineSites({ shrinesRef }) {
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
     scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    euler: new THREE.Euler(),
     color: new THREE.Color()
   }), []);
 
@@ -4296,9 +4323,11 @@ function RuneShrineSites({ shrinesRef }) {
 
       if (shrine.activated) {
         if (usedMesh.current) {
-          scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, spin));
+          scratch.euler.set(Math.PI / 2, 0, spin);
+          scratch.quat.setFromEuler(scratch.euler);
+          scratch.pos.set(pos.x, pos.y + 0.1, pos.z);
           scratch.matrix.compose(
-            new THREE.Vector3(pos.x, pos.y + 0.1, pos.z),
+            scratch.pos,
             scratch.quat,
             scratch.scale.setScalar(2.4 * pulse)
           );
@@ -4311,9 +4340,11 @@ function RuneShrineSites({ shrinesRef }) {
       }
 
       if (coreMesh.current) {
-        scratch.quat.setFromEuler(new THREE.Euler(0.38, spin * 1.8, 0.2));
+        scratch.euler.set(0.38, spin * 1.8, 0.2);
+        scratch.quat.setFromEuler(scratch.euler);
+        scratch.pos.set(pos.x, pos.y + 0.82 + Math.sin(shrine.pulse) * 0.08, pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(pos.x, pos.y + 0.82 + Math.sin(shrine.pulse) * 0.08, pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.setScalar(0.62 + progress * 0.26)
         );
@@ -4323,9 +4354,11 @@ function RuneShrineSites({ shrinesRef }) {
       }
 
       if (ringMesh.current) {
-        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, spin));
+        scratch.euler.set(Math.PI / 2, 0, spin);
+        scratch.quat.setFromEuler(scratch.euler);
+        scratch.pos.set(pos.x, pos.y + 0.08, pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(pos.x, pos.y + 0.08, pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.setScalar(2.25 * pulse)
         );
@@ -4336,8 +4369,9 @@ function RuneShrineSites({ shrinesRef }) {
 
       if (beamMesh.current) {
         scratch.quat.identity();
+        scratch.pos.set(pos.x, pos.y + 1.42, pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(pos.x, pos.y + 1.42, pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.set(0.1 + progress * 0.06, 2.5 + progress * 1.2, 0.1 + progress * 0.06)
         );
@@ -4348,9 +4382,11 @@ function RuneShrineSites({ shrinesRef }) {
       }
 
       if (chargeMesh.current && progress > 0) {
-        scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -spin * 2.2));
+        scratch.euler.set(Math.PI / 2, 0, -spin * 2.2);
+        scratch.quat.setFromEuler(scratch.euler);
+        scratch.pos.set(pos.x, pos.y + 0.13, pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(pos.x, pos.y + 0.13, pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.setScalar(1.0 + progress * 2.2)
         );
@@ -4519,11 +4555,13 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
     scale: new THREE.Vector3(),
-    pos: new THREE.Vector3()
+    pos: new THREE.Vector3(),
+    euler: new THREE.Euler()
   }), []);
   const showDetail = visualQuality !== 'low';
 
   useFrame(() => {
+    const now = performance.now();
     const budget = getVisualBudget(visualQuality);
     const auraLimit = Math.min(MAX_PROJECTILES, budget.projectileAura);
     const detailLimit = Math.min(MAX_PROJECTILES, budget.projectileDetail);
@@ -4536,7 +4574,8 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
         for (const projectile of projectilesRef.current) {
           if (projectile.type !== 'orb') continue;
           if (count >= auraLimit) break;
-          local.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, projectile.angle + performance.now() * (0.006 + stage * 0.001)));
+          local.euler.set(Math.PI / 2, 0, projectile.angle + now * (0.006 + stage * 0.001));
+          local.quat.setFromEuler(local.euler);
           local.matrix.compose(projectile.pos, local.quat, local.scale.setScalar((0.84 + stage * 0.16) * projectile.visualScale));
           orbRing.current.setMatrixAt(count, local.matrix);
           count += 1;
@@ -4552,7 +4591,8 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
         for (const projectile of projectilesRef.current) {
           if (projectile.type !== 'orb') continue;
           if (count >= detailLimit) break;
-          local.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -projectile.angle + performance.now() * 0.004));
+          local.euler.set(Math.PI / 2, 0, -projectile.angle + now * 0.004);
+          local.quat.setFromEuler(local.euler);
           local.matrix.compose(projectile.pos, local.quat, local.scale.setScalar((1.08 + stage * 0.2) * projectile.visualScale));
           orbHalo.current.setMatrixAt(count, local.matrix);
           count += 1;
@@ -4573,7 +4613,8 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
           projectile.pos.y - 0.02,
           projectile.pos.z - Math.cos(projectile.angle) * length * 0.42
         );
-        local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, -projectile.angle));
+        local.euler.set(-Math.PI / 2, 0, -projectile.angle);
+        local.quat.setFromEuler(local.euler);
         local.matrix.compose(local.pos, local.quat, local.scale.set(0.18 + stage * 0.06, length, 1));
         orbTrail.current.setMatrixAt(count, local.matrix);
         count += 1;
@@ -4590,13 +4631,14 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
           if (count >= detailLimit * 3) break;
           for (let i = 0; i < 3; i += 1) {
             if (count >= detailLimit * 3) break;
-            const spin = projectile.angle + performance.now() * 0.008 + i * Math.PI * 2 / 3;
+            const spin = projectile.angle + now * 0.008 + i * Math.PI * 2 / 3;
             local.pos.set(
               projectile.pos.x + Math.cos(spin) * 0.42 * projectile.visualScale,
-              projectile.pos.y + Math.sin(performance.now() * 0.006 + i) * 0.08,
+              projectile.pos.y + Math.sin(now * 0.006 + i) * 0.08,
               projectile.pos.z + Math.sin(spin) * 0.42 * projectile.visualScale
             );
-            local.quat.setFromEuler(new THREE.Euler(0.6, -spin, 0.2));
+            local.euler.set(0.6, -spin, 0.2);
+            local.quat.setFromEuler(local.euler);
             local.matrix.compose(local.pos, local.quat, local.scale.setScalar(0.12 * projectile.visualScale));
             orbCrown.current.setMatrixAt(count, local.matrix);
             count += 1;
@@ -4612,7 +4654,8 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
       for (const projectile of projectilesRef.current) {
         if (projectile.type !== 'storm') continue;
         if (count >= auraLimit) break;
-        local.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, performance.now() * 0.004 + projectile.angle));
+        local.euler.set(Math.PI / 2, 0, now * 0.004 + projectile.angle);
+        local.quat.setFromEuler(local.euler);
         local.matrix.compose(projectile.pos, local.quat, local.scale.setScalar((1.2 + stage * 0.12) * projectile.visualScale * tier));
         stormRing.current.setMatrixAt(count, local.matrix);
         count += 1;
@@ -4626,7 +4669,8 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
       for (const projectile of projectilesRef.current) {
         if (projectile.type !== 'storm') continue;
         if (count >= auraLimit) break;
-        local.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, -performance.now() * 0.003 + projectile.angle));
+        local.euler.set(Math.PI / 2, 0, -now * 0.003 + projectile.angle);
+        local.quat.setFromEuler(local.euler);
         local.matrix.compose(projectile.pos, local.quat, local.scale.setScalar(projectile.burstRadius ?? 1.8));
         stormDisk.current.setMatrixAt(count, local.matrix);
         count += 1;
@@ -4644,10 +4688,11 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
         for (let i = 0; i < 4; i += 1) {
           if (count >= detailLimit * 4) break;
           if (count >= MAX_PROJECTILES * 4) break;
-          const spokeAngle = projectile.angle + performance.now() * 0.006 + i * Math.PI / 2;
+          const spokeAngle = projectile.angle + now * 0.006 + i * Math.PI / 2;
           local.pos.copy(projectile.pos);
           local.pos.y += 0.04;
-          local.quat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, -spokeAngle));
+          local.euler.set(-Math.PI / 2, 0, -spokeAngle);
+          local.quat.setFromEuler(local.euler);
           local.matrix.compose(local.pos, local.quat, local.scale.set(0.12 + stage * 0.015, radius * 0.92, 1));
           stormSpoke.current.setMatrixAt(count, local.matrix);
           count += 1;
@@ -4663,8 +4708,9 @@ function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'high' }) {
         if (projectile.type !== 'storm') continue;
         if (count >= detailLimit) break;
         local.pos.copy(projectile.pos);
-        local.pos.y += 0.1 + Math.sin(performance.now() * 0.009 + projectile.angle) * 0.03;
-        local.quat.setFromEuler(new THREE.Euler(0.52, -performance.now() * 0.008 + projectile.angle, 0.18));
+        local.pos.y += 0.1 + Math.sin(now * 0.009 + projectile.angle) * 0.03;
+        local.euler.set(0.52, -now * 0.008 + projectile.angle, 0.18);
+        local.quat.setFromEuler(local.euler);
         local.matrix.compose(local.pos, local.quat, local.scale.setScalar((0.22 + stage * 0.045) * projectile.visualScale));
         stormCore.current.setMatrixAt(count, local.matrix);
         count += 1;
@@ -4759,19 +4805,23 @@ function BossPresence({ enemiesRef }) {
   const scratch = useMemo(() => ({
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3()
+    scale: new THREE.Vector3(),
+    pos: new THREE.Vector3(),
+    euler: new THREE.Euler()
   }), []);
 
   useFrame(() => {
-    const bosses = enemiesRef.current.filter(enemy => enemy.kind === 'boss');
     const spin = performance.now() * 0.0018;
     if (ringMesh.current) {
       let count = 0;
-      for (const boss of bosses) {
+      for (const boss of enemiesRef.current) {
+        if (boss.kind !== 'boss') continue;
         for (let layer = 0; layer < 2; layer += 1) {
-          scratch.quat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, spin * (layer ? -1.5 : 1)));
+          scratch.euler.set(Math.PI / 2, 0, spin * (layer ? -1.5 : 1));
+          scratch.quat.setFromEuler(scratch.euler);
+          scratch.pos.set(boss.pos.x, boss.pos.y + 0.08 + layer * 0.08, boss.pos.z);
           scratch.matrix.compose(
-            new THREE.Vector3(boss.pos.x, boss.pos.y + 0.08 + layer * 0.08, boss.pos.z),
+            scratch.pos,
             scratch.quat,
             scratch.scale.setScalar(2.6 + layer * 0.72 + Math.sin(boss.wobble + layer) * 0.08)
           );
@@ -4785,16 +4835,19 @@ function BossPresence({ enemiesRef }) {
 
     if (crownMesh.current) {
       let count = 0;
-      for (const boss of bosses) {
+      for (const boss of enemiesRef.current) {
+        if (boss.kind !== 'boss') continue;
         for (let i = 0; i < 7; i += 1) {
           const angle = spin * 1.6 + i * Math.PI * 2 / 7;
-          scratch.quat.setFromEuler(new THREE.Euler(0.28, -angle, 0.1));
+          scratch.euler.set(0.28, -angle, 0.1);
+          scratch.quat.setFromEuler(scratch.euler);
+          scratch.pos.set(
+            boss.pos.x + Math.cos(angle) * 1.15,
+            boss.pos.y + 2.55 + Math.sin(boss.wobble + i) * 0.08,
+            boss.pos.z + Math.sin(angle) * 1.15
+          );
           scratch.matrix.compose(
-            new THREE.Vector3(
-              boss.pos.x + Math.cos(angle) * 1.15,
-              boss.pos.y + 2.55 + Math.sin(boss.wobble + i) * 0.08,
-              boss.pos.z + Math.sin(angle) * 1.15
-            ),
+            scratch.pos,
             scratch.quat,
             scratch.scale.set(0.18, 0.46, 0.18)
           );
@@ -4808,10 +4861,12 @@ function BossPresence({ enemiesRef }) {
 
     if (beamMesh.current) {
       let count = 0;
-      for (const boss of bosses) {
+      for (const boss of enemiesRef.current) {
+        if (boss.kind !== 'boss') continue;
         scratch.quat.identity();
+        scratch.pos.set(boss.pos.x, boss.pos.y + 1.65, boss.pos.z);
         scratch.matrix.compose(
-          new THREE.Vector3(boss.pos.x, boss.pos.y + 1.65, boss.pos.z),
+          scratch.pos,
           scratch.quat,
           scratch.scale.set(0.22, 3.4 + Math.sin(boss.wobble) * 0.28, 0.22)
         );
@@ -5046,7 +5101,7 @@ function RuneDrifterModel() {
 PRELOAD_MODEL_URLS.forEach(path => useGLTF.preload(path));
 
 function MapBaseArena({ visualQuality = 'high' }) {
-  const edgeSegments = visualQuality === 'low' ? 112 : visualQuality === 'balanced' ? 144 : 176;
+  const edgeSegments = visualQuality === 'low' ? 144 : visualQuality === 'balanced' ? 192 : 224;
   return (
     <group>
       <mesh receiveShadow position={[0, -2.05, 0]}>
@@ -5062,7 +5117,7 @@ function MapBaseArena({ visualQuality = 'high' }) {
       <SculptedRuinTerrain visualQuality={visualQuality} />
       <OpenFieldTerrainIdentity />
       {visualQuality !== 'low' && <TerrainStoryDetails />}
-      {visualQuality === 'high' && <RiftFloorSigils />}
+      {visualQuality !== 'low' && <RiftFloorSigils />}
       <RuneRelicLandmarks />
       {visualQuality !== 'low' && (
         <Suspense fallback={null}>
@@ -5139,7 +5194,7 @@ function RiftFloorSigils() {
 function SculptedRuinTerrain({ visualQuality = 'high' }) {
   const geometry = useMemo(() => {
     const size = ARENA_RADIUS * 2 + 48;
-    const segments = visualQuality === 'low' ? 48 : visualQuality === 'balanced' ? 72 : 96;
+    const segments = visualQuality === 'low' ? 64 : visualQuality === 'balanced' ? 96 : 120;
     const half = size / 2;
     const positions = [];
     const colors = [];
@@ -5426,8 +5481,8 @@ function TerrainStoryDetails() {
 
 function ImportedForestBattlefield({ visualQuality = 'high' }) {
   const transforms = useMemo(() => {
-    const density = visualQuality === 'low' ? 0.28 : visualQuality === 'balanced' ? 0.42 : 0.58;
-    const treeDensity = visualQuality === 'low' ? 0.24 : visualQuality === 'balanced' ? 0.38 : 0.52;
+    const density = visualQuality === 'low' ? 0.32 : visualQuality === 'balanced' ? 0.56 : 0.68;
+    const treeDensity = visualQuality === 'low' ? 0.28 : visualQuality === 'balanced' ? 0.48 : 0.62;
     const count = base => Math.max(1, Math.round(base * density));
     const countTree = base => Math.max(1, Math.round(base * treeDensity));
 
@@ -5622,8 +5677,8 @@ function ImportedForestLightFlecks({ transforms }) {
 
 function NaturalFieldKit({ visualQuality = 'high' }) {
   const transforms = useMemo(() => {
-    const density = visualQuality === 'low' ? 0.18 : visualQuality === 'balanced' ? 0.26 : 0.34;
-    const treeDensity = visualQuality === 'low' ? 0.05 : visualQuality === 'balanced' ? 0.08 : 0.12;
+    const density = visualQuality === 'low' ? 0.22 : visualQuality === 'balanced' ? 0.36 : 0.44;
+    const treeDensity = visualQuality === 'low' ? 0.06 : visualQuality === 'balanced' ? 0.12 : 0.16;
     const count = base => Math.max(1, Math.round(base * density));
     const countTree = base => Math.max(1, Math.round(base * treeDensity));
     const place = (angle, radius, scale, yOffset = 0.03, tilt = 0) => {
