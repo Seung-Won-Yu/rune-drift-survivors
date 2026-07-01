@@ -88,6 +88,12 @@ import {
   resolveStaticCollisions
 } from './systems/terrain.js';
 import {
+  isPoolBelowLimit,
+  pushDamageNumber,
+  pushXpGem,
+  updateTimedPool
+} from './systems/runtimePools.js';
+import {
   createEmptyRunStats,
   createInitialGame,
   getItemPickupCount,
@@ -2101,105 +2107,52 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
 
   const updateBursts = dt => {
     const budget = getVisualBudget(visualQuality);
-    let write = 0;
-    for (const burst of hitBursts.current) {
-      burst.life -= dt;
-      if (burst.life <= 0) continue;
-      if (write < budget.hitBursts) {
-        hitBursts.current[write] = burst;
-        write += 1;
-      }
-    }
-    hitBursts.current.length = write;
+    updateTimedPool(hitBursts.current, dt, budget.hitBursts);
   };
 
   const updateWeaponEffects = dt => {
     const budget = getVisualBudget(visualQuality);
-    let write = 0;
-    for (const effect of weaponEffects.current) {
-      effect.life -= dt;
-      if (effect.life <= 0) continue;
-      if (write < budget.weaponEffects) {
-        weaponEffects.current[write] = effect;
-        write += 1;
-      }
-    }
-    weaponEffects.current.length = write;
+    updateTimedPool(weaponEffects.current, dt, budget.weaponEffects);
   };
 
   const updateDamageNumbers = dt => {
     const budget = getVisualBudget(visualQuality);
-    let write = 0;
-    for (const number of damageNumbers.current) {
-      number.life -= dt;
-      if (number.life <= 0) continue;
+    updateTimedPool(damageNumbers.current, dt, budget.damageNumbers, number => {
       number.age += dt;
       number.pos.y += dt * 0.9;
-      if (write < budget.damageNumbers) {
-        damageNumbers.current[write] = number;
-        write += 1;
-      }
-    }
-    damageNumbers.current.length = write;
+    });
   };
 
   const updateSpawnWarnings = dt => {
     const budget = getVisualBudget(visualQuality);
-    let write = 0;
-    for (const warning of spawnWarnings.current) {
-      warning.life -= dt;
-      if (warning.life <= 0) continue;
-      if (write < budget.spawnWarnings) {
-        spawnWarnings.current[write] = warning;
-        write += 1;
-      }
-    }
-    spawnWarnings.current.length = write;
+    updateTimedPool(spawnWarnings.current, dt, budget.spawnWarnings);
   };
 
   const canAddHitBurst = (overflow = 8) => (
-    hitBursts.current.length < getVisualBudget(visualQuality).hitBursts + overflow
+    isPoolBelowLimit(hitBursts.current, getVisualBudget(visualQuality).hitBursts, overflow)
   );
 
   const canAddWeaponEffect = (overflow = 6) => (
-    weaponEffects.current.length < getVisualBudget(visualQuality).weaponEffects + overflow
+    isPoolBelowLimit(weaponEffects.current, getVisualBudget(visualQuality).weaponEffects, overflow)
   );
 
   const addDamageNumber = (pos, value, color, size = 0.56) => {
     const budget = getVisualBudget(visualQuality).damageNumbers;
-    const isPriority = typeof value === 'string' && /[A-Z가-힣]/.test(value);
     const loadRatio = (enemies.current.length / Math.max(1, runtimeBudget.maxEnemies))
       + (projectiles.current.length / Math.max(1, runtimeBudget.maxProjectiles));
-    if (!isPriority && visualQuality === 'low' && Math.random() < 0.55) return;
-    if (!isPriority && loadRatio > 1.35 && Math.random() < 0.42) return;
-    if (!isPriority && damageNumbers.current.length >= budget + 8) return;
-    if (damageNumbers.current.length >= budget + 14) damageNumbers.current.length = budget + 8;
-    damageNumbers.current.push({
-      pos: pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.22, 1.05, (Math.random() - 0.5) * 0.22)),
+    pushDamageNumber(damageNumbers.current, {
+      pos,
       value,
       color,
       size,
-      age: 0,
-      life: 0.58,
-      maxLife: 0.58
+      visualQuality,
+      budget,
+      loadRatio
     });
   };
 
   const addXpGem = (pos, value) => {
-    if (xpGems.current.length < runtimeBudget.maxXpGems) {
-      xpGems.current.push({
-        pos,
-        value,
-        pulse: Math.random() * Math.PI * 2
-      });
-      return;
-    }
-
-    const target = xpGems.current[Math.floor(Math.random() * xpGems.current.length)];
-    if (!target) return;
-    target.value += value;
-    target.pulse = Math.random() * Math.PI * 2;
-    target.pos.lerp(pos, 0.28);
+    pushXpGem(xpGems.current, pos, value, runtimeBudget.maxXpGems);
   };
 
   const updateCamera = (camera, dt) => {
