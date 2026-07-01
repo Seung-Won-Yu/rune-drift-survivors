@@ -43,7 +43,6 @@ import {
   RUN_DURATION,
   SHRINE_ACTIVATE_RADIUS,
   SHRINE_CHANNEL_TIME,
-  WAVE_DURATION,
   XP_BASE_MAGNET_RADIUS,
   XP_PICKUP_RADIUS
 } from './config/gameTuning.js';
@@ -90,6 +89,7 @@ import {
   pushXpGem,
   updateTimedPool
 } from './systems/runtimePools.js';
+import { applyFrameStateUpdate } from './systems/runFrameState.js';
 import { updateFollowCamera } from './systems/sceneCamera.js';
 import {
   createEmptyRunStats,
@@ -445,40 +445,15 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
     if (stateSyncElapsed.current >= stateSyncInterval || game.time + stateSyncElapsed.current >= RUN_DURATION) {
       const elapsed = stateSyncElapsed.current;
       stateSyncElapsed.current = 0;
-      setGame(current => {
-        const nextTime = current.time + elapsed;
-        const nextWave = Math.max(1, Math.floor(nextTime / WAVE_DURATION) + 1);
-        const pickupFlash = Math.max(0, (current.pickupFlash ?? 0) - elapsed);
-        const encounterAlertTimer = Math.max(0, (current.encounterAlertTimer ?? 0) - elapsed);
-        const damageFlash = Math.max(0, (current.damageFlash ?? 0) - elapsed);
-        const dashCooldownMax = DASH_COOLDOWN * current.stats.dashCooldown;
-        const movementDelta = player.current.vel.length() > 0.1 ? player.current.vel.length() * elapsed : 0;
-        const basePatch = {
-          time: Math.min(nextTime, RUN_DURATION),
-          wave: nextWave,
-          pickupFlash,
-          pickupMessage: pickupFlash > 0 ? current.pickupMessage : '',
-          encounterAlertTimer,
-          encounterAlert: encounterAlertTimer > 0 ? current.encounterAlert : null,
-          damageFlash,
-          damageMessage: damageFlash > 0 ? current.damageMessage : '',
-          bossStatus: getBossStatusSnapshot(),
-          runStats: getRunStatsSnapshot(),
-          overloadTimer: Math.max(0, (current.overloadTimer ?? 0) - elapsed),
-          onboardingMovement: Math.min(120, (current.onboardingMovement ?? 0) + movementDelta),
-          playerPos: { x: player.current.pos.x, z: player.current.pos.z },
-          dash: {
-            cooldown: Math.min(dashCooldownMax, player.current.dashCd),
-            cooldownMax: dashCooldownMax,
-            active: player.current.dashTimer,
-            ready: player.current.dashCd <= 0
-          }
-        };
-        if (nextTime >= RUN_DURATION) {
-          return { ...current, ...basePatch, phase: 'ended', result: 'victory' };
-        }
-        return { ...current, ...basePatch };
-      });
+      const bossStatus = getBossStatusSnapshot();
+      const runStats = getRunStatsSnapshot();
+      setGame(current => applyFrameStateUpdate({
+        current,
+        elapsed,
+        player: player.current,
+        bossStatus,
+        runStats
+      }));
     }
 
     updatePlayer(dt, game.stats, setGame);
