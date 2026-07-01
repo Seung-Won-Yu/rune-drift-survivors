@@ -58,6 +58,7 @@ import {
   useVisualQuality
 } from './hooks/useVisualQuality.js';
 import { useCanvasQualitySettings } from './hooks/useCanvasQualitySettings.js';
+import { findNearestEnemies } from './systems/combatQueries.js';
 import {
   applyCombatRhythm,
   applyDamageToEnemy,
@@ -93,6 +94,7 @@ import {
   pushXpGem,
   updateTimedPool
 } from './systems/runtimePools.js';
+import { updateFollowCamera } from './systems/sceneCamera.js';
 import {
   createEmptyRunStats,
   createInitialGame,
@@ -2156,51 +2158,20 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
   };
 
   const updateCamera = (camera, dt) => {
-    const framedTarget = scratch.vec.copy(player.current.pos);
-    const frameRadius = ARENA_RADIUS - 38;
-    const flatTarget = scratch.flat.set(framedTarget.x, framedTarget.z);
-    if (flatTarget.length() > frameRadius) {
-      flatTarget.setLength(frameRadius);
-      framedTarget.x = flatTarget.x;
-      framedTarget.z = flatTarget.y;
-    }
-    cameraTarget.current.lerp(framedTarget, 1 - Math.pow(0.001, dt));
-    cameraShake.current = Math.max(0, cameraShake.current - dt * 1.35);
-    const shake = cameraShake.current;
-    const shakeX = (Math.random() - 0.5) * shake;
-    const shakeZ = (Math.random() - 0.5) * shake;
-    const cameraHeight = compactCamera ? 38 : visualQuality === 'balanced' ? 42 : 44;
-    const cameraDepth = compactCamera ? 64 : visualQuality === 'balanced' ? 70 : 74;
-    camera.position.lerp(scratch.cameraPosition.set(cameraTarget.current.x + shakeX, cameraHeight + cameraTarget.current.y * 0.38, cameraTarget.current.z + cameraDepth + shakeZ), 0.08);
-    camera.lookAt(cameraTarget.current.x, (compactCamera ? 0.82 : 0.62) + cameraTarget.current.y * 0.68, cameraTarget.current.z);
-  };
-
-  const nearestEnemy = () => {
-    let best = null;
-    let bestDistance = Infinity;
-    for (const enemy of enemies.current) {
-      const distance = enemy.pos.distanceToSquared(player.current.pos);
-      if (distance < bestDistance) {
-        best = enemy;
-        bestDistance = distance;
-      }
-    }
-    return best;
+    updateFollowCamera({
+      camera,
+      playerPos: player.current.pos,
+      cameraTarget: cameraTarget.current,
+      cameraShake,
+      scratch,
+      compactCamera,
+      visualQuality,
+      dt
+    });
   };
 
   const nearestEnemies = (limit = 1, maxDistance = Infinity) => {
-    const maxDistanceSq = maxDistance * maxDistance;
-    const best = [];
-    for (const enemy of enemies.current) {
-      const distance = enemy.pos.distanceToSquared(player.current.pos);
-      if (distance > maxDistanceSq) continue;
-      let insertAt = best.length;
-      while (insertAt > 0 && best[insertAt - 1].distance > distance) insertAt -= 1;
-      if (insertAt >= limit) continue;
-      best.splice(insertAt, 0, { enemy, distance });
-      if (best.length > limit) best.pop();
-    }
-    return best.map(item => item.enemy);
+    return findNearestEnemies(enemies.current, player.current.pos, limit, maxDistance);
   };
 
   const renderInstances = () => {
