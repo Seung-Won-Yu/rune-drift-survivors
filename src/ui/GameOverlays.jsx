@@ -6,7 +6,6 @@ import {
   getRunPhase,
   getUpgradeCardMeta,
   getUpgradeDisplayTitle,
-  getUpgradeFocusPreview,
   getUpgradeIconMeta,
   getUpgradeTone,
   getUpgradeVisualFamilyKey
@@ -62,10 +61,10 @@ export function UpgradeOverlay({ game, choices, onChoose }) {
   const runPhase = getRunPhase(game);
   return (
     <section className="modalLayer rewardLayer" aria-label="레벨업 보상 선택">
-      <div className="upgradePanel">
+      <div className="upgradePanel rewardBoard">
         <div className="upgradeHeader">
           <div className="upgradeHeaderCopy">
-            <p className="eyebrow">룬 보상 · {runPhase.label}</p>
+            <p className="eyebrow">Level Up · {runPhase.label}</p>
             <h1>{runPhase.cardCue}</h1>
           </div>
           {(game.pendingUpgrades ?? 0) > 1 && <span className="upgradeQueue">보상 {game.pendingUpgrades}</span>}
@@ -80,58 +79,55 @@ export function UpgradeOverlay({ game, choices, onChoose }) {
             ))}
           </div>
         )}
-        <div className="upgradeGrid">
-          {choices.map((choice, index) => {
-            const cardMeta = getUpgradeCardMeta(game, choice);
-            const displayTitle = getUpgradeDisplayTitle(game, choice);
-            const focusPreview = getUpgradeFocusPreview(game, choice);
-            const visualFamilyKey = getUpgradeVisualFamilyKey(choice);
-            const iconMeta = getUpgradeIconMeta(choice);
-            return (
-              <button
-                key={choice.id}
-                className={`upgradeCard family-${visualFamilyKey} rarity-${cardMeta.rarity} ${cardMeta.recommended ? 'isRecommended' : ''}`}
-                type="button"
-                style={{ '--tone': getUpgradeTone(choice) }}
-                aria-label={`${displayTitle}: ${cardMeta.quickSummary}, ${cardMeta.statLine}, ${cardMeta.decision}`}
-                onClick={() => onChoose(choice)}
-              >
-                <span className="upgradeCardShine" aria-hidden="true" />
-                <span className="upgradeFamilyRibbon" aria-hidden="true">{choice.family}</span>
-                <span className="upgradeChoiceIndex" aria-hidden="true">{index + 1}</span>
-                <div className="upgradeCardTop">
-                  <span className="upgradeRarity">{cardMeta.rarityLabel}</span>
-                  <strong>{cardMeta.recommended ? `추천 · ${cardMeta.reason}` : cardMeta.role}</strong>
-                </div>
-                <div className="upgradeHero">
-                  <i className="upgradeSigil" aria-hidden="true">{iconMeta.glyph}</i>
-                  <div className="upgradeTitleRow">
-                    <em>{choice.family} · {choice.branch}</em>
-                    <span>{displayTitle}</span>
-                  </div>
-                </div>
-                <div className="upgradeOutcomeBand" aria-label="핵심 변화">
-                  <small>{cardMeta.quickLead}</small>
-                  <strong>{cardMeta.quickSummary}</strong>
-                  <span className="upgradeStatLine">{cardMeta.statLine}</span>
-                </div>
-                <div className="upgradeReasonLine" aria-label="선택 이유">
-                  <span>{cardMeta.decision}</span>
-                  <b>{cardMeta.payoff}</b>
-                </div>
-                <small className="upgradeEffectText">{choice.text}</small>
-                <b className="upgradePathText">{focusPreview}</b>
-                <div className="upgradeTags">
-                  <i>{choice.branch}</i>
-                  {cardMeta.tags.map(tag => <i key={tag}>{tag}</i>)}
-                </div>
-                <span className="upgradePickCta">획득</span>
-              </button>
-            );
-          })}
+        <div className="upgradeGrid rewardChoices">
+          {choices.map((choice, index) => (
+            <UpgradeCard
+              key={choice.id}
+              game={game}
+              choice={choice}
+              index={index}
+              onChoose={onChoose}
+            />
+          ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function UpgradeCard({ game, choice, index, onChoose }) {
+  const cardMeta = getUpgradeCardMeta(game, choice);
+  const displayTitle = getUpgradeDisplayTitle(game, choice);
+  const visualFamilyKey = getUpgradeVisualFamilyKey(choice);
+  const iconMeta = getUpgradeIconMeta(choice);
+  const tone = getUpgradeTone(choice);
+
+  return (
+    <button
+      className={`upgradeCard rewardCard family-${visualFamilyKey} rarity-${cardMeta.rarity} ${cardMeta.recommended ? 'isRecommended' : ''}`}
+      type="button"
+      style={{ '--tone': tone, '--icon-tone': iconMeta.color ?? tone }}
+      aria-label={`${displayTitle}: ${cardMeta.quickSummary}, ${cardMeta.statLine}`}
+      onClick={() => onChoose(choice)}
+    >
+      <span className="upgradeChoiceIndex" aria-hidden="true">{index + 1}</span>
+      <span className="rewardCardBadge">{cardMeta.rarityLabel}</span>
+      <span className="rewardCardRole">{cardMeta.recommended ? cardMeta.reason : cardMeta.role}</span>
+      <div className="rewardCardArt" aria-hidden="true">
+        <i className="upgradeSigil">{iconMeta.glyph}</i>
+        {cardMeta.recommended && <span>추천</span>}
+      </div>
+      <div className="rewardCardCopy">
+        <small>{choice.family} · {choice.branch}</small>
+        <strong>{displayTitle}</strong>
+        <p>{cardMeta.quickSummary}</p>
+      </div>
+      <div className="rewardCardStats">
+        <b>{cardMeta.statLine}</b>
+        <span>{cardMeta.payoff}</span>
+      </div>
+      <span className="upgradePickCta">선택</span>
+    </button>
   );
 }
 

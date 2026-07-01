@@ -2084,287 +2084,549 @@ button {
   }
 }
 
-/* Reward card third pass: casual roguelite cards, fewer text boxes, stronger family identity. */
+/* Compact casual HUD and reward cards. This is the active UI layer. */
+.hudCompact {
+  width: min(448px, calc(100vw - 28px));
+  gap: 6px;
+}
+
+.hudTopBar {
+  display: grid;
+  grid-template-columns: minmax(128px, 1.05fr) minmax(112px, 0.95fr) minmax(82px, 0.58fr) auto;
+  gap: 6px;
+  align-items: stretch;
+  padding: 6px;
+  border: 2px solid rgba(255, 232, 147, 0.66);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 244, 186, 0.22), rgba(58, 86, 42, 0.1)),
+    rgba(25, 46, 28, 0.66);
+  box-shadow:
+    0 12px 22px rgba(6, 14, 7, 0.28),
+    inset 0 2px 0 rgba(255, 252, 226, 0.14);
+  backdrop-filter: blur(5px);
+}
+
+.hudCompact .hudMeter,
+.hudCompact .hudTimeSeal {
+  min-height: 38px;
+  border-color: rgba(255, 238, 174, 0.46);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 249, 219, 0.28), rgba(84, 112, 51, 0.34)),
+    rgba(22, 41, 25, 0.72);
+}
+
+.hudCompact .hudMeterIcon,
+.hudCompact .hudTimeIcon {
+  border-radius: 10px;
+  color: #2c1a05;
+  background: linear-gradient(180deg, #fff4a8, #df9a38);
+}
+
+.hudCompact .hudGauge {
+  height: 7px;
+  border-color: rgba(28, 34, 15, 0.56);
+  background: rgba(13, 22, 12, 0.64);
+}
+
+.hudCompact .hudActions {
+  grid-template-columns: repeat(2, 36px);
+}
+
+.hudCompact .iconButton {
+  min-height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fff1a1, #c88031);
+}
+
+.hudAlertStack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.hudAlert {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-width: 86px;
+  min-height: 28px;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 9px 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 235, 158, 0.42);
+  border-radius: 999px;
+  color: #fff8df;
+  background: rgba(24, 43, 27, 0.74);
+  box-shadow: 0 8px 16px rgba(5, 12, 6, 0.22);
+}
+
+.hudAlert b {
+  color: var(--gold-bright);
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.hudAlert small {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 249, 226, 0.86);
+  font-size: 10px;
+  font-weight: 850;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hudAlert i {
+  position: absolute;
+  right: 9px;
+  bottom: 4px;
+  left: 9px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--mint), var(--gold-bright));
+}
+
+.hudAlert-danger {
+  border-color: rgba(255, 126, 103, 0.58);
+  background: rgba(61, 20, 14, 0.78);
+}
+
+.hudAlert-warning,
+.hudAlert-threat {
+  border-color: color-mix(in srgb, var(--tone, var(--gold)) 48%, rgba(255, 231, 150, 0.2));
+}
+
+.hudAlert-reward,
+.hudAlert-ready {
+  border-color: rgba(171, 235, 124, 0.54);
+}
+
+.hudCoachCard,
+.hudObjectiveDock {
+  width: min(350px, 100%);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 247, 207, 0.14), rgba(73, 99, 43, 0.16)),
+    rgba(22, 41, 25, 0.74);
+  backdrop-filter: blur(5px);
+}
+
+.hudCoachCard .hudPromptBody {
+  min-width: 0;
+}
+
+.hudObjectiveDock {
+  grid-template-columns: minmax(86px, auto) minmax(130px, 1fr);
+}
+
+.hudObjectiveDock .hudQuestSummary,
+.hudObjectiveDock .hudQuestCard {
+  border-radius: 12px;
+}
+
 .rewardLayer {
   place-items: center;
   background:
-    linear-gradient(180deg, rgba(7, 18, 12, 0.78), rgba(15, 28, 13, 0.86)),
-    radial-gradient(circle at 50% 56%, rgba(255, 220, 122, 0.22), transparent 38%);
+    radial-gradient(circle at 50% 54%, rgba(255, 221, 118, 0.24), transparent 34%),
+    rgba(8, 17, 10, 0.78);
+  backdrop-filter: blur(5px);
 }
 
-.upgradePanel {
-  width: min(1080px, calc(100vw - 40px));
-  padding: 20px;
-  border: 3px solid rgba(255, 230, 139, 0.9);
-  border-radius: 14px;
-  color: #fff7d6;
+.rewardBoard {
+  width: min(980px, calc(100vw - 36px));
+  padding: 18px;
+  border: 3px solid rgba(255, 228, 132, 0.88);
+  border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(78, 111, 51, 0.97), rgba(34, 63, 36, 0.99));
+    linear-gradient(180deg, rgba(82, 118, 53, 0.98), rgba(35, 66, 38, 0.98));
   box-shadow:
-    0 28px 70px rgba(4, 13, 7, 0.6),
-    0 0 0 5px rgba(50, 34, 12, 0.24),
-    inset 0 2px 0 rgba(255, 248, 206, 0.18);
+    0 30px 74px rgba(3, 10, 5, 0.62),
+    inset 0 2px 0 rgba(255, 250, 222, 0.18);
 }
 
-.upgradePanel::before {
-  inset: 9px;
-  border-style: solid;
-  border-color: rgba(255, 239, 168, 0.2);
+.rewardBoard::before {
+  inset: 8px;
+  border: 1px solid rgba(255, 241, 178, 0.24);
 }
 
-.upgradePanel h1 {
-  color: #fff2b0;
-  font-size: 30px;
-  line-height: 1.02;
-}
-
-.upgradeGrid {
-  grid-template-columns: repeat(3, minmax(230px, 1fr));
-  gap: 14px;
-  margin-top: 16px;
-}
-
-.upgradeCard {
-  --card-ink: #292412;
-  grid-template-rows: 32px 136px 98px 28px;
-  gap: 10px;
-  min-height: 384px;
-  padding: 12px 12px 58px;
-  border: 4px solid color-mix(in srgb, var(--house) 52%, #fff1a3);
-  border-radius: 14px;
-  color: var(--card-ink);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--house) 18%, #fff9d8), #fff1b6 52%, color-mix(in srgb, var(--house) 26%, #e1b75c));
-  box-shadow:
-    0 8px 0 color-mix(in srgb, var(--house) 30%, rgba(70, 40, 8, 0.42)),
-    0 22px 34px rgba(8, 15, 7, 0.36),
-    inset 0 2px 0 rgba(255, 255, 255, 0.56);
-}
-
-.upgradeCard::before {
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--house) 86%, #fff1a2), color-mix(in srgb, var(--house) 40%, #ffe68b)) 0 0 / 100% 12px no-repeat,
-    linear-gradient(180deg, transparent 0 calc(100% - 54px), rgba(82, 50, 12, 0.12) calc(100% - 54px));
-}
-
-.upgradeCard::after {
-  right: 14px;
-  bottom: 70px;
-  color: color-mix(in srgb, var(--house) 48%, #5b441d);
-  font-size: 44px;
-  opacity: 0.08;
-}
-
-.upgradeCardShine {
-  inset: 44px 14px auto;
-  height: 116px;
-  border-radius: 16px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.38), transparent 45%),
-    color-mix(in srgb, var(--house) 22%, rgba(255, 248, 206, 0.78));
-}
-
-.upgradeFamilyRibbon {
-  top: 17px;
-  left: -6px;
-  min-width: 82px;
-  padding: 7px 13px 7px 17px;
-  border-radius: 0 10px 10px 0;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--house) 74%, #855520), color-mix(in srgb, var(--house) 44%, #253b20));
-}
-
-.upgradeChoiceIndex {
-  top: 15px;
-  right: 13px;
-  width: 32px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #fff3a8, #d99537);
-}
-
-.upgradeCardTop {
+.rewardBoard .upgradeHeader {
   align-items: center;
-  min-height: 32px;
-  padding: 0 42px 0 82px;
 }
 
-.upgradeRarity,
-.upgradeCardTop strong {
-  padding: 5px 8px;
+.rewardBoard h1 {
+  max-width: 720px;
+  color: #fff2ae;
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+.rewardBoard .upgradeSynergyStrip {
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.rewardBoard .upgradeSynergyStrip span {
+  min-width: 0;
+  padding: 7px 10px;
   border-radius: 999px;
-  font-size: 10px;
-  text-transform: none;
 }
 
-.upgradeHero {
-  grid-template-columns: 74px minmax(0, 1fr);
-  min-height: 136px;
-  padding: 12px;
-  border: 3px solid color-mix(in srgb, var(--house) 36%, rgba(84, 52, 13, 0.22));
-  border-radius: 14px;
+.rewardChoices {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 15px;
+}
+
+.upgradeCard.rewardCard {
+  --house: var(--tone, #e7b95a);
+  display: grid;
+  grid-template-rows: 30px 116px minmax(96px, auto) 54px;
+  gap: 9px;
+  min-height: 342px;
+  padding: 12px 12px 55px;
+  border: 4px solid color-mix(in srgb, var(--house) 50%, #fff3a4);
+  border-radius: 18px;
+  color: #292510;
   background:
-    linear-gradient(180deg, rgba(255, 253, 228, 0.92), rgba(255, 238, 172, 0.76));
+    linear-gradient(180deg, color-mix(in srgb, var(--house) 20%, #fff8cf), #fff0ad 58%, color-mix(in srgb, var(--house) 32%, #ddb158));
+  box-shadow:
+    0 8px 0 color-mix(in srgb, var(--house) 30%, rgba(75, 43, 8, 0.44)),
+    0 22px 34px rgba(5, 13, 7, 0.36),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
 }
 
-.upgradeSigil {
-  width: 70px;
-  border: 4px solid color-mix(in srgb, var(--house) 42%, #fff3b1);
-  border-radius: 16px;
-  font-size: 32px;
+.upgradeCard.rewardCard::before {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--house) 78%, #fff2a3), color-mix(in srgb, var(--house) 36%, #ffe98e)) 0 0 / 100% 13px no-repeat,
+    linear-gradient(180deg, transparent 0 calc(100% - 50px), rgba(85, 48, 10, 0.12) calc(100% - 50px));
 }
 
-.upgradeTitleRow {
-  justify-items: start;
-  align-content: center;
-  text-align: left;
-}
-
-.upgradeTitleRow em {
-  color: color-mix(in srgb, var(--house) 62%, #334026);
-  font-size: 10px;
-}
-
-.upgradeTitleRow span {
-  color: #283016;
-  font-size: 25px;
-  line-height: 1.02;
-  overflow-wrap: normal;
-  word-break: keep-all;
-}
-
-.upgradeOutcomeBand {
-  min-height: 98px;
-  padding: 12px;
-  border: 2px solid rgba(93, 62, 18, 0.14);
-  border-radius: 14px;
-  background: rgba(255, 249, 218, 0.7);
-  box-shadow: inset 0 -4px 0 rgba(86, 52, 10, 0.08);
-}
-
-.upgradeOutcomeBand small {
-  background: color-mix(in srgb, var(--house) 68%, #4f612c);
-  text-transform: none;
-}
-
-.upgradeOutcomeBand strong {
-  color: #292e15;
-  font-size: 18px;
-}
-
-.upgradeReasonLine {
-  padding: 0 3px;
-}
-
-.upgradeReasonLine span {
-  color: color-mix(in srgb, var(--house) 58%, #2f3a1d);
-  text-transform: none;
-}
-
-.upgradeReasonLine b {
-  color: #593a10;
-}
-
-.upgradeEffectText,
-.upgradePathText {
+.upgradeCard.rewardCard::after {
   display: none;
 }
 
-.upgradeTags {
-  right: 13px;
-  bottom: 55px;
-  left: 13px;
-  max-height: 24px;
-  padding: 0;
-}
-
-.upgradeTags i {
+.rewardCardBadge,
+.rewardCardRole {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 10px;
+  overflow: hidden;
   border-radius: 999px;
-  background: rgba(255, 249, 218, 0.66);
-  text-transform: none;
+  color: #2a1c06;
+  background: rgba(255, 248, 211, 0.8);
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.upgradePickCta {
+.rewardCardRole {
+  position: absolute;
+  top: 15px;
+  right: 52px;
+  background: linear-gradient(180deg, #fff0a3, color-mix(in srgb, var(--house) 34%, #df9b3b));
+}
+
+.rewardCardArt {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 116px;
+  border: 3px solid color-mix(in srgb, var(--house) 32%, rgba(95, 61, 16, 0.22));
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--house) 32%, transparent), transparent 52%),
+    rgba(255, 250, 221, 0.78);
+}
+
+.rewardCardArt .upgradeSigil {
+  width: 76px;
+  border-color: color-mix(in srgb, var(--icon-tone, var(--house)) 46%, #fff1ac);
+  border-radius: 20px;
+  color: #fff9df;
+  background:
+    radial-gradient(circle at 35% 26%, rgba(255, 255, 255, 0.38), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--icon-tone, var(--house)) 74%, #fff0a3), color-mix(in srgb, var(--house) 72%, #304d21));
+  font-size: 36px;
+}
+
+.rewardCardArt span {
+  position: absolute;
+  right: 10px;
+  bottom: 9px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: #2d1d06;
+  background: #fff1a3;
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.rewardCardCopy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 2px 3px;
+}
+
+.rewardCardCopy small {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--house) 58%, #37401f);
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rewardCardCopy strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #293116;
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1.04;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.rewardCardCopy p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #4d522a;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.rewardCardStats {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 14px;
+  background: rgba(255, 249, 218, 0.68);
+  box-shadow: inset 0 -3px 0 rgba(82, 49, 8, 0.08);
+}
+
+.rewardCardStats b {
+  overflow: hidden;
+  color: #2e3518;
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rewardCardStats span {
+  overflow: hidden;
+  color: #625330;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upgradeCard.rewardCard .upgradeChoiceIndex {
+  top: 14px;
   right: 13px;
-  bottom: 12px;
-  left: 13px;
-  min-height: 39px;
-  border: 2px solid rgba(80, 45, 8, 0.18);
+  z-index: 2;
   border-radius: 12px;
-  background: linear-gradient(180deg, #fff5a8, color-mix(in srgb, var(--house) 36%, #de9637));
+}
+
+.upgradeCard.rewardCard .upgradePickCta {
+  right: 12px;
+  bottom: 11px;
+  left: 12px;
+  min-height: 38px;
+  border: 2px solid rgba(75, 42, 8, 0.18);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff4a3, color-mix(in srgb, var(--house) 38%, #da9134));
   font-size: 14px;
 }
 
-.upgradeCard:hover,
-.upgradeCard:focus-visible,
-.upgradeCard.isRecommended {
+.upgradeCard.rewardCard:hover,
+.upgradeCard.rewardCard:focus-visible,
+.upgradeCard.rewardCard.isRecommended {
   transform: translateY(-4px);
+  box-shadow:
+    0 9px 0 color-mix(in srgb, var(--house) 34%, rgba(75, 43, 8, 0.44)),
+    0 26px 48px rgba(5, 13, 7, 0.46),
+    0 0 30px color-mix(in srgb, var(--house) 20%, transparent),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 960px) {
+  .hudCompact {
+    width: min(420px, calc(100vw - 20px));
+  }
+
+  .hudTopBar {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  }
+
+  .hudCompact .hudTimeSeal,
+  .hudCompact .hudActions {
+    display: none;
+  }
+
+  .rewardChoices {
+    grid-template-columns: 1fr;
+  }
+
+  .upgradeCard.rewardCard {
+    min-height: 230px;
+    grid-template-columns: 116px minmax(0, 1fr);
+    grid-template-rows: 30px 1fr auto;
+    padding: 12px 12px 54px;
+  }
+
+  .upgradeCard.rewardCard .rewardCardArt {
+    grid-row: 2 / 4;
+    min-height: 138px;
+  }
+
+  .rewardCardCopy,
+  .rewardCardStats {
+    grid-column: 2;
+  }
 }
 
 @media (pointer: coarse), (max-width: 700px), (max-aspect-ratio: 3 / 4) {
-  .rewardLayer {
-    align-items: flex-end;
-    padding: 7px;
+  .hudCompact {
+    inset: max(7px, env(safe-area-inset-top)) max(7px, env(safe-area-inset-right)) auto max(7px, env(safe-area-inset-left));
+    width: auto;
   }
 
-  .upgradePanel {
-    width: calc(100vw - 14px);
-    max-height: calc(100dvh - 14px);
-    padding: 13px;
-    border-radius: 14px;
+  .hudTopBar {
+    width: min(100%, 350px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    padding: 5px;
+    border-radius: 16px;
   }
 
-  .upgradePanel h1 {
-    font-size: 25px;
+  .hudCompact .hudMeter {
+    min-height: 36px;
   }
 
-  .upgradeSynergyStrip {
+  .hudAlertStack,
+  .hudCoachCard,
+  .hudObjectiveDock {
     display: none;
   }
 
-  .upgradeGrid {
-    grid-auto-columns: minmax(272px, 83vw);
+  .rewardLayer {
+    align-items: flex-end;
+    padding: 8px;
+  }
+
+  .rewardBoard {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: 14px;
+    border-radius: 18px 18px 12px 12px;
+  }
+
+  .rewardBoard h1 {
+    font-size: 22px;
+  }
+
+  .rewardBoard .upgradeHeader {
+    gap: 8px;
+  }
+
+  .rewardChoices {
     gap: 10px;
     margin-top: 12px;
-    padding-bottom: 10px;
   }
 
-  .upgradeCard {
-    grid-template-rows: 30px 126px 92px 24px;
-    max-height: min(468px, calc(100dvh - 168px));
-    padding: 11px 11px 56px;
-    border-radius: 13px;
+  .upgradeCard.rewardCard {
+    min-height: 206px;
+    grid-template-columns: 92px minmax(0, 1fr);
+    grid-template-rows: 26px minmax(78px, auto) 58px;
+    gap: 7px 9px;
+    padding: 10px 10px 50px;
+    border-width: 3px;
   }
 
-  .upgradeHero {
-    grid-template-columns: 64px minmax(0, 1fr);
-    min-height: 126px;
-    padding: 10px;
+  .upgradeCard.rewardCard .rewardCardBadge {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    padding: 5px 8px;
   }
 
-  .upgradeSigil {
+  .upgradeCard.rewardCard .rewardCardArt {
+    grid-column: 1;
+    grid-row: 2 / 4;
+    min-height: 124px;
+  }
+
+  .upgradeCard.rewardCard .rewardCardCopy {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-content: start;
+    padding: 3px 30px 0 0;
+  }
+
+  .upgradeCard.rewardCard .rewardCardStats {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: end;
+    min-height: 54px;
+    padding: 8px 9px;
+  }
+
+  .rewardCardArt .upgradeSigil {
     width: 60px;
+    border-radius: 17px;
     font-size: 28px;
   }
 
-  .upgradeTitleRow span {
-    display: -webkit-box;
-    overflow: hidden;
-    font-size: 20px;
-    line-height: 1.08;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  .upgradeOutcomeBand {
-    min-height: 92px;
-    padding: 10px;
-  }
-
-  .upgradeOutcomeBand strong {
-    font-size: 16px;
-  }
-
-  .upgradeReasonLine,
-  .upgradeTags {
+  .rewardCardRole {
     display: none;
   }
+
+  .rewardCardCopy strong {
+    font-size: 20px;
+  }
+
+  .rewardCardCopy small {
+    display: none;
+  }
+
+  .rewardCardCopy p {
+    font-size: 12px;
+  }
+
+  .rewardCardStats b {
+    font-size: 12px;
+  }
+
+  .rewardCardStats span {
+    font-size: 10px;
+  }
+
 }
