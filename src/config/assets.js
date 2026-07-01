@@ -31,8 +31,23 @@ export const IMPORTED_ENV_MODEL_URLS = {
   bushes: withBase('models/quaternius/bushes.glb')
 };
 
+export const CORE_PRELOAD_MODEL_URLS = [
+  MODEL_URLS.player
+];
+
+export const HIGH_DETAIL_PRELOAD_MODEL_URLS = [
+  MODEL_URLS.golem,
+  MODEL_URLS.runner,
+  MODEL_URLS.brute,
+  MODEL_URLS.boss,
+  PROJECTILE_MODEL_URLS.orb,
+  PROJECTILE_MODEL_URLS.storm,
+  PROJECTILE_MODEL_URLS.orbitBlade,
+  ...Object.values(NATURE_MODEL_URLS),
+  ...Object.values(IMPORTED_ENV_MODEL_URLS)
+];
+
 export const PRELOAD_MODEL_URLS = [
-  ...Object.values(MODEL_URLS),
-  ...Object.values(PROJECTILE_MODEL_URLS),
-  ...Object.values(NATURE_MODEL_URLS)
+  ...CORE_PRELOAD_MODEL_URLS,
+  ...HIGH_DETAIL_PRELOAD_MODEL_URLS
 ];
