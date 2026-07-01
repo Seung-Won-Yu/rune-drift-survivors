@@ -53,12 +53,11 @@ import {
 } from './config/gameTuning.js';
 import {
   getRuntimeBudget,
-  getRuntimeVisualQuality,
   getStateSyncInterval,
   getVisualBudget,
-  isOptionalRenderFeatureEnabled,
   useVisualQuality
 } from './hooks/useVisualQuality.js';
+import { useCanvasQualitySettings } from './hooks/useCanvasQualitySettings.js';
 import {
   applyCombatRhythm,
   applyDamageToEnemy,
@@ -91,9 +90,6 @@ import {
 import {
   createEmptyRunStats,
   createInitialGame,
-  createQaBossGame,
-  createQaResultGame,
-  createQaStressGame,
   getItemPickupCount,
   withItemPickup,
   withShrineActivation
@@ -117,6 +113,7 @@ import {
   pickArmoryBoost,
   pickUpgrades
 } from './systems/progression.js';
+import { useRuneQaControls } from './qa/useRuneQaControls.js';
 import { HUD } from './ui/GameHud.jsx';
 import { EndOverlay, PauseOverlay, UpgradeOverlay } from './ui/GameOverlays.jsx';
 import { createTouchControlsState, TouchControls } from './ui/TouchControls.jsx';
@@ -169,29 +166,14 @@ function App() {
   const sceneApi = useRef(null);
   const touchControls = useRef(createTouchControlsState());
   const visualQuality = useVisualQuality();
-  const runtimeVisualQuality = getRuntimeVisualQuality(visualQuality, game);
-  const enablePostFx = useMemo(() => (
-    runtimeVisualQuality === 'high' && isOptionalRenderFeatureEnabled('fx')
-  ), [runtimeVisualQuality]);
-  const enableEnvironment = useMemo(() => (
-    runtimeVisualQuality === 'high' && isOptionalRenderFeatureEnabled('env')
-  ), [runtimeVisualQuality]);
-  const canvasDpr = useMemo(() => (
-    runtimeVisualQuality === 'low' ? [0.82, 0.92] : runtimeVisualQuality === 'balanced' ? [0.94, 1.04] : [1.0, 1.14]
-  ), [runtimeVisualQuality]);
-  const canvasCamera = useMemo(() => ({
-    position: runtimeVisualQuality === 'low' ? [0, 38, 64] : runtimeVisualQuality === 'balanced' ? [0, 42, 70] : [0, 44, 74],
-    fov: runtimeVisualQuality === 'low' ? 50 : 48,
-    near: 0.1,
-    far: 420
-  }), [runtimeVisualQuality]);
-  const canvasGl = useMemo(() => ({
-    antialias: runtimeVisualQuality !== 'low' && enablePostFx,
-    alpha: false,
-    depth: true,
-    stencil: false,
-    powerPreference: runtimeVisualQuality === 'high' && enablePostFx ? 'high-performance' : 'low-power'
-  }), [enablePostFx, runtimeVisualQuality]);
+  const {
+    runtimeVisualQuality,
+    enablePostFx,
+    enableEnvironment,
+    canvasDpr,
+    canvasCamera,
+    canvasGl
+  } = useCanvasQualitySettings(visualQuality, game);
 
   const togglePause = () => {
     setGame(current => {
@@ -254,87 +236,7 @@ function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  useEffect(() => {
-    if (!import.meta.env.DEV) return undefined;
-    const showQaGame = nextGame => {
-      sceneApi.current?.reset();
-      setUpgradeChoices([]);
-      setGame(nextGame);
-      window.setTimeout(() => setGame(nextGame), 80);
-    };
-    window.__RUNE_DRIFT_QA__ = {
-      boss: options => {
-        showQaGame(createQaBossGame(options));
-      },
-      result: result => {
-        showQaGame(createQaResultGame(result));
-      },
-      stress: options => {
-        const nextGame = createQaStressGame();
-        showQaGame(nextGame);
-        [120, 260, 620].forEach(delay => {
-          window.setTimeout(() => sceneApi.current?.stress?.(options), delay);
-        });
-      },
-      upgrade: () => {
-        const nextGame = {
-          ...createQaStressGame(),
-          phase: 'upgrade',
-          pendingUpgrades: 1
-        };
-        sceneApi.current?.reset();
-        setUpgradeChoices(pickUpgrades(nextGame));
-        setGame(nextGame);
-      },
-      starterUpgrade: () => {
-        const nextGame = {
-          ...createInitialGame(),
-          phase: 'upgrade',
-          level: 2,
-          xp: 0,
-          xpToNext: 45,
-          pendingUpgrades: 1,
-          time: 28,
-          kills: 18,
-          onboardingMovement: 42,
-          dashUses: 1
-        };
-        sceneApi.current?.reset();
-        setUpgradeChoices(pickUpgrades(nextGame));
-        setGame(nextGame);
-      },
-      reset: () => {
-        sceneApi.current?.reset();
-        setUpgradeChoices([]);
-        setGame(createInitialGame());
-      }
-    };
-    const qaMode = new URLSearchParams(window.location.search).get('qa');
-    if (qaMode === 'upgrade') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.upgrade(), 120);
-    } else if (qaMode === 'starter-upgrade') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.starterUpgrade(), 120);
-    } else if (qaMode === 'stress') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.stress({
-        enemies: MAX_ENEMIES - 6,
-        projectiles: MAX_PROJECTILES - 12,
-        gems: MAX_XP_GEMS - 24
-      }), 120);
-    } else if (qaMode === 'silhouette') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.stress({
-        enemies: 92,
-        projectiles: 0,
-        gems: 0,
-        hitBursts: 0,
-        weaponEffects: 0
-      }), 120);
-    } else if (qaMode === 'victory' || qaMode === 'defeat') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.result(qaMode), 120);
-    }
-    return () => {
-      delete window.__RUNE_DRIFT_QA__;
-    };
-  }, []);
+  useRuneQaControls({ sceneApi, setGame, setUpgradeChoices });
 
   return (
     <main className={`shell visual-${runtimeVisualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>
