@@ -87,6 +87,7 @@ import {
   isPoolBelowLimit,
   pushDamageNumber,
   pushXpGem,
+  trimSceneRuntimePools,
   updateTimedPool
 } from './systems/runtimePools.js';
 import { applyFrameStateUpdate } from './systems/runFrameState.js';
@@ -539,36 +540,13 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
   };
 
   const trimRuntimePools = () => {
-    if (projectiles.current.length > runtimeBudget.maxProjectiles) {
-      projectiles.current.length = runtimeBudget.maxProjectiles;
-    }
-
-    while (xpGems.current.length > runtimeBudget.maxXpGems) {
-      const gem = xpGems.current.pop();
-      const target = xpGems.current[Math.floor(Math.random() * xpGems.current.length)];
-      if (!gem || !target) continue;
-      target.value += gem.value;
-      target.pos.lerp(gem.pos, 0.18);
-    }
-
-    if (enemies.current.length <= runtimeBudget.maxEnemies) return;
-    const protectedEnemies = [];
-    const regularEnemies = [];
-    const playerPos = player.current.pos;
-    for (const enemy of enemies.current) {
-      if (enemy.kind === 'boss' || enemy.kind === 'elite') {
-        protectedEnemies.push(enemy);
-      } else {
-        regularEnemies.push(enemy);
-      }
-    }
-    regularEnemies.sort((a, b) => (
-      a.pos.distanceToSquared(playerPos) - b.pos.distanceToSquared(playerPos)
-    ));
-    enemies.current = [
-      ...protectedEnemies,
-      ...regularEnemies.slice(0, Math.max(0, runtimeBudget.maxEnemies - protectedEnemies.length))
-    ];
+    trimSceneRuntimePools({
+      projectiles,
+      xpGems,
+      enemies,
+      runtimeBudget,
+      playerPos: player.current.pos
+    });
   };
 
   const getRunStatsSnapshot = () => ({
