@@ -23,7 +23,9 @@ Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete sy
 ## Current Features
 
 - 3D forest-ruin arena with terrain, blockers, imported tree clusters, rocks, shrines, and rune lighting.
+- Balanced mode now uses imported forest props, natural field accents, clearer perimeter groves, richer grove-floor patches, leaf/root decals, and darker terrain colors for better map read.
 - First-run onboarding for movement, dash, XP pickup, and armory cache.
+- Early upgrade pacing starts with rune orb, growth, and survival picks; new weapon families open through an armory cache, shrine, or later run timing.
 - Wave pacing with combat rhythm phases and escalating threat.
 - Run phase goals for early, mid, and final survival direction.
 - Auto-combat weapons:
@@ -44,10 +46,12 @@ Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete sy
   - armory cache
 - Elite and boss encounters with alerts, boss HP bar, pattern state, and rage phase.
 - Pause, upgrade, and result overlays.
-- Upgrade cards prioritize recommended picks and show short current-phase reasons.
+- Upgrade cards use collectible-style silhouettes, larger choice intent labels, family-specific card surfaces, recommended-pick badges, quick stat reads, and responsive mobile layout.
+- Gameplay HUD is now a compact casual pocket: HP/XP stay anchored, run timer is compressed, and non-critical chips stay hidden until needed.
+- Enemy classes use clearer silhouettes in balanced mode: runner, golem, brute, elite, and boss have stronger shape, scale, accent, and marker differences.
 - Run result summary with grade, top DPS weapon, preferred build, shrine rewards, elite kills, and boss kills.
 - Mobile HUD and modal layout pass.
-- Runtime caps for enemies, projectiles, XP gems, damage numbers, and effects.
+- Runtime caps plus adaptive combat budgets for enemies, projectiles, XP gems, damage numbers, and effects.
 
 ## Controls
 
@@ -75,7 +79,7 @@ Optional URL flags:
 Notes:
 
 - `balanced` keeps the normal arena detail and uses a capped but sharp DPR range.
-- Runtime optimization focuses on lower object churn, squared-distance checks, post-effect opt-in, and capped combat object counts.
+- Runtime optimization focuses on lower object churn, squared-distance checks, post-effect opt-in, capped combat object counts, and adaptive budget pressure when frames get heavy.
 - `low` is intended for mobile, high-DPI small screens, reduced-motion users, or hot laptops.
 - Bloom, vignette, and the HDR environment are opt-in through `?fx=on`, `?env=on`, or `?quality=cinematic`.
 
@@ -104,6 +108,14 @@ Preview the production build:
 ```bash
 npm run preview
 ```
+
+Run the local browser smoke suite:
+
+```bash
+npm run qa:smoke
+```
+
+This opens local Chrome so the stress FPS check matches the real browser path.
 
 ## GitHub Pages
 
@@ -174,10 +186,17 @@ Blender source files can stay on the local machine, but the web game does not ne
 Recent checks:
 
 - `npm run build` passes locally.
+- `npm run qa:smoke` runs HUD, upgrade card, boss HUD, result overlay, and stress-budget checks with Playwright/Chrome.
 - GitHub Actions deploy passes on `main`.
 - GitHub Pages build mode uses `GITHUB_PAGES=true npm run build`.
-- Mobile HUD, upgrade cards, boss, result, and stress views have dedicated QA entry points in the app.
-- Runtime caps are in place for enemies, projectiles, XP gems, damage numbers, and effects.
+- Mobile HUD, upgrade cards, enemy silhouette, map, boss, result, and stress views have dedicated QA entry points in the app.
+- Runtime caps and adaptive budget pressure are in place for enemies, projectiles, XP gems, damage numbers, and effects.
+- Starter upgrade pacing was checked with `?quality=balanced&qa=starter-upgrade`; stress budget was checked with `?quality=balanced&qa=stress`.
+- Stress QA exposes frame metrics through `window.__RUNE_DRIFT_QA__.metrics()`, including average FPS, EMA FPS, max frame time, slow frames, severe frames, object counts, and active runtime budgets.
+- Compact HUD desktop/mobile screenshots were checked with Playwright after the casual HUD pass.
+- Upgrade card desktop/mobile screenshots were checked with Playwright after the readability pass.
+- Balanced map screenshots and stress metrics were checked after the ground-detail pass.
+- Smoke screenshots are written under `output/playwright/`.
 
 ## Asset Notes
 

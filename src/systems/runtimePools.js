@@ -65,7 +65,11 @@ export function pushDamageNumber(pool, {
   if (!isPriority && pool.length >= budget + 8) return false;
   if (pool.length >= budget + 14) pool.length = budget + 8;
   pool.push({
-    pos: pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.22, 1.05, (Math.random() - 0.5) * 0.22)),
+    pos: new THREE.Vector3(
+      pos.x + (Math.random() - 0.5) * 0.22,
+      pos.y + 1.05,
+      pos.z + (Math.random() - 0.5) * 0.22
+    ),
     value,
     color,
     size,

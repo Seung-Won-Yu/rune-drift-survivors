@@ -6,7 +6,8 @@ import { MAX_ENEMIES } from '../config/gameTuning.js';
 import { getRuntimeBudget } from '../hooks/useVisualQuality.js';
 import { useVisualFrameGate } from '../hooks/useVisualFrameGate.js';
 import { getTerrainHeight } from '../systems/terrain.js';
-import { useInstancedModelParts } from './StaticModelInstances.jsx';
+import { syncInstanceMesh, syncInstanceMeshes } from './instancedMeshUtils.js';
+import { useInstancedModelParts } from './useInstancedModelParts.js';
 
 export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' }) {
   const bodyRef = useRef();
@@ -17,11 +18,11 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
   const enemyLimit = getRuntimeBudget(visualQuality).maxEnemies;
   const shouldRenderVisualFrame = useVisualFrameGate(visualQuality, 36, 22);
   const meta = useMemo(() => ({
-    runner: { color: '#496fa0', head: '#668bc0', accent: '#a6ddff', face: '#fff1a6', scale: [0.88, 0.68, 1.32], lift: 0.18 },
-    golem: { color: '#6f9158', head: '#88a86b', accent: '#dacb7a', face: '#fff0a6', scale: [1.16, 1.04, 0.98], lift: 0.14 },
-    brute: { color: '#b85f4b', head: '#d0785f', accent: '#ffd078', face: '#fff0a6', scale: [1.42, 1.14, 1.18], lift: 0.1 },
-    elite: { color: '#8264aa', head: '#a486ce', accent: '#ffe78a', face: '#fff1c2', scale: [1.2, 1.28, 1.08], lift: 0.18 },
-    boss: { color: '#aa8748', head: '#c79a52', accent: '#fff1a6', face: '#fff4c6', scale: [1.92, 1.56, 1.72], lift: 0.22 }
+    runner: { color: '#335d98', head: '#5e8dc4', accent: '#a6ddff', face: '#fff1a6', scale: [0.74, 0.52, 1.72], lift: 0.2, headSize: [0.3, 0.26, 0.23], accentSize: [0.2, 0.72, 0.2], shadow: [0.92, 0.48] },
+    golem: { color: '#5c8654', head: '#7ea66b', accent: '#dacb7a', face: '#fff0a6', scale: [1.18, 1.18, 1.02], lift: 0.12, headSize: [0.32, 0.34, 0.32], accentSize: [0.2, 0.34, 0.24], shadow: [0.9, 0.68] },
+    brute: { color: '#b94f42', head: '#db735c', accent: '#ffd078', face: '#fff0a6', scale: [1.74, 1.08, 1.28], lift: 0.08, headSize: [0.38, 0.3, 0.34], accentSize: [0.28, 0.36, 0.26], shadow: [1.08, 0.74] },
+    elite: { color: '#7657a6', head: '#a486ce', accent: '#ffe78a', face: '#fff1c2', scale: [1.34, 1.42, 1.16], lift: 0.18, headSize: [0.44, 0.38, 0.38], accentSize: [0.36, 0.54, 0.3], shadow: [1.02, 0.78] },
+    boss: { color: '#b08a48', head: '#d39e55', accent: '#fff1a6', face: '#fff4c6', scale: [2.2, 1.62, 1.86], lift: 0.22, headSize: [0.5, 0.48, 0.44], accentSize: [0.42, 0.62, 0.34], shadow: [1.22, 0.84] }
   }), []);
   const local = useMemo(() => ({
     pos: new THREE.Vector3(),
@@ -93,9 +94,9 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
         Math.sin(stride * 0.82) * 0.08 + hitReact * 0.12
       ));
       local.headScale.set(
-        radius * (enemy.kind === 'boss' ? 0.44 : enemy.kind === 'brute' ? 0.34 : 0.3),
-        radius * (enemy.kind === 'boss' ? 0.44 : 0.32),
-        radius * (enemy.kind === 'runner' ? 0.26 : 0.3)
+        radius * kindMeta.headSize[0],
+        radius * kindMeta.headSize[1],
+        radius * kindMeta.headSize[2]
       );
       local.matrix.compose(local.headPos, local.headQuat, local.headScale);
       headRef.current.setMatrixAt(count, local.matrix);
@@ -126,9 +127,9 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
       );
       local.accentQuat.setFromEuler(new THREE.Euler(0.48, facing, Math.PI / 4 + step * 0.12));
       local.accentScale.set(
-        radius * (enemy.kind === 'boss' ? 0.32 : 0.22),
-        radius * (enemy.kind === 'runner' ? 0.54 : 0.38),
-        radius * 0.22
+        radius * kindMeta.accentSize[0],
+        radius * kindMeta.accentSize[1],
+        radius * kindMeta.accentSize[2]
       );
       local.matrix.compose(local.accentPos, local.accentQuat, local.accentScale);
       accentRef.current.setMatrixAt(count, local.matrix);
@@ -136,18 +137,14 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
       accentRef.current.setColorAt(count, local.color);
 
       local.pos.set(enemy.pos.x, getTerrainHeight(enemy.pos.x, enemy.pos.z) + 0.055, enemy.pos.z);
-      const shadowSize = radius * (enemy.kind === 'boss' ? 1.15 : 0.82);
-      local.matrix.compose(local.pos, local.shadowQuat, local.shadowScale.set(shadowSize, shadowSize * 0.62, 1));
+      const shadowSize = radius * (enemy.kind === 'boss' ? 1.2 : 0.86);
+      local.matrix.compose(local.pos, local.shadowQuat, local.shadowScale.set(shadowSize * kindMeta.shadow[0], shadowSize * kindMeta.shadow[1], 1));
       shadowRef.current.setMatrixAt(count, local.matrix);
 
       count += 1;
     }
 
-    [bodyRef.current, headRef.current, faceRef.current, accentRef.current, shadowRef.current].forEach(mesh => {
-      mesh.count = count;
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    });
+    syncInstanceMeshes([bodyRef.current, headRef.current, faceRef.current, accentRef.current, shadowRef.current], count);
   });
 
   return (
@@ -326,8 +323,7 @@ export function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 
         local.final.multiplyMatrices(local.baseMatrices[index], part.localMatrix);
         mesh.setMatrixAt(index, local.final);
       }
-      mesh.count = count;
-      mesh.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(mesh, count);
     });
   });
 

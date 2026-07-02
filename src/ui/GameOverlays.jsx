@@ -3,15 +3,11 @@ import {
   formatFocusLevel,
   getBuildSynergyStates,
   getDominantBuild,
-  getRunPhase,
-  getUpgradeCardMeta,
-  getUpgradeDisplayTitle,
-  getUpgradeIconMeta,
-  getUpgradeTone,
-  getUpgradeVisualFamilyKey
+  getRunPhase
 } from '../systems/progression.js';
 import { getOpeningObjectives, getRunResultSummary } from '../systems/runProgress.js';
 import { formatTime } from './formatters.js';
+import { UpgradeCard } from './UpgradeCard.jsx';
 
 export function PauseOverlay({ game, onResume, onRestart }) {
   const dominantBuild = getDominantBuild(game);
@@ -92,42 +88,6 @@ export function UpgradeOverlay({ game, choices, onChoose }) {
         </div>
       </div>
     </section>
-  );
-}
-
-function UpgradeCard({ game, choice, index, onChoose }) {
-  const cardMeta = getUpgradeCardMeta(game, choice);
-  const displayTitle = getUpgradeDisplayTitle(game, choice);
-  const visualFamilyKey = getUpgradeVisualFamilyKey(choice);
-  const iconMeta = getUpgradeIconMeta(choice);
-  const tone = getUpgradeTone(choice);
-
-  return (
-    <button
-      className={`upgradeCard rewardCard family-${visualFamilyKey} rarity-${cardMeta.rarity} ${cardMeta.recommended ? 'isRecommended' : ''}`}
-      type="button"
-      style={{ '--tone': tone, '--icon-tone': iconMeta.color ?? tone }}
-      aria-label={`${displayTitle}: ${cardMeta.quickSummary}, ${cardMeta.statLine}`}
-      onClick={() => onChoose(choice)}
-    >
-      <span className="upgradeChoiceIndex" aria-hidden="true">{index + 1}</span>
-      <span className="rewardCardBadge">{cardMeta.rarityLabel}</span>
-      <span className="rewardCardRole">{cardMeta.recommended ? cardMeta.reason : cardMeta.role}</span>
-      <div className="rewardCardArt" aria-hidden="true">
-        <i className="upgradeSigil">{iconMeta.glyph}</i>
-        {cardMeta.recommended && <span>추천</span>}
-      </div>
-      <div className="rewardCardCopy">
-        <small>{choice.family} · {choice.branch}</small>
-        <strong>{displayTitle}</strong>
-        <p>{cardMeta.quickSummary}</p>
-      </div>
-      <div className="rewardCardStats">
-        <b>{cardMeta.statLine}</b>
-        <span>{cardMeta.payoff}</span>
-      </div>
-      <span className="upgradePickCta">선택</span>
-    </button>
   );
 }
 

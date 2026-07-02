@@ -1,0 +1,433 @@
+/* Base responsive rules before active casual UI overrides. */
+@media (max-width: 980px) {
+  .hud {
+    width: min(560px, calc(100vw - 24px));
+  }
+
+  .upgradeGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .upgradeCard {
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (pointer: coarse), (max-width: 700px), (max-aspect-ratio: 3 / 4) {
+  .hud {
+    inset: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) auto max(6px, env(safe-area-inset-left));
+    width: auto;
+    max-height: 24dvh;
+    gap: 4px;
+  }
+
+  .hudMeter {
+    min-height: 38px;
+    gap: 4px;
+    padding: 4px 5px 4px 4px;
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .hudMeterIcon {
+    width: 24px;
+    font-size: 12px;
+  }
+
+  .hudMeterText {
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .hudMeterText span {
+    overflow: hidden;
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hudMeterText strong {
+    font-size: 11px;
+  }
+
+  .hudGauge {
+    height: 5px;
+  }
+
+  .hudActions {
+    display: none;
+  }
+
+  .iconButton {
+    width: 26px;
+    min-height: 38px;
+    box-shadow: none;
+    font-size: 12px;
+  }
+
+  .hudPrompt {
+    width: min(100%, 360px);
+    max-width: 100%;
+    gap: 3px;
+    padding: 6px 8px 7px;
+    box-shadow: 0 7px 16px rgba(0, 0, 0, 0.22);
+  }
+
+  .hudPromptHeader {
+    grid-template-columns: auto 1fr;
+    gap: 5px;
+  }
+
+  .hudPromptHeader strong,
+  .hudPromptHeader small,
+  .hudPromptBody small {
+    display: none;
+  }
+
+  .hudPromptBody {
+    min-width: 0;
+    padding: 2px 0 5px;
+    background: transparent;
+  }
+
+  .hudPromptBody b {
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hudQuestRow {
+    grid-template-columns: minmax(96px, auto) minmax(0, 1fr);
+    width: 100%;
+    max-width: 100%;
+    gap: 4px;
+    padding: 5px;
+  }
+
+  .hudQuestCard:nth-of-type(n + 3) {
+    display: none;
+  }
+
+  .hudQuestSummary,
+  .hudQuestCard {
+    padding: 5px 6px 8px;
+  }
+
+  .hudQuestSummary small,
+  .hudQuestCard small {
+    display: none;
+  }
+
+  .hudEncounter {
+    width: 100%;
+    max-width: 100%;
+    min-height: 24px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px;
+    padding: 5px 8px 6px 10px;
+  }
+
+  .hudEncounter strong {
+    overflow: hidden;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hudEncounter small {
+    display: none;
+  }
+
+  .hudBoss {
+    width: 100%;
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 3px 6px;
+    padding: 5px 7px 6px 9px;
+  }
+
+  .hudBossName {
+    grid-row: 1 / 3;
+    align-content: center;
+  }
+
+  .hudBossName small,
+  .hudBossPattern small,
+  .hudBossPattern em {
+    display: none;
+  }
+
+  .hudBossHp {
+    height: 6px;
+  }
+
+  .hudBossPattern {
+    grid-column: 2;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+
+  .hudBossPattern span {
+    min-height: 16px;
+    padding: 2px 5px;
+    overflow: hidden;
+    font-size: 8px;
+    text-overflow: ellipsis;
+  }
+
+  .touchControls {
+    display: flex;
+  }
+
+  .modalLayer {
+    padding: 12px;
+  }
+
+  .upgradePanel,
+  .pausePanel,
+  .endPanel {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    padding: 18px;
+    overflow-x: hidden;
+  }
+
+  .upgradeSynergyStrip {
+    display: none;
+  }
+
+  .upgradeGrid {
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .upgradeCard {
+    min-height: 0;
+    grid-template-rows: auto minmax(118px, auto) minmax(82px, auto) auto auto auto;
+    gap: 9px;
+    padding: 13px;
+  }
+
+  .upgradeSigil {
+    width: 62px;
+    font-size: 28px;
+  }
+
+  .upgradePickCta {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    min-height: 30px;
+    padding: 8px 9px;
+  }
+
+  .pauseStats,
+  .controlGrid,
+  .pauseObjectives,
+  .resultStats,
+  .runSummary,
+  .resultHighlights {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .hudMeter {
+    min-height: 34px;
+    padding: 4px 5px;
+  }
+
+  .iconButton {
+    width: 24px;
+    min-height: 34px;
+  }
+
+  .hudMeterIcon {
+    width: 22px;
+    font-size: 11px;
+  }
+
+  .upgradeSigil {
+    width: 54px;
+    font-size: 24px;
+  }
+}
+
+.hud {
+  width: min(430px, calc(100vw - 28px));
+  gap: 5px;
+}
+
+.hudMeter {
+  min-height: 34px;
+  border-radius: 11px;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 215, 0.28), rgba(58, 78, 41, 0.5)),
+    rgba(27, 44, 25, 0.64);
+}
+
+.hudMeterIcon {
+  width: 24px;
+  border-width: 1px;
+  font-size: 12px;
+}
+
+.hudMeterText span {
+  font-size: 9px;
+}
+
+.hudMeterText strong {
+  font-size: 12px;
+}
+
+.hudGauge {
+  height: 5px;
+}
+
+.hudActions {
+  grid-template-columns: repeat(2, 32px);
+  gap: 4px;
+}
+
+.iconButton {
+  width: 32px;
+  min-height: 34px;
+  border-radius: 10px;
+}
+
+.hudPrompt {
+  max-width: min(360px, 100%);
+  padding: 7px 9px 8px;
+}
+
+.hudPromptBody {
+  min-width: min(230px, calc(100vw - 64px));
+}
+
+.hudQuestRow {
+  grid-template-columns: minmax(90px, auto) minmax(104px, 1fr);
+  max-width: min(390px, 100%);
+}
+
+.hudQuestCard:nth-of-type(n + 3) {
+  display: none;
+}
+
+.hudBoss {
+  grid-template-columns: minmax(58px, auto) minmax(128px, 1fr) minmax(82px, auto);
+  width: min(410px, 100%);
+  min-height: 34px;
+  gap: 5px;
+  align-items: center;
+  padding: 5px 8px 6px 10px;
+  border-radius: 999px;
+  border-color: color-mix(in srgb, var(--tone, var(--rose)) 44%, rgba(255, 232, 150, 0.24));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--tone, var(--rose)) 14%, transparent), transparent),
+    rgba(58, 31, 24, 0.64);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 242, 203, 0.08);
+}
+
+.hudBoss::before {
+  width: 0;
+}
+
+.hudBossName {
+  display: flex;
+  min-width: 0;
+  gap: 5px;
+  align-items: baseline;
+}
+
+.hudBossName span {
+  color: color-mix(in srgb, var(--tone, var(--rose)) 66%, white);
+  font-size: 9px;
+}
+
+.hudBossName strong {
+  max-width: 72px;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hudBossName small {
+  display: none;
+}
+
+.hudBossHp {
+  height: 7px;
+}
+
+.hudBossPattern {
+  min-width: 0;
+}
+
+.hudBossPattern span {
+  min-height: 21px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+}
+
+@media (pointer: coarse), (max-width: 700px), (max-aspect-ratio: 3 / 4) {
+  .hud {
+    max-height: 20dvh;
+    gap: 3px;
+    justify-items: start;
+  }
+
+  .hudPrompt,
+  .hudQuestRow {
+    display: none;
+  }
+
+  .hudBoss {
+    grid-template-columns: 58px minmax(0, 1fr) 76px;
+    width: min(100%, 360px);
+    min-height: 28px;
+    padding: 4px 7px;
+    border-radius: 999px;
+  }
+
+  .hudBossName {
+    grid-row: auto;
+  }
+
+  .hudBossName span {
+    display: none;
+  }
+
+  .hudBossName strong {
+    max-width: 56px;
+    font-size: 11px;
+  }
+
+  .hudBossHp {
+    height: 5px;
+  }
+
+  .hudBossPattern {
+    grid-column: auto;
+  }
+
+  .hudBossPattern span {
+    min-height: 18px;
+    padding: 3px 6px;
+    font-size: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -11,16 +11,16 @@ export function SculptedRuinTerrain({ visualQuality = 'high' }) {
     const positions = [];
     const colors = [];
     const indices = [];
-    const lowColor = new THREE.Color('#516f43');
-    const midColor = new THREE.Color('#7f9d5e');
-    const highColor = new THREE.Color('#a09d60');
-    const mossColor = new THREE.Color('#70af5c');
+    const lowColor = new THREE.Color('#4a6b3e');
+    const midColor = new THREE.Color('#718d52');
+    const highColor = new THREE.Color('#9f9658');
+    const mossColor = new THREE.Color('#72b15f');
     const edgeColor = new THREE.Color('#233c28');
     const warmStone = new THREE.Color('#969073');
     const lowlandMud = new THREE.Color('#666f49');
     const riftBlue = new THREE.Color('#5fb994');
-    const dryGrass = new THREE.Color('#9d8d55');
-    const pathDust = new THREE.Color('#9d7651');
+    const dryGrass = new THREE.Color('#958e55');
+    const pathDust = new THREE.Color('#a2784f');
     const runeWash = new THREE.Color('#79bf87');
     const forestShade = new THREE.Color('#315834');
 
@@ -44,16 +44,16 @@ export function SculptedRuinTerrain({ visualQuality = 'high' }) {
         const outerRuinRing = (1 - smoothStep(0.0, 3.6, Math.abs(radius - 76.0))) * 0.55;
         const laneWash = smoothStep(0.78, 1.0, Math.abs(Math.sin(angle * 2.0 + 0.4))) * smoothStep(34.0, 52.0, radius) * (1 - smoothStep(88.0, 104.0, radius));
 
-        const color = new THREE.Color().copy(lowColor).lerp(midColor, 0.72 + mossBlend * 0.35);
-        color.lerp(lowlandMud, basinBlend * 0.26);
-        color.lerp(highColor, heightBlend * 0.62);
-        color.lerp(mossColor, THREE.MathUtils.clamp(mossBlend, 0, 0.34));
-        color.lerp(dryGrass, dryBlend * 0.24);
-        color.lerp(pathDust, spokeWear * 0.36);
-        color.lerp(warmStone, Math.max(ruinWear * 0.045, ridgeBlend * 0.24, outerRuinRing * 0.24));
-        color.lerp(runeWash, Math.max(riftBlend * 0.2, innerRuneRing * 0.22, laneWash * 0.12));
-        color.lerp(riftBlue, riftBlend * 0.12);
-        color.lerp(forestShade, smoothStep(78.0, 112.0, radius) * 0.16);
+        const color = new THREE.Color().copy(lowColor).lerp(midColor, 0.66 + mossBlend * 0.42);
+        color.lerp(lowlandMud, basinBlend * 0.3);
+        color.lerp(highColor, heightBlend * 0.52);
+        color.lerp(mossColor, THREE.MathUtils.clamp(mossBlend * 1.18, 0, 0.42));
+        color.lerp(dryGrass, dryBlend * 0.18);
+        color.lerp(pathDust, spokeWear * 0.43);
+        color.lerp(warmStone, Math.max(ruinWear * 0.06, ridgeBlend * 0.3, outerRuinRing * 0.3));
+        color.lerp(runeWash, Math.max(riftBlend * 0.24, innerRuneRing * 0.28, laneWash * 0.16));
+        color.lerp(riftBlue, riftBlend * 0.15);
+        color.lerp(forestShade, smoothStep(76.0, 112.0, radius) * 0.24);
         color.lerp(edgeColor, edgeBlend);
 
         positions.push(x, y, z);

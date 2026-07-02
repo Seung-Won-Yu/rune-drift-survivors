@@ -7,6 +7,7 @@ import {
   RelicBoxInstances,
   RelicOctahedronInstances
 } from './InstancedGeometry.jsx';
+import { syncInstanceMesh, syncInstanceMeshes } from './instancedMeshUtils.js';
 
 export function BalancedCasualArena({ visualQuality = 'balanced' }) {
   const arena = useMemo(() => createBalancedCasualArenaLayout(visualQuality), [visualQuality]);
@@ -14,9 +15,12 @@ export function BalancedCasualArena({ visualQuality = 'balanced' }) {
   return (
     <group>
       <GroundDecalInstances transforms={arena.edgeShadePatches} shape="circle" segments={28} opacity={visualQuality === 'low' ? 0.055 : 0.11} />
+      <GroundDecalInstances transforms={arena.groveFloorPatches} shape="circle" segments={24} opacity={visualQuality === 'low' ? 0.045 : 0.13} />
       <GroundDecalInstances transforms={arena.centralPlaza} shape="circle" segments={40} opacity={visualQuality === 'low' ? 0.12 : 0.19} />
       <GroundDecalInstances transforms={arena.trailSegments} shape="plane" opacity={visualQuality === 'low' ? 0.07 : 0.14} doubleSide />
+      <GroundDecalInstances transforms={arena.rootStrips} shape="plane" opacity={visualQuality === 'low' ? 0.055 : 0.13} doubleSide />
       <GroundDecalInstances transforms={arena.meadowPatches} shape="circle" segments={24} opacity={visualQuality === 'low' ? 0.035 : 0.082} />
+      <GroundDecalInstances transforms={arena.leafLitter} shape="circle" segments={8} opacity={visualQuality === 'low' ? 0.08 : 0.16} />
       <GroundDecalInstances transforms={arena.shrinePads} shape="circle" segments={28} opacity={visualQuality === 'low' ? 0.06 : 0.105} />
       <GroundDecalInstances transforms={arena.pondPatches} shape="circle" segments={24} opacity={visualQuality === 'low' ? 0.075 : 0.135} />
       <GroundDecalInstances transforms={arena.pondHighlights} shape="ring" ringArgs={[0.42, 0.52, 18]} opacity={visualQuality === 'low' ? 0.075 : 0.13} doubleSide />
@@ -70,11 +74,7 @@ function BalancedArenaPropInstances({ trees, bushes, rocks, grassTufts }) {
         local.color.set(tree.canopyColor);
         canopyRef.current.setColorAt(index, local.color);
       });
-      [trunkRef.current, canopyRef.current].forEach(mesh => {
-        mesh.count = trees.length;
-        mesh.instanceMatrix.needsUpdate = true;
-        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-      });
+      syncInstanceMeshes([trunkRef.current, canopyRef.current], trees.length);
     }
 
     if (rockRef.current) {
@@ -86,9 +86,7 @@ function BalancedArenaPropInstances({ trees, bushes, rocks, grassTufts }) {
         local.color.set(rock.color);
         rockRef.current.setColorAt(index, local.color);
       });
-      rockRef.current.count = rocks.length;
-      rockRef.current.instanceMatrix.needsUpdate = true;
-      if (rockRef.current.instanceColor) rockRef.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(rockRef.current, rocks.length);
     }
 
     if (bushRef.current) {
@@ -101,9 +99,7 @@ function BalancedArenaPropInstances({ trees, bushes, rocks, grassTufts }) {
         local.color.set(bush.color);
         bushRef.current.setColorAt(index, local.color);
       });
-      bushRef.current.count = bushes.length;
-      bushRef.current.instanceMatrix.needsUpdate = true;
-      if (bushRef.current.instanceColor) bushRef.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(bushRef.current, bushes.length);
     }
 
     if (tuftRef.current) {
@@ -115,9 +111,7 @@ function BalancedArenaPropInstances({ trees, bushes, rocks, grassTufts }) {
         local.color.set(tuft.color);
         tuftRef.current.setColorAt(index, local.color);
       });
-      tuftRef.current.count = grassTufts.length;
-      tuftRef.current.instanceMatrix.needsUpdate = true;
-      if (tuftRef.current.instanceColor) tuftRef.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(tuftRef.current, grassTufts.length);
     }
   }, [bushes, grassTufts, local, rocks, trees]);
 

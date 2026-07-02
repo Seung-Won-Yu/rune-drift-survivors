@@ -5,7 +5,8 @@ import * as THREE from 'three';
 import { MAX_PROJECTILES } from '../config/gameTuning.js';
 import { getRuntimeBudget } from '../hooks/useVisualQuality.js';
 import { useVisualFrameGate } from '../hooks/useVisualFrameGate.js';
-import { useInstancedModelParts } from './StaticModelInstances.jsx';
+import { syncInstanceMesh, syncInstanceMeshes } from './instancedMeshUtils.js';
+import { useInstancedModelParts } from './useInstancedModelParts.js';
 
 export function SourceProjectileInstances({ projectilesRef, type, url, scaleMultiplier = 1, visualQuality = 'high' }) {
   const parts = useInstancedModelParts(url);
@@ -75,8 +76,7 @@ export function SourceProjectileInstances({ projectilesRef, type, url, scaleMult
         local.final.multiplyMatrices(local.baseMatrices[index], part.localMatrix);
         mesh.setMatrixAt(index, local.final);
       }
-      mesh.count = count;
-      mesh.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(mesh, count);
     });
   });
 
@@ -165,11 +165,7 @@ export function StylizedProjectileInstances({ projectilesRef, visualQuality = 'b
       count += 1;
     }
 
-    [coreRef.current, trailRef.current, sparkRef.current].forEach(mesh => {
-      mesh.count = count;
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    });
+    syncInstanceMeshes([coreRef.current, trailRef.current, sparkRef.current], count);
   });
 
   return (
@@ -189,4 +185,3 @@ export function StylizedProjectileInstances({ projectilesRef, visualQuality = 'b
     </group>
   );
 }
-

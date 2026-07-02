@@ -8,6 +8,7 @@ import { MAX_FIELD_ITEMS, MAX_XP_GEMS, SHRINE_CHANNEL_TIME } from '../config/gam
 import { getVisualBudget } from '../hooks/useVisualQuality.js';
 import { useVisualFrameGate } from '../hooks/useVisualFrameGate.js';
 import { getPlayerTerrainY } from '../systems/terrain.js';
+import { syncInstanceMesh } from './instancedMeshUtils.js';
 
 export function GemBeacons({ gemsRef, visualQuality = 'high' }) {
   const beamMesh = useRef();
@@ -35,8 +36,7 @@ export function GemBeacons({ gemsRef, visualQuality = 'high' }) {
       );
       beamMesh.current.setMatrixAt(count, scratch.matrix);
     }
-    beamMesh.current.count = gemCount;
-    beamMesh.current.instanceMatrix.needsUpdate = true;
+    syncInstanceMesh(beamMesh.current, gemCount);
   });
 
   return (
@@ -160,51 +160,17 @@ export function FieldPickupItems({ itemsRef, visualQuality = 'high' }) {
       else magnetCount += 1;
     }
 
-    if (magnetCore.current) {
-      magnetCore.current.count = magnetCount;
-      magnetCore.current.instanceMatrix.needsUpdate = true;
-    }
-    if (magnetRing.current) {
-      magnetRing.current.count = magnetCount;
-      magnetRing.current.instanceMatrix.needsUpdate = true;
-    }
-    if (purgeCore.current) {
-      purgeCore.current.count = purgeCount;
-      purgeCore.current.instanceMatrix.needsUpdate = true;
-    }
-    if (purgeRing.current) {
-      purgeRing.current.count = purgeCount;
-      purgeRing.current.instanceMatrix.needsUpdate = true;
-    }
-    if (healCore.current) {
-      healCore.current.count = healCount;
-      healCore.current.instanceMatrix.needsUpdate = true;
-    }
-    if (healRing.current) {
-      healRing.current.count = healCount;
-      healRing.current.instanceMatrix.needsUpdate = true;
-    }
-    if (overloadCore.current) {
-      overloadCore.current.count = overloadCount;
-      overloadCore.current.instanceMatrix.needsUpdate = true;
-    }
-    if (overloadRing.current) {
-      overloadRing.current.count = overloadCount;
-      overloadRing.current.instanceMatrix.needsUpdate = true;
-    }
-    if (cacheCore.current) {
-      cacheCore.current.count = cacheCount;
-      cacheCore.current.instanceMatrix.needsUpdate = true;
-    }
-    if (cacheRing.current) {
-      cacheRing.current.count = cacheCount;
-      cacheRing.current.instanceMatrix.needsUpdate = true;
-    }
-    if (beamMesh.current) {
-      beamMesh.current.count = beamCount;
-      beamMesh.current.instanceMatrix.needsUpdate = true;
-      if (beamMesh.current.instanceColor) beamMesh.current.instanceColor.needsUpdate = true;
-    }
+    syncInstanceMesh(magnetCore.current, magnetCount);
+    syncInstanceMesh(magnetRing.current, magnetCount);
+    syncInstanceMesh(purgeCore.current, purgeCount);
+    syncInstanceMesh(purgeRing.current, purgeCount);
+    syncInstanceMesh(healCore.current, healCount);
+    syncInstanceMesh(healRing.current, healCount);
+    syncInstanceMesh(overloadCore.current, overloadCount);
+    syncInstanceMesh(overloadRing.current, overloadCount);
+    syncInstanceMesh(cacheCore.current, cacheCount);
+    syncInstanceMesh(cacheRing.current, cacheCount);
+    syncInstanceMesh(beamMesh.current, beamCount);
   });
 
   return (
@@ -366,31 +332,11 @@ export function RuneShrineSites({ shrinesRef, visualQuality = 'high' }) {
       activeCount += 1;
     }
 
-    if (coreMesh.current) {
-      coreMesh.current.count = activeCount;
-      coreMesh.current.instanceMatrix.needsUpdate = true;
-      if (coreMesh.current.instanceColor) coreMesh.current.instanceColor.needsUpdate = true;
-    }
-    if (ringMesh.current) {
-      ringMesh.current.count = activeCount;
-      ringMesh.current.instanceMatrix.needsUpdate = true;
-      if (ringMesh.current.instanceColor) ringMesh.current.instanceColor.needsUpdate = true;
-    }
-    if (beamMesh.current) {
-      beamMesh.current.count = beamCount;
-      beamMesh.current.instanceMatrix.needsUpdate = true;
-      if (beamMesh.current.instanceColor) beamMesh.current.instanceColor.needsUpdate = true;
-    }
-    if (chargeMesh.current) {
-      chargeMesh.current.count = chargeCount;
-      chargeMesh.current.instanceMatrix.needsUpdate = true;
-      if (chargeMesh.current.instanceColor) chargeMesh.current.instanceColor.needsUpdate = true;
-    }
-    if (usedMesh.current) {
-      usedMesh.current.count = usedCount;
-      usedMesh.current.instanceMatrix.needsUpdate = true;
-      if (usedMesh.current.instanceColor) usedMesh.current.instanceColor.needsUpdate = true;
-    }
+    syncInstanceMesh(coreMesh.current, activeCount);
+    syncInstanceMesh(ringMesh.current, activeCount);
+    syncInstanceMesh(beamMesh.current, beamCount);
+    syncInstanceMesh(chargeMesh.current, chargeCount);
+    syncInstanceMesh(usedMesh.current, usedCount);
   });
 
   return (

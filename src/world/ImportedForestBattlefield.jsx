@@ -6,11 +6,12 @@ import { MAP_CLIFFS, SHRINE_SITES } from '../config/gameData.js';
 import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { getTerrainHeight } from '../systems/terrain.js';
 import { StaticModelInstances } from './StaticModelInstances.jsx';
+import { syncInstanceMesh } from './instancedMeshUtils.js';
 
 export function ImportedForestBattlefield({ visualQuality = 'high' }) {
   const transforms = useMemo(() => {
-    const density = visualQuality === 'low' ? 0 : visualQuality === 'balanced' ? 0.3 : 0.56;
-    const treeDensity = visualQuality === 'low' ? 0 : visualQuality === 'balanced' ? 0.24 : 0.52;
+    const density = visualQuality === 'low' ? 0 : visualQuality === 'balanced' ? 0.5 : 0.58;
+    const treeDensity = visualQuality === 'low' ? 0 : visualQuality === 'balanced' ? 0.42 : 0.54;
     const count = base => Math.max(1, Math.round(base * density));
     const countTree = base => Math.max(1, Math.round(base * treeDensity));
 
@@ -64,8 +65,8 @@ export function ImportedForestBattlefield({ visualQuality = 'high' }) {
       return withModelScale(transform, 0.84, 0.92, 0.84);
     }).filter(readableClear);
 
-    const featureGroves = [0.18, 0.74, 1.34, 2.78, 5.58].map((angle, index) => {
-      const radius = index % 2 ? 68 : 78;
+    const featureGroves = [0.18, 0.74, 1.34, 2.12, 2.78, 4.92, 5.58].map((angle, index) => {
+      const radius = index % 2 ? 68 : 79;
       const transform = place(angle, radius, 0.96 + index * 0.04, -0.04, 0.08);
       transform.shadowWidth = 7.8 + index * 0.55;
       transform.shadowDepth = 3.6 + (index % 2) * 0.4;
@@ -82,7 +83,7 @@ export function ImportedForestBattlefield({ visualQuality = 'high' }) {
       return withModelScale(transform, 0.54, 0.62, 0.54);
     })).filter(readableClear);
 
-    const rockClusters = Array.from({ length: count(18) }, (_, index) => {
+    const rockClusters = Array.from({ length: count(22) }, (_, index) => {
       const angle = index * 1.47 + 0.3 + Math.sin(index * 1.37) * 0.12;
       const radius = 62 + (index % 11) * 4.2 + Math.cos(index * 1.21) * 1.7;
       const transform = place(angle, radius, 0.56 + (index % 5) * 0.08, 0.02, 0.2);
@@ -104,7 +105,7 @@ export function ImportedForestBattlefield({ visualQuality = 'high' }) {
       return withModelScale(transform, 0.5, 0.48, 0.5);
     }));
 
-    const bushes = Array.from({ length: count(24) }, (_, index) => {
+    const bushes = Array.from({ length: count(32) }, (_, index) => {
       const angle = index * 1.13 + 0.26 + Math.cos(index * 1.4) * 0.1;
       const radius = 50 + (index % 16) * 3.7 + Math.sin(index * 1.9) * 1.5;
       const transform = place(angle, radius, 0.64 + (index % 4) * 0.07, 0.01, 0.22);
@@ -153,8 +154,7 @@ function ImportedForestGroundShadows({ transforms }) {
       );
       shadowRef.current.setMatrixAt(index, local.matrix);
     });
-    shadowRef.current.count = transforms.length;
-    shadowRef.current.instanceMatrix.needsUpdate = true;
+    syncInstanceMesh(shadowRef.current, transforms.length);
   }, [local, transforms]);
 
   return (
@@ -190,9 +190,7 @@ function ImportedForestLightFlecks({ transforms }) {
       local.color.set(index % 4 === 0 ? '#d5ae62' : '#92c66d');
       fleckRef.current.setColorAt(index, local.color);
     });
-    fleckRef.current.count = transforms.length;
-    fleckRef.current.instanceMatrix.needsUpdate = true;
-    if (fleckRef.current.instanceColor) fleckRef.current.instanceColor.needsUpdate = true;
+    syncInstanceMesh(fleckRef.current, transforms.length);
   }, [local, transforms]);
 
   return (

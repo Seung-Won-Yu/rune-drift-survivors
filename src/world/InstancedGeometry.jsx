@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
+import { syncInstanceMesh } from './instancedMeshUtils.js';
+
 function useInstanceScratch() {
   return useMemo(() => ({
     matrix: new THREE.Matrix4(),
@@ -9,12 +11,6 @@ function useInstanceScratch() {
     pos: new THREE.Vector3(),
     color: new THREE.Color()
   }), []);
-}
-
-function commitInstanceMesh(mesh, count) {
-  mesh.count = count;
-  mesh.instanceMatrix.needsUpdate = true;
-  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 }
 
 function copyPosition(target, position) {
@@ -48,7 +44,7 @@ export function RelicBoxInstances({ transforms, roughness = 0.94 }) {
       local.color.set(mark.color);
       meshRef.current.setColorAt(index, local.color);
     });
-    commitInstanceMesh(meshRef.current, transforms.length);
+    syncInstanceMesh(meshRef.current, transforms.length);
   }, [local, transforms]);
 
   if (!transforms.length) return null;
@@ -76,7 +72,7 @@ export function RelicOctahedronInstances({ transforms, opacity = 0.42 }) {
       local.color.set(mark.color);
       meshRef.current.setColorAt(index, local.color);
     });
-    commitInstanceMesh(meshRef.current, transforms.length);
+    syncInstanceMesh(meshRef.current, transforms.length);
   }, [local, transforms]);
 
   if (!transforms.length) return null;
@@ -111,7 +107,7 @@ export function GroundDecalInstances({
       local.color.set(mark.color ?? '#ffffff');
       meshRef.current.setColorAt(index, local.color);
     });
-    commitInstanceMesh(meshRef.current, transforms.length);
+    syncInstanceMesh(meshRef.current, transforms.length);
   }, [local, transforms]);
 
   if (!transforms.length) return null;
@@ -149,7 +145,7 @@ export function TerrainStoneInstances({ transforms, roll = 0.04 }) {
       local.color.set(stone.color ?? '#8b8a68');
       stoneRef.current.setColorAt(index, local.color);
     });
-    commitInstanceMesh(stoneRef.current, transforms.length);
+    syncInstanceMesh(stoneRef.current, transforms.length);
   }, [local, roll, transforms]);
 
   if (!transforms.length) return null;

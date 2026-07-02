@@ -7,6 +7,7 @@ import { MAX_ENEMIES } from '../config/gameTuning.js';
 import { getVisualBudget } from '../hooks/useVisualQuality.js';
 import { useVisualFrameGate } from '../hooks/useVisualFrameGate.js';
 import { getEnemyAccentColor } from '../systems/enemyDirector.js';
+import { syncInstanceMesh } from './instancedMeshUtils.js';
 
 export function EnemyGroundAuras({ enemiesRef, visualQuality = 'high' }) {
   const auraMesh = useRef();
@@ -54,13 +55,11 @@ export function EnemyGroundAuras({ enemiesRef, visualQuality = 'high' }) {
       auraMesh.current.setColorAt(count, scratch.color);
       count += 1;
     }
-    auraMesh.current.count = count;
-    auraMesh.current.instanceMatrix.needsUpdate = true;
-    if (auraMesh.current.instanceColor) auraMesh.current.instanceColor.needsUpdate = true;
+    syncInstanceMesh(auraMesh.current, count);
   });
 
   return (
-      <instancedMesh ref={auraMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+    <instancedMesh ref={auraMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
       <ringGeometry args={[0.58, 0.68, 32]} />
       <meshBasicMaterial transparent opacity={0.42} depthWrite={false} toneMapped={false} />
     </instancedMesh>
@@ -94,7 +93,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
     right: new THREE.Vector3(),
     yAxis: new THREE.Vector3(0, 1, 0)
   }), []);
-  const showDecor = visualQuality === 'high';
+  const showDecor = visualQuality !== 'low';
   const shouldRenderVisualFrame = useVisualFrameGate(visualQuality, 30, 18);
 
   useFrame(state => {
@@ -160,9 +159,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         coreMesh.current.setColorAt(count, scratch.color);
         count += 1;
       }
-      coreMesh.current.count = count;
-      coreMesh.current.instanceMatrix.needsUpdate = true;
-      if (coreMesh.current.instanceColor) coreMesh.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(coreMesh.current, count);
     }
 
     if (eyeMesh.current) {
@@ -209,9 +206,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
           count += 1;
         }
       }
-      eyeMesh.current.count = count;
-      eyeMesh.current.instanceMatrix.needsUpdate = true;
-      if (eyeMesh.current.instanceColor) eyeMesh.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(eyeMesh.current, count);
     }
 
     if (flashMesh.current) {
@@ -229,8 +224,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         flashMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
       }
-      flashMesh.current.count = count;
-      flashMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(flashMesh.current, count);
     }
 
     if (hitSparkMesh.current) {
@@ -252,9 +246,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         hitSparkMesh.current.setColorAt(count, scratch.color);
         count += 1;
       }
-      hitSparkMesh.current.count = count;
-      hitSparkMesh.current.instanceMatrix.needsUpdate = true;
-      if (hitSparkMesh.current.instanceColor) hitSparkMesh.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(hitSparkMesh.current, count);
     }
 
     if (showDecor && runnerTrailMesh.current) {
@@ -272,8 +264,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         runnerTrailMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
       }
-      runnerTrailMesh.current.count = count;
-      runnerTrailMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(runnerTrailMesh.current, count);
     }
 
     if (showDecor && runnerChevronMesh.current) {
@@ -291,8 +282,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         runnerChevronMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
       }
-      runnerChevronMesh.current.count = count;
-      runnerChevronMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(runnerChevronMesh.current, count);
     }
 
     if (showDecor && bruteMarkMesh.current) {
@@ -309,8 +299,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         bruteMarkMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
       }
-      bruteMarkMesh.current.count = count;
-      bruteMarkMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(bruteMarkMesh.current, count);
     }
 
     if (showDecor && brutePlateMesh.current) {
@@ -335,8 +324,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
           count += 1;
         }
       }
-      brutePlateMesh.current.count = count;
-      brutePlateMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(brutePlateMesh.current, count);
     }
 
     if (showDecor && bruteHornMesh.current) {
@@ -361,8 +349,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
           count += 1;
         }
       }
-      bruteHornMesh.current.count = count;
-      bruteHornMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(bruteHornMesh.current, count);
     }
 
     if (showDecor && golemShardMesh.current) {
@@ -379,8 +366,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         golemShardMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
       }
-      golemShardMesh.current.count = count;
-      golemShardMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(golemShardMesh.current, count);
     }
 
     if (showDecor && golemGroundMesh.current) {
@@ -397,8 +383,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         golemGroundMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
       }
-      golemGroundMesh.current.count = count;
-      golemGroundMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(golemGroundMesh.current, count);
     }
 
     if (showDecor && eliteCrownMesh.current) {
@@ -423,8 +408,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
           count += 1;
         }
       }
-      eliteCrownMesh.current.count = count;
-      eliteCrownMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(eliteCrownMesh.current, count);
     }
 
     if (showDecor && eliteAuraMesh.current) {
@@ -441,8 +425,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         eliteAuraMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
       }
-      eliteAuraMesh.current.count = count;
-      eliteAuraMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(eliteAuraMesh.current, count);
     }
 
     if (threatRingMesh.current) {
@@ -469,9 +452,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         threatRingMesh.current.setColorAt(count, scratch.color);
         count += 1;
       }
-      threatRingMesh.current.count = count;
-      threatRingMesh.current.instanceMatrix.needsUpdate = true;
-      if (threatRingMesh.current.instanceColor) threatRingMesh.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(threatRingMesh.current, count);
     }
 
     if (chargeTellMesh.current) {
@@ -493,9 +474,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         chargeTellMesh.current.setColorAt(count, scratch.color);
         count += 1;
       }
-      chargeTellMesh.current.count = count;
-      chargeTellMesh.current.instanceMatrix.needsUpdate = true;
-      if (chargeTellMesh.current.instanceColor) chargeTellMesh.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(chargeTellMesh.current, count);
     }
   });
 

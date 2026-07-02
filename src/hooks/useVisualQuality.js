@@ -17,6 +17,14 @@ export function getRuntimeBudget(visualQuality = 'high') {
   return RUNTIME_BUDGETS[visualQuality] ?? RUNTIME_BUDGETS.high;
 }
 
+export function applyRuntimeBudgetPressure(target, baseBudget, pressure = 0) {
+  const t = Math.min(1, Math.max(0, pressure));
+  target.maxEnemies = Math.max(18, Math.round(baseBudget.maxEnemies * (1 - t * 0.22)));
+  target.maxProjectiles = Math.max(14, Math.round(baseBudget.maxProjectiles * (1 - t * 0.28)));
+  target.maxXpGems = Math.max(28, Math.round(baseBudget.maxXpGems * (1 - t * 0.26)));
+  return target;
+}
+
 export function getRuntimeVisualQuality(baseQuality = 'balanced', game = {}) {
   if (baseQuality === 'low') return 'low';
   const time = game.time ?? 0;
@@ -50,7 +58,7 @@ function getForcedVisualQuality() {
   }
 }
 
-export function isVisualQualityForced() {
+function isVisualQualityForced() {
   return getForcedVisualQuality() !== null;
 }
 

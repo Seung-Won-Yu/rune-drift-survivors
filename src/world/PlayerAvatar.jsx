@@ -8,7 +8,8 @@ import { MODEL_URLS, PROJECTILE_MODEL_URLS } from '../config/assets.js';
 import { ART_TOKENS } from '../config/gameData.js';
 import { MAX_ORBIT_BLADES, PLAYER_SPEED, PLAYER_VISUAL_BASE_SCALE } from '../config/gameTuning.js';
 import { getBladeCount, getBuildFocus, getDominantBuild, getOrbColor, getWeaponStage, isWeaponFamilyUnlocked } from '../systems/progression.js';
-import { useInstancedModelParts } from './StaticModelInstances.jsx';
+import { syncInstanceMesh, syncInstanceMeshes } from './instancedMeshUtils.js';
+import { useInstancedModelParts } from './useInstancedModelParts.js';
 
 export function PlayerAvatar({ rootRef, game, player, visualQuality = 'high' }) {
   const runeGroup = useRef();
@@ -287,16 +288,14 @@ function SourceOrbitBlades({ player, game }) {
       const mesh = meshRefs.current[partIndex];
       if (!mesh) return;
       if (bladeCount <= 0) {
-        mesh.count = 0;
-        mesh.instanceMatrix.needsUpdate = true;
+        syncInstanceMesh(mesh, 0);
         return;
       }
       for (let index = 0; index < bladeCount; index += 1) {
         local.final.multiplyMatrices(local.baseMatrices[index], part.localMatrix);
         mesh.setMatrixAt(index, local.final);
       }
-      mesh.count = bladeCount;
-      mesh.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(mesh, bladeCount);
     });
   });
 
@@ -334,11 +333,7 @@ function StylizedOrbitBlades({ player, game, visualQuality = 'balanced' }) {
   useFrame(() => {
     const blades = Math.min(MAX_ORBIT_BLADES, bladeCount);
     if (blades <= 0) {
-      [bladeRef.current, glintRef.current].forEach(mesh => {
-        if (!mesh) return;
-        mesh.count = 0;
-        mesh.instanceMatrix.needsUpdate = true;
-      });
+      syncInstanceMeshes([bladeRef.current, glintRef.current], 0);
       return;
     }
 
@@ -366,12 +361,7 @@ function StylizedOrbitBlades({ player, game, visualQuality = 'balanced' }) {
       glintRef.current?.setColorAt(index, local.color);
     }
 
-    [bladeRef.current, glintRef.current].forEach(mesh => {
-      if (!mesh) return;
-      mesh.count = blades;
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    });
+    syncInstanceMeshes([bladeRef.current, glintRef.current], blades);
   });
 
   return (

@@ -27,37 +27,6 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function getShrineHint(game) {
-  if ((game.shrineActivations ?? 0) >= SHRINE_SITES.length) return null;
-  const playerPos = game.playerPos ?? { x: 0, z: 0 };
-  const activeMap = game.activatedShrines ?? {};
-  let nearest = null;
-  for (const shrine of SHRINE_SITES) {
-    if (activeMap[shrine.id]) continue;
-    const x = Math.cos(shrine.angle) * shrine.radius;
-    const z = Math.sin(shrine.angle) * shrine.radius;
-    const dx = x - playerPos.x;
-    const dz = z - playerPos.z;
-    const distance = Math.hypot(dx, dz);
-    if (!nearest || distance < nearest.distance) {
-      nearest = { ...shrine, distance, dx, dz };
-    }
-  }
-  if (!nearest) return null;
-  return {
-    label: nearest.label,
-    distance: Math.round(nearest.distance),
-    direction: formatCompassDirection(nearest.dx, nearest.dz)
-  };
-}
-
-function formatCompassDirection(dx, dz) {
-  const angle = Math.atan2(dz, dx);
-  const directions = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
-  const index = Math.round(((angle + Math.PI * 2) % (Math.PI * 2)) / (Math.PI / 4)) % directions.length;
-  return directions[index];
-}
-
 export function getOpeningObjectives(game) {
   return OPENING_OBJECTIVES.map(objective => {
     const value = Math.min(objective.target, objective.getValue(game));

@@ -87,7 +87,7 @@ export function createBalancedNatureAssetTransforms() {
 
 export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
   const density = visualQuality === 'low' ? 0.62 : 1;
-  const laneAngles = [-0.22, 1.1, 2.52, 3.86];
+  const laneAngles = [-0.22, 0.72, 1.76, 2.52, 3.86];
   const pathCount = visualQuality === 'low' ? 3 : 4;
 
   const trailSegments = laneAngles.flatMap((angle, laneIndex) => (
@@ -100,11 +100,59 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
       return {
         position: [x, getTerrainHeight(x, z) + 0.052, z],
         rotation: -angle + Math.PI / 2 + Math.sin(index + laneIndex) * 0.11,
-        scale: [12.8 + index * 1.1, 2.65 + (laneIndex % 2) * 0.32, 1],
-        color: laneIndex % 2 ? '#ad9e58' : '#8da95f'
+        scale: [13.6 + index * 1.16, 2.95 + (laneIndex % 2) * 0.36, 1],
+        color: laneIndex % 2 ? '#b49b56' : '#86a75a'
       };
     })
   )).filter(mark => Math.hypot(mark.position[0], mark.position[2]) < ARENA_RADIUS - 18);
+
+  const groveFloorPatches = Array.from({ length: visualQuality === 'low' ? 7 : 13 }, (_, index) => {
+    const angle = index * Math.PI * 2 / (visualQuality === 'low' ? 7 : 13) + 0.22 + Math.sin(index * 1.3) * 0.08;
+    const radius = 76 + (index % 4) * 7.4 + Math.cos(index * 0.83) * 2.0;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    return {
+      position: [x, getTerrainHeight(x, z) + 0.049, z],
+      rotation: -angle + Math.PI / 2 + Math.sin(index * 0.78) * 0.18,
+      scale: [14 + (index % 4) * 3.5, 5.8 + (index % 3) * 1.1, 1],
+      color: index % 2 ? '#3f6d3e' : '#557d43'
+    };
+  }).filter(mark => {
+    const distance = Math.hypot(mark.position[0], mark.position[2]);
+    return distance > 62 && distance < ARENA_RADIUS - 6 && !(mark.position[2] < -58 && Math.abs(mark.position[0]) < 72);
+  });
+
+  const leafLitter = Array.from({ length: visualQuality === 'low' ? 14 : 32 }, (_, index) => {
+    const angle = index * 2.271 + 0.36 + Math.sin(index * 0.71) * 0.08;
+    const radius = 42 + (index % 30) * 2.4 + Math.cos(index * 1.17) * 1.2;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    return {
+      position: [x, getTerrainHeight(x, z) + 0.076, z],
+      rotation: angle + index * 0.09,
+      scale: [0.38 + (index % 4) * 0.09, 0.2 + (index % 3) * 0.04, 1],
+      color: index % 5 === 0 ? '#c59758' : index % 3 === 0 ? '#7fa35a' : '#b0a45f'
+    };
+  }).filter(mark => {
+    const distance = Math.hypot(mark.position[0], mark.position[2]);
+    return distance > 28 && distance < ARENA_RADIUS - 14 && !(Math.abs(mark.position[0]) < 17 && Math.abs(mark.position[2]) < 17);
+  });
+
+  const rootStrips = Array.from({ length: visualQuality === 'low' ? 6 : 14 }, (_, index) => {
+    const angle = index * 1.74 + 0.52;
+    const radius = 54 + (index % 9) * 5.7 + Math.sin(index * 1.1) * 1.4;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    return {
+      position: [x, getTerrainHeight(x, z) + 0.086, z],
+      rotation: -angle + Math.PI / 2 + (index % 2 ? 0.22 : -0.18),
+      scale: [5.8 + (index % 5) * 1.1, 0.34 + (index % 3) * 0.08, 1],
+      color: index % 2 ? '#6d5d38' : '#4d6f3b'
+    };
+  }).filter(mark => {
+    const distance = Math.hypot(mark.position[0], mark.position[2]);
+    return distance > 44 && distance < ARENA_RADIUS - 18 && !(mark.position[2] < -56 && Math.abs(mark.position[0]) < 72);
+  });
 
   const meadowPatches = [
     { angle: -0.82, radius: 32, sx: 10.5, sz: 4.2, color: '#91b564' },
@@ -166,13 +214,13 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
     return new THREE.Vector3(x, getTerrainHeight(x, z) + yOffset, z);
   };
 
-  const treeCount = visualQuality === 'low' ? 10 : 20;
+  const treeCount = visualQuality === 'low' ? 10 : 24;
   const trees = Array.from({ length: treeCount }, (_, index) => {
     const cluster = index % 5;
     const baseAngle = cluster * Math.PI * 2 / 5 + 0.36;
     const angle = baseAngle + (Math.floor(index / 5) - 1.5) * 0.09 + Math.sin(index * 1.3) * 0.035;
     const radius = 82 + (index % 4) * 7.8 + Math.cos(index * 0.9) * 2.6;
-    const scale = 1.08 + (index % 4) * 0.13;
+    const scale = 1.08 + (index % 4) * 0.13 + (index % 7 === 0 ? 0.16 : 0);
     return {
       position: place(angle, radius, 0.04),
       rotation: -angle + Math.PI / 2,
@@ -186,7 +234,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
     return distance > 72 && distance < ARENA_RADIUS - 4 && !hudLane;
   });
 
-  const rockCount = visualQuality === 'low' ? 6 : 13;
+  const rockCount = visualQuality === 'low' ? 6 : 16;
   const rocks = Array.from({ length: rockCount }, (_, index) => {
     const angle = index * 1.91 + 0.44;
     const radius = 36 + (index % 9) * 7.2 + Math.sin(index * 1.15) * 1.6;
@@ -198,7 +246,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
     };
   }).filter(rock => rock.position.length() > 30 && rock.position.length() < ARENA_RADIUS - 14);
 
-  const grassCount = visualQuality === 'low' ? 12 : 26;
+  const grassCount = visualQuality === 'low' ? 12 : 34;
   const grassTufts = Array.from({ length: grassCount }, (_, index) => {
     const angle = index * 2.12 + 0.18;
     const radius = 32 + (index % 28) * 2.85 + Math.cos(index * 1.32) * 1.1;
@@ -210,7 +258,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
     };
   }).filter(tuft => tuft.position.length() > 26 && tuft.position.length() < ARENA_RADIUS - 12);
 
-  const bushes = Array.from({ length: visualQuality === 'low' ? 10 : 20 }, (_, index) => {
+  const bushes = Array.from({ length: visualQuality === 'low' ? 10 : 24 }, (_, index) => {
     const site = SHRINE_SITES[index % SHRINE_SITES.length];
     const aroundShrine = index % 3 !== 0;
     const angle = aroundShrine
@@ -230,15 +278,15 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
     return distance > 30 && distance < ARENA_RADIUS - 12 && !(Math.abs(bush.position.x) < 18 && Math.abs(bush.position.z) < 18);
   });
 
-  const edgeShadePatches = Array.from({ length: visualQuality === 'low' ? 5 : 10 }, (_, index) => {
-    const angle = index * Math.PI * 2 / (visualQuality === 'low' ? 5 : 10) + 0.18;
+  const edgeShadePatches = Array.from({ length: visualQuality === 'low' ? 5 : 14 }, (_, index) => {
+    const angle = index * Math.PI * 2 / (visualQuality === 'low' ? 5 : 14) + 0.18;
     const radius = 96 + (index % 2) * 5.4;
     const x = Math.cos(angle) * radius;
     const z = Math.sin(angle) * radius;
     return {
       position: [x, getTerrainHeight(x, z) + 0.048, z],
       rotation: -angle + Math.PI / 2 + Math.sin(index * 0.8) * 0.18,
-      scale: [22 + (index % 3) * 5.5, 8.4 + (index % 2) * 2.1, 1],
+      scale: [24 + (index % 3) * 5.5, 9.2 + (index % 2) * 2.1, 1],
       color: index % 2 ? '#365b36' : '#426b3b'
     };
   });
@@ -344,6 +392,9 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
   return {
     centralPlaza,
     trailSegments,
+    groveFloorPatches,
+    leafLitter,
+    rootStrips,
     meadowPatches,
     shrinePads,
     flowerFlecks,

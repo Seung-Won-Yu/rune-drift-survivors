@@ -1,0 +1,45 @@
+export function getHudAlerts({
+  game,
+  crisis,
+  activeThreat,
+  bossPatternMeta,
+  bossStatus,
+  dashPct,
+  dashReady,
+  dashCooldown,
+  showDashTicker
+}) {
+  const alerts = [];
+
+  if (showDashTicker) {
+    alerts.push({
+      id: 'dash',
+      label: 'Dash',
+      value: dashReady ? 'Ready' : `${dashCooldown.toFixed(1)}s`,
+      kind: dashReady ? 'ready' : 'cooldown',
+      pct: dashPct
+    });
+  }
+
+  if (crisis.level > 0) {
+    alerts.push({ id: 'crisis', label: '위험', value: crisis.label, kind: crisis.level >= 3 ? 'danger' : 'warning' });
+  }
+
+  if (game.damageFlash > 0) {
+    alerts.push({ id: 'damage', label: '피격', value: game.damageMessage, kind: 'danger' });
+  }
+
+  if (!bossStatus && activeThreat) {
+    alerts.push({ id: 'threat', label: activeThreat.label, value: activeThreat.weakness, kind: 'threat', tone: activeThreat.color });
+  }
+
+  if (!bossStatus && bossPatternMeta) {
+    alerts.push({ id: 'pattern', label: bossPatternMeta.label, value: bossPatternMeta.cue, kind: 'threat', tone: bossPatternMeta.color });
+  }
+
+  if (game.pickupFlash > 0) {
+    alerts.push({ id: 'pickup', label: '획득', value: game.pickupMessage, kind: 'reward' });
+  }
+
+  return alerts;
+}

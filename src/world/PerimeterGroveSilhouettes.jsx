@@ -3,6 +3,7 @@ import * as THREE from 'three';
 
 import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { getTerrainHeight } from '../systems/terrain.js';
+import { syncInstanceMeshes } from './instancedMeshUtils.js';
 
 export function PerimeterGroveSilhouettes({ visualQuality = 'high' }) {
   const transforms = useMemo(() => {
@@ -71,11 +72,7 @@ export function PerimeterGroveSilhouettes({ visualQuality = 'high' }) {
       local.matrix.compose(local.pos, local.quat, local.scale.set(transform.shadowScale[0], transform.shadowScale[1], transform.shadowScale[2]));
       shadowRef.current.setMatrixAt(index, local.matrix);
     });
-    [trunkRef.current, canopyRef.current, shadowRef.current].forEach(mesh => {
-      mesh.count = transforms.length;
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    });
+    syncInstanceMeshes([trunkRef.current, canopyRef.current, shadowRef.current], transforms.length);
   }, [local, transforms]);
 
   return (
@@ -86,11 +83,11 @@ export function PerimeterGroveSilhouettes({ visualQuality = 'high' }) {
       </instancedMesh>
       <instancedMesh ref={trunkRef} args={[null, null, transforms.length]} frustumCulled={false}>
         <cylinderGeometry args={[1, 0.76, 1, 6]} />
-        <meshStandardMaterial vertexColors roughness={0.92} metalness={0.01} />
+        <meshBasicMaterial vertexColors toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={canopyRef} args={[null, null, transforms.length]} frustumCulled={false}>
         <coneGeometry args={[1, 1.38, 7]} />
-        <meshStandardMaterial vertexColors roughness={0.86} metalness={0.01} />
+        <meshBasicMaterial vertexColors toneMapped={false} />
       </instancedMesh>
     </group>
   );

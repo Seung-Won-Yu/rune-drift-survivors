@@ -5,6 +5,7 @@ import { NATURE_MODEL_URLS } from '../config/assets.js';
 import { ART_TOKENS, SHRINE_SITES } from '../config/gameData.js';
 import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { getTerrainHeight } from '../systems/terrain.js';
+import { syncInstanceMesh, syncInstanceMeshes } from './instancedMeshUtils.js';
 import { StaticModelInstances } from './StaticModelInstances.jsx';
 
 export function NaturalFieldKit({ visualQuality = 'high' }) {
@@ -250,17 +251,21 @@ export function NaturalFieldKit({ visualQuality = 'high' }) {
   );
 }
 
-function FieldSaplingClusters({ transforms }) {
-  const trunkRef = useRef();
-  const canopyRef = useRef();
-  const shadowRef = useRef();
-  const local = useMemo(() => ({
+function useInstanceScratch({ color = true } = {}) {
+  return useMemo(() => ({
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
     scale: new THREE.Vector3(),
     pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+    color: color ? new THREE.Color() : null
+  }), [color]);
+}
+
+function FieldSaplingClusters({ transforms }) {
+  const trunkRef = useRef();
+  const canopyRef = useRef();
+  const shadowRef = useRef();
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!trunkRef.current || !canopyRef.current || !shadowRef.current) return;
@@ -290,11 +295,7 @@ function FieldSaplingClusters({ transforms }) {
       local.color.set('#335136');
       shadowRef.current.setColorAt(index, local.color);
     });
-    [trunkRef.current, canopyRef.current, shadowRef.current].forEach(mesh => {
-      mesh.count = transforms.length;
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    });
+    syncInstanceMeshes([trunkRef.current, canopyRef.current, shadowRef.current], transforms.length);
   }, [local, transforms]);
 
   return (
@@ -318,13 +319,7 @@ function FieldSaplingClusters({ transforms }) {
 function FallenTrunkMarks({ transforms }) {
   const trunkRef = useRef();
   const rootRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!trunkRef.current || !rootRef.current) return;
@@ -344,12 +339,7 @@ function FallenTrunkMarks({ transforms }) {
       local.color.set(transform.rootColor);
       rootRef.current.setColorAt(index, local.color);
     });
-    trunkRef.current.count = transforms.length;
-    trunkRef.current.instanceMatrix.needsUpdate = true;
-    if (trunkRef.current.instanceColor) trunkRef.current.instanceColor.needsUpdate = true;
-    rootRef.current.count = transforms.length;
-    rootRef.current.instanceMatrix.needsUpdate = true;
-    if (rootRef.current.instanceColor) rootRef.current.instanceColor.needsUpdate = true;
+    syncInstanceMeshes([trunkRef.current, rootRef.current], transforms.length);
   }, [local, transforms]);
 
   return (
@@ -370,13 +360,7 @@ function ForestStumpClusters({ transforms }) {
   const stumpRef = useRef();
   const topRef = useRef();
   const rootFlareRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!stumpRef.current || !topRef.current || !rootFlareRef.current) return;
@@ -402,11 +386,7 @@ function ForestStumpClusters({ transforms }) {
       local.color.set(index % 3 === 0 ? '#233527' : '#18261d');
       rootFlareRef.current.setColorAt(index, local.color);
     });
-    [stumpRef.current, topRef.current, rootFlareRef.current].forEach(mesh => {
-      mesh.count = transforms.length;
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    });
+    syncInstanceMeshes([stumpRef.current, topRef.current, rootFlareRef.current], transforms.length);
   }, [local, transforms]);
 
   return (
@@ -429,13 +409,7 @@ function ForestStumpClusters({ transforms }) {
 
 function FieldMossPatches({ transforms }) {
   const patchRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!patchRef.current) return;
@@ -452,9 +426,7 @@ function FieldMossPatches({ transforms }) {
       local.color.set(transform.color);
       patchRef.current.setColorAt(index, local.color);
     });
-    patchRef.current.count = transforms.length;
-    patchRef.current.instanceMatrix.needsUpdate = true;
-    if (patchRef.current.instanceColor) patchRef.current.instanceColor.needsUpdate = true;
+    syncInstanceMesh(patchRef.current, transforms.length);
   }, [local, transforms]);
 
   return (
@@ -467,13 +439,7 @@ function FieldMossPatches({ transforms }) {
 
 function FieldLeafLitter({ transforms }) {
   const leafRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!leafRef.current) return;
@@ -486,9 +452,7 @@ function FieldLeafLitter({ transforms }) {
       local.color.set(transform.color);
       leafRef.current.setColorAt(index, local.color);
     });
-    leafRef.current.count = transforms.length;
-    leafRef.current.instanceMatrix.needsUpdate = true;
-    if (leafRef.current.instanceColor) leafRef.current.instanceColor.needsUpdate = true;
+    syncInstanceMesh(leafRef.current, transforms.length);
   }, [local, transforms]);
 
   return (
@@ -501,13 +465,7 @@ function FieldLeafLitter({ transforms }) {
 
 function FieldPebbleScatter({ transforms }) {
   const pebbleRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!pebbleRef.current) return;
@@ -524,9 +482,7 @@ function FieldPebbleScatter({ transforms }) {
       local.color.set(transform.color);
       pebbleRef.current.setColorAt(index, local.color);
     });
-    pebbleRef.current.count = transforms.length;
-    pebbleRef.current.instanceMatrix.needsUpdate = true;
-    if (pebbleRef.current.instanceColor) pebbleRef.current.instanceColor.needsUpdate = true;
+    syncInstanceMesh(pebbleRef.current, transforms.length);
   }, [local, transforms]);
 
   return (
@@ -540,13 +496,7 @@ function FieldPebbleScatter({ transforms }) {
 function FieldWildflowerFlecks({ transforms }) {
   const flowerRef = useRef();
   const haloRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!flowerRef.current || !haloRef.current) return;
@@ -564,11 +514,7 @@ function FieldWildflowerFlecks({ transforms }) {
       haloRef.current.setMatrixAt(index, local.matrix);
       haloRef.current.setColorAt(index, local.color);
     });
-    [flowerRef.current, haloRef.current].forEach(mesh => {
-      mesh.count = transforms.length;
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    });
+    syncInstanceMeshes([flowerRef.current, haloRef.current], transforms.length);
   }, [local, transforms]);
 
   return (
@@ -587,13 +533,7 @@ function FieldWildflowerFlecks({ transforms }) {
 
 function RockLichenPatches({ transforms }) {
   const lichenRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!lichenRef.current) return;
@@ -605,9 +545,7 @@ function RockLichenPatches({ transforms }) {
       local.color.set(transform.color);
       lichenRef.current.setColorAt(index, local.color);
     });
-    lichenRef.current.count = transforms.length;
-    lichenRef.current.instanceMatrix.needsUpdate = true;
-    if (lichenRef.current.instanceColor) lichenRef.current.instanceColor.needsUpdate = true;
+    syncInstanceMesh(lichenRef.current, transforms.length);
   }, [local, transforms]);
 
   return (
@@ -621,13 +559,7 @@ function RockLichenPatches({ transforms }) {
 function ShrineRuneSprouts({ transforms }) {
   const sproutRef = useRef();
   const glowRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!sproutRef.current || !glowRef.current) return;
@@ -646,11 +578,7 @@ function ShrineRuneSprouts({ transforms }) {
       glowRef.current.setMatrixAt(index, local.matrix);
       glowRef.current.setColorAt(index, local.color);
     });
-    [sproutRef.current, glowRef.current].forEach(mesh => {
-      mesh.count = transforms.length;
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    });
+    syncInstanceMeshes([sproutRef.current, glowRef.current], transforms.length);
   }, [local, transforms]);
 
   return (
@@ -669,13 +597,7 @@ function ShrineRuneSprouts({ transforms }) {
 
 function TreeRootPatches({ transforms }) {
   const rootPatchRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!rootPatchRef.current) return;
@@ -692,9 +614,7 @@ function TreeRootPatches({ transforms }) {
       local.color.set(index % 4 === 0 ? '#6f6849' : index % 3 === 0 ? '#47613e' : '#2f432f');
       rootPatchRef.current.setColorAt(index, local.color);
     });
-    rootPatchRef.current.count = transforms.length;
-    rootPatchRef.current.instanceMatrix.needsUpdate = true;
-    if (rootPatchRef.current.instanceColor) rootPatchRef.current.instanceColor.needsUpdate = true;
+    syncInstanceMesh(rootPatchRef.current, transforms.length);
   }, [local, transforms]);
 
   return (
@@ -707,13 +627,7 @@ function TreeRootPatches({ transforms }) {
 
 function TreeCanopyHighlights({ transforms }) {
   const highlightRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3(),
-    color: new THREE.Color()
-  }), []);
+  const local = useInstanceScratch();
 
   useEffect(() => {
     if (!highlightRef.current) return;
@@ -733,9 +647,7 @@ function TreeCanopyHighlights({ transforms }) {
       local.color.set(index % 4 === 0 ? '#a4c477' : index % 5 === 0 ? ART_TOKENS.wornGold : '#9bcf7a');
       highlightRef.current.setColorAt(index, local.color);
     });
-    highlightRef.current.count = transforms.length;
-    highlightRef.current.instanceMatrix.needsUpdate = true;
-    if (highlightRef.current.instanceColor) highlightRef.current.instanceColor.needsUpdate = true;
+    syncInstanceMesh(highlightRef.current, transforms.length);
   }, [local, transforms]);
 
   return (
@@ -748,12 +660,7 @@ function TreeCanopyHighlights({ transforms }) {
 
 function TreeCanopyShadows({ transforms }) {
   const shadowRef = useRef();
-  const local = useMemo(() => ({
-    matrix: new THREE.Matrix4(),
-    quat: new THREE.Quaternion(),
-    scale: new THREE.Vector3(),
-    pos: new THREE.Vector3()
-  }), []);
+  const local = useInstanceScratch({ color: false });
 
   useEffect(() => {
     if (!shadowRef.current) return;
@@ -765,8 +672,7 @@ function TreeCanopyShadows({ transforms }) {
       local.matrix.compose(local.pos, local.quat, local.scale.set(shadowScale, shadowScale * 0.68, 1));
       shadowRef.current.setMatrixAt(index, local.matrix);
     });
-    shadowRef.current.count = transforms.length;
-    shadowRef.current.instanceMatrix.needsUpdate = true;
+    syncInstanceMesh(shadowRef.current, transforms.length);
   }, [local, transforms]);
 
   return (

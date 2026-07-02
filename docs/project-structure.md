@@ -2,16 +2,27 @@
 
 ## Runtime Code
 
-- `src/main.jsx` - current playable prototype. Game loop, combat, map, HUD, and rendering live here for now.
+- `src/main.jsx` - app shell, run state, Canvas setup, overlays, and root render.
+- `src/GameScene.jsx` - frame-loop orchestration and handoff into world rendering.
+- `src/hooks/useGameSceneRuntime.js` - runtime refs, adaptive budgets, reset handling, and QA metrics for the active scene.
+- `src/hooks/useGameSceneEffects.js` - scene keyboard input, QA scene API wiring, and pending level-up queue effects.
+- `src/systems/gameSceneActions.js` - gameplay runtime action wrappers for player, spawning, weapons, projectiles, enemies, pickups, shrines, feedback, camera, and instance rendering.
 - `src/config/assets.js` - active model URL manifest and preload list.
-- `src/styles.css` - HUD, modal, and shell styles.
+- `src/config/gameData.js`, `src/config/gameTuning.js`, `src/config/upgrades.js` - tuning, combat metadata, upgrade data, unlock gates, and shared caps.
+- `src/systems/` - frame-runtime modules for player, enemies, projectiles, weapons, XP gems, field items, shrines, frame telemetry, progression, terrain, spawning, and pool trimming.
+- `src/world/` - Three.js/R3F scene components for the arena, terrain dressing, actors, props, effects, projectiles, enemy instances, combat feedback, and shared instanced-model hooks.
+- `src/ui/` - compact gameplay HUD, overlays, touch controls, and formatting helpers.
+- `src/qa/` - dev-only browser QA hooks for upgrade, starter, stress, silhouette, boss, and result scenarios.
+- `src/styles.css`, `src/styles/` - CSS entry plus split base, HUD, overlay, responsive, and active casual UI style modules.
 - `vite.config.js` - build configuration, including vendor chunk splitting for React, R3F, Three, and effects.
 - `scripts/gltf-to-glb.mjs` - converts archived `.gltf` source models into runtime `.glb` files under `public/models`.
+- `scripts/playwright-smoke.config.mjs`, `scripts/qa-smoke.spec.mjs` - local Playwright smoke checks for HUD, rewards, boss HUD, result overlay, and stress metrics.
 
 ## Runtime Assets
 
 - `public/models/` contains only assets loaded by the current game.
 - `public/models/nature-kit/` contains the active open-field environment props from Kenney Nature Kit.
+- `public/models/quaternius/` contains active imported forest accent props used in balanced/high modes.
 
 ## Local Source Assets
 

@@ -1,7 +1,7 @@
 import { BOSS_PATTERN_META, DAMAGE_SOURCE_META } from '../config/gameData.js';
 import { DASH_COOLDOWN, RUN_DURATION } from '../config/gameTuning.js';
 
-export function createEmptyItemPickups() {
+function createEmptyItemPickups() {
   return { magnet: 0, purge: 0, heal: 0, overload: 0, cache: 0 };
 }
 

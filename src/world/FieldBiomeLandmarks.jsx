@@ -3,6 +3,7 @@ import * as THREE from 'three';
 
 import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { getTerrainHeight } from '../systems/terrain.js';
+import { syncInstanceMesh, syncInstanceMeshes } from './instancedMeshUtils.js';
 
 export function FieldBiomeLandmarks({ visualQuality = 'high' }) {
   const marks = useMemo(() => {
@@ -94,9 +95,7 @@ export function FieldBiomeLandmarks({ visualQuality = 'high' }) {
         local.color.set(mark.color);
         bloomRef.current.setColorAt(index, local.color);
       });
-      bloomRef.current.count = marks.blooms.length;
-      bloomRef.current.instanceMatrix.needsUpdate = true;
-      if (bloomRef.current.instanceColor) bloomRef.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(bloomRef.current, marks.blooms.length);
     }
 
     if (cairnRef.current) {
@@ -107,9 +106,7 @@ export function FieldBiomeLandmarks({ visualQuality = 'high' }) {
         local.color.set(mark.color);
         cairnRef.current.setColorAt(index, local.color);
       });
-      cairnRef.current.count = marks.cairns.length;
-      cairnRef.current.instanceMatrix.needsUpdate = true;
-      if (cairnRef.current.instanceColor) cairnRef.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(cairnRef.current, marks.cairns.length);
     }
 
     if (poleRef.current && flagRef.current) {
@@ -130,11 +127,7 @@ export function FieldBiomeLandmarks({ visualQuality = 'high' }) {
         local.color.set(mark.color);
         flagRef.current.setColorAt(index, local.color);
       });
-      [poleRef.current, flagRef.current].forEach(mesh => {
-        mesh.count = marks.banners.length;
-        mesh.instanceMatrix.needsUpdate = true;
-        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-      });
+      syncInstanceMeshes([poleRef.current, flagRef.current], marks.banners.length);
     }
 
     if (pondRef.current) {
@@ -145,9 +138,7 @@ export function FieldBiomeLandmarks({ visualQuality = 'high' }) {
         local.color.set(mark.color);
         pondRef.current.setColorAt(index, local.color);
       });
-      pondRef.current.count = marks.ponds.length;
-      pondRef.current.instanceMatrix.needsUpdate = true;
-      if (pondRef.current.instanceColor) pondRef.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(pondRef.current, marks.ponds.length);
     }
   }, [local, marks]);
 

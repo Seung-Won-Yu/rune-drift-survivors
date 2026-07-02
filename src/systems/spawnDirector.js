@@ -8,12 +8,14 @@ import {
   createBoss,
   createElite,
   createEnemy,
+  getEnemyAccentColor,
+  getSpawnColor
+} from './enemyDirector.js';
+import {
   getCombatRhythm,
   getDirectorPressure,
-  getEnemyAccentColor,
-  getSpawnColor,
   getWaveProfile
-} from './enemyDirector.js';
+} from './enemyPacing.js';
 
 export function updateEnemySpawning({
   dt,

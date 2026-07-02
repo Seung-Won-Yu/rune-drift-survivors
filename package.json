@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "qa:smoke": "playwright test --config scripts/playwright-smoke.config.mjs",
     "assets:gltf-to-glb": "node scripts/gltf-to-glb.mjs --out-dir public/models assets/archive/public-models/gltf-source/player-wizard.gltf assets/archive/public-models/gltf-source/enemy-demon.gltf assets/archive/public-models/gltf-source/enemy-bat-source.gltf assets/archive/public-models/gltf-source/enemy-cyclops.gltf assets/archive/public-models/gltf-source/boss-cthulhu.gltf",
     "preview": "vite preview --host 0.0.0.0"
   },
@@ -19,6 +20,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@vitejs/plugin-react": "^5.1.2",
     "vite": "^7.2.7"
   }

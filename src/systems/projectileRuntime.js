@@ -14,6 +14,8 @@ import {
 } from './progression.js';
 
 const projectilePush = new THREE.Vector3();
+const bladePos = new THREE.Vector3();
+const bladeOffset = new THREE.Vector3();
 
 function getProjectileGridCoord(value) {
   return Math.floor(value / PROJECTILE_GRID_CELL_SIZE);
@@ -21,6 +23,20 @@ function getProjectileGridCoord(value) {
 
 function getProjectileGridKey(cellX, cellZ) {
   return cellX * PROJECTILE_GRID_KEY_STRIDE + cellZ;
+}
+
+export function addProjectileRuntime({ projectiles, runtimeBudget, projectile }) {
+  if (projectiles.current.length < runtimeBudget.maxProjectiles) {
+    projectiles.current.push(projectile);
+    return true;
+  }
+
+  const replaceIndex = projectiles.current.findIndex(existing => (
+    existing.life < 0.14 || (projectile.type === 'storm' && existing.type === 'orb')
+  ));
+  if (replaceIndex < 0) return false;
+  projectiles.current[replaceIndex] = projectile;
+  return true;
 }
 
 export function updateProjectileRuntime({
@@ -48,9 +64,10 @@ export function updateProjectileRuntime({
 
   for (let i = 0; i < bladeCount; i += 1) {
     const offset = angle + i * (Math.PI * 2 / bladeCount);
-    const bladePos = player.current.pos.clone().add(new THREE.Vector3(Math.cos(offset) * bladeRadius, 0.22, Math.sin(offset) * bladeRadius));
+    bladePos.copy(player.current.pos).add(bladeOffset.set(Math.cos(offset) * bladeRadius, 0.22, Math.sin(offset) * bladeRadius));
     for (const enemy of enemies.current) {
-      if (enemy.pos.distanceToSquared(bladePos) < enemy.hitRadius ** 2) {
+      const hitRadiusSq = enemy.hitRadius * enemy.hitRadius;
+      if (enemy.pos.distanceToSquared(bladePos) < hitRadiusSq) {
         const bladeDamage = weaponCatalog[2].damage * stats.damage * stats.bladeDamage * overloadDamage * dt * (6 + weaponStage * 0.75 + bladeFocus * 0.32);
         const dealt = applyDamageToEnemy(enemy, bladeDamage, 'blade');
         recordDamage('blade', dealt);
@@ -122,7 +139,9 @@ export function getProjectileCandidatesForEnemy(grid, enemy) {
     for (let cellZ = centerZ - cellRange; cellZ <= centerZ + cellRange; cellZ += 1) {
       const bucket = grid.cells.get(getProjectileGridKey(cellX, cellZ));
       if (!bucket) continue;
-      candidates.push(...bucket);
+      for (const projectile of bucket) {
+        candidates.push(projectile);
+      }
     }
   }
 

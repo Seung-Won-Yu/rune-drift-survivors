@@ -1,0 +1,106 @@
+/* Design tokens, document reset, shell canvas frame. */
+:root {
+  --ink: #fff9e8;
+  --muted: rgba(255, 249, 232, 0.76);
+  --dim: rgba(255, 249, 232, 0.52);
+  --coal: #143222;
+  --blackwood: #23462b;
+  --moss: #5f9652;
+  --moss-soft: #8fc466;
+  --stone: #68745c;
+  --stone-light: #b1a875;
+  --bark: #6f4f35;
+  --paper: #fff0b4;
+  --paper-soft: #dfbc67;
+  --gold: #f4bd48;
+  --gold-bright: #ffe990;
+  --mint: #8be36f;
+  --cyan: #68c7f0;
+  --violet: #b79af0;
+  --rose: #ff7e67;
+  --line: rgba(255, 233, 144, 0.3);
+  --line-strong: rgba(255, 233, 144, 0.62);
+  --shadow: rgba(14, 29, 17, 0.4);
+  color: var(--ink);
+  background: var(--coal);
+  font-family:
+    "Avenir Next", "Bahnschrift", "Pretendard", "Apple SD Gothic Neo", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  font-synthesis: none;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-rendering: geometricPrecision;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+.shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 52% 56%, rgba(255, 224, 135, 0.17), transparent 34%),
+    radial-gradient(circle at 76% 22%, rgba(139, 227, 111, 0.15), transparent 30%),
+    linear-gradient(180deg, #193c28, #31512c 54%, #162d20);
+}
+
+.shell canvas {
+  display: block;
+}
+
+.shell::before,
+.shell::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: "";
+  pointer-events: none;
+}
+
+.shell::before {
+  background:
+    radial-gradient(circle at 50% 52%, transparent 45%, rgba(18, 35, 20, 0.12) 80%, rgba(8, 19, 12, 0.54) 100%),
+    linear-gradient(180deg, rgba(255, 230, 160, 0.07), transparent 24%, transparent 78%, rgba(115, 170, 84, 0.08));
+}
+
+.shell::after {
+  background:
+    radial-gradient(circle at 12% 24%, rgba(255, 231, 150, 0.035), transparent 18%),
+    radial-gradient(circle at 88% 14%, rgba(145, 225, 132, 0.03), transparent 18%);
+  opacity: 0.48;
+}
+
+.shell.visual-low::after {
+  opacity: 0.12;
+}
+
+.shell.isLowHp::before {
+  background:
+    radial-gradient(circle at 50% 52%, transparent 28%, rgba(0, 0, 0, 0.24) 62%, rgba(72, 13, 8, 0.78) 100%),
+    linear-gradient(180deg, rgba(255, 127, 102, 0.1), transparent 34%, rgba(255, 127, 102, 0.08));
+}
+
+.shell.isHurt::before {
+  background:
+    radial-gradient(circle at 50% 52%, transparent 20%, rgba(255, 127, 102, 0.12) 52%, rgba(76, 10, 6, 0.82) 100%),
+    linear-gradient(180deg, rgba(255, 127, 102, 0.16), transparent 38%, rgba(255, 127, 102, 0.1));
+}

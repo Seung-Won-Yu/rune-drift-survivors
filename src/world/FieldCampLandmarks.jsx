@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { getTerrainHeight } from '../systems/terrain.js';
 import { GroundDecalInstances } from './InstancedGeometry.jsx';
+import { syncInstanceMesh } from './instancedMeshUtils.js';
 
 export function FieldCampLandmarks({ visualQuality = 'high' }) {
   const marks = useMemo(() => {
@@ -104,9 +105,7 @@ export function FieldCampLandmarks({ visualQuality = 'high' }) {
         local.color.set(mark.color);
         mesh.setColorAt(index, local.color);
       });
-      mesh.count = transforms.length;
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      syncInstanceMesh(mesh, transforms.length);
     };
 
     applyInstances(tentRef.current, marks.tents, (mark, index) => new THREE.Euler(0.03, mark.rotation, index % 2 ? 0.02 : -0.02));

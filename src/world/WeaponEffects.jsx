@@ -6,6 +6,7 @@ import { MAX_PROJECTILES } from '../config/gameTuning.js';
 import { getVisualBudget } from '../hooks/useVisualQuality.js';
 import { useVisualFrameGate } from '../hooks/useVisualFrameGate.js';
 import { getOrbColor, getStormColor, getWeaponStage, getWeaponTier } from '../systems/progression.js';
+import { syncInstanceMesh } from './instancedMeshUtils.js';
 
 export function WeaponStrikeEffects({ effectsRef, visualQuality = 'high' }) {
   const effectLimit = getVisualBudget(visualQuality).weaponEffects;
@@ -151,8 +152,7 @@ export function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'hig
           count += 1;
         }
       }
-      orbRing.current.count = count;
-      orbRing.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(orbRing.current, count);
     }
 
     if (orbHalo.current) {
@@ -168,8 +168,7 @@ export function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'hig
           count += 1;
         }
       }
-      orbHalo.current.count = count;
-      orbHalo.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(orbHalo.current, count);
     }
 
     if (orbTrail.current) {
@@ -189,8 +188,7 @@ export function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'hig
         orbTrail.current.setMatrixAt(count, local.matrix);
         count += 1;
       }
-      orbTrail.current.count = count;
-      orbTrail.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(orbTrail.current, count);
     }
 
     if (orbCrown.current) {
@@ -215,8 +213,7 @@ export function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'hig
           }
         }
       }
-      orbCrown.current.count = count;
-      orbCrown.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(orbCrown.current, count);
     }
 
     if (stormRing.current) {
@@ -230,8 +227,7 @@ export function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'hig
         stormRing.current.setMatrixAt(count, local.matrix);
         count += 1;
       }
-      stormRing.current.count = count;
-      stormRing.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(stormRing.current, count);
     }
 
     if (stormDisk.current) {
@@ -245,8 +241,7 @@ export function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'hig
         stormDisk.current.setMatrixAt(count, local.matrix);
         count += 1;
       }
-      stormDisk.current.count = count;
-      stormDisk.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(stormDisk.current, count);
     }
 
     if (showDetail && stormSpoke.current) {
@@ -268,8 +263,7 @@ export function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'hig
           count += 1;
         }
       }
-      stormSpoke.current.count = count;
-      stormSpoke.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(stormSpoke.current, count);
     }
 
     if (showDetail && stormCore.current) {
@@ -285,8 +279,7 @@ export function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'hig
         stormCore.current.setMatrixAt(count, local.matrix);
         count += 1;
       }
-      stormCore.current.count = count;
-      stormCore.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(stormCore.current, count);
     }
   });
 

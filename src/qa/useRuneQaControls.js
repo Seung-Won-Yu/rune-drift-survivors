@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 import { MAX_ENEMIES, MAX_PROJECTILES, MAX_XP_GEMS } from '../config/gameTuning.js';
 import { createInitialGame, createQaBossGame, createQaResultGame, createQaStressGame } from '../systems/gameState.js';
-import { pickUpgrades } from '../systems/progression.js';
+import { pickUpgrades } from '../systems/upgradeDrafting.js';
 
 export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
   useEffect(() => {
@@ -29,6 +29,7 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
           window.setTimeout(() => sceneApi.current?.stress?.(options), delay);
         });
       },
+      metrics: () => sceneApi.current?.metrics?.(),
       upgrade: () => {
         const nextGame = {
           ...createQaStressGame(),

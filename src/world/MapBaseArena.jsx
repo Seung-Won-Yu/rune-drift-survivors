@@ -24,12 +24,12 @@ export function MapBaseArena({ visualQuality = 'high' }) {
     <group>
       <mesh receiveShadow position={[0, -2.05, 0]}>
         <cylinderGeometry args={[ARENA_RADIUS + 18.0, ARENA_RADIUS + 8.0, 1.5, edgeSegments]} />
-        <meshStandardMaterial color="#425f35" roughness={0.99} metalness={0.01} />
+        <meshStandardMaterial color="#344f31" roughness={0.99} metalness={0.01} />
       </mesh>
 
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.08, 0]}>
         <circleGeometry args={[ARENA_RADIUS + 42.0, edgeSegments]} />
-        <meshStandardMaterial color="#769956" roughness={1} metalness={0} />
+        <meshStandardMaterial color="#6f8d4f" roughness={1} metalness={0} />
       </mesh>
 
       <SculptedRuinTerrain visualQuality={visualQuality} />
@@ -48,6 +48,7 @@ export function MapBaseArena({ visualQuality = 'high' }) {
       {visualQuality === 'balanced' && (
         <Suspense fallback={null}>
           <BalancedNatureAssetAccents />
+          <ImportedForestBattlefield visualQuality={visualQuality} />
         </Suspense>
       )}
       <RuneRelicLandmarks visualQuality={visualQuality} />
@@ -56,9 +57,9 @@ export function MapBaseArena({ visualQuality = 'high' }) {
           <ImportedForestBattlefield visualQuality={visualQuality} />
         </Suspense>
       )}
-      {highDetail && <NaturalFieldKit visualQuality={visualQuality} />}
+      {visualQuality !== 'low' && <NaturalFieldKit visualQuality={visualQuality} />}
       {highDetail && <FieldBiomeLandmarks visualQuality={visualQuality} />}
-      {highDetail && <PerimeterGroveSilhouettes visualQuality={visualQuality} />}
+      {visualQuality !== 'low' && <PerimeterGroveSilhouettes visualQuality={visualQuality} />}
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.07, 0]}>
         <ringGeometry args={[ARENA_RADIUS - 1.35, ARENA_RADIUS - 1.02, edgeSegments]} />

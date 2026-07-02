@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { getTerrainHeight } from '../systems/terrain.js';
+import { syncInstanceMesh } from './instancedMeshUtils.js';
 
 export function FieldPathNetwork({ visualQuality = 'high' }) {
   const marks = useMemo(() => {
@@ -94,9 +95,7 @@ export function FieldPathNetwork({ visualQuality = 'high' }) {
         local.color.set(mark.color);
         trailRef.current.setColorAt(index, local.color);
       });
-      trailRef.current.count = marks.trails.length;
-      trailRef.current.instanceMatrix.needsUpdate = true;
-      if (trailRef.current.instanceColor) trailRef.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(trailRef.current, marks.trails.length);
     }
 
     if (tuftRef.current) {
@@ -107,9 +106,7 @@ export function FieldPathNetwork({ visualQuality = 'high' }) {
         local.color.set(mark.color);
         tuftRef.current.setColorAt(index, local.color);
       });
-      tuftRef.current.count = marks.tufts.length;
-      tuftRef.current.instanceMatrix.needsUpdate = true;
-      if (tuftRef.current.instanceColor) tuftRef.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(tuftRef.current, marks.tufts.length);
     }
 
     if (postRef.current) {
@@ -120,9 +117,7 @@ export function FieldPathNetwork({ visualQuality = 'high' }) {
         local.color.set(mark.color);
         postRef.current.setColorAt(index, local.color);
       });
-      postRef.current.count = marks.posts.length;
-      postRef.current.instanceMatrix.needsUpdate = true;
-      if (postRef.current.instanceColor) postRef.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(postRef.current, marks.posts.length);
     }
 
     if (plankRef.current) {
@@ -133,9 +128,7 @@ export function FieldPathNetwork({ visualQuality = 'high' }) {
         local.color.set(mark.color);
         plankRef.current.setColorAt(index, local.color);
       });
-      plankRef.current.count = marks.planks.length;
-      plankRef.current.instanceMatrix.needsUpdate = true;
-      if (plankRef.current.instanceColor) plankRef.current.instanceColor.needsUpdate = true;
+      syncInstanceMesh(plankRef.current, marks.planks.length);
     }
   }, [local, marks]);
 

@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 import { getEnemyAccentColor, getEnemyDisplayName } from '../systems/enemyDirector.js';
+import { syncInstanceMesh } from './instancedMeshUtils.js';
 
 export function BossNameplates({ enemiesRef }) {
   const bosses = enemiesRef.current.filter(enemy => enemy.kind === 'boss' || enemy.kind === 'elite');
@@ -72,8 +73,7 @@ export function BossPresence({ enemiesRef }) {
           count += 1;
         }
       }
-      ringMesh.current.count = count;
-      ringMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(ringMesh.current, count);
     }
 
     if (crownMesh.current) {
@@ -98,8 +98,7 @@ export function BossPresence({ enemiesRef }) {
           count += 1;
         }
       }
-      crownMesh.current.count = count;
-      crownMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(crownMesh.current, count);
     }
 
     if (beamMesh.current) {
@@ -116,8 +115,7 @@ export function BossPresence({ enemiesRef }) {
         beamMesh.current.setMatrixAt(count, scratch.matrix);
         count += 1;
       }
-      beamMesh.current.count = count;
-      beamMesh.current.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(beamMesh.current, count);
     }
   });
 

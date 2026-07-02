@@ -1,65 +1,25 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-export function useInstancedModelParts(url, normalizeOrigin = false) {
-  const { scene } = useGLTF(url);
-
-  return useMemo(() => {
-    const model = scene.clone(true);
-    model.updateMatrixWorld(true);
-    const originMatrix = new THREE.Matrix4();
-    if (normalizeOrigin) {
-      const bounds = new THREE.Box3().setFromObject(model);
-      const center = new THREE.Vector3();
-      bounds.getCenter(center);
-      originMatrix.makeTranslation(-center.x, -bounds.min.y, -center.z);
-    }
-    const parts = [];
-    model.traverse(child => {
-      if (!child.isMesh) return;
-      const material = Array.isArray(child.material)
-        ? child.material.map(item => item.clone())
-        : child.material.clone();
-      if (Array.isArray(material)) {
-        material.forEach(item => {
-          item.roughness = Math.min(0.92, item.roughness ?? 0.72);
-        });
-      } else {
-        material.roughness = Math.min(0.92, material.roughness ?? 0.72);
-      }
-      parts.push({
-        geometry: child.geometry,
-        material,
-        localMatrix: normalizeOrigin
-          ? originMatrix.clone().multiply(child.matrixWorld)
-          : child.matrixWorld.clone()
-      });
-    });
-    return parts;
-  }, [normalizeOrigin, scene]);
-}
+import { syncInstanceMesh } from './instancedMeshUtils.js';
+import { useInstancedModelParts } from './useInstancedModelParts.js';
 
 export function StaticModelInstances({ url, transforms, castShadow = false, receiveShadow = false, materialColor, normalizeOrigin = false }) {
   const parts = useInstancedModelParts(url, normalizeOrigin);
   const styledParts = useMemo(() => {
     if (!materialColor) return parts;
     const color = new THREE.Color(materialColor);
+    const createFlatMaterial = source => new THREE.MeshBasicMaterial({
+      color,
+      toneMapped: false,
+      transparent: Boolean(source?.transparent),
+      opacity: source?.opacity ?? 1,
+      side: source?.side ?? THREE.FrontSide
+    });
     return parts.map(part => {
       const material = Array.isArray(part.material)
-        ? part.material.map(item => {
-          const clone = item.clone();
-          clone.color?.copy(color);
-          if (clone.map) clone.map = null;
-          clone.emissive?.set(color).multiplyScalar(0.045);
-          return clone;
-        })
-        : part.material.clone();
-      if (!Array.isArray(material)) {
-        material.color?.copy(color);
-        if (material.map) material.map = null;
-        material.emissive?.set(color).multiplyScalar(0.045);
-      }
+        ? part.material.map(item => createFlatMaterial(item))
+        : createFlatMaterial(part.material);
       return { ...part, material };
     });
   }, [materialColor, parts]);
@@ -93,8 +53,7 @@ export function StaticModelInstances({ url, transforms, castShadow = false, rece
         local.final.multiplyMatrices(local.base, part.localMatrix);
         mesh.setMatrixAt(index, local.final);
       });
-      mesh.count = transforms.length;
-      mesh.instanceMatrix.needsUpdate = true;
+      syncInstanceMesh(mesh, transforms.length);
     });
   }, [axis, local, styledParts, transforms]);
 

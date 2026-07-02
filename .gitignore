@@ -1,6 +1,7 @@
 node_modules
 dist
 .playwright-cli
+test-results
 output
 .DS_Store
 .tools

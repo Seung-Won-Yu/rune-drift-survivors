@@ -1,0 +1,477 @@
+/* Shared HUD, boss, and touch-control primitives. */
+.hud {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  left: max(14px, env(safe-area-inset-left));
+  z-index: 2;
+  display: grid;
+  width: min(472px, calc(100vw - 28px));
+  gap: 6px;
+  pointer-events: none;
+}
+
+.hudMeter {
+  position: relative;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  min-width: 0;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px 4px 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 241, 188, 0.5);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 215, 0.24), rgba(49, 73, 37, 0.66)),
+    rgba(32, 51, 29, 0.72);
+}
+
+.hudMeterBody {
+  min-width: 0;
+}
+
+.hudMeterIcon {
+  display: grid;
+  width: 26px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 2px solid rgba(255, 249, 221, 0.42);
+  border-radius: 999px;
+  color: #241707;
+  background: linear-gradient(180deg, #fff6b8, #efbb4b);
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1;
+  box-shadow: inset 0 -3px 0 rgba(70, 39, 10, 0.18);
+}
+
+.hudMeterText {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.hudMeterText span,
+.hudPromptHeader span,
+.hudQuestSummary span,
+.hudEncounter span,
+.hudBossName span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.hudMeterText strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(36, 20, 7, 0.54);
+}
+
+.hudMeter.isLow .hudMeterText strong,
+.hudMeter.isHit .hudMeterText strong {
+  color: var(--gold-bright);
+}
+
+.hudGauge {
+  position: relative;
+  z-index: 1;
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(20, 29, 14, 0.52);
+  border-radius: 999px;
+  background: rgba(16, 24, 14, 0.62);
+}
+
+.hudGauge i,
+.hudPromptBody i,
+.hudQuestCard > i,
+.hudBossHp i {
+  display: block;
+  height: 100%;
+}
+
+.hudMeter-hp .hudGauge i {
+  background: linear-gradient(90deg, #d3453e, var(--rose), #ffbb74);
+}
+
+.hudMeter-xp .hudGauge i {
+  background: linear-gradient(90deg, var(--mint), var(--cyan), var(--gold-bright));
+}
+
+.hudActions {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 36px);
+  gap: 5px;
+  pointer-events: auto;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 100%;
+  min-height: 38px;
+  padding: 0;
+  border: 1px solid rgba(255, 241, 188, 0.5);
+  border-radius: 12px;
+  color: #2a1a06;
+  background: linear-gradient(180deg, #ffe99c, #d9943d);
+  box-shadow:
+    inset 0 -4px 0 rgba(74, 39, 8, 0.18),
+    0 6px 12px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.iconButton:hover,
+.iconButton:focus-visible {
+  outline: none;
+  border-color: rgba(255, 230, 160, 0.62);
+  box-shadow:
+    0 0 18px rgba(229, 189, 94, 0.18),
+    inset 0 1px 0 rgba(255, 247, 223, 0.08);
+}
+
+.hudPrompt,
+.hudQuestRow,
+.hudEncounter,
+.hudBoss {
+  position: relative;
+  width: fit-content;
+  max-width: min(440px, 100%);
+  overflow: hidden;
+  border: 1px solid rgba(255, 231, 150, 0.34);
+  border-radius: 12px;
+  color: var(--ink);
+  background:
+    linear-gradient(180deg, rgba(255, 248, 223, 0.08), transparent),
+    rgba(31, 48, 28, 0.82);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+}
+
+.hudPrompt {
+  display: grid;
+  gap: 5px;
+  padding: 8px 10px 9px;
+  border-color: color-mix(in srgb, var(--tone, var(--mint)) 38%, rgba(229, 189, 94, 0.18));
+}
+
+.hudPrompt::before,
+.hudEncounter::before,
+.hudBoss::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  content: "";
+  background: color-mix(in srgb, var(--tone, var(--mint)) 70%, var(--gold));
+}
+
+.hudPromptHeader {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.hudPromptHeader strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.hudPromptHeader small,
+.hudPromptBody small,
+.hudQuestSummary small,
+.hudQuestCard small,
+.hudEncounter small,
+.hudBossName small,
+.hudBossPattern small,
+.hudBossPattern em {
+  color: var(--muted);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.hudPromptHeader small {
+  text-align: right;
+}
+
+.hudPromptBody {
+  position: relative;
+  min-width: min(270px, calc(100vw - 64px));
+  padding: 6px 8px 8px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(22, 39, 24, 0.36);
+}
+
+.hudPromptBody b {
+  display: block;
+  color: color-mix(in srgb, var(--tone, var(--mint)) 55%, white);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.hudPromptBody small {
+  display: block;
+  margin-top: 3px;
+}
+
+.hudPromptBody i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--tone, var(--mint)) 70%, white), var(--gold));
+}
+
+.hudQuestRow {
+  display: grid;
+  grid-template-columns: minmax(108px, auto) repeat(2, minmax(104px, 1fr));
+  gap: 5px;
+  padding: 6px;
+}
+
+.hudQuestSummary,
+.hudQuestCard {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 7px 8px 10px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(34, 52, 30, 0.5);
+}
+
+.hudQuestSummary strong {
+  color: var(--gold-bright);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.hudQuestCard {
+  border: 1px solid color-mix(in srgb, var(--tone, var(--mint)) 28%, transparent);
+}
+
+.hudQuestCard span {
+  display: grid;
+  gap: 2px;
+  color: color-mix(in srgb, var(--tone, var(--mint)) 54%, white);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.hudQuestCard span strong {
+  color: var(--ink);
+}
+
+.hudQuestCard > i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--tone, var(--mint)) 72%, white), var(--gold));
+}
+
+.hudEncounter {
+  display: grid;
+  grid-template-columns: auto minmax(130px, auto) auto;
+  gap: 9px;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 12px 9px 14px;
+  border-color: color-mix(in srgb, var(--tone, var(--gold)) 48%, transparent);
+}
+
+.hudEncounter strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.hudEncounter.isBoss {
+  border-color: rgba(255, 127, 102, 0.6);
+  background:
+    linear-gradient(180deg, rgba(255, 127, 102, 0.12), transparent),
+    rgba(68, 30, 22, 0.78);
+}
+
+.hudBoss {
+  display: grid;
+  grid-template-columns: minmax(116px, 150px) minmax(180px, 1fr) minmax(156px, auto);
+  gap: 8px;
+  align-items: center;
+  width: min(690px, 100%);
+  padding: 8px 10px 9px 14px;
+  border-color: color-mix(in srgb, var(--tone, var(--rose)) 45%, rgba(229, 189, 94, 0.2));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--tone, var(--rose)) 9%, transparent), transparent),
+    rgba(63, 31, 23, 0.8);
+}
+
+.hudBoss.isEnraged {
+  border-color: rgba(255, 127, 102, 0.7);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.3),
+    0 0 24px rgba(255, 127, 102, 0.14);
+}
+
+.hudBossName {
+  display: grid;
+  gap: 2px;
+}
+
+.hudBossName strong {
+  color: var(--gold-bright);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.hudBossHp {
+  height: 11px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--tone, var(--rose)) 32%, transparent);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.hudBossHp i {
+  background: linear-gradient(90deg, var(--tone, var(--rose)), var(--gold-bright));
+}
+
+.hudBossPattern {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.hudBossPattern small,
+.hudBossPattern em {
+  display: none;
+}
+
+.hudBossPattern span,
+.hudBossPattern small,
+.hudBossPattern em {
+  min-height: 24px;
+  padding: 5px 7px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--pattern, var(--rose)) 28%, transparent);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.24);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hudBossPattern span {
+  color: color-mix(in srgb, var(--pattern, var(--rose)) 64%, white);
+}
+
+.hud.hasBoss .hudEncounter {
+  display: none;
+}
+
+.touchControls {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: max(16px, env(safe-area-inset-left));
+  z-index: 2;
+  display: none;
+  align-items: flex-end;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.touchStick,
+.touchDashButton {
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.touchStick {
+  position: relative;
+  width: clamp(82px, 22vw, 112px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(255, 230, 160, 0.28);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(124, 242, 184, 0.16), transparent 34%),
+    rgba(5, 10, 6, 0.5);
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.34),
+    inset 0 0 0 1px rgba(255, 247, 223, 0.06);
+}
+
+.touchStick::before {
+  position: absolute;
+  inset: 18%;
+  content: "";
+  border: 1px solid rgba(124, 242, 184, 0.18);
+  border-radius: inherit;
+}
+
+.touchStick i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 42%;
+  aspect-ratio: 1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.48), transparent 23%),
+    linear-gradient(135deg, var(--mint), var(--cyan));
+  box-shadow:
+    0 0 18px rgba(121, 217, 255, 0.36),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.22);
+  transform: translate(calc(-50% + var(--stick-x, 0px)), calc(-50% + var(--stick-z, 0px)));
+}
+
+.touchStick.isActive {
+  border-color: rgba(124, 242, 184, 0.62);
+}
+
+.touchDashButton {
+  display: grid;
+  place-items: center;
+  width: clamp(62px, 16vw, 76px);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid rgba(255, 230, 160, 0.44);
+  border-radius: 999px;
+  color: var(--gold-bright);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 230, 160, 0.2), transparent 38%),
+    rgba(16, 14, 7, 0.62);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.34);
+}
+
+.touchDashButton span {
+  font-size: 26px;
+  font-weight: 950;
+  line-height: 1;
+}

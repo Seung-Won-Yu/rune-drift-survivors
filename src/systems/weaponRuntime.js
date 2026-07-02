@@ -13,6 +13,10 @@ import {
   isWeaponFamilyUnlocked
 } from './progression.js';
 
+const UP_AXIS = new THREE.Vector3(0, 1, 0);
+const orbDirection = new THREE.Vector3();
+const knockbackDirection = new THREE.Vector3();
+
 export function updateWeaponCasts({
   dt,
   currentGame,
@@ -62,13 +66,14 @@ export function updateWeaponCasts({
       const shotTotal = orbFocus >= 2 ? Math.max(orbCount, targets.length) : targets.length;
       for (let index = 0; index < shotTotal; index += 1) {
         const target = targets[index % targets.length];
-        const dir = target.pos.clone().sub(player.current.pos).setY(0).normalize();
+        const dir = orbDirection.copy(target.pos).sub(player.current.pos).setY(0).normalize();
         const spread = (index - (shotTotal - 1) / 2) * (orbFocus >= 2 ? 0.14 : 0.09);
-        dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), spread);
+        dir.applyAxisAngle(UP_AXIS, spread);
+        const speed = weaponCatalog[0].speed * stats.orbSpeed * (1 + orbPierceLevel * 0.06);
         addProjectile({
           type: 'orb',
-          pos: player.current.pos.clone().add(new THREE.Vector3(0, 0.35, 0)),
-          vel: dir.multiplyScalar(weaponCatalog[0].speed * stats.orbSpeed * (1 + orbPierceLevel * 0.06)),
+          pos: new THREE.Vector3(player.current.pos.x, player.current.pos.y + 0.35, player.current.pos.z),
+          vel: new THREE.Vector3(dir.x * speed, 0, dir.z * speed),
           angle: Math.atan2(dir.x, dir.z),
           life: 1.25 + stats.pierce * 0.05,
           damage: weaponCatalog[0].damage * stats.damage * stats.orbDamage * overloadDamage * (1 + orbFocus * 0.035 + orbPierceLevel * 0.05),
@@ -91,10 +96,10 @@ export function updateWeaponCasts({
     for (let strike = 0; strike < strikeCount; strike += 1) {
       const target = enemies.current[Math.floor(Math.random() * enemies.current.length)];
       if (!target) continue;
-      const offset = strike === 0
-        ? new THREE.Vector3()
-        : new THREE.Vector3((Math.random() - 0.5) * (5.5 + stormFocus * 0.9), 0, (Math.random() - 0.5) * (5.5 + stormFocus * 0.9));
-      const strikePos = target.pos.clone().add(offset).add(new THREE.Vector3(0, 0.8, 0));
+      const spread = strike === 0 ? 0 : 5.5 + stormFocus * 0.9;
+      const offsetX = strike === 0 ? 0 : (Math.random() - 0.5) * spread;
+      const offsetZ = strike === 0 ? 0 : (Math.random() - 0.5) * spread;
+      const strikePos = new THREE.Vector3(target.pos.x + offsetX, target.pos.y + 0.8, target.pos.z + offsetZ);
       addProjectile({
         type: 'storm',
         pos: strikePos,
@@ -130,7 +135,9 @@ export function updateWeaponCasts({
       stats.lightningChains + Math.floor(weaponStage / 2) + Math.floor(chainFocus / 2),
       weaponCatalog[3].range * stats.lightningRange + weaponStage * 4 + chainFocus * 3 + stormChainLevel * 3.5
     );
-    let previous = player.current.pos.clone().add(new THREE.Vector3(0, 1.05, 0));
+    let previousX = player.current.pos.x;
+    let previousY = player.current.pos.y + 1.05;
+    let previousZ = player.current.pos.z;
     const color = getLightningColor(stats, weaponStage);
     chainTargets.forEach((enemy, index) => {
       const executeBoost = stats.lightningExecute > 0 && enemy.hp / enemy.maxHp < 0.45
@@ -141,7 +148,8 @@ export function updateWeaponCasts({
       recordDamage('lightning', dealt);
       enemy.flash = 0.2;
       enemy.shocked = Math.max(enemy.shocked ?? 0, 0.48 + chainFocus * 0.16 + stormChainLevel * 0.1);
-      enemy.pos.addScaledVector(enemy.pos.clone().sub(player.current.pos).setY(0).normalize(), 0.08);
+      knockbackDirection.copy(enemy.pos).sub(player.current.pos).setY(0);
+      if (knockbackDirection.lengthSq() > 0.001) enemy.pos.addScaledVector(knockbackDirection.normalize(), 0.08);
       addDamageNumber(enemy.pos, Math.ceil(dealt), color, 0.64);
       if (canAddHitBurst(8)) {
         hitBursts.current.push({
@@ -157,15 +165,17 @@ export function updateWeaponCasts({
       if (canAddWeaponEffect(6)) {
         weaponEffects.current.push({
           type: 'beam',
-          from: previous.clone(),
-          to: enemy.pos.clone().add(new THREE.Vector3(0, 1.0, 0)),
+          from: new THREE.Vector3(previousX, previousY, previousZ),
+          to: new THREE.Vector3(enemy.pos.x, enemy.pos.y + 1.0, enemy.pos.z),
           life: 0.18,
           maxLife: 0.18,
           color,
           width: 0.11 + weaponStage * 0.015
         });
       }
-      previous = enemy.pos.clone().add(new THREE.Vector3(0, 1.0, 0));
+      previousX = enemy.pos.x;
+      previousY = enemy.pos.y + 1.0;
+      previousZ = enemy.pos.z;
     });
     if (chainTargets.length > 0) cameraShake.current = Math.max(cameraShake.current, 0.1);
     lightningTimer.current = Math.max(0.3, weaponCatalog[3].cooldown * stats.cooldown * overloadCooldown * (1 - weaponStage * 0.05) * (1 - Math.min(0.12, chainFocus * 0.02)));
@@ -185,13 +195,13 @@ export function updateWeaponCasts({
       const dealt = applyDamageToEnemy(enemy, damage * falloff, 'nova');
       recordDamage('nova', dealt);
       enemy.flash = 0.16;
-      const push = enemy.pos.clone().sub(player.current.pos).setY(0);
+      const push = knockbackDirection.copy(enemy.pos).sub(player.current.pos).setY(0);
       if (push.lengthSq() > 0.001) enemy.pos.addScaledVector(push.normalize(), 0.34 + novaFocus * 0.05 + bladeNovaLevel * 0.04);
       hitCount += 1;
       if (hitCount <= 18) addDamageNumber(enemy.pos, Math.ceil(dealt), color, 0.56);
     }
     hitBursts.current.push({
-      pos: player.current.pos.clone(),
+      pos: new THREE.Vector3(player.current.pos.x, player.current.pos.y, player.current.pos.z),
       life: 0.62,
       maxLife: 0.62,
       color,
@@ -201,7 +211,7 @@ export function updateWeaponCasts({
     });
     weaponEffects.current.push({
       type: 'ring',
-      pos: player.current.pos.clone(),
+      pos: new THREE.Vector3(player.current.pos.x, player.current.pos.y, player.current.pos.z),
       life: 0.56,
       maxLife: 0.56,
       color,
@@ -210,7 +220,7 @@ export function updateWeaponCasts({
     if (stats.novaPulse > 0) {
       weaponEffects.current.push({
         type: 'ring',
-        pos: player.current.pos.clone(),
+        pos: new THREE.Vector3(player.current.pos.x, player.current.pos.y, player.current.pos.z),
         life: 0.78,
         maxLife: 0.78,
         color: '#fff1a6',
@@ -220,7 +230,7 @@ export function updateWeaponCasts({
     if (novaFocus >= 2) {
       weaponEffects.current.push({
         type: 'ring',
-        pos: player.current.pos.clone(),
+        pos: new THREE.Vector3(player.current.pos.x, player.current.pos.y, player.current.pos.z),
         life: 0.9,
         maxLife: 0.9,
         color: '#fff1a6',

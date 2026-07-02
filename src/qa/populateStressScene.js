@@ -11,10 +11,12 @@ import { getRuntimeBudget } from '../hooks/useVisualQuality.js';
 import {
   applyCombatRhythm,
   createBoss,
-  createEnemy,
+  createEnemy
+} from '../systems/enemyDirector.js';
+import {
   getCombatRhythm,
   getWaveProfile
-} from '../systems/enemyDirector.js';
+} from '../systems/enemyPacing.js';
 import { getEnemyTerrainY, getPlayerTerrainY } from '../systems/terrain.js';
 
 export function populateStressScene({
