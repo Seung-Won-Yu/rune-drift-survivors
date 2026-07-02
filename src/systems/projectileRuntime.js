@@ -13,6 +13,8 @@ import {
   isWeaponFamilyUnlocked
 } from './progression.js';
 
+const projectilePush = new THREE.Vector3();
+
 function getProjectileGridCoord(value) {
   return Math.floor(value / PROJECTILE_GRID_CELL_SIZE);
 }
@@ -125,4 +127,44 @@ export function getProjectileCandidatesForEnemy(grid, enemy) {
   }
 
   return candidates;
+}
+
+export function resolveProjectileHitsForEnemy({
+  enemy,
+  projectiles,
+  player,
+  hitBursts,
+  cameraShake,
+  recordDamage,
+  addDamageNumber,
+  canAddHitBurst
+}) {
+  for (const projectile of projectiles) {
+    if (projectile.life <= 0 || projectile.pierce < 0) continue;
+    if (projectile.pos.distanceToSquared(enemy.pos) < (enemy.hitRadius + projectile.radius) ** 2) {
+      const dealt = applyDamageToEnemy(enemy, projectile.damage, projectile.type);
+      recordDamage(projectile.type, dealt);
+      enemy.flash = 0.14;
+      projectile.pierce -= 1;
+      const push = projectile.type === 'storm'
+        ? projectilePush.copy(enemy.pos).sub(player.current.pos).setY(0)
+        : projectilePush.copy(projectile.vel).setY(0);
+      if (push.lengthSq() > 0.001) {
+        enemy.pos.addScaledVector(push.normalize(), projectile.type === 'storm' ? 0.28 : 0.18);
+      }
+      addDamageNumber(enemy.pos, Math.ceil(dealt), projectile.color, projectile.type === 'storm' ? 0.82 : 0.62);
+      if (canAddHitBurst(8)) {
+        hitBursts.current.push({
+          pos: enemy.pos.clone(),
+          life: 0.28 + (projectile.stage ?? 0) * 0.04,
+          maxLife: 0.28 + (projectile.stage ?? 0) * 0.04,
+          color: projectile.color,
+          type: projectile.type,
+          stage: projectile.stage ?? 0,
+          radius: projectile.radius
+        });
+      }
+      cameraShake.current = Math.max(cameraShake.current, projectile.type === 'storm' ? 0.16 : 0.08);
+    }
+  }
 }
