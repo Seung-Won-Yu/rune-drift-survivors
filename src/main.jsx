@@ -17,8 +17,7 @@ import {
   DAMAGE_SOURCE_META,
   EARLY_FIELD_ITEM_SCHEDULE,
   ELITE_ROLE_META,
-  FIELD_ITEM_META,
-  WEAPON_CATALOG as weaponCatalog
+  FIELD_ITEM_META
 } from './config/gameData.js';
 import {
   ARENA_RADIUS,
@@ -36,8 +35,6 @@ import {
   OVERLOAD_DURATION,
   PLAYER_RADIUS,
   PLAYER_SPEED,
-  PROJECTILE_GRID_CELL_SIZE,
-  PROJECTILE_GRID_KEY_STRIDE,
   RUN_DURATION,
   SHRINE_ACTIVATE_RADIUS,
   SHRINE_CHANNEL_TIME,
@@ -82,6 +79,11 @@ import {
   updateTimedPool
 } from './systems/runtimePools.js';
 import { applyFrameStateUpdate } from './systems/runFrameState.js';
+import {
+  getProjectileCandidatesForEnemy as getProjectileCandidatesFromGrid,
+  rebuildProjectileGrid as rebuildProjectileSpatialGrid,
+  updateProjectileRuntime
+} from './systems/projectileRuntime.js';
 import { updateFollowCamera } from './systems/sceneCamera.js';
 import { updateEnemySpawning } from './systems/spawnDirector.js';
 import { updateWeaponCasts } from './systems/weaponRuntime.js';
@@ -94,13 +96,9 @@ import {
 } from './systems/gameState.js';
 import {
   applyBuildFocus,
-  getBladeColor,
-  getBladeCount,
   getBuildFocus,
   getFocusMessage,
   getUpgradeFocusKey,
-  getWeaponStage,
-  isWeaponFamilyUnlocked,
   pickArmoryBoost,
   pickUpgrades
 } from './systems/progression.js';
@@ -131,14 +129,6 @@ function preloadModelUrls(urls) {
     preloadedModelUrls.add(url);
     useGLTF.preload(url);
   });
-}
-
-function getProjectileGridCoord(value) {
-  return Math.floor(value / PROJECTILE_GRID_CELL_SIZE);
-}
-
-function getProjectileGridKey(cellX, cellZ) {
-  return cellX * PROJECTILE_GRID_KEY_STRIDE + cellZ;
 }
 
 function ModelPreloads({ visualQuality }) {
@@ -689,97 +679,28 @@ function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'high', t
   };
 
   const updateProjectiles = (dt, stats, currentGame) => {
-    const angle = performance.now() * 0.0024;
-    const weaponStage = getWeaponStage(currentGame);
-    const overloadDamage = currentGame.overloadTimer > 0 ? 1.25 : 1;
-    const bladeFocus = getBuildFocus(currentGame, 'blade');
-    const bladeUnlocked = isWeaponFamilyUnlocked(currentGame, 'blade');
-    const bladeRadius = (2.5 + weaponStage * 0.16 + bladeFocus * 0.08) * stats.bladeRadius;
-    const bladeCount = getBladeCount(stats, bladeFocus, bladeUnlocked);
-    const bladeColor = getBladeColor(stats, weaponStage);
-    for (let i = 0; i < bladeCount; i += 1) {
-      const offset = angle + i * (Math.PI * 2 / bladeCount);
-      const bladePos = player.current.pos.clone().add(new THREE.Vector3(Math.cos(offset) * bladeRadius, 0.22, Math.sin(offset) * bladeRadius));
-      for (const enemy of enemies.current) {
-        if (enemy.pos.distanceToSquared(bladePos) < enemy.hitRadius ** 2) {
-          const bladeDamage = weaponCatalog[2].damage * stats.damage * stats.bladeDamage * overloadDamage * dt * (6 + weaponStage * 0.75 + bladeFocus * 0.32);
-          const dealt = applyDamageToEnemy(enemy, bladeDamage, 'blade');
-          recordDamage('blade', dealt);
-          enemy.flash = 0.1;
-          enemy.bladeNumberTimer = (enemy.bladeNumberTimer ?? 0) - dt;
-          if (enemy.bladeNumberTimer <= 0) {
-            enemy.bladeNumberTimer = 0.22;
-            addDamageNumber(enemy.pos, Math.ceil(dealt * 5), bladeColor, 0.46 + weaponStage * 0.03);
-            if (canAddHitBurst(8)) {
-              hitBursts.current.push({
-                pos: enemy.pos.clone(),
-                life: 0.22 + weaponStage * 0.03,
-                maxLife: 0.22 + weaponStage * 0.03,
-                color: bladeColor,
-                type: 'blade',
-                stage: weaponStage,
-                radius: 0.7 + weaponStage * 0.18
-              });
-            }
-          }
-        }
-      }
-    }
-
-    let projectileWrite = 0;
-    for (const projectile of projectiles.current) {
-      projectile.life -= dt;
-      projectile.pos.addScaledVector(projectile.vel, dt);
-      if (projectile.life <= 0 || projectile.pierce < 0 || hitsStaticCollider(projectile.pos, projectile.radius * 0.55)) continue;
-      if (projectileWrite < runtimeBudget.maxProjectiles) {
-        projectiles.current[projectileWrite] = projectile;
-        projectileWrite += 1;
-      }
-    }
-    projectiles.current.length = projectileWrite;
+    updateProjectileRuntime({
+      dt,
+      stats,
+      currentGame,
+      runtimeBudget,
+      player,
+      enemies,
+      projectiles,
+      hitBursts,
+      hitsStaticCollider,
+      recordDamage,
+      addDamageNumber,
+      canAddHitBurst
+    });
   };
 
   const rebuildProjectileGrid = () => {
-    const grid = projectileGrid.current;
-    grid.cells.clear();
-    grid.maxRadius = 0;
-    grid.candidates.length = 0;
-
-    for (const projectile of projectiles.current) {
-      if (projectile.life <= 0 || projectile.pierce < 0) continue;
-      const cellX = getProjectileGridCoord(projectile.pos.x);
-      const cellZ = getProjectileGridCoord(projectile.pos.z);
-      const key = getProjectileGridKey(cellX, cellZ);
-      let bucket = grid.cells.get(key);
-      if (!bucket) {
-        bucket = [];
-        grid.cells.set(key, bucket);
-      }
-      bucket.push(projectile);
-      grid.maxRadius = Math.max(grid.maxRadius, projectile.radius ?? 0);
-    }
+    rebuildProjectileSpatialGrid(projectileGrid.current, projectiles.current);
   };
 
   const getProjectileCandidatesForEnemy = enemy => {
-    const grid = projectileGrid.current;
-    const candidates = grid.candidates;
-    candidates.length = 0;
-    if (grid.cells.size === 0) return candidates;
-
-    const centerX = getProjectileGridCoord(enemy.pos.x);
-    const centerZ = getProjectileGridCoord(enemy.pos.z);
-    const radius = enemy.hitRadius + grid.maxRadius;
-    const cellRange = Math.max(1, Math.ceil(radius / PROJECTILE_GRID_CELL_SIZE));
-
-    for (let cellX = centerX - cellRange; cellX <= centerX + cellRange; cellX += 1) {
-      for (let cellZ = centerZ - cellRange; cellZ <= centerZ + cellRange; cellZ += 1) {
-        const bucket = grid.cells.get(getProjectileGridKey(cellX, cellZ));
-        if (!bucket) continue;
-        candidates.push(...bucket);
-      }
-    }
-
-    return candidates;
+    return getProjectileCandidatesFromGrid(projectileGrid.current, enemy);
   };
 
   const damagePlayer = (amount, updateGame, invuln = 0.62) => {
