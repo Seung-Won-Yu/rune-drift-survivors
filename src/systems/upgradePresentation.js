@@ -11,21 +11,22 @@ import {
   getUpgradeFocusKey,
   getUpgradePickCount,
   getUpgradeSynergyMatches,
+  getWeaponFamilyRankProgress,
   isWeaponFamilyUnlocked
 } from './progression.js';
 
 export function getUpgradeTone(upgrade) {
   const key = getUpgradeFocusKey(upgrade);
-  return key ? BUILD_FOCUS_META[key].color : '#fff1a6';
+  return key ? BUILD_FOCUS_META[key].color : '#d4a84c';
 }
 
 export function getUpgradeIconMeta(upgrade) {
   const key = getUpgradeFocusKey(upgrade);
   if (key && BUILD_FOCUS_META[key]) return BUILD_FOCUS_META[key];
   if (upgrade.id === 'maxHp') return { glyph: '+', color: '#79f29a' };
-  if (upgrade.id === 'dash' || upgrade.id === 'speed') return { glyph: '›', color: '#73fbd3' };
-  if (upgrade.id === 'magnet' || upgrade.id === 'luck') return { glyph: '✦', color: '#fff1a6' };
-  return { glyph: '✚', color: '#fff1a6' };
+  if (upgrade.id === 'dash' || upgrade.id === 'speed') return { glyph: '›', color: '#64c98d' };
+  if (upgrade.id === 'magnet' || upgrade.id === 'luck') return { glyph: '✦', color: '#d4a84c' };
+  return { glyph: '✚', color: '#d4a84c' };
 }
 
 function getUpgradeImpactLabel(upgrade) {
@@ -152,6 +153,7 @@ export function getUpgradeCardMeta(game, upgrade) {
   const runPhase = getRunPhase(game);
   const dominant = getDominantBuild(game);
   const focus = key ? getBuildFocus(game, key) : 0;
+  const rankProgress = key ? getWeaponFamilyRankProgress(game, key, true) : null;
   const pickCount = getUpgradePickCount(game, upgrade.id);
   const synergyMatches = getUpgradeSynergyMatches(game, upgrade);
   const primarySynergy = synergyMatches[0];
@@ -202,8 +204,10 @@ export function getUpgradeCardMeta(game, upgrade) {
     tags.push('전체 무기');
   }
 
+  if (rankProgress) tags.push(`${rankProgress.next}/${rankProgress.limit}`);
   if (pickCount > 0) tags.push(`랭크 ${formatFocusLevel(pickCount + 1)}`);
-  if (key && focus + 1 >= 3) tags.push('각성 임박');
+  if (key && focus + 1 >= 3 && rankProgress?.next < rankProgress?.limit) tags.push('각성 임박');
+  if (rankProgress?.next >= rankProgress?.limit) tags.push('무기 완성');
   if (improvesSynergy) tags.push(`공명 ${formatFocusLevel(primarySynergy.nextLevel)}`);
   if (phaseRecommended) tags.push(runPhase.title);
   if (upgrade.id === 'heal' || (upgrade.id === 'maxHp' && game.stats.hp / game.stats.maxHp < 0.7)) tags.push('위기 대응');
@@ -280,6 +284,9 @@ export function getUpgradeCardMeta(game, upgrade) {
     recommended,
     rarity,
     rarityLabel,
+    progressLabel: rankProgress
+      ? `무기 랭크 ${rankProgress.next}/${rankProgress.limit}`
+      : '',
     tags: [...new Set(tags.filter(tag => tag !== upgrade.branch))].slice(0, 2)
   };
 }

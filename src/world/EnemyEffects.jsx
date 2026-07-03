@@ -242,7 +242,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
           scratch.scale.setScalar((0.18 + enemy.radius * 0.22) * (0.8 + hitPower * 0.7))
         );
         hitSparkMesh.current.setMatrixAt(count, scratch.matrix);
-        scratch.color.set(enemy.kind === 'boss' || enemy.kind === 'elite' ? getEnemyAccentColor(enemy) : '#fff1a6');
+        scratch.color.set(enemy.kind === 'boss' || enemy.kind === 'elite' ? getEnemyAccentColor(enemy) : '#d4a84c');
         hitSparkMesh.current.setColorAt(count, scratch.color);
         count += 1;
       }
@@ -508,15 +508,15 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         <>
           <instancedMesh ref={runnerTrailMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
             <planeGeometry args={[1, 1]} />
-            <meshBasicMaterial color="#70d6ff" transparent opacity={0.34} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+            <meshBasicMaterial color="#58b9d4" transparent opacity={0.3} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
           </instancedMesh>
           <instancedMesh ref={runnerChevronMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
             <coneGeometry args={[1, 1, 3]} />
-            <meshBasicMaterial color="#9ff7ff" transparent opacity={0.76} depthWrite={false} toneMapped={false} />
+            <meshBasicMaterial color="#7fc9d8" transparent opacity={0.64} depthWrite={false} toneMapped={false} />
           </instancedMesh>
           <instancedMesh ref={bruteMarkMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
             <torusGeometry args={[0.68, 0.045, 8, 28]} />
-            <meshBasicMaterial color="#ff8b72" transparent opacity={0.72} depthWrite={false} toneMapped={false} />
+            <meshBasicMaterial color="#d96d58" transparent opacity={0.62} depthWrite={false} toneMapped={false} />
           </instancedMesh>
           <instancedMesh ref={brutePlateMesh} args={[null, null, MAX_ENEMIES * 2]} frustumCulled={false}>
             <boxGeometry args={[1, 1, 1]} />

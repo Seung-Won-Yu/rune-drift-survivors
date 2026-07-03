@@ -1,34 +1,34 @@
 export const FIELD_ITEM_META = {
-  magnet: { color: '#71c9ff', label: 'MAGNET', name: '자석 룬' },
-  purge: { color: '#ffd66e', label: 'PURGE', name: '정화 폭발' },
+  magnet: { color: '#58b9d4', label: 'MAGNET', name: '자석 룬' },
+  purge: { color: '#d8ad4f', label: 'PURGE', name: '정화 폭발' },
   heal: { color: '#8eea8b', label: 'HEAL', name: '생명 결정' },
   overload: { color: '#cf9cff', label: 'OVERLOAD', name: '과부하 룬' },
-  cache: { color: '#ffe08a', label: 'ARMORY', name: '무기 보급' }
+  cache: { color: '#d4a84c', label: 'ARMORY', name: '무기 보급' }
 };
 
 export const ART_TOKENS = {
-  void: '#142419',
-  deepVoid: '#213422',
-  terrainLow: '#4d6840',
-  terrainMid: '#76905a',
-  terrainHigh: '#b59a5e',
-  moss: '#5aa465',
-  oldStone: '#8b836d',
-  wornGold: '#e7b95a',
-  emberGold: '#ffd66e',
-  runeCyan: '#71c9ff',
-  runeMint: '#8eea8b',
-  dangerRed: '#ff7d62',
-  elderViolet: '#c59cff',
-  riftViolet: '#a58af0'
+  void: '#0e1b13',
+  deepVoid: '#172719',
+  terrainLow: '#33472f',
+  terrainMid: '#566b42',
+  terrainHigh: '#857642',
+  moss: '#4f8255',
+  oldStone: '#77725d',
+  wornGold: '#c79b45',
+  emberGold: '#d8ad4f',
+  runeCyan: '#58b9d4',
+  runeMint: '#6fbd70',
+  dangerRed: '#d96755',
+  elderViolet: '#aa91cf',
+  riftViolet: '#8274c5'
 };
 
 export const WAVE_PROFILES = [
-  { name: 'Rift Scouts', trait: '정찰', hint: '균형형 진입', accent: '#70f0b4', affix: 'scout', targetBase: 48, spawnBase: 7, runner: 0.16, brute: 0.02, interval: 0.58 },
-  { name: 'Howling Pack', trait: '추격', hint: '러너 가속', accent: '#70d6ff', affix: 'pack', targetBase: 66, spawnBase: 9, runner: 0.31, brute: 0.05, interval: 0.48 },
-  { name: 'Stone March', trait: '장갑', hint: '체력 높은 행군', accent: '#ffdf6e', affix: 'stone', targetBase: 80, spawnBase: 10, runner: 0.18, brute: 0.2, interval: 0.44 },
-  { name: 'Split Swarm', trait: '분열', hint: '일부 적 사망 시 분열', accent: '#d8b2ff', affix: 'split', targetBase: 94, spawnBase: 12, runner: 0.38, brute: 0.14, interval: 0.4 },
-  { name: 'Rift Siege', trait: '공성', hint: '피해와 압박 증가', accent: '#ff8b72', affix: 'siege', targetBase: 112, spawnBase: 14, runner: 0.3, brute: 0.28, interval: 0.36 }
+  { name: 'Rift Scouts', trait: '정찰', hint: '균형형 진입', accent: '#64c98d', affix: 'scout', targetBase: 48, spawnBase: 7, runner: 0.16, brute: 0.02, interval: 0.58 },
+  { name: 'Howling Pack', trait: '추격', hint: '러너 가속', accent: '#58b9d4', affix: 'pack', targetBase: 66, spawnBase: 9, runner: 0.31, brute: 0.05, interval: 0.48 },
+  { name: 'Stone March', trait: '장갑', hint: '체력 높은 행군', accent: '#d4a84c', affix: 'stone', targetBase: 80, spawnBase: 10, runner: 0.18, brute: 0.2, interval: 0.44 },
+  { name: 'Split Swarm', trait: '분열', hint: '일부 적 사망 시 분열', accent: '#aa91cf', affix: 'split', targetBase: 94, spawnBase: 12, runner: 0.38, brute: 0.14, interval: 0.4 },
+  { name: 'Rift Siege', trait: '공성', hint: '피해와 압박 증가', accent: '#d96d58', affix: 'siege', targetBase: 112, spawnBase: 14, runner: 0.3, brute: 0.28, interval: 0.36 }
 ];
 
 export const BOSS_WAVE_SCHEDULE = [6, 9, 12];
@@ -56,23 +56,23 @@ export const EARLY_FIELD_ITEM_SCHEDULE = [
 ];
 
 export const ELITE_ROLE_META = {
-  bulwark: { label: 'BULWARK', name: '방벽 정예', color: '#ffdf6e', hint: '칼날/태양' },
-  charger: { label: 'CHARGER', name: '돌진 정예', color: '#70d6ff', hint: '폭풍/번개' },
-  summoner: { label: 'SUMMONER', name: '소환 정예', color: '#f5c7ff', hint: '분열/연쇄' }
+  bulwark: { label: 'BULWARK', name: '방벽 정예', color: '#d4a84c', hint: '칼날/태양' },
+  charger: { label: 'CHARGER', name: '돌진 정예', color: '#58b9d4', hint: '폭풍/번개' },
+  summoner: { label: 'SUMMONER', name: '소환 정예', color: '#aa91cf', hint: '분열/연쇄' }
 };
 
 export const BOSS_PATTERN_META = {
-  shockwave: { label: 'SHOCKWAVE', color: '#ff8b72', hint: '충격파 예고', cue: '붉은 원 밖으로', shape: 'shockwave' },
-  summon: { label: 'SUMMON', color: '#f5c7ff', hint: '소환수 진입', cue: '보스 주변 정리', shape: 'summon' },
-  guard: { label: 'WARD', color: '#fff1a6', hint: '보호막 충전', cue: '보호막 집중 공격', shape: 'guard' }
+  shockwave: { label: 'SHOCKWAVE', color: '#d96d58', hint: '충격파 예고', cue: '붉은 원 밖으로', shape: 'shockwave' },
+  summon: { label: 'SUMMON', color: '#aa91cf', hint: '소환수 진입', cue: '보스 주변 정리', shape: 'summon' },
+  guard: { label: 'WARD', color: '#d4a84c', hint: '보호막 충전', cue: '보호막 집중 공격', shape: 'guard' }
 };
 
 export const BOSS_PATTERN_ORDER = ['shockwave', 'summon', 'guard'];
 
 export const SURGE_EVENTS = [
-  { time: 150, label: 'RIFT SURGE', message: '균열 폭주: 적 무리 진입', color: '#ff8b72', count: 10 },
-  { time: 195, label: 'ELITE SURGE', message: '정예 파동: 패턴 가속', color: '#f5c7ff', count: 13 },
-  { time: 245, label: 'FINAL SURGE', message: '최종 폭주: 생존 압박 최대', color: '#fff1a6', count: 16 }
+  { time: 150, label: 'RIFT SURGE', message: '균열 폭주: 적 무리 진입', color: '#d96d58', count: 10 },
+  { time: 195, label: 'ELITE SURGE', message: '정예 파동: 패턴 가속', color: '#aa91cf', count: 13 },
+  { time: 245, label: 'FINAL SURGE', message: '최종 폭주: 생존 압박 최대', color: '#d4a84c', count: 16 }
 ];
 
 export const RUN_PHASES = [
@@ -83,7 +83,7 @@ export const RUN_PHASES = [
     title: '움직임 적응',
     goal: '원을 그리며 XP 회수',
     cardCue: '초반 안정과 XP 흐름',
-    color: '#73fbd3'
+    color: '#64c98d'
   },
   {
     id: 'anchor',
@@ -92,7 +92,7 @@ export const RUN_PHASES = [
     title: '성장 안정',
     goal: '레벨과 생존 기반 확보',
     cardCue: '기본 구체와 성장 보강',
-    color: '#70d6ff'
+    color: '#58b9d4'
   },
   {
     id: 'armory',
@@ -101,7 +101,7 @@ export const RUN_PHASES = [
     title: '무기 방향',
     goal: '첫 보급으로 빌드 축 선택',
     cardCue: '새 무기 또는 주력 강화',
-    color: '#fff1a6'
+    color: '#d4a84c'
   },
   {
     id: 'synergy',
@@ -110,7 +110,7 @@ export const RUN_PHASES = [
     title: '조합 완성',
     goal: '주력 무기 공명 만들기',
     cardCue: '공명 완성과 주력 집중',
-    color: '#d8b2ff'
+    color: '#aa91cf'
   },
   {
     id: 'final',
@@ -119,15 +119,15 @@ export const RUN_PHASES = [
     title: '최종 생존',
     goal: '빈 공간 유지와 보스 대응',
     cardCue: '생존 보강과 광역 정리',
-    color: '#ff8b72'
+    color: '#d96d58'
   }
 ];
 
 export const SHRINE_SITES = [
-  { id: 'armory', angle: 0.72, radius: 82, reward: 'cache', label: '무기 제단', color: '#fff1a6' },
+  { id: 'armory', angle: 0.72, radius: 82, reward: 'cache', label: '무기 제단', color: '#d4a84c' },
   { id: 'vital', angle: 2.62, radius: 89.5, reward: 'heal', label: '생명 제단', color: '#79f29a' },
-  { id: 'purge', angle: 4.08, radius: 82, reward: 'purge', label: '정화 제단', color: '#ffdf6e' },
-  { id: 'etching', angle: 5.45, radius: 89.5, reward: 'upgrade', label: '각인 제단', color: '#d8b2ff' }
+  { id: 'purge', angle: 4.08, radius: 82, reward: 'purge', label: '정화 제단', color: '#d8ad4f' },
+  { id: 'etching', angle: 5.45, radius: 89.5, reward: 'upgrade', label: '각인 제단', color: '#aa91cf' }
 ];
 
 export const MAP_CLIFFS = [
@@ -145,7 +145,7 @@ export const WEAPON_CATALOG = [
   {
     id: 'rune-orb',
     name: '룬 구체',
-    color: '#70d6ff',
+    color: '#58b9d4',
     cooldown: 0.5,
     damage: 23,
     speed: 17,
@@ -155,7 +155,7 @@ export const WEAPON_CATALOG = [
   {
     id: 'storm-brand',
     name: '폭풍 낙인',
-    color: '#b8f7ff',
+    color: '#7fc9d8',
     cooldown: 1.68,
     damage: 34,
     speed: 0,
@@ -165,7 +165,7 @@ export const WEAPON_CATALOG = [
   {
     id: 'orbit-blade',
     name: '궤도 칼날',
-    color: '#f7d06b',
+    color: '#d4a84c',
     cooldown: 0,
     damage: 14,
     speed: 0,
@@ -175,7 +175,7 @@ export const WEAPON_CATALOG = [
   {
     id: 'chain-lightning',
     name: '연쇄 번개',
-    color: '#d7b7ff',
+    color: '#aa91cf',
     cooldown: 1.16,
     damage: 25,
     range: 34,
@@ -184,7 +184,7 @@ export const WEAPON_CATALOG = [
   {
     id: 'solar-nova',
     name: '태양 파동',
-    color: '#ff8b72',
+    color: '#d96d58',
     cooldown: 3.35,
     damage: 31,
     radius: 8.4
@@ -192,10 +192,10 @@ export const WEAPON_CATALOG = [
 ];
 
 export const DAMAGE_SOURCE_META = {
-  orb: { label: '룬 구체', color: '#70d6ff' },
-  storm: { label: '폭풍 낙인', color: '#b8f7ff' },
-  blade: { label: '궤도 칼날', color: '#f7d06b' },
-  lightning: { label: '연쇄 번개', color: '#d7b7ff' },
-  nova: { label: '태양 파동', color: '#ff8b72' },
-  generic: { label: '기타', color: '#fff1a6' }
+  orb: { label: '룬 구체', color: '#58b9d4' },
+  storm: { label: '폭풍 낙인', color: '#7fc9d8' },
+  blade: { label: '궤도 칼날', color: '#d4a84c' },
+  lightning: { label: '연쇄 번개', color: '#aa91cf' },
+  nova: { label: '태양 파동', color: '#d96d58' },
+  generic: { label: '기타', color: '#d4a84c' }
 };

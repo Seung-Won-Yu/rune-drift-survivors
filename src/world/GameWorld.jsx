@@ -38,19 +38,19 @@ export function GameWorld({
 
   return (
     <>
-      <hemisphereLight args={['#fff0bd', '#517d47', 0.82]} />
-      <ambientLight intensity={0.38} />
+      <hemisphereLight args={['#e5d093', '#2b4b34', 0.62]} />
+      <ambientLight intensity={0.26} />
       <directionalLight
         castShadow={false}
         position={[24, 34, 18]}
-        intensity={visualQuality === 'low' ? 2.25 : 2.55}
-        color="#fff0bd"
+        intensity={visualQuality === 'low' ? 1.62 : 1.86}
+        color="#e9d49b"
       />
-      {visualQuality !== 'low' && <directionalLight position={[-34, 20, -48]} intensity={0.44} color="#b9e9ff" />}
-      <pointLight position={[0, 2.4, 0]} intensity={visualQuality === 'low' ? 0.95 : 1.35} color={ART_TOKENS.wornGold} distance={14} />
-      {visualQuality === 'high' && <pointLight position={[0, 5.8, 0]} intensity={0.72} color={ART_TOKENS.runeMint} distance={34} />}
-      {visualQuality === 'high' && <pointLight position={[-42, 3.2, -22]} intensity={0.5} color="#ffdca2" distance={38} />}
-      {visualQuality === 'high' && <pointLight position={[48, 3.2, 26]} intensity={0.48} color="#b7ef9d" distance={34} />}
+      {visualQuality !== 'low' && <directionalLight position={[-34, 20, -48]} intensity={0.28} color="#8fc1cc" />}
+      <pointLight position={[0, 2.4, 0]} intensity={visualQuality === 'low' ? 0.56 : 0.78} color={ART_TOKENS.wornGold} distance={13} />
+      {visualQuality === 'high' && <pointLight position={[0, 5.8, 0]} intensity={0.34} color={ART_TOKENS.runeMint} distance={32} />}
+      {visualQuality === 'high' && <pointLight position={[-42, 3.2, -22]} intensity={0.28} color="#c99f72" distance={34} />}
+      {visualQuality === 'high' && <pointLight position={[48, 3.2, 26]} intensity={0.26} color="#80b06d" distance={32} />}
       <MapBaseArena visualQuality={visualQuality} />
       {visualQuality !== 'low' && <ArenaAtmosphere />}
       <Suspense fallback={null}>
@@ -64,11 +64,11 @@ export function GameWorld({
       <EnemyAccents enemiesRef={enemies} visualQuality={visualQuality} />
       {visualQuality === 'high' ? (
         <Suspense fallback={null}>
-          <SourceEnemyInstances enemiesRef={enemies} kind="golem" url={MODEL_URLS.golem} scaleMultiplier={2.42} materialTone="#638f5e" visualQuality={visualQuality} />
-          <SourceEnemyInstances enemiesRef={enemies} kind="runner" url={MODEL_URLS.runner} scaleMultiplier={2.82} materialTone="#4d6fa5" visualQuality={visualQuality} />
-          <SourceEnemyInstances enemiesRef={enemies} kind="brute" url={MODEL_URLS.brute} scaleMultiplier={2.92} materialTone="#b84f42" visualQuality={visualQuality} />
-          <SourceEnemyInstances enemiesRef={enemies} kind="elite" url={MODEL_URLS.boss} scaleMultiplier={1.26} materialTone="#8b6cc0" visualQuality={visualQuality} />
-          <SourceEnemyInstances enemiesRef={enemies} kind="boss" url={MODEL_URLS.boss} scaleMultiplier={2.05} materialTone="#b08a48" visualQuality={visualQuality} />
+          <SourceEnemyInstances enemiesRef={enemies} kind="golem" url={MODEL_URLS.golem} scaleMultiplier={2.42} materialTone="#557d51" visualQuality={visualQuality} />
+          <SourceEnemyInstances enemiesRef={enemies} kind="runner" url={MODEL_URLS.runner} scaleMultiplier={2.82} materialTone="#41658e" visualQuality={visualQuality} />
+          <SourceEnemyInstances enemiesRef={enemies} kind="brute" url={MODEL_URLS.brute} scaleMultiplier={2.92} materialTone="#99473b" visualQuality={visualQuality} />
+          <SourceEnemyInstances enemiesRef={enemies} kind="elite" url={MODEL_URLS.boss} scaleMultiplier={1.26} materialTone="#765c9b" visualQuality={visualQuality} />
+          <SourceEnemyInstances enemiesRef={enemies} kind="boss" url={MODEL_URLS.boss} scaleMultiplier={2.05} materialTone="#93723f" visualQuality={visualQuality} />
         </Suspense>
       ) : (
         <StylizedEnemyInstances enemiesRef={enemies} visualQuality={visualQuality} />
@@ -77,7 +77,7 @@ export function GameWorld({
       <BossPresence enemiesRef={enemies} />
       <instancedMesh ref={gemMesh} args={[null, null, MAX_XP_GEMS]} frustumCulled={false}>
         <octahedronGeometry args={[0.34, 0]} />
-        <meshStandardMaterial color="#9ff7ff" emissive="#38d9ff" emissiveIntensity={3.5} roughness={0.18} toneMapped={false} />
+        <meshStandardMaterial color="#82dbe7" emissive="#2da4bd" emissiveIntensity={2.2} roughness={0.22} toneMapped={false} />
       </instancedMesh>
       {visualQuality === 'high' && <GemBeacons gemsRef={xpGems} visualQuality={visualQuality} />}
       <FieldPickupItems itemsRef={fieldItems} visualQuality={visualQuality} />

@@ -28,39 +28,48 @@ export const BUILD_FOCUS_META = {
   orb: {
     label: '룬 구체',
     title: '분열 사격',
-    color: '#70d6ff',
+    color: '#58b9d4',
     glyph: '◈',
+    maxRank: 7,
     perks: ['표적 +1', '부채꼴 보조탄', '룬창 과충전']
   },
   storm: {
     label: '폭풍 낙인',
     title: '낙뢰 지대',
-    color: '#b8f7ff',
+    color: '#7fc9d8',
     glyph: '↯',
+    maxRank: 5,
     perks: ['낙뢰 +1', '잔류 시간 증가', '폭풍망 확장']
   },
   blade: {
     label: '궤도 칼날',
     title: '근접 수호',
-    color: '#f7d06b',
+    color: '#d4a84c',
     glyph: '◇',
+    maxRank: 5,
     perks: ['칼날 +1', '접촉 피해 감소', '참격 압박']
   },
   chain: {
     label: '연쇄 번개',
     title: '전류 제어',
-    color: '#d7b7ff',
+    color: '#aa91cf',
     glyph: '⌁',
+    maxRank: 5,
     perks: ['연쇄 +1', '감전 둔화', '부상 처형']
   },
   nova: {
     label: '태양 파동',
     title: '태양 중심',
-    color: '#ff8b72',
+    color: '#d96d58',
     glyph: '☉',
+    maxRank: 5,
     perks: ['파동 범위 증가', '밀어내기 강화', '쿨다운 압축']
   }
 };
+
+export const WEAPON_FAMILY_RANK_LIMITS = Object.fromEntries(
+  Object.entries(BUILD_FOCUS_META).map(([key, meta]) => [key, meta.maxRank])
+);
 
 export const BUILD_SYNERGIES = [
   {
@@ -68,7 +77,7 @@ export const BUILD_SYNERGIES = [
     title: '폭풍 전류망',
     label: '폭풍 + 번개',
     keys: ['storm', 'chain'],
-    color: '#9ff7ff',
+    color: '#7fc9d8',
     bonus: '낙뢰가 더 자주 감전시키고 번개 사거리가 증가'
   },
   {
@@ -76,7 +85,7 @@ export const BUILD_SYNERGIES = [
     title: '태양 칼날환',
     label: '칼날 + 태양',
     keys: ['blade', 'nova'],
-    color: '#fff1a6',
+    color: '#d4a84c',
     bonus: '근접 방어와 파동 밀어내기가 함께 강화'
   },
   {
@@ -84,7 +93,7 @@ export const BUILD_SYNERGIES = [
     title: '관통 룬창',
     label: '구체 관통',
     keys: ['orb'],
-    color: '#70d6ff',
+    color: '#58b9d4',
     bonus: '구체 관통/속도/피해가 집중 성장'
   }
 ];

@@ -30,9 +30,9 @@ export function getCrisisState(game) {
 }
 
 export function getBossPhaseMeta(hpPct, enraged = false) {
-  if (enraged || hpPct <= 0.5) return { label: 'RAGE', color: '#ff8b72' };
-  if (hpPct <= 0.75) return { label: 'PRESSURE', color: '#fff1a6' };
-  return { label: 'OPENING', color: '#70d6ff' };
+  if (enraged || hpPct <= 0.5) return { label: 'RAGE', color: '#d96d58' };
+  if (hpPct <= 0.75) return { label: 'PRESSURE', color: '#d4a84c' };
+  return { label: 'OPENING', color: '#58b9d4' };
 }
 
 export function getDirectorPressure(game) {

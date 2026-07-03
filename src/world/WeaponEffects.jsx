@@ -22,7 +22,7 @@ export function WeaponStrikeEffects({ effectsRef, visualQuality = 'high' }) {
   );
 }
 
-function getReadableEffectColor(color, fallback = '#fff1a6') {
+function getReadableEffectColor(color, fallback = '#d4a84c') {
   try {
     const parsed = new THREE.Color(color || fallback);
     const luminance = parsed.r * 0.2126 + parsed.g * 0.7152 + parsed.b * 0.0722;
@@ -95,7 +95,7 @@ function RingEffect({ effect, visualQuality = 'high' }) {
       {showTertiary && (
         <mesh rotation={[-Math.PI / 2, 0, -progress * Math.PI * 0.5]} scale={[radius * 0.68, radius * 0.68, 1]}>
           <ringGeometry args={[0.38, 0.46, 6]} />
-          <meshBasicMaterial color="#fff1a6" transparent opacity={opacity * 0.44} depthWrite={false} toneMapped={false} />
+          <meshBasicMaterial color="#d4a84c" transparent opacity={opacity * 0.38} depthWrite={false} toneMapped={false} />
         </mesh>
       )}
       {effect.type === 'ring' && showSecondary && (
@@ -295,11 +295,11 @@ export function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'hig
       </instancedMesh>
       <instancedMesh ref={orbHalo} args={[null, null, MAX_PROJECTILES]} frustumCulled={false}>
         <torusGeometry args={[0.68, 0.012, 8, 42]} />
-        <meshBasicMaterial color="#fff1a6" transparent opacity={0.3} toneMapped={false} />
+        <meshBasicMaterial color="#d4a84c" transparent opacity={0.24} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={orbCrown} args={[null, null, MAX_PROJECTILES * 3]} frustumCulled={false}>
         <octahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color="#fff1a6" transparent opacity={0.66} toneMapped={false} />
+        <meshBasicMaterial color="#d4a84c" transparent opacity={0.52} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={stormDisk} args={[null, null, MAX_PROJECTILES]} frustumCulled={false}>
         <circleGeometry args={[1, 56]} />

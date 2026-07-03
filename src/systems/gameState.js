@@ -127,10 +127,10 @@ export function createQaBossGame(options = {}) {
       label: 'RIFT BEAST',
       title: enraged ? '분노 페이즈 진입' : '보스 패턴 예고',
       hint: '중거리 이탈 후 약점 집중',
-      color: enraged ? '#ff8b72' : '#fff1a6'
+      color: enraged ? '#d96d58' : '#d4a84c'
     },
     encounterAlertTimer: 2.8,
-    activeThreat: { label: 'RIFT BEAST', weakness: '룬/번개 집중', color: '#ffdf6e' },
+    activeThreat: { label: 'RIFT BEAST', weakness: '룬/번개 집중', color: '#d4a84c' },
     lastBossPattern: enraged ? 'shockwave' : 'guard',
     bossStatus: {
       hp: enraged ? 720 : 1260,
@@ -139,7 +139,7 @@ export function createQaBossGame(options = {}) {
       wave: 6,
       enraged,
       phaseLabel: enraged ? 'RAGE' : 'PRESSURE',
-      phaseColor: enraged ? '#ff8b72' : '#ffdf6e',
+      phaseColor: enraged ? '#d96d58' : '#d4a84c',
       patternLabel: enraged ? BOSS_PATTERN_META.shockwave.label : BOSS_PATTERN_META.guard.label,
       patternHint: enraged ? BOSS_PATTERN_META.shockwave.hint : BOSS_PATTERN_META.guard.hint,
       patternColor: enraged ? BOSS_PATTERN_META.shockwave.color : BOSS_PATTERN_META.guard.color,
@@ -246,7 +246,7 @@ export function createQaStressGame() {
       label: 'PERF STRESS',
       title: '후반 전투 부하 재현',
       hint: '적/투사체/이펙트 cap 확인',
-      color: '#70d6ff'
+      color: '#58b9d4'
     },
     encounterAlertTimer: 2.8,
     buildFocus: { ...createEmptyBuildFocus(), orb: 4, storm: 4, chain: 4, nova: 3, blade: 3 },

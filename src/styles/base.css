@@ -1,26 +1,26 @@
 /* Design tokens, document reset, shell canvas frame. */
 :root {
-  --ink: #fff9e8;
-  --muted: rgba(255, 249, 232, 0.76);
-  --dim: rgba(255, 249, 232, 0.52);
-  --coal: #143222;
-  --blackwood: #23462b;
-  --moss: #5f9652;
-  --moss-soft: #8fc466;
-  --stone: #68745c;
-  --stone-light: #b1a875;
-  --bark: #6f4f35;
-  --paper: #fff0b4;
-  --paper-soft: #dfbc67;
-  --gold: #f4bd48;
-  --gold-bright: #ffe990;
-  --mint: #8be36f;
-  --cyan: #68c7f0;
-  --violet: #b79af0;
-  --rose: #ff7e67;
-  --line: rgba(255, 233, 144, 0.3);
-  --line-strong: rgba(255, 233, 144, 0.62);
-  --shadow: rgba(14, 29, 17, 0.4);
+  --ink: #fff0c7;
+  --muted: rgba(255, 236, 194, 0.74);
+  --dim: rgba(255, 236, 194, 0.5);
+  --coal: #102016;
+  --blackwood: #1b2f1d;
+  --moss: #4f7b46;
+  --moss-soft: #789757;
+  --stone: #5c6651;
+  --stone-light: #928761;
+  --bark: #624833;
+  --paper: #ead78e;
+  --paper-soft: #b9984d;
+  --gold: #c9993e;
+  --gold-bright: #dfc265;
+  --mint: #6fbd70;
+  --cyan: #58b9d4;
+  --violet: #aa91cf;
+  --rose: #d96755;
+  --line: rgba(219, 184, 92, 0.28);
+  --line-strong: rgba(219, 184, 92, 0.58);
+  --shadow: rgba(4, 12, 7, 0.52);
   color: var(--ink);
   background: var(--coal);
   font-family:
@@ -58,9 +58,9 @@ button {
   height: 100%;
   overflow: hidden;
   background:
-    radial-gradient(circle at 52% 56%, rgba(255, 224, 135, 0.17), transparent 34%),
-    radial-gradient(circle at 76% 22%, rgba(139, 227, 111, 0.15), transparent 30%),
-    linear-gradient(180deg, #193c28, #31512c 54%, #162d20);
+    radial-gradient(circle at 52% 56%, rgba(188, 148, 72, 0.11), transparent 34%),
+    radial-gradient(circle at 76% 22%, rgba(94, 151, 83, 0.08), transparent 30%),
+    linear-gradient(180deg, #0d1a12, #253922 54%, #0f2016);
 }
 
 .shell canvas {
@@ -78,15 +78,15 @@ button {
 
 .shell::before {
   background:
-    radial-gradient(circle at 50% 52%, transparent 45%, rgba(18, 35, 20, 0.12) 80%, rgba(8, 19, 12, 0.54) 100%),
-    linear-gradient(180deg, rgba(255, 230, 160, 0.07), transparent 24%, transparent 78%, rgba(115, 170, 84, 0.08));
+    radial-gradient(circle at 50% 52%, transparent 42%, rgba(8, 20, 12, 0.22) 80%, rgba(2, 8, 5, 0.7) 100%),
+    linear-gradient(180deg, rgba(180, 137, 72, 0.04), transparent 24%, transparent 78%, rgba(52, 86, 48, 0.08));
 }
 
 .shell::after {
   background:
-    radial-gradient(circle at 12% 24%, rgba(255, 231, 150, 0.035), transparent 18%),
-    radial-gradient(circle at 88% 14%, rgba(145, 225, 132, 0.03), transparent 18%);
-  opacity: 0.48;
+    radial-gradient(circle at 12% 24%, rgba(213, 169, 88, 0.024), transparent 18%),
+    radial-gradient(circle at 88% 14%, rgba(112, 169, 99, 0.024), transparent 18%);
+  opacity: 0.34;
 }
 
 .shell.visual-low::after {

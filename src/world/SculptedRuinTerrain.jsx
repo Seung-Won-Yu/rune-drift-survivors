@@ -11,18 +11,18 @@ export function SculptedRuinTerrain({ visualQuality = 'high' }) {
     const positions = [];
     const colors = [];
     const indices = [];
-    const lowColor = new THREE.Color('#4a6b3e');
-    const midColor = new THREE.Color('#718d52');
-    const highColor = new THREE.Color('#9f9658');
-    const mossColor = new THREE.Color('#72b15f');
-    const edgeColor = new THREE.Color('#233c28');
-    const warmStone = new THREE.Color('#969073');
-    const lowlandMud = new THREE.Color('#666f49');
-    const riftBlue = new THREE.Color('#5fb994');
-    const dryGrass = new THREE.Color('#958e55');
-    const pathDust = new THREE.Color('#a2784f');
-    const runeWash = new THREE.Color('#79bf87');
-    const forestShade = new THREE.Color('#315834');
+    const lowColor = new THREE.Color('#34482f');
+    const midColor = new THREE.Color('#536942');
+    const highColor = new THREE.Color('#776f45');
+    const mossColor = new THREE.Color('#557f4c');
+    const edgeColor = new THREE.Color('#172719');
+    const warmStone = new THREE.Color('#7f7a63');
+    const lowlandMud = new THREE.Color('#4f583b');
+    const riftBlue = new THREE.Color('#47887b');
+    const dryGrass = new THREE.Color('#756d43');
+    const pathDust = new THREE.Color('#7d6040');
+    const runeWash = new THREE.Color('#5d9366');
+    const forestShade = new THREE.Color('#223f29');
 
     for (let zIndex = 0; zIndex <= segments; zIndex += 1) {
       for (let xIndex = 0; xIndex <= segments; xIndex += 1) {
@@ -83,7 +83,7 @@ export function SculptedRuinTerrain({ visualQuality = 'high' }) {
 
   return (
     <mesh receiveShadow geometry={geometry}>
-      <meshStandardMaterial vertexColors roughness={0.99} metalness={0.01} emissive="#4c6f3d" emissiveIntensity={0.06} />
+      <meshStandardMaterial vertexColors roughness={0.99} metalness={0.01} emissive="#253a25" emissiveIntensity={0.035} />
     </mesh>
   );
 }

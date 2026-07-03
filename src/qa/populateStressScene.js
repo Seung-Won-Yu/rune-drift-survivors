@@ -89,7 +89,7 @@ export function populateStressScene({
       stage: 4,
       burstRadius: 3.6,
       trailLength: 2.4,
-      color: type === 'storm' ? '#b8f7ff' : '#70d6ff'
+      color: type === 'storm' ? '#7fc9d8' : '#58b9d4'
     };
   });
 
@@ -108,7 +108,7 @@ export function populateStressScene({
       pos: new THREE.Vector3(Math.cos(angle) * radius, 0.8, Math.sin(angle) * radius),
       life: 0.45 + (index % 5) * 0.08,
       maxLife: 0.8,
-      color: index % 3 === 0 ? '#ff8b72' : index % 3 === 1 ? '#70d6ff' : '#fff1a6',
+      color: index % 3 === 0 ? '#d96d58' : index % 3 === 1 ? '#58b9d4' : '#d4a84c',
       type: index % 3 === 0 ? 'storm' : 'hit',
       stage: 4,
       radius: 1.2 + (index % 5) * 0.28
@@ -123,7 +123,7 @@ export function populateStressScene({
       pos: new THREE.Vector3(Math.cos(angle) * radius, 0.5, Math.sin(angle) * radius),
       life: 0.38 + (index % 6) * 0.08,
       maxLife: 0.86,
-      color: index % 2 === 0 ? '#73fbd3' : '#d8b2ff',
+      color: index % 2 === 0 ? '#64c98d' : '#aa91cf',
       radius: 4.2 + (index % 4)
     };
   });
@@ -134,7 +134,7 @@ export function populateStressScene({
     return {
       pos: new THREE.Vector3(Math.cos(angle) * radius, 1.4, Math.sin(angle) * radius),
       value: index % 6 === 0 ? 'CRIT' : `${42 + index}`,
-      color: index % 2 === 0 ? '#fff1a6' : '#d8b2ff',
+      color: index % 2 === 0 ? '#d4a84c' : '#aa91cf',
       size: 0.45 + (index % 4) * 0.04,
       age: 0,
       life: 0.4 + (index % 5) * 0.04,
@@ -149,7 +149,7 @@ export function populateStressScene({
       pos: new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius),
       life: 1.1,
       maxLife: 1.1,
-      color: index % 2 === 0 ? '#ff8b72' : '#70d6ff',
+      color: index % 2 === 0 ? '#d96d58' : '#58b9d4',
       label: index < 3 ? 'SURGE' : '',
       radius: 2.8 + (index % 4) * 0.6
     };

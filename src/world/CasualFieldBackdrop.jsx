@@ -20,7 +20,7 @@ export function CasualFieldBackdrop({ visualQuality = 'high' }) {
         scale: visualQuality === 'high'
           ? [24 + (index % 4) * 4.8, 11 + (index % 3) * 2.2, 1]
           : [10 + (index % 4) * 2.2, 4.4 + (index % 3) * 0.7, 1],
-        color: index % 5 === 0 ? '#dfc777' : index % 3 === 0 ? '#acd36f' : '#8fc66a'
+        color: index % 5 === 0 ? '#a38b4f' : index % 3 === 0 ? '#789d58' : '#668b54'
       };
     }).filter(patch => Math.hypot(patch.position[0], patch.position[2]) < ARENA_RADIUS - 12);
 
@@ -37,7 +37,7 @@ export function CasualFieldBackdrop({ visualQuality = 'high' }) {
           scale: visualQuality === 'high'
             ? [12.5 + index * 0.9, 4.6 + (laneIndex % 2) * 0.7, 1]
             : [8.0 + index * 0.45, 2.6 + (laneIndex % 2) * 0.35, 1],
-          color: laneIndex % 2 ? '#d7bd70' : '#bcd374'
+          color: laneIndex % 2 ? '#9d8550' : '#829c58'
         };
       })
     )).filter(path => Math.hypot(path.position[0], path.position[2]) < ARENA_RADIUS - 10);
@@ -52,7 +52,7 @@ export function CasualFieldBackdrop({ visualQuality = 'high' }) {
         position: [x, getTerrainHeight(x, z) + 0.045, z],
         rotation: angle,
         scale: [0.42 + (index % 3) * 0.08, 0.28 + (index % 2) * 0.04, 1],
-        color: index % 7 === 0 ? '#f1cf64' : index % 5 === 0 ? '#ef8fa8' : index % 3 === 0 ? '#b88add' : '#8ed86d'
+        color: index % 7 === 0 ? '#c4a14c' : index % 5 === 0 ? '#b77884' : index % 3 === 0 ? '#9274ad' : '#6ea45a'
       };
     }).filter(dot => {
       const distance = Math.hypot(dot.position[0], dot.position[2]);
@@ -60,8 +60,8 @@ export function CasualFieldBackdrop({ visualQuality = 'high' }) {
     });
 
     const centralMeadow = [
-      { position: [0, getTerrainHeight(0, 0) + 0.033, 0], rotation: 0, scale: visualQuality === 'high' ? [19, 19, 1] : [10.5, 10.5, 1], color: '#a8d16e' },
-      { position: [0, getTerrainHeight(0, 0) + 0.039, 0], rotation: Math.PI / 8, scale: visualQuality === 'high' ? [10.8, 10.8, 1] : [6.4, 6.4, 1], color: '#dfc777' }
+      { position: [0, getTerrainHeight(0, 0) + 0.033, 0], rotation: 0, scale: visualQuality === 'high' ? [19, 19, 1] : [10.5, 10.5, 1], color: '#769356' },
+      { position: [0, getTerrainHeight(0, 0) + 0.039, 0], rotation: Math.PI / 8, scale: visualQuality === 'high' ? [10.8, 10.8, 1] : [6.4, 6.4, 1], color: '#a38b4f' }
     ];
 
     return { broadPatches, softPaths, flowerDots, centralMeadow };
@@ -69,10 +69,10 @@ export function CasualFieldBackdrop({ visualQuality = 'high' }) {
 
   return (
     <group>
-      <GroundDecalInstances transforms={field.broadPatches} shape="circle" segments={36} opacity={visualQuality === 'high' ? 0.09 : 0.035} />
-      <GroundDecalInstances transforms={field.softPaths} shape="circle" segments={28} opacity={visualQuality === 'high' ? 0.13 : 0.055} />
-      <GroundDecalInstances transforms={field.centralMeadow} shape="circle" segments={48} opacity={visualQuality === 'high' ? 0.14 : 0.06} />
-      <GroundDecalInstances transforms={field.flowerDots} shape="ring" ringArgs={[0.42, 0.7, 5]} opacity={visualQuality === 'high' ? 0.28 : 0.16} doubleSide />
+      <GroundDecalInstances transforms={field.broadPatches} shape="circle" segments={36} opacity={visualQuality === 'high' ? 0.075 : 0.03} />
+      <GroundDecalInstances transforms={field.softPaths} shape="circle" segments={28} opacity={visualQuality === 'high' ? 0.1 : 0.045} />
+      <GroundDecalInstances transforms={field.centralMeadow} shape="circle" segments={48} opacity={visualQuality === 'high' ? 0.11 : 0.05} />
+      <GroundDecalInstances transforms={field.flowerDots} shape="ring" ringArgs={[0.42, 0.7, 5]} opacity={visualQuality === 'high' ? 0.2 : 0.12} doubleSide />
     </group>
   );
 }

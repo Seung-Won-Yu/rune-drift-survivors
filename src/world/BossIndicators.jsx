@@ -123,15 +123,15 @@ export function BossPresence({ enemiesRef }) {
     <>
       <instancedMesh ref={ringMesh} args={[null, null, 8]} frustumCulled={false}>
         <torusGeometry args={[0.78, 0.018, 8, 64]} />
-        <meshBasicMaterial color="#ffdf6e" transparent opacity={0.58} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#d4a84c" transparent opacity={0.5} depthWrite={false} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={crownMesh} args={[null, null, 28]} frustumCulled={false}>
         <coneGeometry args={[1, 1, 4]} />
-        <meshBasicMaterial color="#ffdf6e" transparent opacity={0.84} toneMapped={false} />
+        <meshBasicMaterial color="#d4a84c" transparent opacity={0.76} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={beamMesh} args={[null, null, 4]} frustumCulled={false}>
         <cylinderGeometry args={[1, 1, 1, 16, 1, true]} />
-        <meshBasicMaterial color="#ffdf6e" transparent opacity={0.22} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#d4a84c" transparent opacity={0.18} depthWrite={false} toneMapped={false} />
       </instancedMesh>
     </>
   );

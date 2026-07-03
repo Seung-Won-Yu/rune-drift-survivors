@@ -12,7 +12,7 @@ export function SourceProjectileInstances({ projectilesRef, type, url, scaleMult
   const parts = useInstancedModelParts(url);
   const projectileLimit = getRuntimeBudget(visualQuality).maxProjectiles;
   const styledParts = useMemo(() => {
-    const tone = new THREE.Color(type === 'storm' ? '#f0d86a' : '#7ce8ff');
+    const tone = new THREE.Color(type === 'storm' ? '#c6a64f' : '#58b9d4');
     return parts.map(part => {
       const material = Array.isArray(part.material)
         ? part.material.map(item => {
@@ -113,8 +113,8 @@ export function StylizedProjectileInstances({ projectilesRef, visualQuality = 'b
     matrix: new THREE.Matrix4(),
     color: new THREE.Color(),
     orbColor: new THREE.Color('#76e6ff'),
-    stormColor: new THREE.Color('#f0d76a'),
-    sparkColor: new THREE.Color('#fff1a6')
+    stormColor: new THREE.Color('#c6a64f'),
+    sparkColor: new THREE.Color('#d4a84c')
   }), []);
   const shouldRenderVisualFrame = useVisualFrameGate(visualQuality, 36, 20);
 

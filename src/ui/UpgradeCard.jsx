@@ -42,7 +42,7 @@ export function UpgradeCard({ game, choice, index, onChoose }) {
       <div className="rewardCardStats">
         <small>{cardMeta.decision}</small>
         <b>{cardMeta.statLine}</b>
-        <span>{cardMeta.payoff}</span>
+        <span>{cardMeta.progressLabel || cardMeta.payoff}</span>
       </div>
       {cardMeta.tags.length > 0 && (
         <div className="rewardCardTags" aria-hidden="true">

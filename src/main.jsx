@@ -14,7 +14,8 @@ import { createInitialGame } from './systems/gameState.js';
 import {
   applyBuildFocus,
   getFocusMessage,
-  getUpgradeFocusKey
+  getUpgradeFocusKey,
+  isWeaponFamilyAtCap
 } from './systems/progression.js';
 import { pickUpgrades } from './systems/upgradeDrafting.js';
 import { useRuneQaControls } from './qa/useRuneQaControls.js';
@@ -79,6 +80,7 @@ function App() {
     setGame(current => {
       const nextStats = upgrade.apply(current.stats);
       const focusKey = getUpgradeFocusKey(upgrade);
+      if (focusKey && isWeaponFamilyAtCap(current, focusKey)) return current;
       const nextBuildFocus = applyBuildFocus(current.buildFocus, focusKey);
       const focusMessage = getFocusMessage(focusKey, nextBuildFocus);
       const nextPending = Math.max(0, (current.pendingUpgrades ?? 1) - 1);
@@ -139,8 +141,8 @@ function App() {
           camera.updateProjectionMatrix();
         }}
       >
-        <color attach="background" args={['#1d3a28']} />
-        <fog attach="fog" args={['#376340', 112, 310]} />
+        <color attach="background" args={['#102016']} />
+        <fog attach="fog" args={['#243a26', 92, 286]} />
         <GameScene
           refApi={sceneApi}
           game={game}

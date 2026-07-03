@@ -134,19 +134,19 @@ export function updateEnemySpawning({
       label: 'RIFT BEAST',
       radius: 4.2
     });
-    hitBursts.current.push({ pos: boss.pos.clone(), life: 1.1, maxLife: 1.1, color: '#ffdf6e' });
+    hitBursts.current.push({ pos: boss.pos.clone(), life: 1.1, maxLife: 1.1, color: '#d4a84c' });
     showEncounterAlert(updateGame, {
       kind: 'boss',
       label: 'RIFT BEAST',
       title: '균열 보스 출현',
       hint: '패턴 예고 확인',
-      color: '#ffdf6e',
+      color: '#d4a84c',
       threat: {
         kind: 'boss',
         label: 'RIFT BEAST',
         name: '균열 보스',
         weakness: '예고 후 회피',
-        color: '#ffdf6e'
+        color: '#d4a84c'
       }
     }, 4.0);
     bossSpawnedWave.current = currentGame.wave;

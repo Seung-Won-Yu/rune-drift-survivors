@@ -103,7 +103,7 @@ export function PlayerPresence({ player, game, visualQuality = 'high' }) {
       </mesh>
       <mesh ref={dashSpark} rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[0, -0.4, -0.18]} scale={[1.1, 1.1, 1]} visible={false}>
         <ringGeometry args={[0.32, 0.4, 4]} />
-        <meshBasicMaterial color="#9ff7ff" transparent opacity={0.68} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#7fc9d8" transparent opacity={0.54} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh ref={directionRune} rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[0, -0.43, 0.86]} scale={[0.5, 0.92, 1]} visible={false}>
         <coneGeometry args={[0.72, 1.1, 3]} />
@@ -123,7 +123,7 @@ export function PlayerPresence({ player, game, visualQuality = 'high' }) {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[0, -0.45, 0]} scale={[1.25, 1.25, 1]}>
         <ringGeometry args={[0.18, 0.23, 4]} />
-        <meshBasicMaterial color="#fff1a6" transparent opacity={0.34 + stage * 0.06} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#d4a84c" transparent opacity={0.28 + stage * 0.045} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh ref={castNeedle} position={[0, 1.12, 0.42]} rotation={[0.64, 0, Math.PI / 4]}>
         <octahedronGeometry args={[1, 0]} />
@@ -143,7 +143,7 @@ export function PlayerPresence({ player, game, visualQuality = 'high' }) {
           return (
             <mesh key={`player-shoulder-rune-${index}`} position={[Math.cos(angle) * 0.58, 0.08 + (index % 2) * 0.16, Math.sin(angle) * 0.58]} rotation={[0.55, angle, 0.35]} scale={[0.08, 0.22 + stage * 0.02, 0.08]}>
               <octahedronGeometry args={[1, 0]} />
-              <meshBasicMaterial color={index % 2 ? '#fff1a6' : color} transparent opacity={0.8} toneMapped={false} />
+              <meshBasicMaterial color={index % 2 ? '#d4a84c' : color} transparent opacity={0.68} toneMapped={false} />
             </mesh>
           );
         })}

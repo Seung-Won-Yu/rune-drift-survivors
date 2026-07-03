@@ -1,7 +1,8 @@
 import { RUN_PHASES, WEAPON_CATALOG as weaponCatalog } from '../config/gameData.js';
 import {
   BUILD_FOCUS_META,
-  BUILD_SYNERGIES
+  BUILD_SYNERGIES,
+  WEAPON_FAMILY_RANK_LIMITS
 } from '../config/upgrades.js';
 import {
   MAX_ORBIT_BLADES,
@@ -22,40 +23,40 @@ export function getWeaponTier(stats, stage = 0) {
 }
 
 export function getOrbColor(stats, stage = 0) {
-  if (stage >= 3) return '#fff1a6';
-  if (stage >= 2) return '#c7f9ff';
-  if (stage >= 1) return '#7fffd7';
-  if (stats.damage > 1.45) return '#ffef9a';
-  if (stats.pierce > 1) return '#c7f9ff';
+  if (stage >= 3) return '#d4a84c';
+  if (stage >= 2) return '#9ed8dd';
+  if (stage >= 1) return '#6ec59b';
+  if (stats.damage > 1.45) return '#cdb462';
+  if (stats.pierce > 1) return '#9ed8dd';
   return weaponCatalog[0].color;
 }
 
 export function getStormColor(stats, stage = 0) {
-  if (stage >= 3) return '#f5c7ff';
-  if (stage >= 2) return '#fff1a6';
-  if (stats.cooldown < 0.72) return '#d7b7ff';
-  if (stats.damage > 1.35) return '#fff1a6';
+  if (stage >= 3) return '#aa91cf';
+  if (stage >= 2) return '#d4a84c';
+  if (stats.cooldown < 0.72) return '#aa91cf';
+  if (stats.damage > 1.35) return '#d4a84c';
   return weaponCatalog[1].color;
 }
 
 export function getBladeColor(stats, stage = 0) {
-  if (stage >= 3) return '#ffffff';
-  if (stage >= 2) return '#ffe58a';
-  if (stats.damage > 1.35) return '#ffdf6e';
+  if (stage >= 3) return '#ead78e';
+  if (stage >= 2) return '#d4b85d';
+  if (stats.damage > 1.35) return '#cba64c';
   return weaponCatalog[2].color;
 }
 
 export function getLightningColor(stats, stage = 0) {
-  if (stage >= 3) return '#ffffff';
-  if (stage >= 2) return '#f5c7ff';
-  if (stats.lightningChains >= 5) return '#c7f9ff';
+  if (stage >= 3) return '#d8cbe8';
+  if (stage >= 2) return '#aa91cf';
+  if (stats.lightningChains >= 5) return '#9ed8dd';
   return weaponCatalog[3].color;
 }
 
 export function getNovaColor(stats, stage = 0) {
-  if (stage >= 3) return '#fff1a6';
-  if (stage >= 2) return '#ffbf7a';
-  if (stats.novaRadius > 1.35) return '#ffd27f';
+  if (stage >= 3) return '#d4a84c';
+  if (stage >= 2) return '#c98655';
+  if (stats.novaRadius > 1.35) return '#ca9f54';
   return weaponCatalog[4].color;
 }
 
@@ -106,10 +107,33 @@ export function getBuildFocus(game, key) {
   return Math.max(0, game?.buildFocus?.[key] ?? 0);
 }
 
+export function getWeaponFamilyRankLimit(key) {
+  return WEAPON_FAMILY_RANK_LIMITS[key] ?? Infinity;
+}
+
+export function getWeaponFamilyRankProgress(game, key, includeNext = false) {
+  const limit = getWeaponFamilyRankLimit(key);
+  const current = getBuildFocus(game, key);
+  return {
+    current,
+    next: Math.min(limit, current + (includeNext ? 1 : 0)),
+    limit,
+    isMaxed: current >= limit
+  };
+}
+
+export function isWeaponFamilyAtCap(game, key) {
+  if (!key) return false;
+  return getWeaponFamilyRankProgress(game, key).isMaxed;
+}
+
 export function getFocusMessage(key, buildFocus) {
   if (!key || !BUILD_FOCUS_META[key]) return '';
   const focus = buildFocus?.[key] ?? 0;
   const meta = BUILD_FOCUS_META[key];
+  if (focus >= getWeaponFamilyRankLimit(key)) {
+    return `${meta.label} 최대 ${formatFocusLevel(focus)}: 무기 완성`;
+  }
   return `${meta.label} 집중 ${formatFocusLevel(focus)}: ${meta.perks[Math.min(meta.perks.length - 1, focus - 1)]}`;
 }
 

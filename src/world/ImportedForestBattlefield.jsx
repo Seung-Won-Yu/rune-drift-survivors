@@ -123,10 +123,10 @@ export function ImportedForestBattlefield({ visualQuality = 'high' }) {
   return (
     <group>
       <ImportedForestGroundShadows transforms={transforms.ground} />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.birchTrees} transforms={[...transforms.outerBirches, ...transforms.featureGroves.filter((_, index) => index % 2 === 0), ...transforms.shrineGroves.filter((_, index) => index % 2 === 0)]} normalizeOrigin materialColor="#c8e5a7" />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.pineTrees} transforms={[...transforms.outerPines, ...transforms.featureGroves.filter((_, index) => index % 2 === 1), ...transforms.shrineGroves.filter((_, index) => index % 2 === 1)]} normalizeOrigin materialColor="#89bd78" />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.rocks} transforms={[...transforms.rockClusters, ...transforms.barrierRocks]} normalizeOrigin materialColor="#c5b890" />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.bushes} transforms={transforms.bushes} normalizeOrigin receiveShadow materialColor="#95d071" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.birchTrees} transforms={[...transforms.outerBirches, ...transforms.featureGroves.filter((_, index) => index % 2 === 0), ...transforms.shrineGroves.filter((_, index) => index % 2 === 0)]} normalizeOrigin materialColor="#91ad74" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.pineTrees} transforms={[...transforms.outerPines, ...transforms.featureGroves.filter((_, index) => index % 2 === 1), ...transforms.shrineGroves.filter((_, index) => index % 2 === 1)]} normalizeOrigin materialColor="#5f8a5a" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.rocks} transforms={[...transforms.rockClusters, ...transforms.barrierRocks]} normalizeOrigin materialColor="#8a8066" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.bushes} transforms={transforms.bushes} normalizeOrigin receiveShadow materialColor="#6f975b" />
       {visualQuality === 'high' && <ImportedForestLightFlecks transforms={transforms.canopies} />}
     </group>
   );

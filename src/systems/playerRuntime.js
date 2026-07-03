@@ -110,7 +110,7 @@ export function updatePlayerRuntime({
       pos: player.current.pos.clone(),
       life: 0.34,
       maxLife: 0.34,
-      color: '#70d6ff',
+      color: '#58b9d4',
       type: 'dash',
       stage: 4,
       radius: 3.2
@@ -120,10 +120,10 @@ export function updatePlayerRuntime({
       pos: player.current.pos.clone(),
       life: 0.34,
       maxLife: 0.34,
-      color: '#70d6ff',
+      color: '#58b9d4',
       radius: 7.2
     });
-    addDamageNumber(player.current.pos, '회피', '#9ff7ff', 0.74);
+    addDamageNumber(player.current.pos, '회피', '#7fc9d8', 0.74);
     cameraShake.current = Math.max(cameraShake.current, 0.18);
     updateGame(current => ({ ...current, dashUses: (current.dashUses ?? 0) + 1 }));
   }

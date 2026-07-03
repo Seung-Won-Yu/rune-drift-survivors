@@ -18,11 +18,11 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
   const enemyLimit = getRuntimeBudget(visualQuality).maxEnemies;
   const shouldRenderVisualFrame = useVisualFrameGate(visualQuality, 36, 22);
   const meta = useMemo(() => ({
-    runner: { color: '#335d98', head: '#5e8dc4', accent: '#a6ddff', face: '#fff1a6', scale: [0.74, 0.52, 1.72], lift: 0.2, headSize: [0.3, 0.26, 0.23], accentSize: [0.2, 0.72, 0.2], shadow: [0.92, 0.48] },
-    golem: { color: '#5c8654', head: '#7ea66b', accent: '#dacb7a', face: '#fff0a6', scale: [1.18, 1.18, 1.02], lift: 0.12, headSize: [0.32, 0.34, 0.32], accentSize: [0.2, 0.34, 0.24], shadow: [0.9, 0.68] },
-    brute: { color: '#b94f42', head: '#db735c', accent: '#ffd078', face: '#fff0a6', scale: [1.74, 1.08, 1.28], lift: 0.08, headSize: [0.38, 0.3, 0.34], accentSize: [0.28, 0.36, 0.26], shadow: [1.08, 0.74] },
-    elite: { color: '#7657a6', head: '#a486ce', accent: '#ffe78a', face: '#fff1c2', scale: [1.34, 1.42, 1.16], lift: 0.18, headSize: [0.44, 0.38, 0.38], accentSize: [0.36, 0.54, 0.3], shadow: [1.02, 0.78] },
-    boss: { color: '#b08a48', head: '#d39e55', accent: '#fff1a6', face: '#fff4c6', scale: [2.2, 1.62, 1.86], lift: 0.22, headSize: [0.5, 0.48, 0.44], accentSize: [0.42, 0.62, 0.34], shadow: [1.22, 0.84] }
+    runner: { color: '#2f557d', head: '#52799e', accent: '#88bfd1', face: '#d7bd68', scale: [0.74, 0.52, 1.72], lift: 0.2, headSize: [0.3, 0.26, 0.23], accentSize: [0.2, 0.72, 0.2], shadow: [0.92, 0.48] },
+    golem: { color: '#4f754d', head: '#6f8d5e', accent: '#b29b56', face: '#d8bd68', scale: [1.18, 1.18, 1.02], lift: 0.12, headSize: [0.32, 0.34, 0.32], accentSize: [0.2, 0.34, 0.24], shadow: [0.9, 0.68] },
+    brute: { color: '#914338', head: '#b15d4d', accent: '#c99c54', face: '#dbc06a', scale: [1.74, 1.08, 1.28], lift: 0.08, headSize: [0.38, 0.3, 0.34], accentSize: [0.28, 0.36, 0.26], shadow: [1.08, 0.74] },
+    elite: { color: '#684f8e', head: '#8d74ad', accent: '#d3b95e', face: '#dfcb88', scale: [1.34, 1.42, 1.16], lift: 0.18, headSize: [0.44, 0.38, 0.38], accentSize: [0.36, 0.54, 0.3], shadow: [1.02, 0.78] },
+    boss: { color: '#8d713f', head: '#ac824b', accent: '#d2b867', face: '#e1c986', scale: [2.2, 1.62, 1.86], lift: 0.22, headSize: [0.5, 0.48, 0.44], accentSize: [0.42, 0.62, 0.34], shadow: [1.22, 0.84] }
   }), []);
   const local = useMemo(() => ({
     pos: new THREE.Vector3(),
@@ -41,7 +41,7 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
     shadowQuat: new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)),
     matrix: new THREE.Matrix4(),
     color: new THREE.Color(),
-    flashColor: new THREE.Color('#fff1a6')
+    flashColor: new THREE.Color('#d4a84c')
   }), []);
 
   useFrame(state => {
@@ -179,7 +179,7 @@ export function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 
   const styledParts = useMemo(() => {
     if (!materialTone) return parts;
     const tone = new THREE.Color(materialTone);
-    const warmLift = new THREE.Color('#ffe7a3');
+    const warmLift = new THREE.Color('#c9a85f');
     const tintStrength = visualQuality === 'high' ? 0.62 : 1;
     const liftStrength = visualQuality === 'high' ? 0.03 : 0.08;
     return parts.map(part => {

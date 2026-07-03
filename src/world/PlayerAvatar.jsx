@@ -198,9 +198,9 @@ function RuneDrifterModel({ visualQuality = 'high' }) {
   const model = useMemo(() => cloneSkeleton(scene), [scene]);
 
   useEffect(() => {
-    const warmLift = new THREE.Color('#f0d081');
-    const shadowWood = new THREE.Color('#6f5138');
-    const parchment = new THREE.Color('#d8d1b6');
+    const warmLift = new THREE.Color('#c49b58');
+    const shadowWood = new THREE.Color('#604832');
+    const parchment = new THREE.Color('#bcb397');
     const flattenMaterials = visualQuality !== 'high';
     model.traverse(child => {
       if (child.isMesh) {
@@ -225,7 +225,7 @@ function RuneDrifterModel({ visualQuality = 'high' }) {
             } else if (flattenMaterials && luminance > 0.82) {
               clone.color.copy(parchment);
             } else {
-              clone.color.lerp(warmLift, flattenMaterials ? 0.11 : 0.06);
+            clone.color.lerp(warmLift, flattenMaterials ? 0.08 : 0.04);
             }
           }
           if ('roughness' in clone) clone.roughness = Math.max(clone.roughness ?? 0.5, 0.48);
@@ -351,7 +351,7 @@ function StylizedOrbitBlades({ player, game, visualQuality = 'balanced' }) {
       local.quat.setFromEuler(new THREE.Euler(0.02, -angle + Math.PI / 2, index % 2 ? 0.18 : -0.18));
       local.matrix.compose(local.pos, local.quat, local.scale.set(1.05 * size, 0.1 * size, 0.22 * size));
       bladeRef.current?.setMatrixAt(index, local.matrix);
-      local.color.set(index % 2 ? '#f7d06b' : '#fff09a');
+      local.color.set(index % 2 ? '#d4a84c' : '#d8bd64');
       bladeRef.current?.setColorAt(index, local.color);
 
       local.pos.y += 0.035;

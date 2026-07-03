@@ -112,7 +112,7 @@ export function createBoss(wave, playerPos = new THREE.Vector3()) {
     radius: 1.8,
     hitRadius: 2.85,
     xp: 64 + wave * 9,
-    color: '#ffdf6e',
+    color: '#d4a84c',
     abilityTimer: 2.8,
     patternIndex: 0,
     currentPattern: BOSS_PATTERN_ORDER[0],
@@ -154,7 +154,7 @@ export function createSummonedRunner(source, wave, playerPos = new THREE.Vector3
     radius: 0.56,
     hitRadius: 1.0,
     xp: 2,
-    color: '#70d6ff',
+    color: '#58b9d4',
     flash: 0,
     facingAngle: Math.atan2(playerPos.x - pos.x, playerPos.z - pos.z),
     wobble: Math.random() * Math.PI * 2,
@@ -186,7 +186,7 @@ export function createSplitRunner(source, wave, playerPos = new THREE.Vector3(),
     radius: 0.5,
     hitRadius: 0.88,
     xp: 1,
-    color: '#d8b2ff',
+    color: '#aa91cf',
     flash: 0,
     facingAngle: Math.atan2(playerPos.x - pos.x, playerPos.z - pos.z),
     wobble: Math.random() * Math.PI * 2,
@@ -236,7 +236,7 @@ export function applyDamageToEnemy(enemy, damage, source = 'generic') {
 export function getEnemyAccentColor(enemy) {
   if (typeof enemy === 'string') return getSpawnColor(enemy);
   if (enemy.kind === 'elite') return ELITE_ROLE_META[enemy.role]?.color ?? FIELD_ITEM_META.overload.color;
-  if (enemy.kind === 'boss') return enemy.bossGuard > 0 ? BOSS_PATTERN_META.guard.color : '#ffdf6e';
+  if (enemy.kind === 'boss') return enemy.bossGuard > 0 ? BOSS_PATTERN_META.guard.color : '#d4a84c';
   if (enemy.affix) return getAffixEnemyColor(enemy.affix, enemy.kind);
   return getSpawnColor(enemy.kind);
 }
@@ -248,18 +248,18 @@ export function getEnemyDisplayName(enemy) {
 }
 
 export function getSpawnColor(kind) {
-  if (kind === 'boss') return '#ffdf6e';
+  if (kind === 'boss') return '#d4a84c';
   if (kind === 'elite') return FIELD_ITEM_META.overload.color;
-  if (kind === 'runner') return '#70d6ff';
-  if (kind === 'brute') return '#ff8b72';
+  if (kind === 'runner') return '#58b9d4';
+  if (kind === 'brute') return '#d96d58';
   return '#70f0b4';
 }
 
 function getAffixEnemyColor(affix, kind) {
-  if (affix === 'pack') return kind === 'runner' ? '#9ff7ff' : '#70d6ff';
-  if (affix === 'stone') return kind === 'brute' ? '#fff1a6' : '#c7d49a';
-  if (affix === 'split') return kind === 'runner' ? '#d8b2ff' : '#f5c7ff';
-  if (affix === 'siege') return kind === 'brute' ? '#ff8b72' : '#ffbf78';
+  if (affix === 'pack') return kind === 'runner' ? '#7fc9d8' : '#58b9d4';
+  if (affix === 'stone') return kind === 'brute' ? '#d4a84c' : '#a8b47a';
+  if (affix === 'split') return kind === 'runner' ? '#aa91cf' : '#c2a6d8';
+  if (affix === 'siege') return kind === 'brute' ? '#d96d58' : '#c98655';
   return getSpawnColor(kind);
 }
 

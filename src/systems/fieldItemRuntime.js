@@ -119,12 +119,12 @@ function applyFieldItemRuntime(item, currentGame, updateGame, context) {
       pos: player.current.pos.clone(),
       life: 0.9,
       maxLife: 0.9,
-      color: '#70d6ff',
+      color: '#58b9d4',
       type: 'magnet',
       stage: 4,
       radius: 4.8
     });
-    addDamageNumber(player.current.pos, `자석 ${xpGems.current.length}`, '#9ff7ff', 0.9);
+    addDamageNumber(player.current.pos, `자석 ${xpGems.current.length}`, '#7fc9d8', 0.9);
     cameraShake.current = Math.max(cameraShake.current, 0.18);
     updateGame(current => ({
       ...withItemPickup(current, 'magnet'),
@@ -256,7 +256,7 @@ function applyFieldItemRuntime(item, currentGame, updateGame, context) {
         pos: enemy.pos.clone(),
         life: 0.46,
         maxLife: 0.46,
-        color: '#ffdf6e',
+        color: '#d4a84c',
         type: 'purge',
         stage: 5,
         radius: enemy.hitRadius + 0.8
@@ -267,12 +267,12 @@ function applyFieldItemRuntime(item, currentGame, updateGame, context) {
     pos: player.current.pos.clone(),
     life: 1.1,
     maxLife: 1.1,
-    color: '#ffdf6e',
+    color: '#d4a84c',
     type: 'purge',
     stage: 5,
     radius: 7.2
   });
-  addDamageNumber(player.current.pos, `정화 ${cleared}`, '#ffdf6e', 0.96);
+  addDamageNumber(player.current.pos, `정화 ${cleared}`, '#d4a84c', 0.96);
   cameraShake.current = Math.max(cameraShake.current, 0.36);
   updateGame(current => ({
     ...withItemPickup(current, 'purge'),

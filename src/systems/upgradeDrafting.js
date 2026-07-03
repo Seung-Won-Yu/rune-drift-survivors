@@ -26,6 +26,8 @@ import {
   getUpgradeSynergyMatches,
   getUpgradeVisualFamilyKey,
   getWeaponStage,
+  getWeaponFamilyRankProgress,
+  isWeaponFamilyAtCap,
   isWeaponFamilyUnlocked
 } from './progression.js';
 import { getUpgradeCardMeta } from './upgradePresentation.js';
@@ -63,6 +65,8 @@ export function pickArmoryBoost(game, excludedIds = new Set()) {
 function isUpgradeAvailable(game, upgrade) {
   if (!game) return true;
   const stats = game.stats;
+  const key = getUpgradeFocusKey(upgrade);
+  if (key && isWeaponFamilyAtCap(game, key)) return false;
   const rankLimit = UPGRADE_RANK_LIMITS[upgrade.id];
   if (rankLimit && getUpgradePickCount(game, upgrade.id) >= rankLimit) return false;
   if (upgrade.id === 'orb-count') return stats.orbCount < 7;
@@ -119,9 +123,15 @@ function getUpgradeWeight(game, upgrade) {
 
   if (key) {
     const focus = getBuildFocus(game, key);
+    const rankProgress = getWeaponFamilyRankProgress(game, key);
     const synergyDelta = getUpgradeSynergyMatches(game, upgrade).some(synergy => synergy.nextLevel > synergy.currentLevel);
     const intentionalArmoryUnlock = hasIntentionalArmoryUnlock(game);
     weight += focus * 0.48;
+    if (rankProgress.limit < Infinity) {
+      const remaining = Math.max(0, rankProgress.limit - rankProgress.current);
+      if (remaining <= 1) weight *= 0.48;
+      else if (remaining <= 2) weight *= 0.72;
+    }
     if (!isWeaponFamilyUnlocked(game, key)) {
       weight += intentionalArmoryUnlock ? 0.86 : game.level >= NEW_WEAPON_UNLOCK_LEVEL ? 0.62 : 0.34;
     }

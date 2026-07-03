@@ -226,13 +226,13 @@ export function NaturalFieldKit({ visualQuality = 'high' }) {
     <group>
       {visualQuality === 'high' && (
         <>
-          <StaticModelInstances url={NATURE_MODEL_URLS.rockLargeA} transforms={rockLarge} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#7d9066" />
-          <StaticModelInstances url={NATURE_MODEL_URLS.rockTall} transforms={rockTall} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#81956d" />
-          <StaticModelInstances url={NATURE_MODEL_URLS.pineTall} transforms={pineTall} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#4f9368" />
-          <StaticModelInstances url={NATURE_MODEL_URLS.pineRound} transforms={pineRound} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#5aa56d" />
-          <StaticModelInstances url={NATURE_MODEL_URLS.treeDefault} transforms={treeDefault} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#5f9a64" />
-          <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#6cae62" />
-          <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow={receiveNatureShadows} materialColor="#8fbd62" />
+          <StaticModelInstances url={NATURE_MODEL_URLS.rockLargeA} transforms={rockLarge} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#6d7d5d" />
+          <StaticModelInstances url={NATURE_MODEL_URLS.rockTall} transforms={rockTall} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#717f62" />
+          <StaticModelInstances url={NATURE_MODEL_URLS.pineTall} transforms={pineTall} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#47795c" />
+          <StaticModelInstances url={NATURE_MODEL_URLS.pineRound} transforms={pineRound} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#527f58" />
+          <StaticModelInstances url={NATURE_MODEL_URLS.treeDefault} transforms={treeDefault} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#587f55" />
+          <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} castShadow={castNatureShadows} receiveShadow={receiveNatureShadows} materialColor="#628c55" />
+          <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} receiveShadow={receiveNatureShadows} materialColor="#789a56" />
         </>
       )}
       <FieldSaplingClusters transforms={transforms.saplings} />

@@ -277,7 +277,7 @@ export function triggerBossRagePhase({
     pos: enemy.pos.clone(),
     life: 1.2,
     maxLife: 1.2,
-    color: '#ff8b72',
+    color: '#d96d58',
     type: 'bossRage',
     stage: 5,
     radius: 8.4
@@ -286,7 +286,7 @@ export function triggerBossRagePhase({
     pos: enemy.pos.clone(),
     life: 1.5,
     maxLife: 1.5,
-    color: '#ff8b72',
+    color: '#d96d58',
     label: 'RAGE',
     radius: 7.0
   });
@@ -296,13 +296,13 @@ export function triggerBossRagePhase({
     label: 'RIFT RAGE',
     title: '보스 분노 페이즈',
     hint: '패턴 가속',
-    color: '#ff8b72',
+    color: '#d96d58',
     threat: {
       kind: 'boss',
       label: 'RAGE',
       name: '분노 보스',
       weakness: '거리 유지',
-      color: '#ff8b72'
+      color: '#d96d58'
     },
     message: '보스 분노: 패턴 가속',
     flash: 3.2

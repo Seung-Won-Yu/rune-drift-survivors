@@ -68,7 +68,7 @@ export function resolveDefeatedEnemies({
           pos: enemy.pos.clone(),
           life: 0.56,
           maxLife: 0.56,
-          color: '#d8b2ff',
+          color: '#aa91cf',
           label: 'SPLIT'
         });
       }

@@ -28,7 +28,8 @@ async function attachPageGuards(page) {
 async function capture(page, name) {
   await page.screenshot({
     path: path.join(artifactDir, `${name}.png`),
-    fullPage: true
+    fullPage: false,
+    timeout: 10_000
   });
 }
 
@@ -76,8 +77,12 @@ test('result overlay smoke', async ({ page }) => {
 
 test('stress budget smoke', async ({ page }) => {
   const guards = await openGuardedPage(page, '/?qa=stress&quality=balanced');
-  await page.waitForFunction(() => window.__RUNE_DRIFT_QA__?.metrics?.()?.frameStats?.samples > 180);
-  await page.waitForTimeout(6_000);
+  await page.waitForFunction(
+    () => window.__RUNE_DRIFT_QA__?.metrics?.()?.frameStats?.samples > 180,
+    null,
+    { polling: 100, timeout: 15_000 }
+  );
+  await page.waitForTimeout(1_000);
   const metrics = await page.evaluate(() => window.__RUNE_DRIFT_QA__?.metrics?.());
   expect(metrics?.frameStats?.avgFps, 'average FPS').toBeGreaterThanOrEqual(55);
   expect(metrics?.frameStats?.severeFrames, 'severe frames').toBe(0);

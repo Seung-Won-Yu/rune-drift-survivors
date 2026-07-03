@@ -42,7 +42,7 @@ export function GemBeacons({ gemsRef, visualQuality = 'high' }) {
   return (
     <instancedMesh ref={beamMesh} args={[null, null, MAX_XP_GEMS]} frustumCulled={false}>
       <cylinderGeometry args={[1, 1, 1, 8, 1, true]} />
-      <meshBasicMaterial color="#9ff7ff" transparent opacity={0.28} depthWrite={false} toneMapped={false} />
+      <meshBasicMaterial color="#7fc9d8" transparent opacity={0.22} depthWrite={false} toneMapped={false} />
     </instancedMesh>
   );
 }
@@ -181,15 +181,15 @@ export function FieldPickupItems({ itemsRef, visualQuality = 'high' }) {
       </instancedMesh>
       <instancedMesh ref={magnetRing} args={[null, null, MAX_FIELD_ITEMS]} frustumCulled={false}>
         <torusGeometry args={[1, 0.035, 8, 52]} />
-        <meshBasicMaterial color="#70d6ff" transparent opacity={0.62} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#58b9d4" transparent opacity={0.48} depthWrite={false} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={purgeCore} args={[null, null, MAX_FIELD_ITEMS]} frustumCulled={false} castShadow>
         <icosahedronGeometry args={[0.78, 0]} />
-        <meshStandardMaterial color="#ffdf6e" emissive="#ffb84c" emissiveIntensity={2.8} roughness={0.26} toneMapped={false} />
+        <meshStandardMaterial color="#d4a84c" emissive="#b97834" emissiveIntensity={2.0} roughness={0.3} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={purgeRing} args={[null, null, MAX_FIELD_ITEMS]} frustumCulled={false}>
         <ringGeometry args={[0.86, 1.08, 5]} />
-        <meshBasicMaterial color="#ffdf6e" transparent opacity={0.58} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#d4a84c" transparent opacity={0.44} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={healCore} args={[null, null, MAX_FIELD_ITEMS]} frustumCulled={false} castShadow>
         <dodecahedronGeometry args={[0.74, 0]} />
@@ -201,19 +201,19 @@ export function FieldPickupItems({ itemsRef, visualQuality = 'high' }) {
       </instancedMesh>
       <instancedMesh ref={overloadCore} args={[null, null, MAX_FIELD_ITEMS]} frustumCulled={false} castShadow>
         <octahedronGeometry args={[0.84, 0]} />
-        <meshStandardMaterial color="#f5c7ff" emissive="#b96dff" emissiveIntensity={3.2} roughness={0.18} toneMapped={false} />
+        <meshStandardMaterial color="#aa91cf" emissive="#6f56b1" emissiveIntensity={2.15} roughness={0.22} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={overloadRing} args={[null, null, MAX_FIELD_ITEMS]} frustumCulled={false}>
         <torusGeometry args={[0.92, 0.04, 6, 6]} />
-        <meshBasicMaterial color="#f5c7ff" transparent opacity={0.72} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#aa91cf" transparent opacity={0.56} depthWrite={false} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={cacheCore} args={[null, null, MAX_FIELD_ITEMS]} frustumCulled={false} castShadow>
         <boxGeometry args={[0.92, 0.92, 0.92]} />
-        <meshStandardMaterial color="#fff1a6" emissive="#ffdf6e" emissiveIntensity={2.9} roughness={0.2} toneMapped={false} />
+        <meshStandardMaterial color="#d4a84c" emissive="#b97834" emissiveIntensity={2.05} roughness={0.24} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={cacheRing} args={[null, null, MAX_FIELD_ITEMS]} frustumCulled={false}>
         <torusGeometry args={[0.88, 0.045, 6, 4]} />
-        <meshBasicMaterial color="#fff1a6" transparent opacity={0.76} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#d4a84c" transparent opacity={0.58} depthWrite={false} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={beamMesh} args={[null, null, MAX_FIELD_ITEMS]} frustumCulled={false}>
         <cylinderGeometry args={[1, 1, 1, 8, 1, true]} />

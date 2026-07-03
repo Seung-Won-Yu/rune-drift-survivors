@@ -130,7 +130,7 @@ export function EndOverlay({ game, onRestart }) {
             선호 조합 <b>{resultSummary.synergy.title}</b>
             <small>{resultSummary.synergy.detail}</small>
           </span>
-          <span style={{ '--tone': '#fff1a6' }}>
+          <span style={{ '--tone': '#d4a84c' }}>
             제단 보상 <b>{resultSummary.shrines}</b>
             <small>{resultSummary.shrineLabels}</small>
           </span>

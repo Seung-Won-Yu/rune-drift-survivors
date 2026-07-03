@@ -223,7 +223,7 @@ export function updateWeaponCasts({
         pos: new THREE.Vector3(player.current.pos.x, player.current.pos.y, player.current.pos.z),
         life: 0.78,
         maxLife: 0.78,
-        color: '#fff1a6',
+        color: '#d4a84c',
         radius: radius * (0.54 + Math.min(0.24, stats.novaPulse * 0.06))
       });
     }
@@ -233,7 +233,7 @@ export function updateWeaponCasts({
         pos: new THREE.Vector3(player.current.pos.x, player.current.pos.y, player.current.pos.z),
         life: 0.9,
         maxLife: 0.9,
-        color: '#fff1a6',
+        color: '#d4a84c',
         radius: radius * (0.32 + Math.min(0.18, novaFocus * 0.03))
       });
     }
