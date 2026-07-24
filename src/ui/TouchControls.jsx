@@ -68,7 +68,7 @@ export function TouchControls({ controlsRef }) {
     <div className="touchControls" aria-label="터치 조작">
       <div
         ref={stickRef}
-        className={`touchStick ${stick.active ? 'isActive' : ''}`}
+        className={`runeTouchStick touchStick ${stick.active ? 'isActive' : ''}`}
         role="button"
         tabIndex={0}
         aria-label="이동 조이스틱"
@@ -81,14 +81,16 @@ export function TouchControls({ controlsRef }) {
         onPointerUp={endStick}
         onPointerCancel={endStick}
       >
+        <span aria-hidden="true">MOVE</span>
         <i aria-hidden="true" />
       </div>
       <button
-        className="touchDashButton"
+        className="runeDashButton touchDashButton"
         type="button"
         aria-label="대시"
         onPointerDown={queueDash}
       >
+        <small aria-hidden="true">DASH</small>
         <span aria-hidden="true">↯</span>
       </button>
     </div>

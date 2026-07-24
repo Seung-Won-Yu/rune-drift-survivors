@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const isHeadless = process.env.RUNE_QA_HEADLESS === '1';
+const useSystemChrome = !process.env.CI;
 
 export default defineConfig({
   testDir: '.',
@@ -15,7 +16,7 @@ export default defineConfig({
   use: {
     ...devices['Desktop Chrome'],
     baseURL: 'http://127.0.0.1:5173',
-    channel: 'chrome',
+    ...(useSystemChrome ? { channel: 'chrome' } : {}),
     headless: isHeadless,
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 1,
@@ -33,7 +34,7 @@ export default defineConfig({
       name: 'chrome',
       use: {
         browserName: 'chromium',
-        channel: 'chrome'
+        ...(useSystemChrome ? { channel: 'chrome' } : {})
       }
     }
   ]

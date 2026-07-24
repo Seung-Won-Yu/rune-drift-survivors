@@ -112,7 +112,12 @@ export function updateEnemiesRuntime({
   }));
 
   if (kills > 0) {
-    cameraShake.current = Math.max(cameraShake.current, Math.min(0.26, 0.05 + kills * 0.018));
+    const defeatShake = bossKills > 0
+      ? 0.48
+      : eliteKills > 0
+        ? 0.32
+        : Math.min(0.24, 0.05 + kills * 0.018);
+    cameraShake.current = Math.max(cameraShake.current, defeatShake);
     updateGame(current => ({
       ...current,
       kills: current.kills + kills,

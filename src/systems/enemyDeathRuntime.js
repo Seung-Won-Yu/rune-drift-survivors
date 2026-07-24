@@ -51,12 +51,23 @@ export function resolveDefeatedEnemies({
         }
       }
       if (canAddHitBurst(10)) {
-        hitBursts.current.push({ pos: enemy.pos.clone(), life: 0.36, maxLife: 0.36, color: enemy.kind === 'elite' || enemy.kind === 'boss' ? getEnemyAccentColor(enemy) : '#9df57a' });
+        const isBoss = enemy.kind === 'boss';
+        const isElite = enemy.kind === 'elite';
+        const life = isBoss ? 0.9 : isElite ? 0.58 : 0.34;
+        hitBursts.current.push({
+          pos: enemy.pos.clone(),
+          life,
+          maxLife: life,
+          color: isBoss || isElite ? getEnemyAccentColor(enemy) : '#75ddd2',
+          type: isBoss ? 'bossDeath' : isElite ? 'eliteDeath' : 'death',
+          stage: isBoss ? 5 : isElite ? 3 : 1,
+          radius: isBoss ? 4.2 : isElite ? 2.3 : 1.2
+        });
       }
       addDamageNumber(
         enemy.pos,
         enemy.kind === 'boss' ? 'BOSS DOWN' : enemy.kind === 'elite' ? 'ELITE DOWN' : `+${enemy.xp}`,
-        enemy.kind === 'boss' || enemy.kind === 'elite' ? getEnemyAccentColor(enemy) : '#9df57a',
+        enemy.kind === 'boss' || enemy.kind === 'elite' ? getEnemyAccentColor(enemy) : '#75ddd2',
         enemy.kind === 'boss' || enemy.kind === 'elite' ? 0.95 : 0.54
       );
       if (enemy.canSplit && enemies.current.length + spawnedEnemies.length < runtimeBudget.maxEnemies - 4) {

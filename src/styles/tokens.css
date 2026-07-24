@@ -1,0 +1,115 @@
+:root {
+  --rune-bg-0: #06100e;
+  --rune-bg-1: #0b1815;
+  --rune-bg-2: #10211d;
+  --rune-stone-0: #142722;
+  --rune-stone-1: #1d342f;
+  --rune-stone-2: #2d4b44;
+  --rune-line: rgba(127, 210, 198, 0.2);
+  --rune-line-strong: rgba(127, 210, 198, 0.48);
+  --rune-cyan: #75ddd2;
+  --rune-cyan-soft: #b9f3e8;
+  --rune-ember: #e2ad58;
+  --rune-danger: #e06b5f;
+  --rune-text: #f1e7cc;
+  --rune-muted: #aebeb3;
+  --rune-dim: #71867c;
+  --rune-shadow: rgba(0, 7, 6, 0.72);
+  --rune-panel: rgba(8, 21, 18, 0.92);
+  --rune-panel-solid: #0c1b18;
+  --rune-radius-sm: 4px;
+  --rune-radius: 8px;
+  --rune-radius-lg: 12px;
+  --rune-safe: max(18px, env(safe-area-inset-top));
+  --rune-font:
+    "Avenir Next", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR",
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--rune-text);
+  background: var(--rune-bg-0);
+  font-family: var(--rune-font);
+  font-synthesis: none;
+  font-variant-numeric: tabular-nums;
+  text-rendering: geometricPrecision;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: var(--rune-bg-0);
+}
+
+button {
+  color: inherit;
+  font: inherit;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--rune-cyan-soft);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: var(--rune-bg-0);
+  background: var(--rune-cyan);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--rune-cyan);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  line-height: 1;
+}
+
+@keyframes rune-breathe {
+  0%,
+  100% {
+    opacity: 0.62;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes rune-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rune-hit {
+  0%,
+  100% {
+    filter: none;
+  }
+  45% {
+    filter: brightness(1.65);
+  }
+}
+
+@keyframes rune-alert {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--tone, var(--rune-cyan)) 35%, transparent);
+  }
+  50% {
+    border-color: color-mix(in srgb, var(--tone, var(--rune-cyan)) 78%, transparent);
+  }
+}

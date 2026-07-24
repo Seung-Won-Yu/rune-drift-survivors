@@ -123,10 +123,10 @@ export function ImportedForestBattlefield({ visualQuality = 'high' }) {
   return (
     <group>
       <ImportedForestGroundShadows transforms={transforms.ground} />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.birchTrees} transforms={[...transforms.outerBirches, ...transforms.featureGroves.filter((_, index) => index % 2 === 0), ...transforms.shrineGroves.filter((_, index) => index % 2 === 0)]} normalizeOrigin materialColor="#91ad74" />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.pineTrees} transforms={[...transforms.outerPines, ...transforms.featureGroves.filter((_, index) => index % 2 === 1), ...transforms.shrineGroves.filter((_, index) => index % 2 === 1)]} normalizeOrigin materialColor="#5f8a5a" />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.rocks} transforms={[...transforms.rockClusters, ...transforms.barrierRocks]} normalizeOrigin materialColor="#8a8066" />
-      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.bushes} transforms={transforms.bushes} normalizeOrigin receiveShadow materialColor="#6f975b" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.birchTrees} transforms={[...transforms.outerBirches, ...transforms.featureGroves.filter((_, index) => index % 2 === 0), ...transforms.shrineGroves.filter((_, index) => index % 2 === 0)]} normalizeOrigin materialColor="#567565" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.pineTrees} transforms={[...transforms.outerPines, ...transforms.featureGroves.filter((_, index) => index % 2 === 1), ...transforms.shrineGroves.filter((_, index) => index % 2 === 1)]} normalizeOrigin materialColor="#2b5546" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.rocks} transforms={[...transforms.rockClusters, ...transforms.barrierRocks]} normalizeOrigin materialColor="#687269" />
+      <StaticModelInstances url={IMPORTED_ENV_MODEL_URLS.bushes} transforms={transforms.bushes} normalizeOrigin receiveShadow materialColor="#3d6854" />
       {visualQuality === 'high' && <ImportedForestLightFlecks transforms={transforms.canopies} />}
     </group>
   );
@@ -160,7 +160,7 @@ function ImportedForestGroundShadows({ transforms }) {
   return (
     <instancedMesh ref={shadowRef} args={[null, null, transforms.length]} frustumCulled={false}>
       <circleGeometry args={[1, 32]} />
-      <meshBasicMaterial color="#142316" transparent opacity={0.16} depthWrite={false} toneMapped={false} />
+      <meshBasicMaterial color="#0a1815" transparent opacity={0.18} depthWrite={false} toneMapped={false} />
     </instancedMesh>
   );
 }
@@ -187,7 +187,7 @@ function ImportedForestLightFlecks({ transforms }) {
         local.scale.set((transform.shadowWidth ?? 6) * 0.34, 0.08 + (index % 2) * 0.03, 1)
       );
       fleckRef.current.setMatrixAt(index, local.matrix);
-      local.color.set(index % 4 === 0 ? '#d5ae62' : '#92c66d');
+      local.color.set(index % 4 === 0 ? '#b58a45' : '#5f9075');
       fleckRef.current.setColorAt(index, local.color);
     });
     syncInstanceMesh(fleckRef.current, transforms.length);

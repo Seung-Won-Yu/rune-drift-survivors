@@ -38,19 +38,19 @@ export function GameWorld({
 
   return (
     <>
-      <hemisphereLight args={['#e5d093', '#2b4b34', 0.62]} />
-      <ambientLight intensity={0.26} />
+      <hemisphereLight args={['#c6dfd5', '#132722', 0.58]} />
+      <ambientLight intensity={0.22} />
       <directionalLight
         castShadow={false}
         position={[24, 34, 18]}
-        intensity={visualQuality === 'low' ? 1.62 : 1.86}
-        color="#e9d49b"
+        intensity={visualQuality === 'low' ? 1.36 : 1.54}
+        color="#d6dfc9"
       />
-      {visualQuality !== 'low' && <directionalLight position={[-34, 20, -48]} intensity={0.28} color="#8fc1cc" />}
-      <pointLight position={[0, 2.4, 0]} intensity={visualQuality === 'low' ? 0.56 : 0.78} color={ART_TOKENS.wornGold} distance={13} />
+      {visualQuality !== 'low' && <directionalLight position={[-34, 20, -48]} intensity={0.38} color="#75cfc7" />}
+      <pointLight position={[0, 2.4, 0]} intensity={visualQuality === 'low' ? 0.46 : 0.64} color={ART_TOKENS.wornGold} distance={13} />
       {visualQuality === 'high' && <pointLight position={[0, 5.8, 0]} intensity={0.34} color={ART_TOKENS.runeMint} distance={32} />}
-      {visualQuality === 'high' && <pointLight position={[-42, 3.2, -22]} intensity={0.28} color="#c99f72" distance={34} />}
-      {visualQuality === 'high' && <pointLight position={[48, 3.2, 26]} intensity={0.26} color="#80b06d" distance={32} />}
+      {visualQuality === 'high' && <pointLight position={[-42, 3.2, -22]} intensity={0.25} color="#b9915f" distance={34} />}
+      {visualQuality === 'high' && <pointLight position={[48, 3.2, 26]} intensity={0.28} color="#609c86" distance={32} />}
       <MapBaseArena visualQuality={visualQuality} />
       {visualQuality !== 'low' && <ArenaAtmosphere />}
       <Suspense fallback={null}>

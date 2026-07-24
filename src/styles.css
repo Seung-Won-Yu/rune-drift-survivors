@@ -1,5 +1,5 @@
-@import './styles/base.css';
-@import './styles/hud-core.css';
-@import './styles/overlays-core.css';
-@import './styles/responsive-core.css';
-@import './styles/casual-ui.css';
+@import './styles/tokens.css';
+@import './styles/shell.css';
+@import './styles/hud.css';
+@import './styles/overlays.css';
+@import './styles/responsive.css';

@@ -132,6 +132,19 @@ export function getFirstSessionCue(game, onboardingSteps, activeObjectives) {
     progress: nextStep.progress
   };
 
+  if (nextStep.id === 'cache' && game.time < 30) {
+    return {
+      ...base,
+      stepId: 'first-etching',
+      color: '#aa91cf',
+      title: '첫 각인 준비',
+      body: '푸른 조각을 더 모아 첫 강화 카드를 여세요',
+      detail: '30초 뒤 가까운 곳에 첫 무기 보급이 나타납니다',
+      action: `레벨 ${game.level} · XP ${Math.floor(game.xp)} / ${game.xpToNext}`,
+      progress: Math.min(1, Math.max(game.level > 1 ? 0.72 : 0.36, game.time / 30))
+    };
+  }
+
   if (game.time > 108 && getItemPickupCount(game, 'cache') < 1) {
     return {
       ...base,

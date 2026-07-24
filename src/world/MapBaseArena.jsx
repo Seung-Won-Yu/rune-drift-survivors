@@ -24,12 +24,12 @@ export function MapBaseArena({ visualQuality = 'high' }) {
     <group>
       <mesh receiveShadow position={[0, -2.05, 0]}>
         <cylinderGeometry args={[ARENA_RADIUS + 18.0, ARENA_RADIUS + 8.0, 1.5, edgeSegments]} />
-        <meshStandardMaterial color="#233722" roughness={0.99} metalness={0.01} />
+        <meshStandardMaterial color="#0d1d19" roughness={0.99} metalness={0.01} />
       </mesh>
 
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.08, 0]}>
         <circleGeometry args={[ARENA_RADIUS + 42.0, edgeSegments]} />
-        <meshStandardMaterial color="#465f37" roughness={1} metalness={0} />
+        <meshStandardMaterial color="#1b302a" roughness={1} metalness={0} />
       </mesh>
 
       <SculptedRuinTerrain visualQuality={visualQuality} />
@@ -63,11 +63,11 @@ export function MapBaseArena({ visualQuality = 'high' }) {
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.07, 0]}>
         <ringGeometry args={[ARENA_RADIUS - 1.35, ARENA_RADIUS - 1.02, edgeSegments]} />
-        <meshBasicMaterial color="#c79b45" transparent opacity={0.08} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#b58a45" transparent opacity={0.09} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 10]} position={[0, getTerrainHeight(0, 0) + 0.09, 0]}>
         <ringGeometry args={[ARENA_RADIUS - 8.8, ARENA_RADIUS - 8.55, edgeSegments]} />
-        <meshBasicMaterial color="#83a35c" transparent opacity={0.055} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#75ddd2" transparent opacity={0.045} depthWrite={false} toneMapped={false} />
       </mesh>
     </group>
   );

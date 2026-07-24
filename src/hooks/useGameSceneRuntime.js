@@ -28,6 +28,7 @@ function createPlayerRuntime() {
     vel: new THREE.Vector3(),
     dashTimer: 0,
     dashCd: 0,
+    dashBuffer: 0,
     invuln: 0,
     castPulse: 0,
     hurtPulse: 0,
@@ -40,6 +41,7 @@ function resetPlayerRuntime(player) {
   player.vel.set(0, 0, 0);
   player.dashTimer = 0;
   player.dashCd = 0;
+  player.dashBuffer = 0;
   player.invuln = 0;
   player.castPulse = 0;
   player.hurtPulse = 0;
@@ -166,6 +168,14 @@ export function useGameSceneRuntime(visualQuality) {
     framePressure: Number(framePressure.current.toFixed(3)),
     runtimeBudget: { ...runtimeBudget.current },
     frameStats: getFrameStatsSnapshot(frameStats),
+    player: {
+      x: Number(player.current.pos.x.toFixed(2)),
+      z: Number(player.current.pos.z.toFixed(2)),
+      speed: Number(player.current.vel.length().toFixed(2)),
+      dashCooldown: Number(player.current.dashCd.toFixed(2)),
+      dashActive: player.current.dashTimer > 0,
+      dashBuffered: player.current.dashBuffer > 0
+    },
     counts: {
       enemies: enemies.current.length,
       projectiles: projectiles.current.length,

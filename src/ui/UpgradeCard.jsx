@@ -15,41 +15,45 @@ export function UpgradeCard({ game, choice, index, onChoose }) {
 
   return (
     <button
-      className={`upgradeCard rewardCard family-${visualFamilyKey} rarity-${cardMeta.rarity} ${cardMeta.recommended ? 'isRecommended' : ''}`}
+      className={`runeChoice upgradeCard rewardCard family-${visualFamilyKey} rarity-${cardMeta.rarity} ${cardMeta.recommended ? 'isRecommended' : ''}`}
       type="button"
       style={{ '--tone': tone, '--icon-tone': iconMeta.color ?? tone }}
       aria-label={`${displayTitle}: ${cardMeta.quickSummary}, ${cardMeta.statLine}`}
       onClick={() => onChoose(choice)}
     >
-      <span className="rewardCardCorner" aria-hidden="true">{index + 1}</span>
-      <div className="rewardCardHeader">
-        <span className="rewardCardBadge">{cardMeta.rarityLabel}</span>
-        <span className="rewardCardRole">{cardMeta.recommended ? cardMeta.reason : cardMeta.role}</span>
+      <span className="runeChoiceIndex rewardCardCorner" aria-hidden="true">0{index + 1}</span>
+      <div className="runeChoiceRail" aria-hidden="true">
+        <span>{choice.family}</span>
+        <i />
       </div>
-      <div className="rewardCardArt" aria-hidden="true">
-        <span className="rewardCardType">{cardMeta.quickLead}</span>
-        <span className="rewardCardEmblem">
-          <i className="upgradeSigil">{iconMeta.glyph}</i>
-        </span>
-        <span className="rewardCardFamily">{choice.family}</span>
-        {cardMeta.recommended && <span className="rewardCardRecommend">추천</span>}
-      </div>
-      <div className="rewardCardCopy">
-        <small>{choice.branch} · {cardMeta.role}</small>
-        <strong>{displayTitle}</strong>
-        <p>{cardMeta.quickSummary}</p>
-      </div>
-      <div className="rewardCardStats">
-        <small>{cardMeta.decision}</small>
-        <b>{cardMeta.statLine}</b>
-        <span>{cardMeta.progressLabel || cardMeta.payoff}</span>
-      </div>
-      {cardMeta.tags.length > 0 && (
-        <div className="rewardCardTags" aria-hidden="true">
-          {cardMeta.tags.map(tag => <span key={tag}>{tag}</span>)}
+      <div className="runeChoiceBody">
+        <header className="rewardCardHeader">
+          <span className="rewardCardBadge">{cardMeta.rarityLabel}</span>
+          <span className="rewardCardRole">{cardMeta.recommended ? cardMeta.reason : cardMeta.role}</span>
+        </header>
+        <div className="runeChoiceSigil rewardCardArt" aria-hidden="true">
+          <span className="rewardCardEmblem">
+            <i className="upgradeSigil">{iconMeta.glyph}</i>
+          </span>
+          <span className="rewardCardType">{cardMeta.quickLead}</span>
         </div>
-      )}
-      <span className="upgradePickCta">선택</span>
+        <div className="rewardCardCopy">
+          <small>{choice.branch} · {cardMeta.role}</small>
+          <strong>{displayTitle}</strong>
+          <p>{cardMeta.quickSummary}</p>
+        </div>
+        <div className="rewardCardStats">
+          <small>{cardMeta.decision}</small>
+          <b>{cardMeta.statLine}</b>
+          <span>{cardMeta.progressLabel || cardMeta.payoff}</span>
+        </div>
+        {cardMeta.tags.length > 0 && (
+          <div className="rewardCardTags" aria-hidden="true">
+            {cardMeta.tags.map(tag => <span key={tag}>{tag}</span>)}
+          </div>
+        )}
+        <span className="upgradePickCta">이 룬 새기기</span>
+      </div>
     </button>
   );
 }

@@ -62,9 +62,13 @@ export function HUD({ game, onRestart, onPause }) {
   });
 
   return (
-    <section className={`hud hudCompact ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''} ${bossStatus?.casting ? 'isCasting' : ''}`} aria-label="게임 상태">
-      <div className="hudTopBar">
-        <div className="hudVitalsPocket" aria-label="체력과 경험치">
+    <section
+      className={`runeHud hud hudCompact ${isThreatened ? 'isThreatened' : ''} ${bossStatus ? 'hasBoss' : ''} ${bossStatus?.casting ? 'isCasting' : ''}`}
+      aria-label="게임 상태"
+    >
+      <div className="runeHudTop hudTopBar">
+        <div className="runeVitals hudVitalsPocket" aria-label="체력과 경험치">
+          <span className="runeVitalsLabel" aria-hidden="true">WANDERER</span>
           <HudMeter
             tone="hp"
             label="체력"
@@ -80,16 +84,20 @@ export function HUD({ game, onRestart, onPause }) {
             pct={xpPct}
           />
         </div>
-        <div className="hudRunPocket" aria-label="런 진행도">
-          <span>{runPhase.label}</span>
+        <div className="runeRunClock hudRunPocket" aria-label="런 진행도">
+          <div className="runeRunClockMeta">
+            <span>{runPhase.label}</span>
+            <small>{game.kills} KOs</small>
+          </div>
           <strong>{formatTime(timeRemaining)}</strong>
-          <small>{game.kills} KOs</small>
-          <i style={{ width: `${runPct}%` }} />
+          <div className="runeRunTrack" aria-hidden="true">
+            <i style={{ width: `${runPct}%` }} />
+          </div>
         </div>
         <HudActions game={game} onPause={onPause} onRestart={onRestart} />
       </div>
       {hudAlerts.length > 0 && (
-        <div className="hudAlertStack" aria-label="전투 알림">
+        <div className="runeAlertStack hudAlertStack" aria-label="전투 알림">
           {hudAlerts.slice(0, 2).map(alert => (
             <HudAlert key={alert.id} alert={alert} />
           ))}

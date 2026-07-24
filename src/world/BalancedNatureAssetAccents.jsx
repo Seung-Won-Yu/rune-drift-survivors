@@ -9,11 +9,11 @@ export function BalancedNatureAssetAccents() {
 
   return (
     <group>
-      <StaticModelInstances url={NATURE_MODEL_URLS.pineTall} transforms={transforms.pineTall} materialColor="#4f8e61" />
-      <StaticModelInstances url={NATURE_MODEL_URLS.treeDefault} transforms={transforms.treeDefault} materialColor="#5a9660" />
-      <StaticModelInstances url={NATURE_MODEL_URLS.rockLargeA} transforms={transforms.rocks} materialColor="#7b8563" />
-      <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} materialColor="#6f9a58" />
-      <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} materialColor="#8fb768" />
+      <StaticModelInstances url={NATURE_MODEL_URLS.pineTall} transforms={transforms.pineTall} materialColor="#285343" />
+      <StaticModelInstances url={NATURE_MODEL_URLS.treeDefault} transforms={transforms.treeDefault} materialColor="#315e4a" />
+      <StaticModelInstances url={NATURE_MODEL_URLS.rockLargeA} transforms={transforms.rocks} materialColor="#64736b" />
+      <StaticModelInstances url={NATURE_MODEL_URLS.bushLarge} transforms={transforms.bushes} materialColor="#37634f" />
+      <StaticModelInstances url={NATURE_MODEL_URLS.grassLarge} transforms={transforms.grass} materialColor="#56765b" />
     </group>
   );
 }

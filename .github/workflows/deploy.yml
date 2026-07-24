@@ -36,6 +36,15 @@ jobs:
         env:
           GITHUB_PAGES: 'true'
 
+      - name: Install browser for smoke QA
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke QA
+        run: npm run qa:smoke
+        env:
+          CI: 'true'
+          RUNE_QA_HEADLESS: '1'
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 

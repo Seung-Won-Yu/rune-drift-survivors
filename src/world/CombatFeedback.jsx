@@ -1,34 +1,56 @@
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
+import { getHitBurstPresentation } from '../systems/combatFeedbackPresentation.js';
 
 export function HitBurst({ burst, visualQuality = 'high' }) {
   const progress = 1 - burst.life / burst.maxLife;
   const radius = Math.max(0.55, burst.radius ?? 1);
+  const profile = getHitBurstPresentation(burst.type);
   const shardOpacity = Math.max(0, 0.68 - progress * 0.68);
-  const ringSegments = visualQuality === 'low' ? 14 : 24;
-  const shardCount = visualQuality === 'high' ? 4 : visualQuality === 'balanced' ? 2 : 0;
+  const ringSegments = profile.ringSegments ?? (visualQuality === 'low' ? 14 : 24);
+  const qualityShards = visualQuality === 'high' ? 4 : visualQuality === 'balanced' ? 2 : 0;
+  const shardCount = visualQuality === 'low'
+    ? Math.min(2, profile.shardBonus)
+    : Math.min(10, qualityShards + profile.shardBonus);
   const showCore = visualQuality !== 'low';
+  const ringScale = radius * (0.7 + progress * profile.ringExpansion);
+  const [ringInner, ringOuter] = profile.ringThickness;
   return (
     <group position={[burst.pos.x, burst.pos.y + 0.18, burst.pos.z]}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[radius * (0.7 + progress * 1.7), radius * (0.7 + progress * 1.7), 1]}>
-        <ringGeometry args={[0.32, 0.38, ringSegments]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[ringScale, ringScale, 1]}>
+        <ringGeometry args={[ringInner, ringOuter, ringSegments]} />
         <meshBasicMaterial color={burst.color} transparent opacity={Math.max(0, 0.8 - progress)} depthWrite={false} toneMapped={false} />
       </mesh>
+      {profile.showEcho && (
+        <mesh
+          rotation={[-Math.PI / 2, 0, Math.PI / ringSegments]}
+          scale={[ringScale * (0.58 + progress * 0.34), ringScale * (0.58 + progress * 0.34), 1]}
+        >
+          <ringGeometry args={[0.46, 0.51, ringSegments]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={Math.max(0, 0.36 - progress * 0.34)} depthWrite={false} toneMapped={false} />
+        </mesh>
+      )}
       {showCore && (
         <>
           <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} scale={[radius * (0.46 + progress * 1.9), radius * (0.46 + progress * 1.9), 1]}>
             <ringGeometry args={[0.12, 0.16, 4]} />
             <meshBasicMaterial color="#ffffff" transparent opacity={Math.max(0, 0.58 - progress * 0.58)} depthWrite={false} toneMapped={false} />
           </mesh>
-          <mesh position={[0, 0.14 + progress * 0.35, 0]} scale={[0.34 - progress * 0.12, 0.34 - progress * 0.12, 0.34 - progress * 0.12]}>
-            <octahedronGeometry args={[1, 0]} />
+          <mesh
+            position={[0, 0.14 + progress * 0.35, 0]}
+            rotation={profile.coreShape === 'diamond' ? [0, progress * Math.PI * 2, Math.PI / 4] : [0, 0, 0]}
+            scale={[0.34 - progress * 0.12, 0.34 - progress * 0.12, 0.34 - progress * 0.12]}
+          >
+            {profile.coreShape === 'diamond'
+              ? <boxGeometry args={[1, 1, 1]} />
+              : <octahedronGeometry args={[1, 0]} />}
             <meshBasicMaterial color={burst.color} transparent opacity={Math.max(0, 0.72 - progress)} depthWrite={false} toneMapped={false} />
           </mesh>
         </>
       )}
       {Array.from({ length: shardCount }, (_, index) => {
         const angle = index * Math.PI * 2 / Math.max(1, shardCount) + progress * 1.8;
-        const distance = radius * (0.36 + progress * 0.88);
+        const distance = radius * (0.36 + progress * profile.shardDistance);
         return (
           <mesh
             key={`hit-shard-${index}`}

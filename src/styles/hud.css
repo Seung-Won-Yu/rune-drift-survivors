@@ -1,0 +1,579 @@
+.runeHud {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  padding: var(--rune-safe) max(22px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+  pointer-events: none;
+}
+
+.runeHudTop {
+  display: grid;
+  grid-template-columns: minmax(220px, 310px) minmax(170px, 230px) auto;
+  align-items: start;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.runeVitals {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 19px 18px 14px;
+  overflow: hidden;
+  border: 1px solid var(--rune-line);
+  border-radius: var(--rune-radius);
+  background: linear-gradient(115deg, rgba(8, 23, 20, 0.92), rgba(12, 30, 26, 0.72));
+  box-shadow: 0 16px 38px rgba(0, 7, 6, 0.28);
+  backdrop-filter: blur(10px);
+}
+
+.runeVitals::before {
+  position: absolute;
+  top: -1px;
+  left: 18px;
+  width: 62px;
+  height: 2px;
+  content: "";
+  background: var(--rune-cyan);
+  box-shadow: 0 0 12px rgba(117, 221, 210, 0.42);
+}
+
+.runeVitalsLabel {
+  position: absolute;
+  top: 6px;
+  right: 9px;
+  color: rgba(174, 190, 179, 0.32);
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.19em;
+}
+
+.runeMeter {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.runeMeterIcon {
+  color: var(--rune-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.runeMeter-hp .runeMeterIcon {
+  color: var(--rune-danger);
+}
+
+.runeMeter-xp .runeMeterIcon {
+  color: var(--rune-cyan);
+}
+
+.runeMeterBody {
+  min-width: 0;
+}
+
+.runeMeterText {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.runeMeterText span {
+  color: var(--rune-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+.runeMeterText strong {
+  color: var(--rune-text);
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.runeGauge {
+  height: 3px;
+  overflow: hidden;
+  background: rgba(174, 190, 179, 0.12);
+}
+
+.runeGauge i {
+  display: block;
+  height: 100%;
+  background: var(--rune-cyan);
+  box-shadow: 0 0 10px rgba(117, 221, 210, 0.48);
+  transition: width 150ms linear;
+}
+
+.runeMeter-hp .runeGauge i {
+  background: var(--rune-danger);
+  box-shadow: 0 0 10px rgba(224, 107, 95, 0.4);
+}
+
+.runeMeter.isLow .runeMeterIcon {
+  animation: rune-breathe 850ms ease-in-out infinite;
+}
+
+.runeMeter.isHit {
+  animation: rune-hit 180ms ease-out;
+}
+
+.runeRunClock {
+  position: relative;
+  width: 100%;
+  min-width: 180px;
+  padding: 9px 15px 13px;
+  text-align: center;
+  border-top: 1px solid var(--rune-line-strong);
+  background: linear-gradient(180deg, rgba(6, 16, 14, 0.82), rgba(6, 16, 14, 0.38));
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, calc(100% - 14px) 100%, 14px 100%, 0 8px);
+  backdrop-filter: blur(8px);
+}
+
+.runeRunClockMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--rune-dim);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.runeRunClock > strong {
+  display: block;
+  margin: 1px 0 3px;
+  font-size: 1.34rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+}
+
+.runeRunTrack {
+  height: 2px;
+  overflow: hidden;
+  background: rgba(117, 221, 210, 0.12);
+}
+
+.runeRunTrack i {
+  display: block;
+  height: 100%;
+  background: var(--rune-ember);
+  box-shadow: 0 0 8px rgba(226, 173, 88, 0.48);
+}
+
+.runeActions {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.runeIconButton {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  place-items: center;
+  color: var(--rune-muted);
+  border: 1px solid var(--rune-line);
+  border-radius: var(--rune-radius-sm);
+  background: rgba(8, 22, 19, 0.8);
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+  backdrop-filter: blur(8px);
+}
+
+.runeIconButton:hover {
+  color: var(--rune-cyan-soft);
+  border-color: var(--rune-line-strong);
+  background: rgba(18, 42, 36, 0.92);
+}
+
+.runeAlertStack {
+  position: absolute;
+  top: 105px;
+  left: max(22px, env(safe-area-inset-left));
+  display: grid;
+  gap: 6px;
+}
+
+.runeAlert {
+  --tone: var(--rune-cyan);
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto;
+  min-width: 170px;
+  padding: 8px 11px 9px;
+  overflow: hidden;
+  color: var(--rune-muted);
+  border-left: 2px solid var(--tone);
+  background: rgba(6, 17, 15, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.runeAlert b,
+.runeAlert small {
+  font-size: 0.65rem;
+  line-height: 1.1;
+}
+
+.runeAlert b {
+  color: var(--rune-text);
+}
+
+.runeAlert small {
+  justify-self: end;
+}
+
+.runeAlert i {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--tone);
+}
+
+.runeDirective,
+.runeObjective {
+  position: absolute;
+  top: 46%;
+  left: max(22px, env(safe-area-inset-left));
+  width: min(330px, calc(100vw - 44px));
+  transform: translateY(-50%);
+}
+
+.runeDirective {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  min-height: 128px;
+  border: 1px solid color-mix(in srgb, var(--tone, var(--rune-cyan)) 30%, transparent);
+  border-radius: var(--rune-radius);
+  background: rgba(7, 19, 16, 0.88);
+  box-shadow: 0 20px 48px rgba(0, 7, 6, 0.38);
+  backdrop-filter: blur(10px);
+  animation: rune-enter 180ms ease-out;
+}
+
+.runeDirectiveIndex {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  border-right: 1px solid var(--rune-line);
+}
+
+.runeDirectiveIndex span {
+  color: var(--rune-dim);
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+  transform: rotate(-90deg);
+}
+
+.runeDirectiveIndex i {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: var(--tone);
+}
+
+.runeDirectiveCopy {
+  padding: 18px;
+}
+
+.runeDirectiveCopy strong,
+.runeDirectiveCopy small,
+.runeDirectiveCopy em {
+  display: block;
+}
+
+.runeDirectiveCopy strong {
+  font-size: 0.98rem;
+}
+
+.runeDirectiveCopy small {
+  margin-top: 3px;
+  color: var(--tone);
+  font-size: 0.66rem;
+  font-weight: 750;
+}
+
+.runeDirectiveCopy p {
+  margin: 13px 0 4px;
+  color: var(--rune-text);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.runeDirectiveCopy em {
+  color: var(--rune-dim);
+  font-size: 0.65rem;
+  font-style: normal;
+}
+
+.runeObjective {
+  padding: 14px;
+  border-left: 2px solid var(--rune-cyan);
+  background: linear-gradient(90deg, rgba(7, 20, 17, 0.9), rgba(7, 20, 17, 0.46));
+  backdrop-filter: blur(8px);
+}
+
+.runeObjectivePhase {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rune-line);
+}
+
+.runeObjectivePhase > span {
+  grid-column: 1 / -1;
+  color: var(--rune-dim);
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.runeObjectivePhase strong {
+  font-size: 0.85rem;
+}
+
+.runeObjectivePhase small {
+  color: var(--rune-muted);
+  font-size: 0.62rem;
+}
+
+.runeObjectiveTask {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  padding-top: 10px;
+}
+
+.runeObjectiveTask > span {
+  color: var(--rune-dim);
+  font-size: 0.58rem;
+}
+
+.runeObjectiveTask strong {
+  grid-column: 1;
+  color: var(--rune-text);
+  font-size: 0.75rem;
+}
+
+.runeObjectiveTask small {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  color: var(--tone);
+  font-size: 0.66rem;
+}
+
+.runeObjectiveTask > div {
+  grid-column: 1 / -1;
+  height: 2px;
+  margin-top: 5px;
+  background: rgba(174, 190, 179, 0.1);
+}
+
+.runeObjectiveTask i {
+  display: block;
+  height: 100%;
+  background: var(--tone);
+}
+
+.runeEncounter {
+  position: absolute;
+  top: 26%;
+  left: 50%;
+  display: grid;
+  min-width: min(400px, calc(100vw - 40px));
+  padding: 13px 30px 15px;
+  color: var(--rune-text);
+  text-align: center;
+  border-top: 1px solid color-mix(in srgb, var(--tone, var(--rune-cyan)) 60%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--tone, var(--rune-cyan)) 28%, transparent);
+  background: linear-gradient(90deg, transparent, rgba(6, 17, 15, 0.92) 16%, rgba(6, 17, 15, 0.92) 84%, transparent);
+  transform: translateX(-50%);
+  animation: rune-enter 180ms ease-out;
+}
+
+.runeEncounter span {
+  color: var(--tone);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.runeEncounter strong {
+  margin: 3px 0;
+  font-size: 1rem;
+}
+
+.runeEncounter small {
+  color: var(--rune-muted);
+  font-size: 0.68rem;
+}
+
+.runeBoss {
+  --tone: var(--rune-danger);
+  --pattern: var(--rune-ember);
+  position: absolute;
+  top: max(86px, calc(var(--rune-safe) + 64px));
+  left: 50%;
+  display: grid;
+  grid-template-columns: 150px minmax(220px, 460px) 170px;
+  align-items: center;
+  gap: 14px;
+  width: min(860px, calc(100vw - 44px));
+  padding: 10px 15px;
+  border-top: 1px solid color-mix(in srgb, var(--tone) 65%, transparent);
+  border-bottom: 1px solid rgba(127, 210, 198, 0.12);
+  background: linear-gradient(90deg, transparent, rgba(6, 16, 14, 0.9) 7%, rgba(6, 16, 14, 0.9) 93%, transparent);
+  transform: translateX(-50%);
+  backdrop-filter: blur(10px);
+}
+
+.runeBossName,
+.runeBossPattern {
+  display: grid;
+}
+
+.runeBossName span {
+  color: var(--tone);
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.runeBossName strong {
+  font-size: 0.84rem;
+}
+
+.runeBossName small,
+.runeBossPattern small,
+.runeBossPattern em {
+  color: var(--rune-dim);
+  font-size: 0.58rem;
+  font-style: normal;
+}
+
+.runeBossHp {
+  height: 5px;
+  overflow: hidden;
+  background: rgba(174, 190, 179, 0.12);
+}
+
+.runeBossHp i {
+  display: block;
+  height: 100%;
+  background: var(--tone);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--tone) 55%, transparent);
+  transition: width 180ms linear;
+}
+
+.runeBossPattern {
+  justify-items: end;
+  text-align: right;
+}
+
+.runeBossPattern span {
+  color: var(--rune-muted);
+  font-size: 0.64rem;
+}
+
+.runeBossPattern b {
+  color: var(--pattern);
+}
+
+.runeBoss.isEnraged {
+  animation: rune-alert 1.1s ease-in-out infinite;
+}
+
+.touchControls {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 5;
+  display: none;
+  align-items: end;
+  justify-content: space-between;
+  padding: 0 max(24px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  pointer-events: none;
+}
+
+.runeTouchStick,
+.runeDashButton {
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.runeTouchStick {
+  position: relative;
+  display: grid;
+  width: 126px;
+  height: 126px;
+  place-items: center;
+  color: var(--rune-dim);
+  border: 1px solid rgba(127, 210, 198, 0.2);
+  border-radius: 50%;
+  background:
+    linear-gradient(rgba(117, 221, 210, 0.12), rgba(117, 221, 210, 0.12)) center / 1px 80% no-repeat,
+    linear-gradient(90deg, rgba(117, 221, 210, 0.12), rgba(117, 221, 210, 0.12)) center / 80% 1px no-repeat,
+    rgba(6, 17, 15, 0.4);
+}
+
+.runeTouchStick > span {
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.runeTouchStick > i {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--rune-line-strong);
+  border-radius: 50%;
+  background: rgba(19, 47, 41, 0.9);
+  box-shadow: 0 6px 18px rgba(0, 7, 6, 0.4);
+  transform: translate(var(--stick-x), var(--stick-z));
+  transition: transform 70ms linear, border-color 100ms ease;
+}
+
+.runeTouchStick.isActive > i {
+  border-color: var(--rune-cyan);
+}
+
+.runeDashButton {
+  display: grid;
+  width: 88px;
+  height: 88px;
+  padding: 0;
+  place-items: center;
+  color: var(--rune-cyan-soft);
+  border: 1px solid var(--rune-line-strong);
+  border-radius: 50%;
+  background: rgba(11, 32, 27, 0.78);
+  box-shadow: inset 0 0 0 8px rgba(117, 221, 210, 0.035), 0 12px 28px rgba(0, 7, 6, 0.35);
+}
+
+.runeDashButton small {
+  align-self: end;
+  margin-bottom: -16px;
+  color: var(--rune-dim);
+  font-size: 0.48rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.runeDashButton span {
+  font-size: 1.6rem;
+}

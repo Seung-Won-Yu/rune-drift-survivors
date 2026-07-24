@@ -7,18 +7,18 @@ export const FIELD_ITEM_META = {
 };
 
 export const ART_TOKENS = {
-  void: '#0e1b13',
-  deepVoid: '#172719',
-  terrainLow: '#33472f',
-  terrainMid: '#566b42',
-  terrainHigh: '#857642',
-  moss: '#4f8255',
-  oldStone: '#77725d',
-  wornGold: '#c79b45',
-  emberGold: '#d8ad4f',
-  runeCyan: '#58b9d4',
-  runeMint: '#6fbd70',
-  dangerRed: '#d96755',
+  void: '#06100e',
+  deepVoid: '#0b1815',
+  terrainLow: '#162923',
+  terrainMid: '#294239',
+  terrainHigh: '#56645a',
+  moss: '#2f5b4d',
+  oldStone: '#65736b',
+  wornGold: '#b58a45',
+  emberGold: '#e2ad58',
+  runeCyan: '#75ddd2',
+  runeMint: '#77c8a4',
+  dangerRed: '#e06b5f',
   elderViolet: '#aa91cf',
   riftViolet: '#8274c5'
 };
@@ -43,11 +43,11 @@ export const COMBAT_RHYTHM = [
 
 export const EARLY_FIELD_ITEM_SCHEDULE = [
   { id: 'starter-magnet', time: 5, type: 'magnet', distance: 2.2, spread: 1.1 },
+  { id: 'starter-cache', time: 42, type: 'cache', distance: 5.2, spread: 1.8 },
   { id: 'second-magnet', time: 54, type: 'magnet', distance: 5.8, spread: 2.4 },
   { id: 'starter-overload', time: 76, type: 'overload', distance: 6.4, spread: 2.6 },
   { id: 'starter-purge', time: 98, type: 'purge', distance: 7.4, spread: 2.9 },
   { id: 'third-magnet', time: 118, type: 'magnet', distance: 8.4, spread: 3.5 },
-  { id: 'starter-cache', time: 146, type: 'cache', distance: 8.2, spread: 3.2 },
   { id: 'second-cache', time: 188, type: 'cache', distance: 9.2, spread: 3.8 },
   { id: 'second-purge', time: 208, type: 'purge', distance: 10.5, spread: 4.4 },
   { id: 'third-cache', time: 244, type: 'cache', distance: 10.8, spread: 4.6 },

@@ -21,6 +21,7 @@ import { pickUpgrades } from './systems/upgradeDrafting.js';
 import { useRuneQaControls } from './qa/useRuneQaControls.js';
 import { HUD } from './ui/GameHud.jsx';
 import { EndOverlay, PauseOverlay, UpgradeOverlay } from './ui/GameOverlays.jsx';
+import { LoadingOverlay } from './ui/LoadingOverlay.jsx';
 import { createTouchControlsState, TouchControls } from './ui/TouchControls.jsx';
 import { GameScene } from './GameScene.jsx';
 import './styles.css';
@@ -141,8 +142,8 @@ function App() {
           camera.updateProjectionMatrix();
         }}
       >
-        <color attach="background" args={['#102016']} />
-        <fog attach="fog" args={['#243a26', 92, 286]} />
+        <color attach="background" args={['#06100e']} />
+        <fog attach="fog" args={['#132522', 86, 264]} />
         <GameScene
           refApi={sceneApi}
           game={game}
@@ -163,6 +164,7 @@ function App() {
           </EffectComposer>
         )}
       </Canvas>
+      <LoadingOverlay />
       <HUD game={game} onRestart={restart} onPause={togglePause} />
       {game.phase === 'playing' && <TouchControls controlsRef={touchControls} />}
       {game.phase === 'paused' && <PauseOverlay game={game} onResume={resume} onRestart={restart} />}

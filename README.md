@@ -186,8 +186,9 @@ Blender source files can stay on the local machine, but the web game does not ne
 Recent checks:
 
 - `npm run build` passes locally.
-- `npm run qa:smoke` runs HUD, upgrade card, boss HUD, result overlay, and stress-budget checks with Playwright/Chrome.
-- GitHub Actions deploy passes on `main`.
+- `npm run qa:smoke` runs loading, real keyboard/touch input, buffered dash, mobile pause, HUD, upgrade card, boss HUD, result overlay, and stress-budget checks with Playwright/Chrome.
+- GitHub Actions builds and publishes `main`; confirm the Pages deployment status after each push.
+- GitHub Actions now runs the headless smoke suite before publishing the Pages artifact; real-time FPS remains a local system-Chrome check because CI uses software WebGL.
 - GitHub Pages build mode uses `GITHUB_PAGES=true npm run build`.
 - Mobile HUD, upgrade cards, enemy silhouette, map, boss, result, and stress views have dedicated QA entry points in the app.
 - Runtime caps and adaptive budget pressure are in place for enemies, projectiles, XP gems, damage numbers, and effects.

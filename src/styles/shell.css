@@ -1,0 +1,138 @@
+.shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(85, 164, 149, 0.11), transparent 38%),
+    var(--rune-bg-0);
+}
+
+.shell canvas {
+  display: block;
+}
+
+.shell::before,
+.shell::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: "";
+  pointer-events: none;
+}
+
+.shell::before {
+  background:
+    linear-gradient(180deg, rgba(4, 12, 10, 0.44), transparent 22%, transparent 72%, rgba(3, 9, 8, 0.5)),
+    radial-gradient(circle at 50% 48%, transparent 44%, rgba(0, 7, 6, 0.7) 110%);
+}
+
+.shell::after {
+  opacity: 0.5;
+  background-image:
+    linear-gradient(rgba(117, 221, 210, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(117, 221, 210, 0.018) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(circle at center, black, transparent 72%);
+}
+
+.shell.visual-low::after {
+  display: none;
+}
+
+.shell.isLowHp::before {
+  background:
+    radial-gradient(circle at 50% 50%, transparent 30%, rgba(40, 5, 4, 0.26) 67%, rgba(89, 16, 12, 0.8) 110%),
+    linear-gradient(180deg, rgba(224, 107, 95, 0.12), transparent 28%, rgba(224, 107, 95, 0.08));
+}
+
+.shell.isHurt::before {
+  background:
+    radial-gradient(circle at 50% 50%, transparent 23%, rgba(224, 107, 95, 0.18) 62%, rgba(96, 16, 11, 0.86) 110%),
+    linear-gradient(180deg, rgba(224, 107, 95, 0.18), transparent 36%);
+}
+
+.loadingLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(52, 112, 101, 0.18), transparent 34%),
+    var(--rune-bg-0);
+}
+
+.loadingPanel {
+  width: min(430px, 100%);
+  text-align: center;
+}
+
+.loadingPanel h1 {
+  margin: 0;
+  color: var(--rune-text);
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.loadingPanel > p:not(.eyebrow) {
+  margin: 16px 0 22px;
+  color: var(--rune-muted);
+}
+
+.loadingSigil {
+  position: relative;
+  display: grid;
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 28px;
+  place-items: center;
+  color: var(--rune-cyan-soft);
+  border: 1px solid var(--rune-line-strong);
+  transform: rotate(45deg);
+}
+
+.loadingSigil::before,
+.loadingSigil::after {
+  position: absolute;
+  inset: 7px;
+  content: "";
+  border: 1px solid var(--rune-line);
+}
+
+.loadingSigil::after {
+  inset: 15px;
+  border-color: rgba(226, 173, 88, 0.42);
+}
+
+.loadingSigil span {
+  font-size: 1.4rem;
+  transform: rotate(-45deg);
+}
+
+.loadingGauge {
+  height: 2px;
+  margin: 30px 0 12px;
+  overflow: hidden;
+  background: rgba(127, 210, 198, 0.14);
+}
+
+.loadingGauge i {
+  display: block;
+  height: 100%;
+  background: var(--rune-cyan);
+  box-shadow: 0 0 16px rgba(117, 221, 210, 0.65);
+  transition: width 180ms ease;
+}
+
+.loadingPanel > small {
+  color: var(--rune-dim);
+  font-size: 0.72rem;
+}
+
+.loadingLayer.hasError .loadingSigil {
+  color: var(--rune-danger);
+  border-color: rgba(224, 107, 95, 0.56);
+}

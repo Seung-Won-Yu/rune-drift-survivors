@@ -101,7 +101,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
         position: [x, getTerrainHeight(x, z) + 0.052, z],
         rotation: -angle + Math.PI / 2 + Math.sin(index + laneIndex) * 0.11,
         scale: [13.6 + index * 1.16, 2.95 + (laneIndex % 2) * 0.36, 1],
-        color: laneIndex % 2 ? '#8e7546' : '#657f4b'
+        color: laneIndex % 2 ? '#5c5343' : '#355b4d'
       };
     })
   )).filter(mark => Math.hypot(mark.position[0], mark.position[2]) < ARENA_RADIUS - 18);
@@ -115,7 +115,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
       position: [x, getTerrainHeight(x, z) + 0.049, z],
       rotation: -angle + Math.PI / 2 + Math.sin(index * 0.78) * 0.18,
       scale: [14 + (index % 4) * 3.5, 5.8 + (index % 3) * 1.1, 1],
-      color: index % 2 ? '#2f5734' : '#45693a'
+      color: index % 2 ? '#173c31' : '#245144'
     };
   }).filter(mark => {
     const distance = Math.hypot(mark.position[0], mark.position[2]);
@@ -131,7 +131,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
       position: [x, getTerrainHeight(x, z) + 0.076, z],
       rotation: angle + index * 0.09,
       scale: [0.38 + (index % 4) * 0.09, 0.2 + (index % 3) * 0.04, 1],
-      color: index % 5 === 0 ? '#9d7447' : index % 3 === 0 ? '#627f4a' : '#857d4c'
+      color: index % 5 === 0 ? '#6c5540' : index % 3 === 0 ? '#3b6552' : '#556455'
     };
   }).filter(mark => {
     const distance = Math.hypot(mark.position[0], mark.position[2]);
@@ -147,7 +147,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
       position: [x, getTerrainHeight(x, z) + 0.086, z],
       rotation: -angle + Math.PI / 2 + (index % 2 ? 0.22 : -0.18),
       scale: [5.8 + (index % 5) * 1.1, 0.34 + (index % 3) * 0.08, 1],
-      color: index % 2 ? '#5a4b32' : '#3e5a36'
+      color: index % 2 ? '#493d32' : '#29473c'
     };
   }).filter(mark => {
     const distance = Math.hypot(mark.position[0], mark.position[2]);
@@ -155,14 +155,14 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
   });
 
   const meadowPatches = [
-    { angle: -0.82, radius: 32, sx: 10.5, sz: 4.2, color: '#6e8b52' },
-    { angle: 0.58, radius: 45, sx: 12.0, sz: 4.4, color: '#8f7c4c' },
-    { angle: 1.96, radius: 58, sx: 13.4, sz: 4.7, color: '#658348' },
-    { angle: 3.12, radius: 50, sx: 11.5, sz: 4.1, color: '#7f9457' },
-    { angle: 4.48, radius: 42, sx: 10.8, sz: 3.9, color: '#8a784a' },
-    { angle: 5.44, radius: 64, sx: 13.2, sz: 4.5, color: '#617849' },
-    { angle: 0.14, radius: 75, sx: 17.4, sz: 5.2, color: '#5d7948' },
-    { angle: 3.92, radius: 76, sx: 16.2, sz: 5.0, color: '#778753' }
+    { angle: -0.82, radius: 32, sx: 10.5, sz: 4.2, color: '#365d4d' },
+    { angle: 0.58, radius: 45, sx: 12.0, sz: 4.4, color: '#5a5140' },
+    { angle: 1.96, radius: 58, sx: 13.4, sz: 4.7, color: '#315647' },
+    { angle: 3.12, radius: 50, sx: 11.5, sz: 4.1, color: '#426757' },
+    { angle: 4.48, radius: 42, sx: 10.8, sz: 3.9, color: '#574c3d' },
+    { angle: 5.44, radius: 64, sx: 13.2, sz: 4.5, color: '#2e5143' },
+    { angle: 0.14, radius: 75, sx: 17.4, sz: 5.2, color: '#294b3f' },
+    { angle: 3.92, radius: 76, sx: 16.2, sz: 5.0, color: '#3b5b4f' }
   ].map((patch, index) => {
     const x = Math.cos(patch.angle) * patch.radius;
     const z = Math.sin(patch.angle) * patch.radius;
@@ -181,14 +181,14 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
       position: [x, getTerrainHeight(x, z) + 0.061, z],
       rotation: -site.angle + Math.PI / 2,
       scale: [5.4 + (index % 2) * 0.5, 3.2 + (index % 3) * 0.24, 1],
-      color: index % 2 ? '#909553' : '#788f52'
+      color: index % 2 ? '#536453' : '#3e6253'
     };
   });
 
   const centralPlaza = [
-    { position: [0, getTerrainHeight(0, 0) + 0.066, 0], rotation: 0, scale: [18.5, 18.5, 1], color: '#6d7650' },
-    { position: [0, getTerrainHeight(0, 0) + 0.074, 0], rotation: Math.PI / 4, scale: [10.6, 10.6, 1], color: '#987f4a' },
-    { position: [0, getTerrainHeight(0, 0) + 0.083, 0], rotation: Math.PI / 8, scale: [6.1, 6.1, 1], color: '#5f8654' }
+    { position: [0, getTerrainHeight(0, 0) + 0.066, 0], rotation: 0, scale: [18.5, 18.5, 1], color: '#3d5148' },
+    { position: [0, getTerrainHeight(0, 0) + 0.074, 0], rotation: Math.PI / 4, scale: [10.6, 10.6, 1], color: '#6d5b42' },
+    { position: [0, getTerrainHeight(0, 0) + 0.083, 0], rotation: Math.PI / 8, scale: [6.1, 6.1, 1], color: '#356858' }
   ];
 
   const flowerCount = Math.round((visualQuality === 'low' ? 10 : 24) * density);
@@ -201,7 +201,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
       position: [x, getTerrainHeight(x, z) + 0.09, z],
       rotation: angle,
       scale: [0.24 + (index % 3) * 0.035, 0.18 + (index % 2) * 0.026, 1],
-      color: index % 7 === 0 ? '#a48e4f' : index % 5 === 0 ? '#836d9d' : '#5f8a55'
+      color: index % 7 === 0 ? '#9b7942' : index % 5 === 0 ? '#755f8c' : '#3f715c'
     };
   }).filter(mark => {
     const distance = Math.hypot(mark.position[0], mark.position[2]);
@@ -225,8 +225,8 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
       position: place(angle, radius, 0.04),
       rotation: -angle + Math.PI / 2,
       scale,
-      trunkColor: index % 2 ? '#5b4734' : '#503d30',
-      canopyColor: index % 3 === 0 ? '#3f6d55' : index % 3 === 1 ? '#517948' : '#477356'
+      trunkColor: index % 2 ? '#40352d' : '#352d28',
+      canopyColor: index % 3 === 0 ? '#254f43' : index % 3 === 1 ? '#315b49' : '#2a5548'
     };
   }).filter(tree => {
     const distance = tree.position.length();
@@ -242,7 +242,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
       position: place(angle, radius, 0.12),
       rotation: -angle + Math.PI / 2 + (index % 2 ? 0.28 : -0.22),
       scale: [0.62 + (index % 3) * 0.1, 0.22 + (index % 2) * 0.04, 0.48 + (index % 4) * 0.08],
-      color: index % 3 === 0 ? '#6d745a' : '#607053'
+      color: index % 3 === 0 ? '#647069' : '#53655e'
     };
   }).filter(rock => rock.position.length() > 30 && rock.position.length() < ARENA_RADIUS - 14);
 
@@ -254,7 +254,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
       position: place(angle, radius, 0.13),
       rotation: -angle + Math.PI / 2 + Math.sin(index) * 0.22,
       scale: [0.22 + (index % 4) * 0.035, 0.44 + (index % 3) * 0.05, 0.22],
-      color: index % 5 === 0 ? '#8a7d4c' : '#537d4f'
+      color: index % 5 === 0 ? '#625941' : '#37644f'
     };
   }).filter(tuft => tuft.position.length() > 26 && tuft.position.length() < ARENA_RADIUS - 12);
 
@@ -271,7 +271,7 @@ export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
       position: place(angle, radius, 0.18),
       rotation: -angle + Math.PI / 2 + Math.sin(index * 0.8) * 0.16,
       scale: 0.58 + (index % 4) * 0.12,
-      color: index % 4 === 0 ? '#5b7e4e' : index % 3 === 0 ? '#466b50' : '#637f50'
+      color: index % 4 === 0 ? '#35604d' : index % 3 === 0 ? '#2d5748' : '#3d6552'
     };
   }).filter(bush => {
     const distance = bush.position.length();
