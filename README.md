@@ -1,74 +1,46 @@
 # Rune Drift Survivors
 
-3D browser survivors game prototype built with React, Three.js, React Three Fiber, and Vite.
+룬 유적을 달리며 5분 동안 성장하는 3D 자동 전투 로그라이트입니다. 이동과 대시는 직접 조작하고, 무기 조합·필드 아이템·엘리트·보스에 대응하며 한 번의 빌드를 완성합니다.
 
-Play:
+**[Play Now](https://seung-won-yu.github.io/rune-drift-survivors/)** · **React 19** · **Three.js / React Three Fiber** · **Zustand** · **Vite**
 
-```txt
-https://seung-won-yu.github.io/rune-drift-survivors/
+## 게임 흐름
+
+```text
+이동 학습 → XP와 기본 성장 → 무기 방향 선택 → 시너지 완성 → 최종 공세 생존
 ```
 
-## Game
+- 숲과 룬 유적으로 구성된 3D 아레나
+- 첫 플레이 이동·대시·XP·무기고 안내
+- 전투 리듬에 따라 강해지는 웨이브와 단계별 목표
+- 엘리트 경고, 보스 체력·패턴·분노 단계
+- 업그레이드 카드, 일시정지와 결과 요약 화면
+- 데스크톱과 모바일에 맞춘 HUD·조이스틱·대시 버튼
 
-Rune Drift Survivors is a short 5-minute auto-combat roguelite run.
+## 전투 시스템
 
-You move through a rune ruin field, dodge pressure, collect XP, claim field items, choose upgrades, form weapon synergies, fight elites and bosses, then review your run result.
-
-Run flow:
-
-```txt
-Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete synergies -> Survive the final surge
-```
-
-## Current Features
-
-- 3D forest-ruin arena with terrain, blockers, imported tree clusters, rocks, shrines, and rune lighting.
-- Balanced mode now uses imported forest props, natural field accents, clearer perimeter groves, richer grove-floor patches, leaf/root decals, and darker terrain colors for better map read.
-- First-run onboarding for movement, dash, XP pickup, and armory cache.
-- Early upgrade pacing starts with rune orb, growth, and survival picks; new weapon families open through an armory cache, shrine, or later run timing.
-- Wave pacing with combat rhythm phases and escalating threat.
-- Run phase goals for early, mid, and final survival direction.
-- Auto-combat weapons:
-  - rune orb
-  - storm brand
-  - orbit blade
-  - chain lightning
-  - solar nova
-- Build synergies:
-  - storm + lightning
-  - blade + solar nova
-  - rune orb + pierce
-- Field items:
-  - magnet
-  - purge
-  - heal
-  - overload
-  - armory cache
-- Elite and boss encounters with alerts, boss HP bar, pattern state, and rage phase.
-- Pause, upgrade, and result overlays.
-- Upgrade cards use collectible-style silhouettes, larger choice intent labels, family-specific card surfaces, recommended-pick badges, quick stat reads, and responsive mobile layout.
-- Gameplay HUD is now a compact casual pocket: HP/XP stay anchored, run timer is compressed, and non-critical chips stay hidden until needed.
-- Enemy classes use clearer silhouettes in balanced mode: runner, golem, brute, elite, and boss have stronger shape, scale, accent, and marker differences.
-- Run result summary with grade, top DPS weapon, preferred build, shrine rewards, elite kills, and boss kills.
-- Mobile HUD and modal layout pass.
-- Runtime caps plus adaptive combat budgets for enemies, projectiles, XP gems, damage numbers, and effects.
-
-## Controls
-
-| Action | Input |
+| 분류 | 구성 |
 | --- | --- |
-| Move | `WASD`, arrow keys, or mobile joystick |
-| Dash | `Space` or mobile dash button |
-| Pause | `P`, `Esc`, or pause button |
-| Restart | restart button |
+| 무기 | Rune Orb, Storm Brand, Orbit Blade, Chain Lightning, Solar Nova |
+| 시너지 | Storm + Lightning, Blade + Solar Nova, Rune Orb + Pierce |
+| 필드 아이템 | Magnet, Purge, Heal, Overload, Armory Cache |
+| 적 | Runner, Golem, Brute, Elite, Boss |
+| 결과 | 등급, 최고 DPS 무기, 빌드, 보상, 엘리트·보스 처치 |
 
-## Performance Modes
+## 조작
 
-The default render mode is `balanced` so the game keeps a crisp canvas while avoiding avoidable runtime churn.
+| 동작 | 키보드 | 모바일 |
+| --- | --- | --- |
+| 이동 | `WASD` 또는 방향키 | 화면 조이스틱 |
+| 대시 | `Space` | 대시 버튼 |
+| 일시정지 | `P` 또는 `Esc` | 일시정지 버튼 |
+| 재시작 | 결과 화면 버튼 | 결과 화면 버튼 |
 
-Optional URL flags:
+## 그래픽 품질
 
-```txt
+기본값은 선명도와 안정성의 균형을 맞춘 `balanced`입니다.
+
+```text
 ?quality=low
 ?quality=balanced
 ?quality=high
@@ -76,134 +48,58 @@ Optional URL flags:
 ?quality=cinematic
 ```
 
-Notes:
+- `low`: 모바일, 고해상도 소형 화면과 저사양 기기
+- `balanced`: 기본 지형 디테일과 제한된 DPR
+- `high`: 더 높은 렌더 품질
+- `fx=on`: bloom·vignette 후처리 활성화
+- `cinematic`: 고품질 환경과 후처리 조합
 
-- `balanced` keeps the normal arena detail and uses a capped but sharp DPR range.
-- Runtime optimization focuses on lower object churn, squared-distance checks, post-effect opt-in, capped combat object counts, and adaptive budget pressure when frames get heavy.
-- `low` is intended for mobile, high-DPI small screens, reduced-motion users, or hot laptops.
-- Bloom, vignette, and the HDR environment are opt-in through `?fx=on`, `?env=on`, or `?quality=cinematic`.
+적·발사체·XP·데미지 숫자·효과에는 런타임 상한과 프레임 압력에 따른 가변 예산을 적용합니다.
 
-## Local Development
-
-Install dependencies:
+## 빠른 시작
 
 ```bash
 npm install
-```
-
-Run locally:
-
-```bash
 npm run dev
 ```
 
-Build:
+프로덕션 빌드와 미리보기:
 
 ```bash
 npm run build
-```
-
-Preview the production build:
-
-```bash
 npm run preview
 ```
 
-Run the local browser smoke suite:
+## 브라우저 검증
 
 ```bash
 npm run qa:smoke
 ```
 
-This opens local Chrome so the stress FPS check matches the real browser path.
+Playwright smoke suite가 HUD, 업그레이드 카드, 보스, 결과 화면과 스트레스 예산을 실제 Chrome 흐름으로 확인합니다. QA 화면에서는 `window.__RUNE_DRIFT_QA__.metrics()`로 FPS와 오브젝트 예산을 조회할 수 있습니다.
 
-## GitHub Pages
+## 프로젝트 구조
 
-Deployment is handled by `.github/workflows/deploy.yml`.
+```text
+src/                       게임 상태, 전투, 3D 씬과 UI
+public/models/             브라우저에서 불러오는 GLB 모델
+scripts/                   Playwright QA와 에셋 변환 도구
+docs/project-structure.md  상세 코드 구조
+ASSET_CREDITS.md           외부 에셋 출처와 라이선스
+vite.config.js             개발·Pages 빌드 설정
+```
 
-On every push to `main`, GitHub Actions runs:
+## 배포
+
+`main` 브랜치에 푸시하면 `.github/workflows/deploy.yml`이 다음 Pages 빌드를 실행하고 `dist/`를 배포합니다.
 
 ```bash
 npm ci
 GITHUB_PAGES=true npm run build
 ```
 
-Then it publishes `dist/` to GitHub Pages.
+모델과 정적 자산은 `import.meta.env.BASE_URL`을 사용하므로 `/rune-drift-survivors/` 하위 경로에서 동작합니다.
 
-Important: model URLs use `import.meta.env.BASE_URL`, so the game works under the GitHub Pages subpath:
+## 에셋
 
-```txt
-/rune-drift-survivors/
-```
-
-## Runtime Files
-
-Files needed for the deployed game:
-
-```txt
-.github/workflows/deploy.yml
-index.html
-package.json
-package-lock.json
-vite.config.js
-src/
-public/models/
-```
-
-The tracked `public/models/` files are the runtime GLB assets loaded by the game.
-
-Tracked support files:
-
-```txt
-ASSET_CREDITS.md
-assets/references/asset-sources.md
-docs/project-structure.md
-scripts/
-```
-
-These files are not required by the browser at runtime, but they document asset sources and help rebuild model assets when needed. Imported third-party environment assets are documented in `ASSET_CREDITS.md`.
-
-## Ignored Local Files
-
-These are intentionally not committed:
-
-```txt
-node_modules/
-dist/
-.playwright-cli/
-output/
-.tools/
-assets/source/
-assets/archive/
-assets/blender/*.blend
-*.blend1
-```
-
-Blender source files can stay on the local machine, but the web game does not need them to run.
-
-## QA Notes
-
-Recent checks:
-
-- `npm run build` passes locally.
-- `npm run qa:smoke` runs HUD, upgrade card, boss HUD, result overlay, and stress-budget checks with Playwright/Chrome.
-- GitHub Actions deploy passes on `main`.
-- GitHub Pages build mode uses `GITHUB_PAGES=true npm run build`.
-- Mobile HUD, upgrade cards, enemy silhouette, map, boss, result, and stress views have dedicated QA entry points in the app.
-- Runtime caps and adaptive budget pressure are in place for enemies, projectiles, XP gems, damage numbers, and effects.
-- Starter upgrade pacing was checked with `?quality=balanced&qa=starter-upgrade`; stress budget was checked with `?quality=balanced&qa=stress`.
-- Stress QA exposes frame metrics through `window.__RUNE_DRIFT_QA__.metrics()`, including average FPS, EMA FPS, max frame time, slow frames, severe frames, object counts, and active runtime budgets.
-- Compact HUD desktop/mobile screenshots were checked with Playwright after the casual HUD pass.
-- Upgrade card desktop/mobile screenshots were checked with Playwright after the readability pass.
-- Balanced map screenshots and stress metrics were checked after the ground-detail pass.
-- Smoke screenshots are written under `output/playwright/`.
-
-## Asset Notes
-
-Source and license notes live in:
-
-```txt
-assets/references/asset-sources.md
-```
-
-The game uses compatible/free asset sources plus local Blender-authored runtime GLB outputs.
+실행에 필요한 GLB는 `public/models/`에 포함됩니다. 원본과 라이선스 정보는 [ASSET_CREDITS.md](ASSET_CREDITS.md)와 [`assets/references/asset-sources.md`](assets/references/asset-sources.md)를 따릅니다.
