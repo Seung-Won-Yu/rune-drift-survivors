@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 
+import { populateContactAttackScene } from '../qa/populateContactAttackScene.js';
 import { populateStressScene } from '../qa/populateStressScene.js';
 
 export function useGameSceneEffects({
@@ -51,6 +52,18 @@ export function useGameSceneEffects({
         populateStressScene({
           options,
           visualQuality,
+          player,
+          enemies,
+          projectiles,
+          xpGems,
+          hitBursts,
+          weaponEffects,
+          damageNumbers,
+          spawnWarnings
+        });
+      },
+      contactAttack: () => {
+        populateContactAttackScene({
           player,
           enemies,
           projectiles,

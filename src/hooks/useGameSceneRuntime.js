@@ -174,7 +174,15 @@ export function useGameSceneRuntime(visualQuality) {
       speed: Number(player.current.vel.length().toFixed(2)),
       dashCooldown: Number(player.current.dashCd.toFixed(2)),
       dashActive: player.current.dashTimer > 0,
-      dashBuffered: player.current.dashBuffer > 0
+      dashBuffered: player.current.dashBuffer > 0,
+      invulnerable: player.current.invuln > 0,
+      hurtPulse: Number((player.current.hurtPulse ?? 0).toFixed(2))
+    },
+    contact: {
+      windups: enemies.current.filter(enemy => (enemy.contactAttackTimer ?? 0) > 0).length,
+      recoveries: enemies.current.filter(enemy => (enemy.contactAttackTimer ?? 0) <= 0 && (enemy.contactAttackCooldown ?? 0) > 0).length,
+      resolved: enemies.current.reduce((total, enemy) => total + (enemy.contactAttackCount ?? 0), 0),
+      hits: enemies.current.reduce((total, enemy) => total + (enemy.contactHitCount ?? 0), 0)
     },
     counts: {
       enemies: enemies.current.length,

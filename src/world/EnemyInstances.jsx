@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { MAX_ENEMIES } from '../config/gameTuning.js';
 import { getRuntimeBudget } from '../hooks/useVisualQuality.js';
 import { useVisualFrameGate } from '../hooks/useVisualFrameGate.js';
+import { getEnemyContactWindupProgress } from '../systems/enemyContactRuntime.js';
 import { getTerrainHeight } from '../systems/terrain.js';
 import { syncInstanceMesh, syncInstanceMeshes } from './instancedMeshUtils.js';
 import { useInstancedModelParts } from './useInstancedModelParts.js';
@@ -53,21 +54,25 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
       const kindMeta = meta[enemy.kind] ?? meta.golem;
       const hitReact = THREE.MathUtils.clamp((enemy.flash ?? 0) / 0.18, 0, 1);
       const chargePower = enemy.chargeTimer > 0 ? 1 : 0;
+      const contactPower = getEnemyContactWindupProgress(enemy);
+      const contactImpact = THREE.MathUtils.clamp((enemy.contactAttackPulse ?? 0) / 0.34, 0, 1);
       const guardPower = enemy.bossGuard > 0 ? 1 : 0;
       const motionIntent = enemy.motionIntent ?? 0.55;
       const wobble = enemy.wobble ?? 0;
       const stride = wobble * (enemy.kind === 'runner' ? 2.1 : enemy.kind === 'boss' ? 0.54 : 1.05);
       const step = Math.sin(stride);
-      const bob = Math.max(0, step) * kindMeta.lift * (0.66 + motionIntent * 0.28) + hitReact * 0.08 + chargePower * 0.05;
-      const squash = 1 + Math.max(0, -step) * 0.06 - hitReact * 0.07 + guardPower * 0.04;
-      const widthPulse = 1 + Math.max(0, step) * 0.045 + hitReact * 0.1 + chargePower * 0.08;
-      const depthPulse = 1 + motionIntent * 0.035 + chargePower * 0.12;
+      const bob = Math.max(0, step) * kindMeta.lift * (0.66 + motionIntent * 0.28) + hitReact * 0.08 + chargePower * 0.05 - contactPower * 0.08 + contactImpact * 0.1;
+      const squash = 1 + Math.max(0, -step) * 0.06 - hitReact * 0.07 + guardPower * 0.04 - contactPower * 0.08 + contactImpact * 0.05;
+      const widthPulse = 1 + Math.max(0, step) * 0.045 + hitReact * 0.1 + chargePower * 0.08 + contactPower * 0.08;
+      const depthPulse = 1 + motionIntent * 0.035 + chargePower * 0.12 + contactPower * 0.1;
       const radius = enemy.radius * (enemy.kind === 'boss' ? 2.55 : enemy.kind === 'brute' ? 2.28 : enemy.kind === 'runner' ? 2.05 : 2.08);
       const facing = enemy.facingAngle ?? wobble;
 
       local.pos.set(enemy.pos.x, enemy.pos.y + bob, enemy.pos.z);
       local.quat.setFromEuler(new THREE.Euler(
-        enemy.kind === 'runner' ? -0.2 - chargePower * 0.18 : hitReact * -0.08,
+        enemy.kind === 'runner'
+          ? -0.2 - chargePower * 0.18 - contactPower * 0.18
+          : hitReact * -0.08 - contactPower * 0.12 + contactImpact * 0.08,
         facing,
         Math.sin(stride * 0.72) * (enemy.kind === 'runner' ? 0.16 : 0.07) + hitReact * 0.08
       ));
@@ -236,6 +241,8 @@ export function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 
       if (count >= enemyLimit) break;
       const motionIntent = enemy.motionIntent ?? 0.55;
       const hitReact = THREE.MathUtils.clamp((enemy.flash ?? 0) / 0.18, 0, 1);
+      const contactPower = getEnemyContactWindupProgress(enemy);
+      const contactImpact = THREE.MathUtils.clamp((enemy.contactAttackPulse ?? 0) / 0.34, 0, 1);
       const shockedPower = enemy.shocked > 0 ? 0.18 : 0;
       const stride = enemy.wobble * (kind === 'runner' ? 2.1 : kind === 'brute' ? 0.92 : kind === 'boss' ? 0.48 : 1.1) * (0.82 + motionIntent * 0.26);
       const step = Math.sin(stride);
@@ -243,34 +250,34 @@ export function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 
       const chargePower = enemy.chargeTimer > 0 ? 1 : 0;
       const guardPower = enemy.bossGuard > 0 ? 1 : 0;
       const bob = kind === 'runner'
-        ? stepLift * (0.2 + motionIntent * 0.18) + chargePower * 0.1
+        ? stepLift * (0.2 + motionIntent * 0.18) + chargePower * 0.1 - contactPower * 0.08 + contactImpact * 0.12
         : kind === 'brute'
-          ? Math.abs(step) * (0.032 + motionIntent * 0.035)
+          ? Math.abs(step) * (0.032 + motionIntent * 0.035) - contactPower * 0.06 + contactImpact * 0.08
           : kind === 'boss'
             ? Math.sin(stride) * 0.045 + guardPower * 0.035
             : kind === 'golem'
-              ? Math.abs(step) * (0.032 + motionIntent * 0.025)
-              : Math.abs(step) * (0.05 + motionIntent * 0.045);
+              ? Math.abs(step) * (0.032 + motionIntent * 0.025) - contactPower * 0.04 + contactImpact * 0.06
+              : Math.abs(step) * (0.05 + motionIntent * 0.045) - contactPower * 0.05 + contactImpact * 0.08;
       const squash = kind === 'runner'
-        ? 0.76 + stepLift * (0.16 + motionIntent * 0.08) + chargePower * 0.1 - hitReact * 0.08
+          ? 0.76 + stepLift * (0.16 + motionIntent * 0.08) + chargePower * 0.1 - hitReact * 0.08 - contactPower * 0.08 + contactImpact * 0.05
         : kind === 'brute'
-          ? 0.92 + Math.max(0, -step) * 0.05 - hitReact * 0.04
+          ? 0.92 + Math.max(0, -step) * 0.05 - hitReact * 0.04 - contactPower * 0.07 + contactImpact * 0.04
           : kind === 'elite'
             ? 1.0 + stepLift * 0.045 + chargePower * 0.05 - hitReact * 0.04
             : kind === 'boss'
               ? 1.0 + Math.sin(stride) * 0.025 - guardPower * 0.08 - hitReact * 0.03
               : kind === 'golem'
                 ? 1.12 + Math.max(0, -step) * 0.025 - hitReact * 0.035
-                : 1.0 + stepLift * 0.045 - hitReact * 0.04;
+              : 1.0 + stepLift * 0.045 - hitReact * 0.04 - contactPower * 0.06 + contactImpact * 0.04;
       const pitch = kind === 'runner'
-        ? -0.18 - stepLift * 0.14 - chargePower * 0.3 - hitReact * 0.12
+          ? -0.18 - stepLift * 0.14 - chargePower * 0.3 - hitReact * 0.12 - contactPower * 0.2 + contactImpact * 0.12
         : kind === 'brute'
-          ? -0.01 + Math.max(0, -step) * 0.045 - hitReact * 0.055
+          ? -0.01 + Math.max(0, -step) * 0.045 - hitReact * 0.055 - contactPower * 0.13 + contactImpact * 0.08
           : kind === 'boss'
             ? guardPower * 0.08 - hitReact * 0.04
             : kind === 'golem'
               ? 0.035 + step * 0.018 - hitReact * 0.035
-              : -0.045 + step * 0.035 - hitReact * 0.055;
+              : -0.045 + step * 0.035 - hitReact * 0.055 - contactPower * 0.1 + contactImpact * 0.07;
       const roll = kind === 'runner'
         ? Math.sin(stride * 0.5) * (0.17 + motionIntent * 0.1) + hitReact * Math.sin(enemy.wobble * 1.7) * 0.16
         : kind === 'brute'
@@ -296,16 +303,16 @@ export function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 
               ? 1.02 + Math.max(0, -step) * 0.02 + hitReact * 0.04
               : 1 + hitReact * 0.04;
       const depthPulse = kind === 'runner'
-        ? 1.34 + motionIntent * 0.08 + chargePower * 0.24
+          ? 1.34 + motionIntent * 0.08 + chargePower * 0.24 + contactPower * 0.12
         : kind === 'brute'
-          ? 1.16 + stepLift * 0.02 + hitReact * 0.06
+          ? 1.16 + stepLift * 0.02 + hitReact * 0.06 + contactPower * 0.1
           : kind === 'elite'
             ? 1.0 + chargePower * 0.12 + hitReact * 0.04
             : kind === 'boss'
               ? 1.0 + guardPower * 0.06
               : kind === 'golem'
                 ? 0.92 + stepLift * 0.015 + hitReact * 0.035
-                : 1.02;
+                : 1.02 + contactPower * 0.08;
       local.scale.set(
         enemy.radius * scaleMultiplier * widthPulse * bossPulse,
         enemy.radius * scaleMultiplier * squash * bossPulse,

@@ -14,9 +14,18 @@ export function HudMeter({ tone, label, value, pct, isLow = false, isHit = false
   );
 }
 
-export function HudActions({ game, onPause, onRestart }) {
+export function HudActions({ game, onPause, onRestart, audioMuted, onToggleAudio }) {
   return (
     <div className="runeActions hudActions">
+      <button
+        className="runeIconButton iconButton"
+        type="button"
+        onClick={onToggleAudio}
+        aria-label={audioMuted ? '사운드 켜기' : '사운드 끄기'}
+        aria-pressed={audioMuted}
+      >
+        <span aria-hidden="true">{audioMuted ? '×' : '♪'}</span>
+      </button>
       <button className="runeIconButton iconButton" type="button" onClick={onPause} aria-label={game.phase === 'paused' ? '계속하기' : '일시정지'}>
         <span aria-hidden="true">{game.phase === 'paused' ? '▶' : 'Ⅱ'}</span>
       </button>

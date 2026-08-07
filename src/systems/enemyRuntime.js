@@ -1,11 +1,11 @@
-import { PLAYER_RADIUS } from '../config/gameTuning.js';
+import { AUDIO_CUE, emitAudioCue } from '../audio/audioCues.js';
 import {
   triggerBossRagePhase,
   updateEnemyAbilityRuntime
 } from './enemyAbilityRuntime.js';
 import { resolveDefeatedEnemies } from './enemyDeathRuntime.js';
+import { updateEnemyContactAttack } from './enemyContactRuntime.js';
 import { advanceEnemyMotion } from './enemyMotionRuntime.js';
-import { getEnemyDamagePressure } from './enemyPacing.js';
 import { resolveProjectileHitsForEnemy } from './projectileRuntime.js';
 
 export function updateEnemiesRuntime({
@@ -67,6 +67,14 @@ export function updateEnemiesRuntime({
       damagePlayer,
       showEncounterAlert
     });
+    updateEnemyContactAttack({
+      enemy,
+      dt,
+      distance,
+      currentGame,
+      updateGame,
+      damagePlayer
+    });
     advanceEnemyMotion({
       enemy,
       dt,
@@ -74,10 +82,6 @@ export function updateEnemiesRuntime({
       toPlayer,
       currentGame
     });
-
-    if (distance < enemy.radius + PLAYER_RADIUS && player.current.invuln <= 0) {
-      damagePlayer(enemy.damage * getEnemyDamagePressure(currentGame), updateGame);
-    }
 
     const nearbyProjectiles = getProjectileCandidatesForEnemy(enemy);
     resolveProjectileHitsForEnemy({
@@ -112,6 +116,14 @@ export function updateEnemiesRuntime({
   }));
 
   if (kills > 0) {
+    emitAudioCue(
+      bossKills > 0
+        ? AUDIO_CUE.bossDefeat
+        : eliteKills > 0
+          ? AUDIO_CUE.eliteDefeat
+          : AUDIO_CUE.enemyDefeat,
+      { intensity: Math.min(1, 0.45 + kills * 0.08) }
+    );
     const defeatShake = bossKills > 0
       ? 0.48
       : eliteKills > 0

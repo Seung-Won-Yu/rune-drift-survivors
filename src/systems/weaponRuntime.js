@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { AUDIO_CUE, emitAudioCue } from '../audio/audioCues.js';
 import { WEAPON_CATALOG as weaponCatalog } from '../config/gameData.js';
 import { applyDamageToEnemy } from './enemyDirector.js';
 import {
@@ -61,6 +62,7 @@ export function updateWeaponCasts({
     const orbCount = Math.min(12, stats.orbCount + Math.floor(orbFocus / 2));
     const targets = nearestEnemies(orbCount, 42 + (stats.orbSpeed - 1) * 24 + orbFocus * 4);
     if (targets.length > 0) {
+      emitAudioCue(AUDIO_CUE.weaponCast, { variant: 'orb', intensity: Math.min(1, 0.55 + targets.length * 0.05) });
       pulsePlayerCast(0.16 + weaponStage * 0.012);
       const tier = getWeaponTier(stats, weaponStage);
       const shotTotal = orbFocus >= 2 ? Math.max(orbCount, targets.length) : targets.length;
@@ -90,6 +92,7 @@ export function updateWeaponCasts({
   }
 
   if (stormUnlocked && stormTimer.current <= 0 && enemies.current.length > 3) {
+    emitAudioCue(AUDIO_CUE.weaponCast, { variant: 'storm', intensity: 0.8 });
     pulsePlayerCast(0.22 + stormFocus * 0.012);
     const tier = getWeaponTier(stats, weaponStage);
     const strikeCount = Math.min(7, Math.max(1, Math.round(stats.stormStrikes) + Math.floor(stormFocus / 2)));
@@ -139,6 +142,9 @@ export function updateWeaponCasts({
     let previousY = player.current.pos.y + 1.05;
     let previousZ = player.current.pos.z;
     const color = getLightningColor(stats, weaponStage);
+    if (chainTargets.length > 0) {
+      emitAudioCue(AUDIO_CUE.weaponCast, { variant: 'lightning', intensity: 0.72 });
+    }
     chainTargets.forEach((enemy, index) => {
       const executeBoost = stats.lightningExecute > 0 && enemy.hp / enemy.maxHp < 0.45
         ? 1 + stats.lightningExecute * 0.34
@@ -238,6 +244,9 @@ export function updateWeaponCasts({
       });
     }
     if (hitCount > 0) cameraShake.current = Math.max(cameraShake.current, 0.16);
+    if (hitCount > 0) {
+      emitAudioCue(AUDIO_CUE.weaponCast, { variant: 'nova', intensity: Math.min(1, 0.62 + hitCount * 0.025) });
+    }
     novaTimer.current = Math.max(0.58, weaponCatalog[4].cooldown * stats.cooldown * stats.novaCooldown * overloadCooldown * (1 - weaponStage * 0.05) * (1 - Math.min(0.16, novaFocus * 0.028 + bladeNovaLevel * 0.014)));
   }
 }

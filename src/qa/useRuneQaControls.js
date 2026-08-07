@@ -29,6 +29,15 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
           window.setTimeout(() => sceneApi.current?.stress?.(options), delay);
         });
       },
+      contactAttack: () => {
+        const nextGame = {
+          ...createInitialGame(),
+          onboardingMovement: 42,
+          dashUses: 1
+        };
+        showQaGame(nextGame);
+        window.setTimeout(() => sceneApi.current?.contactAttack?.(), 140);
+      },
       metrics: () => sceneApi.current?.metrics?.(),
       upgrade: () => {
         const nextGame = {
@@ -83,6 +92,8 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
         hitBursts: 0,
         weaponEffects: 0
       }), 120);
+    } else if (qaMode === 'contact') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.contactAttack(), 120);
     } else if (qaMode === 'victory' || qaMode === 'defeat') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.result(qaMode), 120);
     }

@@ -1,4 +1,5 @@
 import { ART_TOKENS } from '../config/gameData.js';
+import { AUDIO_CUE, emitAudioCue } from '../audio/audioCues.js';
 import { getBuildFocus } from './progression.js';
 import {
   advancePlayerMovement,
@@ -35,6 +36,7 @@ export function damagePlayerRuntime({
     radius: 3.2
   });
   addDamageNumber(player.current.pos, `-${damageValue}`, ART_TOKENS.dangerRed, 0.82);
+  emitAudioCue(AUDIO_CUE.playerHit, { intensity: Math.min(1, damageValue / 20) });
   updateGame(current => {
     const nextHp = Math.max(0, current.stats.hp - guardedAmount);
     const hpRatio = nextHp / current.stats.maxHp;
@@ -86,6 +88,7 @@ export function updatePlayerRuntime({
     hasInput
   });
   if (startedDash) {
+    emitAudioCue(AUDIO_CUE.dash);
     hitBursts.current.push({
       pos: player.current.pos.clone(),
       life: 0.34,

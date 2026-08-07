@@ -3,6 +3,7 @@ import {
   ELITE_ROLE_META,
   SURGE_EVENTS
 } from '../config/gameData.js';
+import { AUDIO_CUE, emitAudioCue } from '../audio/audioCues.js';
 import {
   applyCombatRhythm,
   createBoss,
@@ -120,6 +121,7 @@ export function updateEnemySpawning({
         color: meta.color
       }
     }, 3.6);
+    emitAudioCue(AUDIO_CUE.eliteWarning, { variant: elite.role });
     eliteSpawnedMinute.current = minuteMark;
   }
 
@@ -149,6 +151,7 @@ export function updateEnemySpawning({
         color: '#d4a84c'
       }
     }, 4.0);
+    emitAudioCue(AUDIO_CUE.bossWarning);
     bossSpawnedWave.current = currentGame.wave;
   }
 

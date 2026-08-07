@@ -10,6 +10,7 @@ import {
 } from './config/assets.js';
 import { useVisualQuality } from './hooks/useVisualQuality.js';
 import { useCanvasQualitySettings } from './hooks/useCanvasQualitySettings.js';
+import { useGameAudio } from './hooks/useGameAudio.js';
 import { createInitialGame } from './systems/gameState.js';
 import {
   applyBuildFocus,
@@ -24,6 +25,7 @@ import { EndOverlay, PauseOverlay, UpgradeOverlay } from './ui/GameOverlays.jsx'
 import { LoadingOverlay } from './ui/LoadingOverlay.jsx';
 import { createTouchControlsState, TouchControls } from './ui/TouchControls.jsx';
 import { GameScene } from './GameScene.jsx';
+import { AUDIO_CUE, emitAudioCue } from './audio/audioCues.js';
 import './styles.css';
 
 const preloadedModelUrls = new Set();
@@ -56,6 +58,7 @@ function App() {
   const sceneApi = useRef(null);
   const touchControls = useRef(createTouchControlsState());
   const visualQuality = useVisualQuality();
+  const { muted: audioMuted, toggleMuted: toggleAudioMuted } = useGameAudio();
   const {
     runtimeVisualQuality,
     enablePostFx,
@@ -95,6 +98,7 @@ function App() {
         pickupMessage: focusMessage || `${upgrade.title} 강화`,
         pickupFlash: 2.2
       };
+      emitAudioCue(AUDIO_CUE.upgradeSelect, { variant: focusKey ?? 'utility' });
       window.setTimeout(() => {
         setUpgradeChoices(nextPending > 0 ? pickUpgrades(nextGame) : []);
       }, 0);
@@ -109,6 +113,7 @@ function App() {
   };
 
   const onLevelUp = () => {
+    emitAudioCue(AUDIO_CUE.levelUp);
     setGame(current => {
       if ((current.pendingUpgrades ?? 0) <= 0) return current;
       setUpgradeChoices(pickUpgrades(current));
@@ -165,7 +170,13 @@ function App() {
         )}
       </Canvas>
       <LoadingOverlay />
-      <HUD game={game} onRestart={restart} onPause={togglePause} />
+      <HUD
+        game={game}
+        onRestart={restart}
+        onPause={togglePause}
+        audioMuted={audioMuted}
+        onToggleAudio={toggleAudioMuted}
+      />
       {game.phase === 'playing' && <TouchControls controlsRef={touchControls} />}
       {game.phase === 'paused' && <PauseOverlay game={game} onResume={resume} onRestart={restart} />}
       {game.phase === 'upgrade' && (

@@ -9,6 +9,7 @@ import { getVisualBudget } from '../hooks/useVisualQuality.js';
 import { BossNameplates, BossPresence } from './BossIndicators.jsx';
 import { DamageNumber, HitBurst, SpawnWarning } from './CombatFeedback.jsx';
 import { EnemyAccents, EnemyGroundAuras } from './EnemyEffects.jsx';
+import { EnemyContactTelegraphs } from './EnemyContactTelegraphs.jsx';
 import { SourceEnemyInstances, StylizedEnemyInstances } from './EnemyInstances.jsx';
 import { FieldPickupItems, GemBeacons, RuneShrineSites } from './FieldItemsAndShrines.jsx';
 import { MapBaseArena } from './MapBaseArena.jsx';
@@ -61,6 +62,7 @@ export function GameWorld({
         <OrbitBlades player={player} game={game} visualQuality={visualQuality} />
       </Suspense>
       <EnemyGroundAuras enemiesRef={enemies} visualQuality={visualQuality} />
+      <EnemyContactTelegraphs enemiesRef={enemies} visualQuality={visualQuality} />
       <EnemyAccents enemiesRef={enemies} visualQuality={visualQuality} />
       {visualQuality === 'high' ? (
         <Suspense fallback={null}>

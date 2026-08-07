@@ -45,9 +45,11 @@ Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete sy
   - overload
   - armory cache
 - Elite and boss encounters with alerts, boss HP bar, pattern state, and rage phase.
+- Enemy contact attacks use approach, windup, hit, and recovery states with visible reach/countdown rings instead of instant overlap damage.
 - Pause, upgrade, and result overlays.
-- Upgrade cards use collectible-style silhouettes, larger choice intent labels, family-specific card surfaces, recommended-pick badges, quick stat reads, and responsive mobile layout.
-- Gameplay HUD is now a compact casual pocket: HP/XP stay anchored, run timer is compressed, and non-critical chips stay hidden until needed.
+- Upgrade choices use rune-tablet silhouettes, clear role/effect hierarchy, recommendation cues, and responsive mobile layout.
+- Gameplay HUD uses the dark rune-field system with anchored HP/XP, a compact run timer, contextual objectives, and threat alerts.
+- Unlock-safe procedural combat audio for weapon casts, dash, damage, defeats, level-up, upgrades, and elite/boss warnings, with a persisted mute control.
 - Enemy classes use clearer silhouettes in balanced mode: runner, golem, brute, elite, and boss have stronger shape, scale, accent, and marker differences.
 - Run result summary with grade, top DPS weapon, preferred build, shrine rewards, elite kills, and boss kills.
 - Mobile HUD and modal layout pass.
@@ -61,6 +63,7 @@ Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete sy
 | Dash | `Space` or mobile dash button |
 | Pause | `P`, `Esc`, or pause button |
 | Restart | restart button |
+| Sound | sound button |
 
 ## Performance Modes
 
@@ -186,13 +189,14 @@ Blender source files can stay on the local machine, but the web game does not ne
 Recent checks:
 
 - `npm run build` passes locally.
-- `npm run qa:smoke` runs loading, real keyboard/touch input, buffered dash, mobile pause, HUD, upgrade card, boss HUD, result overlay, and stress-budget checks with Playwright/Chrome.
+- `npm run qa:smoke` runs loading, real keyboard/touch input, buffered dash, audio unlock/mute persistence, enemy contact windup/recovery, mobile pause, HUD, upgrade choices, boss HUD, result overlay, and stress-budget checks with Playwright/Chrome.
 - GitHub Actions builds and publishes `main`; confirm the Pages deployment status after each push.
 - GitHub Actions now runs the headless smoke suite before publishing the Pages artifact; real-time FPS remains a local system-Chrome check because CI uses software WebGL.
 - GitHub Pages build mode uses `GITHUB_PAGES=true npm run build`.
-- Mobile HUD, upgrade cards, enemy silhouette, map, boss, result, and stress views have dedicated QA entry points in the app.
+- Mobile HUD, upgrade cards, enemy silhouette, contact telegraph, map, boss, result, and stress views have dedicated QA entry points in the app.
 - Runtime caps and adaptive budget pressure are in place for enemies, projectiles, XP gems, damage numbers, and effects.
 - Starter upgrade pacing was checked with `?quality=balanced&qa=starter-upgrade`; stress budget was checked with `?quality=balanced&qa=stress`.
+- Contact attack timing can be checked deterministically with `?quality=balanced&qa=contact`.
 - Stress QA exposes frame metrics through `window.__RUNE_DRIFT_QA__.metrics()`, including average FPS, EMA FPS, max frame time, slow frames, severe frames, object counts, and active runtime budgets.
 - Compact HUD desktop/mobile screenshots were checked with Playwright after the casual HUD pass.
 - Upgrade card desktop/mobile screenshots were checked with Playwright after the readability pass.

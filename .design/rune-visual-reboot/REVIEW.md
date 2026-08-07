@@ -1,7 +1,7 @@
 # Rune visual reboot — final review
 
-Status: ready for user review  
-Date: 2026-07-24  
+Status: ready for user review
+Date: 2026-08-07
 Branch: `codex/rune-visual-reboot`
 
 ## Outcome
@@ -23,17 +23,20 @@ The previous casual-board/card visual language was replaced with one dark rune-f
 - Upgrade choices show role, name, primary effect, and one action in a consistent rune-tablet hierarchy.
 - Loading, pause, upgrade, boss, and result states now share the same surface, line, color, and type language.
 - The battlefield palette now uses cold teal forest/stone values; amber is reserved for reward and landmark emphasis.
+- Contact pressure is now readable as approach, windup, hit, and recovery rather than instant overlap damage.
 
 ## Verification
 
 - Production build: pass.
-- System Chrome smoke QA: 9/9 pass.
-- CI bundled Chromium smoke QA: 9/9 pass.
+- System Chrome smoke QA: 11/11 pass.
+- CI bundled Chromium smoke QA: 11/11 pass.
 - Keyboard movement and dash: pass.
 - Mobile touch movement, dash, pause, and resume: pass.
 - Loading, upgrade, boss, result, and stress states: pass.
 - Runtime pool caps and local 55 FPS smoke threshold: pass.
 - Buffered dash input just before cooldown completion: pass.
+- Audio unlock, cue playback, mute, and reload persistence: pass.
+- Deterministic enemy contact windup, hit, and recovery: pass.
 
 Supported viewport inspection:
 
@@ -50,4 +53,4 @@ No page or console errors were recorded during the viewport pass.
 ## Remaining follow-up
 
 - Visual review on physical iOS and Android devices is still recommended before a public release because browser chrome, haptics, and real touch latency are outside headless QA.
-- No Git push, pull request, or deployment was performed.
+- The visual reboot baseline was pushed to `origin/codex/rune-visual-reboot`; the current audio and enemy-telegraph passes remain local until explicitly committed and pushed.

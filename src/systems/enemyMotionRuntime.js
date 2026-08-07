@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 import { PLAYER_RADIUS } from '../config/gameTuning.js';
+import { getEnemyContactMotionScale } from './enemyContactRuntime.js';
 import { getEnemyMovePressure } from './enemyPacing.js';
 import { getBuildFocus } from './progression.js';
 import {
@@ -19,12 +20,18 @@ export function advanceEnemyMotion({
   const shockMultiplier = enemy.shocked > 0
     ? Math.max(0.54, 0.82 - getBuildFocus(currentGame, 'chain') * 0.035)
     : 1;
-  const speedMultiplier = (enemy.chargeTimer > 0 ? 3.1 : enemy.bossGuard > 0 ? 0.72 : 1) * shockMultiplier * getEnemyMovePressure(currentGame);
+  const contactMotionScale = getEnemyContactMotionScale(enemy);
+  const speedMultiplier = (enemy.chargeTimer > 0 ? 3.1 : enemy.bossGuard > 0 ? 0.72 : 1)
+    * contactMotionScale
+    * shockMultiplier
+    * getEnemyMovePressure(currentGame);
   enemy.motionSpeed = enemy.speed * speedMultiplier;
   enemy.motionIntent = distance > enemy.radius + PLAYER_RADIUS
     ? THREE.MathUtils.clamp(enemy.motionSpeed / 5.4, 0.16, 1.36)
     : 0.08;
-  enemy.pos.addScaledVector(toPlayer, enemy.speed * speedMultiplier * dt);
+  if (distance > enemy.radius + PLAYER_RADIUS) {
+    enemy.pos.addScaledVector(toPlayer, enemy.speed * speedMultiplier * dt);
+  }
   resolveStaticCollisions(enemy.pos, enemy.radius * 0.7);
   enemy.groundSync = Math.max(0, (enemy.groundSync ?? 0) - dt);
   if (enemy.groundY === undefined || enemy.groundSync <= 0) {

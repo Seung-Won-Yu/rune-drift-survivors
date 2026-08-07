@@ -20,7 +20,7 @@ import {
   HudPrompt
 } from './HudWidgets.jsx';
 
-export function HUD({ game, onRestart, onPause }) {
+export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
   const hpPct = Math.max(0, game.stats.hp / game.stats.maxHp) * 100;
   const hpRatio = game.stats.hp / game.stats.maxHp;
   const xpPct = Math.min(100, (game.xp / game.xpToNext) * 100);
@@ -94,7 +94,13 @@ export function HUD({ game, onRestart, onPause }) {
             <i style={{ width: `${runPct}%` }} />
           </div>
         </div>
-        <HudActions game={game} onPause={onPause} onRestart={onRestart} />
+        <HudActions
+          game={game}
+          onPause={onPause}
+          onRestart={onRestart}
+          audioMuted={audioMuted}
+          onToggleAudio={onToggleAudio}
+        />
       </div>
       {hudAlerts.length > 0 && (
         <div className="runeAlertStack hudAlertStack" aria-label="전투 알림">

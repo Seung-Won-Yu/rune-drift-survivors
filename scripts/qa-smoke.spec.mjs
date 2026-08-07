@@ -58,7 +58,7 @@ test('HUD smoke', async ({ page }) => {
   const guards = await openGuardedPage(page, '/?quality=balanced');
   await expect(page.locator('.hudCompact')).toBeVisible();
   await expect(page.locator('.hudMeter')).toHaveCount(2);
-  await expect(page.locator('.iconButton')).toHaveCount(2);
+  await expect(page.locator('.iconButton')).toHaveCount(3);
   await capture(page, 'qa-smoke-hud');
   guards.assertClean();
 });
@@ -102,6 +102,53 @@ test('dash input buffer smoke', async ({ page }) => {
     null,
     { polling: 16, timeout: 500 }
   );
+  guards.assertClean();
+});
+
+test('audio unlock, cue, and mute persistence smoke', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?quality=balanced');
+  await page.waitForFunction(() => Boolean(window.__RUNE_DRIFT_AUDIO__?.state));
+  await page.keyboard.press(' ');
+  await page.waitForFunction(
+    () => {
+      const state = window.__RUNE_DRIFT_AUDIO__.state();
+      return state.unlocked && state.received > 0 && state.played > 0;
+    },
+    null,
+    { polling: 20, timeout: 2_000 }
+  );
+
+  await page.getByRole('button', { name: '사운드 끄기' }).click();
+  await expect(page.getByRole('button', { name: '사운드 켜기' })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__RUNE_DRIFT_AUDIO__.state().muted)).toBe(true);
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.loadingLayer')).toBeHidden({ timeout: 20_000 });
+  await expect(page.getByRole('button', { name: '사운드 켜기' })).toBeVisible();
+  guards.assertClean();
+});
+
+test('enemy contact windup and recovery smoke', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?quality=balanced');
+  await page.waitForFunction(() => Boolean(window.__RUNE_DRIFT_QA__?.contactAttack));
+  await page.evaluate(() => window.__RUNE_DRIFT_QA__.contactAttack());
+  await page.waitForFunction(
+    () => window.__RUNE_DRIFT_QA__.metrics()?.contact?.windups === 1,
+    null,
+    { polling: 16, timeout: 2_000 }
+  );
+  await capture(page, 'qa-smoke-contact-windup');
+  await page.waitForFunction(
+    () => {
+      const metrics = window.__RUNE_DRIFT_QA__.metrics();
+      return metrics?.contact?.resolved >= 1 && metrics?.contact?.hits >= 1;
+    },
+    null,
+    { polling: 16, timeout: 2_000 }
+  );
+  const metrics = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics());
+  expect(metrics.contact.recoveries, 'contact recovery state').toBeGreaterThanOrEqual(1);
+  expect(metrics.player.invulnerable, 'player hit invulnerability').toBe(true);
   guards.assertClean();
 });
 
