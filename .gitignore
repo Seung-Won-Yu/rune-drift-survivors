@@ -1,13 +1,23 @@
-node_modules
-dist
-.playwright-cli
-test-results
-output
+# Dependencies
+node_modules/
+
+# Build and QA output
+dist/
+output/
+test-results/
+.playwright-cli/
+
+# Local tools and workspace state
+.tools/
+.agents/
 .DS_Store
-.tools
+
+# Environment overrides
 .env
 .env.*
-assets/source
-assets/archive
+
+# Local asset source workspace
+assets/source/
+assets/archive/
 assets/blender/*.blend
 *.blend1

@@ -1,4 +1,4 @@
-# Experience map
+# Rune visual reboot — experience map
 
 ## Gameplay hierarchy
 
@@ -35,4 +35,3 @@
 - Upgrade: 세 선택지의 구조와 정보 위치는 동일하게 유지한다.
 - Pause: 실수로 재시작하지 않도록 재시작을 보조 행동으로 둔다.
 - Win/loss: 제목, 색, 등급 문구로 상태를 중복 전달한다.
-

@@ -1,6 +1,6 @@
-# Combat feel pass 01
+# Rune visual reboot — combat feel pass 01
 
-Status: implemented and verified  
+Status: implemented and verified
 Date: 2026-07-24
 
 ## Goal

@@ -53,4 +53,4 @@ No page or console errors were recorded during the viewport pass.
 ## Remaining follow-up
 
 - Visual review on physical iOS and Android devices is still recommended before a public release because browser chrome, haptics, and real touch latency are outside headless QA.
-- The visual reboot baseline was pushed to `origin/codex/rune-visual-reboot`; the current audio and enemy-telegraph passes remain local until explicitly committed and pushed.
+- The visual reboot, audio pass, and enemy-telegraph pass were committed and pushed to `origin/codex/rune-visual-reboot`.

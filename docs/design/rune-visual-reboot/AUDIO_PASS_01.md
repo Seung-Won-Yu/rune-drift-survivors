@@ -1,4 +1,4 @@
-# Audio pass 01
+# Rune visual reboot — audio pass 01
 
 Status: implemented and verified
 Date: 2026-08-07

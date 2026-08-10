@@ -1,4 +1,4 @@
-# Implementation tasks
+# Rune visual reboot — implementation tasks
 
 ## Slice 1 — Foundation
 

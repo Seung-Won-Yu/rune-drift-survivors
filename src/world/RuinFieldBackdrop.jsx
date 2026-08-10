@@ -3,7 +3,7 @@ import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { getTerrainHeight } from '../systems/terrain.js';
 import { GroundDecalInstances } from './InstancedGeometry.jsx';
 
-export function CasualFieldBackdrop({ visualQuality = 'high' }) {
+export function RuinFieldBackdrop({ visualQuality = 'high' }) {
   const field = useMemo(() => {
     const patchCount = visualQuality === 'low' ? 2 : visualQuality === 'balanced' ? 4 : 13;
     const flowerCount = visualQuality === 'low' ? 12 : visualQuality === 'balanced' ? 20 : 46;

@@ -2,9 +2,9 @@ import { Suspense } from 'react';
 
 import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { getTerrainHeight } from '../systems/terrain.js';
-import { BalancedCasualArena } from './BalancedCasualArena.jsx';
+import { BalancedFieldArena } from './BalancedFieldArena.jsx';
 import { BalancedNatureAssetAccents } from './BalancedNatureAssetAccents.jsx';
-import { CasualFieldBackdrop } from './CasualFieldBackdrop.jsx';
+import { RuinFieldBackdrop } from './RuinFieldBackdrop.jsx';
 import { FieldBiomeLandmarks } from './FieldBiomeLandmarks.jsx';
 import { FieldCampLandmarks } from './FieldCampLandmarks.jsx';
 import { FieldPathNetwork } from './FieldPathNetwork.jsx';
@@ -35,7 +35,7 @@ export function MapBaseArena({ visualQuality = 'high' }) {
       <SculptedRuinTerrain visualQuality={visualQuality} />
       {highDetail ? (
         <>
-          <CasualFieldBackdrop visualQuality={visualQuality} />
+          <RuinFieldBackdrop visualQuality={visualQuality} />
           <OpenFieldTerrainIdentity visualQuality={visualQuality} />
           <FieldPathNetwork visualQuality={visualQuality} />
           <FieldCampLandmarks visualQuality={visualQuality} />
@@ -43,7 +43,7 @@ export function MapBaseArena({ visualQuality = 'high' }) {
           <RiftFloorSigils />
         </>
       ) : (
-        <BalancedCasualArena visualQuality={visualQuality} />
+        <BalancedFieldArena visualQuality={visualQuality} />
       )}
       {visualQuality === 'balanced' && (
         <Suspense fallback={null}>

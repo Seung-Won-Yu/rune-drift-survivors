@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { createBalancedCasualArenaLayout } from '../systems/mapLayout.js';
+import { createBalancedFieldArenaLayout } from '../systems/mapLayout.js';
 import { getTerrainHeight } from '../systems/terrain.js';
 import {
   GroundDecalInstances,
@@ -9,8 +9,8 @@ import {
 } from './InstancedGeometry.jsx';
 import { syncInstanceMesh, syncInstanceMeshes } from './instancedMeshUtils.js';
 
-export function BalancedCasualArena({ visualQuality = 'balanced' }) {
-  const arena = useMemo(() => createBalancedCasualArenaLayout(visualQuality), [visualQuality]);
+export function BalancedFieldArena({ visualQuality = 'balanced' }) {
+  const arena = useMemo(() => createBalancedFieldArenaLayout(visualQuality), [visualQuality]);
 
   return (
     <group>

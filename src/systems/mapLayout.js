@@ -85,7 +85,7 @@ export function createBalancedNatureAssetTransforms() {
   };
 }
 
-export function createBalancedCasualArenaLayout(visualQuality = 'balanced') {
+export function createBalancedFieldArenaLayout(visualQuality = 'balanced') {
   const density = visualQuality === 'low' ? 0.62 : 1;
   const laneAngles = [-0.22, 0.72, 1.76, 2.52, 3.86];
   const pathCount = visualQuality === 'low' ? 3 : 4;

@@ -1,4 +1,4 @@
-# Enemy telegraph pass 01
+# Rune visual reboot — enemy telegraph pass 01
 
 Status: implemented and verified
 Date: 2026-08-07

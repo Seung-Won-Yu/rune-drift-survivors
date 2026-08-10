@@ -1,8 +1,8 @@
-# Rune Drift Survivors — 황혼의 룬 야전
+# Rune visual reboot — 황혼의 룬 야전
 
-Status: implementation  
-Target: mobile-first 5-minute survivors run  
-Primary viewport: 390 × 844 portrait  
+Status: implementation
+Target: mobile-first 5-minute survivors run
+Primary viewport: 390 × 844 portrait
 Supported verification: 360 × 740, 430 × 932, 740 × 360, 1440 × 900
 
 ## Player fantasy
@@ -51,4 +51,3 @@ Supported verification: 360 × 740, 430 × 932, 740 × 360, 1440 × 900
 5. 위험, 성장, 보상은 색뿐 아니라 라벨과 형태로 구분된다.
 6. 모든 기존 QA 흐름과 실제 키보드/터치 입력이 동작한다.
 7. 지원 뷰포트에서 핵심 UI가 화면 밖으로 나가거나 전투 중심을 가리지 않는다.
-

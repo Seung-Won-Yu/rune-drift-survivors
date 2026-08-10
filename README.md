@@ -1,59 +1,36 @@
 # Rune Drift Survivors
 
-3D browser survivors game prototype built with React, Three.js, React Three Fiber, and Vite.
+Rune Drift Survivors is a five-minute 3D browser auto-combat roguelite built with React, Three.js, React Three Fiber, and Vite.
 
-Play:
+Play the GitHub Pages build: [seung-won-yu.github.io/rune-drift-survivors](https://seung-won-yu.github.io/rune-drift-survivors/)
 
-```txt
-https://seung-won-yu.github.io/rune-drift-survivors/
-```
-
-## Game
-
-Rune Drift Survivors is a short 5-minute auto-combat roguelite run.
-
-You move through a rune ruin field, dodge pressure, collect XP, claim field items, choose upgrades, form weapon synergies, fight elites and bosses, then review your run result.
-
-Run flow:
+## Core loop
 
 ```txt
-Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete synergies -> Survive the final surge
+Learn movement → secure early XP → choose an armory direction
+→ complete weapon synergies → survive elites, bosses, and the final surge
 ```
 
-## Current Features
+Move through a dark rune-ruin battlefield, collect XP and field items, draft upgrades, build weapon synergies, read enemy attack telegraphs, and survive until the five-minute result screen.
 
-- 3D forest-ruin arena with terrain, blockers, imported tree clusters, rocks, shrines, and rune lighting.
-- Balanced mode now uses imported forest props, natural field accents, clearer perimeter groves, richer grove-floor patches, leaf/root decals, and darker terrain colors for better map read.
-- First-run onboarding for movement, dash, XP pickup, and armory cache.
-- Early upgrade pacing starts with rune orb, growth, and survival picks; new weapon families open through an armory cache, shrine, or later run timing.
-- Wave pacing with combat rhythm phases and escalating threat.
-- Run phase goals for early, mid, and final survival direction.
-- Auto-combat weapons:
-  - rune orb
-  - storm brand
-  - orbit blade
-  - chain lightning
-  - solar nova
-- Build synergies:
-  - storm + lightning
-  - blade + solar nova
-  - rune orb + pierce
-- Field items:
-  - magnet
-  - purge
-  - heal
-  - overload
-  - armory cache
-- Elite and boss encounters with alerts, boss HP bar, pattern state, and rage phase.
-- Enemy contact attacks use approach, windup, hit, and recovery states with visible reach/countdown rings instead of instant overlap damage.
-- Pause, upgrade, and result overlays.
-- Upgrade choices use rune-tablet silhouettes, clear role/effect hierarchy, recommendation cues, and responsive mobile layout.
-- Gameplay HUD uses the dark rune-field system with anchored HP/XP, a compact run timer, contextual objectives, and threat alerts.
-- Unlock-safe procedural combat audio for weapon casts, dash, damage, defeats, level-up, upgrades, and elite/boss warnings, with a persisted mute control.
-- Enemy classes use clearer silhouettes in balanced mode: runner, golem, brute, elite, and boss have stronger shape, scale, accent, and marker differences.
-- Run result summary with grade, top DPS weapon, preferred build, shrine rewards, elite kills, and boss kills.
-- Mobile HUD and modal layout pass.
-- Runtime caps plus adaptive combat budgets for enemies, projectiles, XP gems, damage numbers, and effects.
+## Current build
+
+### Combat and progression
+
+- Auto-combat weapons: rune orb, storm brand, orbit blade, chain lightning, and solar nova.
+- Synergy paths: storm + lightning, blade + nova, and orb + pierce.
+- First-run guidance for movement, dash, XP collection, and the armory cache.
+- Run phases, wave pacing, surges, field items, shrines, elites, bosses, and boss rage patterns.
+- Contact attacks use approach, windup, resolve, and recovery states with visible reach/countdown rings.
+- Runtime caps and adaptive budgets protect enemy, projectile, XP, number, and effect counts.
+
+### Presentation and controls
+
+- Dark rune-field HUD with anchored HP/XP, timer, objective, threat, boss, upgrade, pause, and result states.
+- Distinct runner, golem, brute, elite, and boss silhouettes across render-quality modes.
+- Procedural Web Audio cues with browser-safe unlock and persisted mute state.
+- Keyboard, mobile joystick, touch dash, portrait, and landscape support.
+- Forest-ruin arena assembled from procedural terrain and CC0 imported props.
 
 ## Controls
 
@@ -62,14 +39,49 @@ Learn movement -> Anchor basic growth -> Pick an armory direction -> Complete sy
 | Move | `WASD`, arrow keys, or mobile joystick |
 | Dash | `Space` or mobile dash button |
 | Pause | `P`, `Esc`, or pause button |
-| Restart | restart button |
-| Sound | sound button |
+| Restart | HUD restart button |
+| Sound | HUD sound button |
 
-## Performance Modes
+## Quick start
 
-The default render mode is `balanced` so the game keeps a crisp canvas while avoiding avoidable runtime churn.
+Requires Node.js 22 or a compatible current LTS release.
 
-Optional URL flags:
+```bash
+npm ci
+npm run dev
+```
+
+The development server prints the local URL. Production and preview commands are:
+
+```bash
+npm run build
+npm run preview
+```
+
+## QA
+
+Run the complete browser smoke suite:
+
+```bash
+npm run qa:smoke
+```
+
+The suite covers loading, keyboard/touch movement, dash buffering, audio, enemy contact timing, HUD/overlays, upgrade selection, boss state, result state, and stress budgets.
+
+Useful deterministic routes include:
+
+```txt
+?qa=starter-upgrade&quality=balanced
+?qa=contact&quality=balanced
+?qa=stress&quality=balanced
+?qa=victory&quality=balanced
+```
+
+See [docs/qa.md](./docs/qa.md) for the complete route table, browser expectations, and generated artifact locations.
+
+## Render quality
+
+The default mode is `balanced`.
 
 ```txt
 ?quality=low
@@ -79,136 +91,55 @@ Optional URL flags:
 ?quality=cinematic
 ```
 
-Notes:
+- `low` prioritizes mobile and reduced-motion stability.
+- `balanced` is the normal gameplay target.
+- `high` enables imported actor models and additional battlefield detail.
+- `fx=on`, `env=on`, and `cinematic` opt into more expensive presentation layers.
 
-- `balanced` keeps the normal arena detail and uses a capped but sharp DPR range.
-- Runtime optimization focuses on lower object churn, squared-distance checks, post-effect opt-in, capped combat object counts, and adaptive budget pressure when frames get heavy.
-- `low` is intended for mobile, high-DPI small screens, reduced-motion users, or hot laptops.
-- Bloom, vignette, and the HDR environment are opt-in through `?fx=on`, `?env=on`, or `?quality=cinematic`.
-
-## Local Development
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Run locally:
-
-```bash
-npm run dev
-```
-
-Build:
-
-```bash
-npm run build
-```
-
-Preview the production build:
-
-```bash
-npm run preview
-```
-
-Run the local browser smoke suite:
-
-```bash
-npm run qa:smoke
-```
-
-This opens local Chrome so the stress FPS check matches the real browser path.
-
-## GitHub Pages
-
-Deployment is handled by `.github/workflows/deploy.yml`.
-
-On every push to `main`, GitHub Actions runs:
-
-```bash
-npm ci
-GITHUB_PAGES=true npm run build
-```
-
-Then it publishes `dist/` to GitHub Pages.
-
-Important: model URLs use `import.meta.env.BASE_URL`, so the game works under the GitHub Pages subpath:
+## Repository structure
 
 ```txt
-/rune-drift-survivors/
-```
-
-## Runtime Files
-
-Files needed for the deployed game:
-
-```txt
-.github/workflows/deploy.yml
-index.html
-package.json
-package-lock.json
-vite.config.js
 src/
-public/models/
+  audio/      semantic audio cues and Web Audio engine
+  config/     asset manifest, tuning, metadata, upgrades
+  hooks/      React-owned runtime lifecycle
+  qa/         deterministic development scenes
+  styles/     tokens, shell, HUD, overlays, responsive rules
+  systems/    frame-level gameplay logic
+  ui/         DOM HUD, overlays, cards, touch controls
+  world/      React Three Fiber battlefield and effects
+public/models/  runtime GLB assets
+scripts/        Playwright QA and model conversion
+docs/           project, QA, asset, and design documentation
 ```
 
-The tracked `public/models/` files are the runtime GLB assets loaded by the game.
+All runtime modules under `src/` are connected to the `src/main.jsx` import graph. Generated output, browser artifacts, raw asset downloads, archives, and Blender working files are git-ignored.
 
-Tracked support files:
+See [docs/project-structure.md](./docs/project-structure.md) for ownership boundaries and the full repository map.
 
-```txt
-ASSET_CREDITS.md
-assets/references/asset-sources.md
-docs/project-structure.md
-scripts/
+## Assets
+
+Only browser-ready assets under `public/models/` ship with the game. Raw downloads and editable sources stay in ignored local folders under `assets/`.
+
+- Active runtime manifest: `src/config/assets.js`
+- Attribution: [ASSET_CREDITS.md](./ASSET_CREDITS.md)
+- Inventory and conversion workflow: [docs/assets.md](./docs/assets.md)
+
+Rebuild archived character/combat glTF sources with:
+
+```bash
+npm run assets:gltf-to-glb
 ```
 
-These files are not required by the browser at runtime, but they document asset sources and help rebuild model assets when needed. Imported third-party environment assets are documented in `ASSET_CREDITS.md`.
+## Deployment
 
-## Ignored Local Files
+`.github/workflows/deploy.yml` builds, runs the headless smoke suite, and deploys `dist/` to GitHub Pages on pushes to `main`.
 
-These are intentionally not committed:
+The production build uses `import.meta.env.BASE_URL`, so models load correctly from the `/rune-drift-survivors/` Pages subpath.
 
-```txt
-node_modules/
-dist/
-.playwright-cli/
-output/
-.tools/
-assets/source/
-assets/archive/
-assets/blender/*.blend
-*.blend1
-```
+## Documentation
 
-Blender source files can stay on the local machine, but the web game does not need them to run.
-
-## QA Notes
-
-Recent checks:
-
-- `npm run build` passes locally.
-- `npm run qa:smoke` runs loading, real keyboard/touch input, buffered dash, audio unlock/mute persistence, enemy contact windup/recovery, mobile pause, HUD, upgrade choices, boss HUD, result overlay, and stress-budget checks with Playwright/Chrome.
-- GitHub Actions builds and publishes `main`; confirm the Pages deployment status after each push.
-- GitHub Actions now runs the headless smoke suite before publishing the Pages artifact; real-time FPS remains a local system-Chrome check because CI uses software WebGL.
-- GitHub Pages build mode uses `GITHUB_PAGES=true npm run build`.
-- Mobile HUD, upgrade cards, enemy silhouette, contact telegraph, map, boss, result, and stress views have dedicated QA entry points in the app.
-- Runtime caps and adaptive budget pressure are in place for enemies, projectiles, XP gems, damage numbers, and effects.
-- Starter upgrade pacing was checked with `?quality=balanced&qa=starter-upgrade`; stress budget was checked with `?quality=balanced&qa=stress`.
-- Contact attack timing can be checked deterministically with `?quality=balanced&qa=contact`.
-- Stress QA exposes frame metrics through `window.__RUNE_DRIFT_QA__.metrics()`, including average FPS, EMA FPS, max frame time, slow frames, severe frames, object counts, and active runtime budgets.
-- Compact HUD desktop/mobile screenshots were checked with Playwright after the casual HUD pass.
-- Upgrade card desktop/mobile screenshots were checked with Playwright after the readability pass.
-- Balanced map screenshots and stress metrics were checked after the ground-detail pass.
-- Smoke screenshots are written under `output/playwright/`.
-
-## Asset Notes
-
-Source and license notes live in:
-
-```txt
-assets/references/asset-sources.md
-```
-
-The game uses compatible/free asset sources plus local Blender-authored runtime GLB outputs.
+- [Project structure](./docs/project-structure.md)
+- [QA guide](./docs/qa.md)
+- [Asset pipeline and sources](./docs/assets.md)
+- [Visual reboot design records](./docs/design/rune-visual-reboot/)
