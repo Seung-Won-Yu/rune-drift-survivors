@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const isHeadless = process.env.RUNE_QA_HEADLESS === '1';
+const isHeadless = process.env.RUNE_QA_HEADED !== '1';
 const useSystemChrome = !process.env.CI;
 
 export default defineConfig({

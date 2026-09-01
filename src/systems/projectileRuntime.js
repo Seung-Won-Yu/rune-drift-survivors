@@ -12,6 +12,7 @@ import {
   getWeaponStage,
   isWeaponFamilyUnlocked
 } from './progression.js';
+import { getCircuitFinaleState } from './runeCircuit.js';
 
 const projectilePush = new THREE.Vector3();
 const bladePos = new THREE.Vector3();
@@ -56,6 +57,7 @@ export function updateProjectileRuntime({
   const angle = performance.now() * 0.0024;
   const weaponStage = getWeaponStage(currentGame);
   const overloadDamage = currentGame.overloadTimer > 0 ? 1.25 : 1;
+  const circuitDamage = getCircuitFinaleState(currentGame).damageMultiplier;
   const bladeFocus = getBuildFocus(currentGame, 'blade');
   const bladeUnlocked = isWeaponFamilyUnlocked(currentGame, 'blade');
   const bladeRadius = (2.5 + weaponStage * 0.16 + bladeFocus * 0.08) * stats.bladeRadius;
@@ -68,7 +70,7 @@ export function updateProjectileRuntime({
     for (const enemy of enemies.current) {
       const hitRadiusSq = enemy.hitRadius * enemy.hitRadius;
       if (enemy.pos.distanceToSquared(bladePos) < hitRadiusSq) {
-        const bladeDamage = weaponCatalog[2].damage * stats.damage * stats.bladeDamage * overloadDamage * dt * (6 + weaponStage * 0.75 + bladeFocus * 0.32);
+        const bladeDamage = weaponCatalog[2].damage * stats.damage * stats.bladeDamage * overloadDamage * circuitDamage * dt * (6 + weaponStage * 0.75 + bladeFocus * 0.32);
         const dealt = applyDamageToEnemy(enemy, bladeDamage, 'blade');
         recordDamage('blade', dealt);
         enemy.flash = 0.1;

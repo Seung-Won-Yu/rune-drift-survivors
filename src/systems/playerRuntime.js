@@ -6,6 +6,7 @@ import {
   samplePlayerControls
 } from './playerMovementRuntime.js';
 import { updatePlayerPresentation } from './playerPresentationRuntime.js';
+import { getCircuitFinaleState } from './runeCircuit.js';
 
 export function damagePlayerRuntime({
   amount,
@@ -19,9 +20,10 @@ export function damagePlayerRuntime({
 }) {
   if (player.current.invuln > 0) return false;
   const bladeFocus = getBuildFocus(game, 'blade');
+  const circuitGuard = getCircuitFinaleState(game).damageTakenMultiplier;
   const guardedAmount = bladeFocus >= 2
-    ? amount * (1 - Math.min(0.28, bladeFocus * 0.055))
-    : amount;
+    ? amount * circuitGuard * (1 - Math.min(0.28, bladeFocus * 0.055))
+    : amount * circuitGuard;
   player.current.invuln = invuln;
   player.current.hurtPulse = Math.max(player.current.hurtPulse ?? 0, 0.62);
   cameraShake.current = Math.max(cameraShake.current, 0.28);

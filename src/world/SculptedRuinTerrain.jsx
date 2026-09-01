@@ -2,27 +2,29 @@ import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { getVisualTerrainHeight, smoothStep } from '../systems/terrain.js';
+import { createTerrainSurfaceTextures } from './terrainSurfaceTextures.js';
 
 export function SculptedRuinTerrain({ visualQuality = 'high' }) {
   const geometry = useMemo(() => {
     const size = ARENA_RADIUS * 2 + 48;
-    const segments = visualQuality === 'low' ? 40 : visualQuality === 'balanced' ? 56 : 76;
+    const segments = visualQuality === 'low' ? 40 : visualQuality === 'balanced' ? 96 : 128;
     const half = size / 2;
     const positions = [];
     const colors = [];
+    const uvs = [];
     const indices = [];
-    const lowColor = new THREE.Color('#162923');
-    const midColor = new THREE.Color('#294239');
-    const highColor = new THREE.Color('#56645a');
-    const mossColor = new THREE.Color('#2f5b4d');
-    const edgeColor = new THREE.Color('#0b1815');
-    const warmStone = new THREE.Color('#68766e');
-    const lowlandMud = new THREE.Color('#243630');
+    const lowColor = new THREE.Color('#213a31');
+    const midColor = new THREE.Color('#496456');
+    const highColor = new THREE.Color('#7b8371');
+    const mossColor = new THREE.Color('#477a62');
+    const edgeColor = new THREE.Color('#132823');
+    const warmStone = new THREE.Color('#8c8b74');
+    const lowlandMud = new THREE.Color('#35483d');
     const riftBlue = new THREE.Color('#3d8b82');
-    const dryGrass = new THREE.Color('#5b5e49');
-    const pathDust = new THREE.Color('#5a5142');
-    const runeWash = new THREE.Color('#4a8f7f');
-    const forestShade = new THREE.Color('#10231f');
+    const dryGrass = new THREE.Color('#77725b');
+    const pathDust = new THREE.Color('#776c56');
+    const runeWash = new THREE.Color('#58a594');
+    const forestShade = new THREE.Color('#19332b');
 
     for (let zIndex = 0; zIndex <= segments; zIndex += 1) {
       for (let xIndex = 0; xIndex <= segments; xIndex += 1) {
@@ -58,6 +60,7 @@ export function SculptedRuinTerrain({ visualQuality = 'high' }) {
 
         positions.push(x, y, z);
         colors.push(color.r, color.g, color.b);
+        uvs.push(xIndex / segments, zIndex / segments);
       }
     }
 
@@ -75,15 +78,30 @@ export function SculptedRuinTerrain({ visualQuality = 'high' }) {
     terrainGeometry.setIndex(indices);
     terrainGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     terrainGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    terrainGeometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     terrainGeometry.computeVertexNormals();
     return terrainGeometry;
   }, [visualQuality]);
+  const surfaceTextures = useMemo(() => (
+    visualQuality === 'low' ? null : createTerrainSurfaceTextures(visualQuality)
+  ), [visualQuality]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => surfaceTextures?.dispose(), [surfaceTextures]);
 
   return (
     <mesh receiveShadow geometry={geometry}>
-      <meshStandardMaterial vertexColors roughness={0.99} metalness={0.01} emissive="#132722" emissiveIntensity={0.045} />
+      <meshStandardMaterial
+        vertexColors
+        map={surfaceTextures?.map ?? null}
+        normalMap={surfaceTextures?.normalMap ?? null}
+        normalScale={surfaceTextures ? [0.58, 0.58] : [0, 0]}
+        roughness={surfaceTextures ? 0.92 : 0.99}
+        roughnessMap={surfaceTextures?.roughnessMap ?? null}
+        metalness={0.01}
+        emissive="#183229"
+        emissiveIntensity={surfaceTextures ? 0.055 : 0.045}
+      />
     </mesh>
   );
 }

@@ -195,13 +195,13 @@ export function PlayerAvatar({ rootRef, game, player, visualQuality = 'high' }) 
 
 function RuneDrifterModel({ visualQuality = 'high' }) {
   const { scene } = useGLTF(MODEL_URLS.player);
-  const model = useMemo(() => cloneSkeleton(scene), [scene]);
+  const model = useMemo(() => cloneSkeleton(scene), [scene, visualQuality]);
 
   useEffect(() => {
     const warmLift = new THREE.Color('#c49b58');
     const shadowWood = new THREE.Color('#604832');
     const parchment = new THREE.Color('#bcb397');
-    const flattenMaterials = visualQuality !== 'high';
+    const flattenMaterials = visualQuality === 'low';
     model.traverse(child => {
       if (child.isMesh) {
         child.castShadow = true;

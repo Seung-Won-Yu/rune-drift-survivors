@@ -58,7 +58,11 @@ export function pickArmoryBoost(game, excludedIds = new Set()) {
   ].filter(Boolean);
 
   const available = weighted.filter(upgrade => isUpgradeAvailable(game, upgrade) && isUpgradeDraftable(game, upgrade) && !excludedIds.has(upgrade.id));
-  return pickWeightedUpgrade(available, game)
+  const replayRouteChoices = game.replayRouteFamily && getBuildFocus(game, game.replayRouteFamily) === 0
+    ? available.filter(upgrade => getUpgradeFocusKey(upgrade) === game.replayRouteFamily)
+    : [];
+  return pickWeightedUpgrade(replayRouteChoices, game)
+    ?? pickWeightedUpgrade(available, game)
     ?? upgradePool.find(upgrade => isUpgradeAvailable(game, upgrade) && isUpgradeDraftable(game, upgrade) && !excludedIds.has(upgrade.id));
 }
 

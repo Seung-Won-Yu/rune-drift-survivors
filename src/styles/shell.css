@@ -23,8 +23,8 @@
 
 .shell::before {
   background:
-    linear-gradient(180deg, rgba(4, 12, 10, 0.44), transparent 22%, transparent 72%, rgba(3, 9, 8, 0.5)),
-    radial-gradient(circle at 50% 48%, transparent 44%, rgba(0, 7, 6, 0.7) 110%);
+    linear-gradient(180deg, rgba(4, 12, 10, 0.3), transparent 22%, transparent 74%, rgba(3, 9, 8, 0.34)),
+    radial-gradient(circle at 50% 48%, transparent 48%, rgba(0, 7, 6, 0.5) 110%);
 }
 
 .shell::after {

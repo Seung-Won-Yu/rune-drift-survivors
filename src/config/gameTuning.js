@@ -69,8 +69,8 @@ export const VISUAL_BUDGETS = {
     gemBeams: 0,
     projectileAura: 6,
     projectileDetail: 0,
-    hitBursts: 3,
-    weaponEffects: 1,
+    hitBursts: 5,
+    weaponEffects: 2,
     damageNumbers: 3,
     spawnWarnings: 2
   },

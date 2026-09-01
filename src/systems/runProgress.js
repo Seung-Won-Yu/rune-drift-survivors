@@ -1,26 +1,27 @@
 import { DAMAGE_SOURCE_META, SHRINE_SITES } from '../config/gameData.js';
 import { RUN_DURATION } from '../config/gameTuning.js';
-import { createEmptyRunStats, getItemPickupCount } from './gameState.js';
+import { BUILD_FOCUS_META } from '../config/upgrades.js';
+import { createEmptyRunStats } from './gameState.js';
 import {
   formatFocusLevel,
   getBuildSynergyStates,
   getDominantBuild,
   getUnlockedWeaponFamilyCount
 } from './progression.js';
+import { getRuneCircuitState } from './runeCircuit.js';
 
 const OPENING_OBJECTIVES = [
   { id: 'first-blood', title: '균열 정찰', label: '적 12 처치', target: 12, color: '#70f0b4', getValue: game => game.kills },
-  { id: 'magnet-flow', title: 'XP 흐름 열기', label: '자석 룬 회수', target: 1, color: '#58b9d4', getValue: game => getItemPickupCount(game, 'magnet') },
-  { id: 'armory-seed', title: '빌드 방향 잡기', label: '무기 보급 회수', target: 1, color: '#d4a84c', getValue: game => getItemPickupCount(game, 'cache') },
+  { id: 'circuit-one', title: '회로 점화', label: '무기 봉인 활성', target: 1, color: '#d4a84c', getValue: game => game.shrineActivations ?? 0 },
   { id: 'first-etching', title: '첫 각인 완성', label: '레벨 3 도달', target: 3, color: '#aa91cf', getValue: game => game.level },
-  { id: 'first-surge', title: '첫 파동 버티기', label: '90초 생존', target: 90, color: '#d96d58', getValue: game => game.time }
+  { id: 'first-surge', title: '점화 구간 버티기', label: '45초 생존', target: 45, color: '#d96d58', getValue: game => game.time }
 ];
 
 const ONBOARDING_STEPS = [
   { id: 'move', title: '이동', label: 'WASD / 방향키', target: 12, color: '#64c98d', getValue: game => game.onboardingMovement ?? 0 },
   { id: 'dash', title: '회피', label: 'Space 대시', target: 1, color: '#58b9d4', getValue: game => game.dashUses ?? 0 },
   { id: 'xp', title: '성장', label: '푸른 XP 회수', target: 12, color: '#aa91cf', getValue: game => Math.max(game.xp, game.level > 1 ? 12 : 0) },
-  { id: 'cache', title: '빌드', label: '무기 보급 회수', target: 1, color: '#d4a84c', getValue: game => getItemPickupCount(game, 'cache') }
+  { id: 'circuit', title: '회로', label: '첫 봉인 활성', target: 1, color: '#d4a84c', getValue: game => game.shrineActivations ?? 0 }
 ];
 
 function clamp(value, min, max) {
@@ -66,19 +67,18 @@ export function getRunPhaseObjectives(game, runPhase, openingObjectives) {
   const dominant = getDominantBuild(game);
   const synergyCount = getBuildSynergyStates(game).filter(synergy => synergy.level > 0).length;
   const unlockedWeapons = getUnlockedWeaponFamilyCount(game);
-  const cacheCount = getItemPickupCount(game, 'cache');
 
   if (runPhase.id === 'anchor') {
     return [
+      makeRunObjective({ id: 'anchor-circuit', title: '경로 연결', label: '봉인 2개 활성', value: game.shrineActivations ?? 0, target: 2, color: '#79f29a' }),
       makeRunObjective({ id: 'anchor-level', title: '성장 안정', label: '레벨 4 도달', value: game.level, target: 4, color: '#58b9d4' }),
-      makeRunObjective({ id: 'anchor-magnet', title: 'XP 회수', label: '자석 룬 2회', value: getItemPickupCount(game, 'magnet'), target: 2, color: '#64c98d' }),
       makeRunObjective({ id: 'anchor-survive', title: '첫 압박', label: '115초 생존', value: game.time, target: 115, color: '#d4a84c', displayValue: value => `${Math.floor(value)}s`, displayTarget: '115s' })
     ];
   }
 
   if (runPhase.id === 'armory') {
     return [
-      makeRunObjective({ id: 'armory-cache', title: '무기 보급', label: '보급 1회 회수', value: cacheCount, target: 1, color: '#d4a84c' }),
+      makeRunObjective({ id: 'pressure-circuit', title: '압박 돌파', label: '봉인 3개 활성', value: game.shrineActivations ?? 0, target: 3, color: '#d8ad4f' }),
       makeRunObjective({ id: 'armory-family', title: '빌드 축', label: '무기 2계열 개방', value: unlockedWeapons, target: 2, color: '#aa91cf' }),
       makeRunObjective({ id: 'armory-elite', title: '정예 대응', label: '정예 1 처치', value: game.eliteKills ?? 0, target: 1, color: '#d96d58' })
     ];
@@ -86,16 +86,16 @@ export function getRunPhaseObjectives(game, runPhase, openingObjectives) {
 
   if (runPhase.id === 'synergy') {
     return [
+      makeRunObjective({ id: 'ascent-circuit', title: '회로 완성', label: '봉인 4개 활성', value: game.shrineActivations ?? 0, target: SHRINE_SITES.length, color: '#aa91cf' }),
       makeRunObjective({ id: 'synergy-link', title: '공명 완성', label: '조합 공명 1개', value: synergyCount, target: 1, color: '#aa91cf' }),
-      makeRunObjective({ id: 'synergy-focus', title: '주력 강화', label: '주력 III 달성', value: dominant?.focus ?? 0, target: 3, color: dominant?.color ?? '#58b9d4' }),
-      makeRunObjective({ id: 'synergy-shrine', title: '제단 활용', label: '제단 2개 활성', value: game.shrineActivations ?? 0, target: 2, color: '#64c98d' })
+      makeRunObjective({ id: 'synergy-focus', title: '주력 강화', label: '주력 III 달성', value: dominant?.focus ?? 0, target: 3, color: dominant?.color ?? '#58b9d4' })
     ];
   }
 
   return [
     makeRunObjective({ id: 'final-survive', title: '최종 생존', label: '300초 생존', value: game.time, target: RUN_DURATION, color: '#d96d58', displayValue: value => `${Math.floor(value)}s`, displayTarget: `${RUN_DURATION}s` }),
-    makeRunObjective({ id: 'final-boss', title: '보스 대응', label: '보스 2 처치', value: game.bossKills ?? 0, target: 2, color: '#d4a84c' }),
-    makeRunObjective({ id: 'final-space', title: '퇴로 확보', label: '대시 8회 활용', value: game.dashUses ?? 0, target: 8, color: '#58b9d4' })
+    makeRunObjective({ id: 'final-circuit', title: '회로 완성', label: '봉인 4개 활성', value: game.shrineActivations ?? 0, target: SHRINE_SITES.length, color: '#aa91cf' }),
+    makeRunObjective({ id: 'final-boss', title: '보스 대응', label: '보스 2 처치', value: game.bossKills ?? 0, target: 2, color: '#d4a84c' })
   ];
 }
 
@@ -118,6 +118,7 @@ export function getFirstSessionCue(game, onboardingSteps, activeObjectives) {
   const nextStep = onboardingSteps.find(step => !step.complete);
   const nextObjective = activeObjectives[0];
   const fallbackProgress = nextObjective?.progress ?? 0;
+  const circuit = getRuneCircuitState(game);
 
   if (!nextStep && !nextObjective) return null;
 
@@ -131,32 +132,6 @@ export function getFirstSessionCue(game, onboardingSteps, activeObjectives) {
     action: nextStep.label,
     progress: nextStep.progress
   };
-
-  if (nextStep.id === 'cache' && game.time < 30) {
-    return {
-      ...base,
-      stepId: 'first-etching',
-      color: '#aa91cf',
-      title: '첫 각인 준비',
-      body: '푸른 조각을 더 모아 첫 강화 카드를 여세요',
-      detail: '30초 뒤 가까운 곳에 첫 무기 보급이 나타납니다',
-      action: `레벨 ${game.level} · XP ${Math.floor(game.xp)} / ${game.xpToNext}`,
-      progress: Math.min(1, Math.max(game.level > 1 ? 0.72 : 0.36, game.time / 30))
-    };
-  }
-
-  if (game.time > 108 && getItemPickupCount(game, 'cache') < 1) {
-    return {
-      ...base,
-      stepId: 'cache',
-      color: '#d4a84c',
-      title: '첫 무기 보급',
-      body: '노란 보급 룬을 지나가면 새 무기 후보가 열립니다',
-      detail: '초반 화력은 무기 수보다 선택 타이밍이 중요합니다',
-      action: '보급 룬 회수',
-      progress: Math.min(1, Math.max(fallbackProgress, (game.time - 108) / 24))
-    };
-  }
 
   switch (nextStep.id) {
     case 'move':
@@ -183,12 +158,13 @@ export function getFirstSessionCue(game, onboardingSteps, activeObjectives) {
         detail: 'XP를 놓치면 초반 화력이 늦게 열립니다',
         progress: nextStep.progress
       };
-    case 'cache':
+    case 'circuit':
       return {
         ...base,
-        title: '무기 보급 찾기',
-        body: '노란 보급 룬을 회수하면 빌드 방향이 정해집니다',
-        detail: '처음부터 강한 무기보다 성장 선택이 핵심입니다',
+        title: circuit.ready ? '첫 봉인 점화' : '첫 봉인 추적',
+        body: circuit.ready ? '화살표를 따라 무기 봉인 위에서 회로를 여세요' : '동쪽의 금빛 봉인으로 이동하며 성장하세요',
+        detail: circuit.ready ? '봉인 범위를 잠시 유지하면 빌드 보상이 열립니다' : `${Math.ceil(circuit.unlockIn)}초 뒤 봉인이 활성화됩니다`,
+        action: circuit.ready ? `${circuit.direction?.arrow ?? ''} ${circuit.distance}m · READY` : `${circuit.direction?.arrow ?? ''} ${circuit.distance}m · ${Math.ceil(circuit.unlockIn)}s`,
         progress: nextStep.progress
       };
     default:
@@ -206,16 +182,10 @@ function getObjectiveCue(objective, progress = 0) {
       detail: '무리 안으로 들어가지 말고 가장자리를 깎습니다',
       action: objective.label
     },
-    'magnet-flow': {
-      title: '자석 룬 회수',
-      body: '푸른 자석 룬은 놓친 XP를 한 번에 당겨옵니다',
-      detail: '레벨업 카드가 늦으면 자석을 먼저 챙기세요',
-      action: objective.label
-    },
-    'armory-seed': {
-      title: '무기 보급 찾기',
-      body: '노란 보급 룬이 보이면 안전한 방향으로 접근하세요',
-      detail: '새 무기는 다음 파동을 버티는 기준점입니다',
+    'circuit-one': {
+      title: '첫 봉인 점화',
+      body: '화살표와 금빛 빔을 따라 무기 봉인으로 이동하세요',
+      detail: '범위 안을 유지하면 첫 빌드 보상이 열립니다',
       action: objective.label
     },
     'first-etching': {
@@ -226,7 +196,7 @@ function getObjectiveCue(objective, progress = 0) {
     },
     'first-surge': {
       title: '첫 파동 버티기',
-      body: '90초까지 살아남으면 초반 흐름이 안정됩니다',
+      body: '45초까지 살아남으면 회로 점화 구간이 안정됩니다',
       detail: '무리 중앙이 아니라 외곽으로 계속 빠지세요',
       action: objective.label
     }
@@ -256,18 +226,52 @@ function getTopDamageSource(game) {
   };
 }
 
-function getRunGrade(game) {
+export function getRunScore(game) {
   const survivalScore = Math.min(40, game.time / RUN_DURATION * 40);
-  const killScore = Math.min(24, (game.kills ?? 0) / 180 * 24);
-  const bossScore = Math.min(16, (game.bossKills ?? 0) * 8 + (game.eliteKills ?? 0) * 2);
-  const shrineScore = Math.min(10, (game.shrineActivations ?? 0) / SHRINE_SITES.length * 10);
-  const synergyScore = Math.min(10, getBuildSynergyStates(game).filter(synergy => synergy.level > 0).length * 4);
-  const total = survivalScore + killScore + bossScore + shrineScore + synergyScore;
-  if (total >= 88) return { grade: 'S', label: '균열 지배', color: '#d4a84c' };
-  if (total >= 74) return { grade: 'A', label: '전투 완성', color: '#64c98d' };
-  if (total >= 58) return { grade: 'B', label: '빌드 성립', color: '#58b9d4' };
-  if (total >= 42) return { grade: 'C', label: '성장 중', color: '#aa91cf' };
-  return { grade: 'D', label: '재정비 필요', color: '#d96d58' };
+  const circuitScore = Math.min(30, (game.shrineActivations ?? 0) / SHRINE_SITES.length * 30);
+  const dominant = getDominantBuild(game);
+  const focusScore = dominant
+    ? Math.min(15, dominant.focus / Math.max(1, dominant.maxRank) * 15)
+    : 0;
+  const strongestSynergy = Math.max(0, ...getBuildSynergyStates(game).map(synergy => synergy.level));
+  const buildScore = Math.min(25, focusScore + strongestSynergy / 4 * 10);
+  const combatScore = Math.min(5, (game.bossKills ?? 0) * 1.5 + (game.eliteKills ?? 0) * 0.35 + (game.kills ?? 0) / 300);
+  const total = survivalScore + circuitScore + buildScore + combatScore;
+  const rounded = {
+    total: Math.round(total),
+    survival: Math.round(survivalScore),
+    circuit: Math.round(circuitScore),
+    build: Math.round(buildScore),
+    combat: Math.round(combatScore)
+  };
+  if (total >= 90) return { ...rounded, grade: 'S', label: '균열 지배', color: '#d4a84c' };
+  if (total >= 76) return { ...rounded, grade: 'A', label: '회로 완성', color: '#64c98d' };
+  if (total >= 60) return { ...rounded, grade: 'B', label: '빌드 성립', color: '#58b9d4' };
+  if (total >= 42) return { ...rounded, grade: 'C', label: '성장 중', color: '#aa91cf' };
+  return { ...rounded, grade: 'D', label: '재정비 필요', color: '#d96d58' };
+}
+
+const ALTERNATE_BUILD_ROUTES = Object.freeze({
+  orb: Object.freeze({ primary: 'blade', secondary: 'nova', detail: '근접 칼날로 공간을 만들고 태양 파동으로 포위를 밀어냅니다' }),
+  storm: Object.freeze({ primary: 'blade', secondary: 'nova', detail: '장판 대신 근접 수호와 광역 밀어내기를 중심으로 운영합니다' }),
+  blade: Object.freeze({ primary: 'storm', secondary: 'chain', detail: '거리 유지형 낙뢰와 연쇄 번개로 전장을 넓게 제어합니다' }),
+  chain: Object.freeze({ primary: 'blade', secondary: 'nova', detail: '연쇄 대신 칼날 방어와 태양 중심의 근거리 빌드를 시험합니다' }),
+  nova: Object.freeze({ primary: 'storm', secondary: 'chain', detail: '큰 단발 파동 대신 지속 낙뢰와 연쇄 처형을 연결합니다' })
+});
+
+function getReplaySuggestion(game) {
+  const dominant = getDominantBuild(game);
+  const route = ALTERNATE_BUILD_ROUTES[dominant?.key] ?? ALTERNATE_BUILD_ROUTES.blade;
+  const primary = BUILD_FOCUS_META[route.primary];
+  const secondary = BUILD_FOCUS_META[route.secondary];
+  return {
+    family: route.primary,
+    title: `${primary.label} + ${secondary.label}`,
+    detail: route.detail,
+    color: primary.color,
+    glyph: primary.glyph,
+    cta: `${primary.label} 경로로 재도전`
+  };
 }
 
 function getActivatedShrineLabels(game) {
@@ -281,16 +285,18 @@ function getActivatedShrineLabels(game) {
 export function getRunResultSummary(game) {
   const topWeapon = getTopDamageSource(game);
   const synergy = getBuildSynergyStates(game).find(item => item.level > 0);
-  const grade = getRunGrade(game);
+  const score = getRunScore(game);
   return {
-    grade: grade.grade,
-    gradeLabel: grade.label,
-    gradeColor: grade.color,
+    grade: score.grade,
+    gradeLabel: score.label,
+    gradeColor: score.color,
+    score,
     topWeapon,
     synergy: synergy
       ? { ...synergy, detail: `${synergy.label} ${formatFocusLevel(synergy.level)}` }
       : { title: '미완성', label: '조합 없음', detail: '다음 런에서 조합 완성', color: '#aa91cf' },
     shrines: `${game.shrineActivations ?? 0} / ${SHRINE_SITES.length}`,
-    shrineLabels: getActivatedShrineLabels(game)
+    shrineLabels: getActivatedShrineLabels(game),
+    replay: getReplaySuggestion(game)
   };
 }

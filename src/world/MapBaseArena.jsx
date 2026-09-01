@@ -48,7 +48,6 @@ export function MapBaseArena({ visualQuality = 'high' }) {
       {visualQuality === 'balanced' && (
         <Suspense fallback={null}>
           <BalancedNatureAssetAccents />
-          <ImportedForestBattlefield visualQuality={visualQuality} />
         </Suspense>
       )}
       <RuneRelicLandmarks visualQuality={visualQuality} />

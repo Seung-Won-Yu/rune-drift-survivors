@@ -1,6 +1,11 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import { EARLY_FIELD_ITEM_SCHEDULE } from '../src/config/gameData.js';
+import { createInitialGame, withItemPickup } from '../src/systems/gameState.js';
+import { getUpgradeFocusKey } from '../src/systems/progression.js';
+import { getCircuitEncounterProfile, getCircuitFinaleState } from '../src/systems/runeCircuit.js';
+import { pickArmoryBoost } from '../src/systems/upgradeDrafting.js';
 
 const artifactDir = path.resolve('output/playwright');
 const enforceRealtimeFrameRate = process.env.CI !== 'true';
@@ -54,13 +59,56 @@ test('loading state smoke', async ({ page }) => {
   guards.assertClean();
 });
 
+test('balanced startup skips high-detail environment payloads', async ({ page }) => {
+  const modelRequests = [];
+  page.on('request', request => {
+    if (request.url().endsWith('.glb')) modelRequests.push(request.url());
+  });
+  const guards = await openGuardedPage(page, '/?quality=balanced');
+  await page.waitForTimeout(500);
+  expect(modelRequests.some(url => url.endsWith('/models/player-wizard.glb'))).toBe(true);
+  expect(modelRequests.filter(url => url.includes('/models/quaternius/'))).toEqual([]);
+  guards.assertClean();
+});
+
 test('HUD smoke', async ({ page }) => {
   const guards = await openGuardedPage(page, '/?quality=balanced');
   await expect(page.locator('.hudCompact')).toBeVisible();
   await expect(page.locator('.hudMeter')).toHaveCount(2);
   await expect(page.locator('.iconButton')).toHaveCount(3);
+  await expect(page.locator('.runeCircuit')).toBeVisible();
+  await expect(page.locator('.runeCircuit')).toContainText('CIRCUIT 0/4');
+  await expect(page.locator('.runeCircuit')).toContainText('무기 봉인');
   await capture(page, 'qa-smoke-hud');
   guards.assertClean();
+});
+
+test('rune circuit ready-state smoke', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?qa=circuit&quality=balanced');
+  await expect(page.locator('.runeCircuit')).toContainText('CIRCUIT 0/4');
+  await expect(page.locator('.runeCircuit')).toContainText('READY');
+  await expect(page.locator('.runeCircuit')).toContainText('무기 봉인');
+  await capture(page, 'qa-smoke-circuit');
+  guards.assertClean();
+});
+
+test('rune circuit encounter pacing smoke', () => {
+  const game = { time: 20, activatedShrines: {} };
+  expect(getCircuitEncounterProfile(game, { x: 0, z: 0 }).stage).toBe('route');
+  expect(getCircuitEncounterProfile(game, { x: 15, z: 0 }).stage).toBe('approach');
+  expect(getCircuitEncounterProfile(game, { x: 34, z: 0 }).stage).toBe('channel');
+  expect(EARLY_FIELD_ITEM_SCHEDULE.some(item => item.type === 'cache' && item.time < 120)).toBe(false);
+  expect(getCircuitFinaleState(game).active).toBe(false);
+  expect(getCircuitFinaleState({ ...game, activatedShrines: { armory: true, vital: true, purge: true, etching: true } })).toMatchObject({
+    active: true,
+    damageMultiplier: 1.16,
+    bossHealthMultiplier: 0.88
+  });
+});
+
+test('replay route guarantees the first armory family', () => {
+  const guidedRun = withItemPickup(createInitialGame({ replayRouteFamily: 'blade' }), 'cache');
+  expect(getUpgradeFocusKey(pickArmoryBoost(guidedRun))).toBe('blade');
 });
 
 test('desktop movement and dash input smoke', async ({ page }) => {
@@ -152,6 +200,23 @@ test('enemy contact windup and recovery smoke', async ({ page }) => {
   guards.assertClean();
 });
 
+test('combat identity damage-source smoke', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?qa=combat&quality=balanced');
+  await page.waitForFunction(
+    () => {
+      const sources = window.__RUNE_DRIFT_QA__?.metrics?.()?.combat?.damageBySource;
+      return ['orb', 'storm', 'blade', 'lightning', 'nova'].every(source => sources?.[source] > 0);
+    },
+    null,
+    { polling: 50, timeout: 8_000 }
+  );
+  const metrics = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics());
+  expect(metrics.combat.totalDamage, 'combat fixture total damage').toBeGreaterThan(0);
+  expect(metrics.counts.enemies, 'combat fixture targets').toBeGreaterThanOrEqual(16);
+  await capture(page, 'qa-smoke-combat-identity');
+  guards.assertClean();
+});
+
 test('mobile HUD, touch movement, dash, and pause smoke', async ({ browser }) => {
   const context = await browser.newContext({
     viewport: { width: 360, height: 740 },
@@ -209,6 +274,8 @@ test('boss HUD smoke', async ({ page }) => {
   await page.evaluate(() => window.__RUNE_DRIFT_QA__.boss({ enraged: true }));
   await expect(page.locator('.hudBoss')).toBeVisible();
   await expect(page.locator('.hudBoss')).toContainText('BOSS');
+  await expect(page.locator('.runeCircuit')).toContainText('CIRCUIT 1/4');
+  await expect(page.locator('.runeCircuit')).toContainText('생명 봉인');
   await capture(page, 'qa-smoke-boss');
   guards.assertClean();
 });
@@ -217,10 +284,18 @@ test('result overlay smoke', async ({ page }) => {
   const guards = await openGuardedPage(page, '/?qa=victory&quality=balanced');
   await expect(page.locator('.endPanel')).toBeVisible();
   await expect(page.locator('.endPanel')).toContainText('5분 생존');
+  await expect(page.locator('.resultStats')).toContainText('40 / 40');
+  await expect(page.locator('.resultStats')).toContainText('30 / 30');
+  await expect(page.locator('.resultGrade')).toContainText('/ 100');
   await expect(page.locator('.resultHighlights em')).toHaveCount(3);
   await expect(page.locator('.resultHighlights b')).toHaveCount(3);
   await expect(page.locator('.resultHighlights small')).toHaveCount(3);
+  await expect(page.locator('.resultReplay')).toBeVisible();
+  await expect(page.locator('.resultReplay')).toContainText('NEXT INSCRIPTION');
+  await expect(page.getByRole('button', { name: /경로로 재도전/ })).toBeVisible();
   await capture(page, 'qa-smoke-result');
+  await page.getByRole('button', { name: /경로로 재도전/ }).click();
+  await expect(page.locator('.hudAlert')).toContainText('궤도 칼날 경로 예약');
   guards.assertClean();
 });
 

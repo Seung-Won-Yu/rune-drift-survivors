@@ -43,7 +43,6 @@ export const COMBAT_RHYTHM = [
 
 export const EARLY_FIELD_ITEM_SCHEDULE = [
   { id: 'starter-magnet', time: 5, type: 'magnet', distance: 2.2, spread: 1.1 },
-  { id: 'starter-cache', time: 42, type: 'cache', distance: 5.2, spread: 1.8 },
   { id: 'second-magnet', time: 54, type: 'magnet', distance: 5.8, spread: 2.4 },
   { id: 'starter-overload', time: 76, type: 'overload', distance: 6.4, spread: 2.6 },
   { id: 'starter-purge', time: 98, type: 'purge', distance: 7.4, spread: 2.9 },
@@ -79,55 +78,55 @@ export const RUN_PHASES = [
   {
     id: 'learn',
     until: 45,
-    label: 'LEARN',
-    title: '움직임 적응',
-    goal: '원을 그리며 XP 회수',
-    cardCue: '초반 안정과 XP 흐름',
+    label: 'IGNITION',
+    title: '회로 점화',
+    goal: '첫 봉인으로 이동',
+    cardCue: '첫 봉인과 초반 화력',
     color: '#64c98d'
   },
   {
     id: 'anchor',
     until: 115,
-    label: 'ANCHOR',
-    title: '성장 안정',
-    goal: '레벨과 생존 기반 확보',
-    cardCue: '기본 구체와 성장 보강',
+    label: 'ROUTE',
+    title: '경로 확보',
+    goal: '두 번째 봉인 연결',
+    cardCue: '이동성과 생존 기반',
     color: '#58b9d4'
   },
   {
     id: 'armory',
     until: 170,
-    label: 'ARMORY',
-    title: '무기 방향',
-    goal: '첫 보급으로 빌드 축 선택',
-    cardCue: '새 무기 또는 주력 강화',
+    label: 'PRESSURE',
+    title: '압박 돌파',
+    goal: '정화 봉인으로 파동 정리',
+    cardCue: '파동 대응과 주력 강화',
     color: '#d4a84c'
   },
   {
     id: 'synergy',
     until: 235,
-    label: 'SYNERGY',
-    title: '조합 완성',
-    goal: '주력 무기 공명 만들기',
+    label: 'ASCENT',
+    title: '회로 완성',
+    goal: '마지막 봉인과 빌드 완성',
     cardCue: '공명 완성과 주력 집중',
     color: '#aa91cf'
   },
   {
     id: 'final',
     until: Infinity,
-    label: 'FINAL',
-    title: '최종 생존',
-    goal: '빈 공간 유지와 보스 대응',
+    label: 'RIFT',
+    title: '균열 종결',
+    goal: '완성된 회로에서 최종 생존',
     cardCue: '생존 보강과 광역 정리',
     color: '#d96d58'
   }
 ];
 
 export const SHRINE_SITES = [
-  { id: 'armory', angle: 0.72, radius: 82, reward: 'cache', label: '무기 제단', color: '#d4a84c' },
-  { id: 'vital', angle: 2.62, radius: 89.5, reward: 'heal', label: '생명 제단', color: '#79f29a' },
-  { id: 'purge', angle: 4.08, radius: 82, reward: 'purge', label: '정화 제단', color: '#d8ad4f' },
-  { id: 'etching', angle: 5.45, radius: 89.5, reward: 'upgrade', label: '각인 제단', color: '#aa91cf' }
+  { id: 'armory', order: 1, angle: 0, radius: 34, unlockAt: 18, reward: 'cache', label: '무기 봉인', rewardLabel: '빌드 보급', color: '#d4a84c' },
+  { id: 'vital', order: 2, angle: 1.57, radius: 40, unlockAt: 78, reward: 'heal', label: '생명 봉인', rewardLabel: '완전 회복', color: '#79f29a' },
+  { id: 'purge', order: 3, angle: 3.14, radius: 46, unlockAt: 145, reward: 'purge', label: '정화 봉인', rewardLabel: '주변 소멸', color: '#d8ad4f' },
+  { id: 'etching', order: 4, angle: 4.71, radius: 52, unlockAt: 215, reward: 'upgrade', label: '각인 봉인', rewardLabel: '보상 선택', color: '#aa91cf' }
 ];
 
 export const MAP_CLIFFS = [

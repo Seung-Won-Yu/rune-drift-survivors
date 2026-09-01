@@ -8,18 +8,22 @@ export function StaticModelInstances({ url, transforms, castShadow = false, rece
   const parts = useInstancedModelParts(url, normalizeOrigin);
   const styledParts = useMemo(() => {
     if (!materialColor) return parts;
-    const color = new THREE.Color(materialColor);
-    const createFlatMaterial = source => new THREE.MeshBasicMaterial({
-      color,
-      toneMapped: false,
-      transparent: Boolean(source?.transparent),
-      opacity: source?.opacity ?? 1,
-      side: source?.side ?? THREE.FrontSide
-    });
+    const tint = new THREE.Color(materialColor);
+    const createTintedMaterial = source => {
+      const material = source?.clone() ?? new THREE.MeshStandardMaterial();
+      if (material.color) {
+        material.color.lerp(tint, material.map ? 0.32 : 0.56);
+      }
+      if ('roughness' in material) material.roughness = THREE.MathUtils.clamp(material.roughness ?? 0.78, 0.62, 0.92);
+      if ('metalness' in material) material.metalness = Math.min(material.metalness ?? 0, 0.08);
+      material.toneMapped = true;
+      material.needsUpdate = true;
+      return material;
+    };
     return parts.map(part => {
       const material = Array.isArray(part.material)
-        ? part.material.map(item => createFlatMaterial(item))
-        : createFlatMaterial(part.material);
+        ? part.material.map(item => createTintedMaterial(item))
+        : createTintedMaterial(part.material);
       return { ...part, material };
     });
   }, [materialColor, parts]);
@@ -32,6 +36,16 @@ export function StaticModelInstances({ url, transforms, castShadow = false, rece
     final: new THREE.Matrix4(),
     euler: new THREE.Euler()
   }), []);
+
+  useEffect(() => {
+    if (!materialColor) return undefined;
+    return () => {
+      styledParts.forEach(part => {
+        const materials = Array.isArray(part.material) ? part.material : [part.material];
+        materials.forEach(material => material?.dispose());
+      });
+    };
+  }, [materialColor, styledParts]);
 
   useEffect(() => {
     styledParts.forEach((part, partIndex) => {

@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 
+import { populateCombatIdentityScene } from '../qa/populateCombatIdentityScene.js';
 import { populateContactAttackScene } from '../qa/populateContactAttackScene.js';
 import { populateStressScene } from '../qa/populateStressScene.js';
+import { resetFrameStats } from '../systems/runTelemetry.js';
 
 export function useGameSceneEffects({
   runtime,
@@ -18,10 +20,13 @@ export function useGameSceneEffects({
     enemies,
     projectiles,
     xpGems,
+    fieldItems,
+    scheduledFieldItems,
     hitBursts,
     weaponEffects,
     damageNumbers,
     spawnWarnings,
+    frameStats,
     levelUpQueued,
     resetRuntime,
     getMetrics
@@ -61,6 +66,7 @@ export function useGameSceneEffects({
           damageNumbers,
           spawnWarnings
         });
+        resetFrameStats(frameStats);
       },
       contactAttack: () => {
         populateContactAttackScene({
@@ -68,6 +74,20 @@ export function useGameSceneEffects({
           enemies,
           projectiles,
           xpGems,
+          hitBursts,
+          weaponEffects,
+          damageNumbers,
+          spawnWarnings
+        });
+      },
+      combatIdentity: () => {
+        populateCombatIdentityScene({
+          player,
+          enemies,
+          projectiles,
+          xpGems,
+          fieldItems,
+          scheduledFieldItems,
           hitBursts,
           weaponEffects,
           damageNumbers,
@@ -86,10 +106,13 @@ export function useGameSceneEffects({
     enemies,
     projectiles,
     xpGems,
+    fieldItems,
+    scheduledFieldItems,
     hitBursts,
     weaponEffects,
     damageNumbers,
-    spawnWarnings
+    spawnWarnings,
+    frameStats
   ]);
 
   useEffect(() => {

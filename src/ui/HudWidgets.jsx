@@ -46,6 +46,27 @@ export function HudAlert({ alert }) {
   );
 }
 
+export function HudCircuit({ circuit }) {
+  if (circuit.complete) {
+    return (
+      <div className="runeCircuit isComplete" aria-label="룬 회로 완성">
+        <span>CIRCUIT {circuit.completed}/{circuit.total}</span>
+        <strong>COMPLETE</strong>
+        <small>최종 공명 · 화력 +16%</small>
+      </div>
+    );
+  }
+
+  const status = circuit.ready ? 'READY' : `${Math.ceil(circuit.unlockIn)}s`;
+  return (
+    <div className={`runeCircuit ${circuit.ready ? 'isReady' : 'isLocked'}`} style={{ '--tone': circuit.nextSite.color }} aria-label="다음 룬 회로 봉인">
+      <span>CIRCUIT {circuit.completed}/{circuit.total}</span>
+      <strong>{circuit.direction?.arrow} {circuit.nextSite.label}</strong>
+      <small>{circuit.distance}m · {status}</small>
+    </div>
+  );
+}
+
 export function HudPrompt({ cue }) {
   return (
     <div className="runeDirective hudCoachCard" style={{ '--tone': cue.color }} aria-label="초반 안내">

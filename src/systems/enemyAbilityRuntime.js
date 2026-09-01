@@ -11,6 +11,7 @@ import {
   getEnemyAbilityScale,
   getEnemyDamagePressure
 } from './enemyPacing.js';
+import { getCircuitFinaleState } from './runeCircuit.js';
 import { resolveStaticCollisions } from './terrain.js';
 
 export function updateEnemyAbilityRuntime({
@@ -113,6 +114,8 @@ export function updateEnemyAbilityRuntime({
   }
 
   if (enemy.kind !== 'boss') return;
+  const circuitFinale = getCircuitFinaleState(currentGame);
+  const bossAbilityScale = abilityScale * circuitFinale.bossAbilityIntervalMultiplier;
 
   if ((enemy.shockwaveTimer ?? 0) > 0) {
     const before = enemy.shockwaveTimer;
@@ -136,7 +139,7 @@ export function updateEnemyAbilityRuntime({
         color: BOSS_PATTERN_META.shockwave.color,
         radius
       });
-      if (distance < radius && distance > 3.4 && damagePlayer((enemy.damage + 5) * getEnemyDamagePressure(currentGame), updateGame, 0.86)) {
+      if (distance < radius && distance > 3.4 && damagePlayer((enemy.damage + 5) * getEnemyDamagePressure(currentGame) * circuitFinale.bossDamageMultiplier, updateGame, 0.86)) {
         player.current.pos.addScaledVector(toPlayer, 4.2);
         resolveStaticCollisions(player.current.pos, PLAYER_RADIUS);
       }
@@ -148,7 +151,8 @@ export function updateEnemyAbilityRuntime({
     enemy.summonWindupTimer = Math.max(0, enemy.summonWindupTimer - dt);
     if (before > 0 && enemy.summonWindupTimer <= 0) {
       const meta = BOSS_PATTERN_META.summon;
-      const count = Math.min(12, 4 + Math.floor(currentGame.wave / 2) + (currentGame.time >= 180 ? 2 : 0), summonSlots());
+      const summonCount = Math.ceil((4 + Math.floor(currentGame.wave / 2) + (currentGame.time >= 180 ? 2 : 0)) * circuitFinale.bossSummonMultiplier);
+      const count = Math.min(12, summonCount, summonSlots());
       for (let index = 0; index < count; index += 1) {
         spawnedEnemies.push(createSummonedRunner(enemy, currentGame.wave + 1, player.current.pos, index));
       }
@@ -179,7 +183,7 @@ export function updateEnemyAbilityRuntime({
     enemy.guardWindupTimer = Math.max(0, enemy.guardWindupTimer - dt);
     if (before > 0 && enemy.guardWindupTimer <= 0) {
       const meta = BOSS_PATTERN_META.guard;
-      enemy.bossGuard = 5.4 + Math.max(0, currentGame.time - 180) * 0.01;
+      enemy.bossGuard = (5.4 + Math.max(0, currentGame.time - 180) * 0.01) * circuitFinale.bossGuardDurationMultiplier;
       hitBursts.current.push({
         pos: enemy.pos.clone(),
         life: 1.0,
@@ -206,7 +210,7 @@ export function updateEnemyAbilityRuntime({
   const pattern = BOSS_PATTERN_ORDER[enemy.patternIndex % BOSS_PATTERN_ORDER.length];
   enemy.patternIndex += 1;
   const bossPhaseScale = enemy.enraged ? 0.76 : 1;
-  enemy.abilityTimer = (pattern === 'guard' ? 6.4 : 7.2) * abilityScale * bossPhaseScale;
+  enemy.abilityTimer = (pattern === 'guard' ? 6.4 : 7.2) * bossAbilityScale * bossPhaseScale;
   const meta = BOSS_PATTERN_META[pattern];
   const warningRadius = pattern === 'shockwave'
     ? 20 + currentGame.wave * 0.8 + Math.max(0, currentGame.time - 180) * 0.025

@@ -14,6 +14,13 @@ const CUE_PROFILES = {
   [AUDIO_CUE.upgradeSelect]: { notes: [440, 660], duration: 0.1, gap: 0.055, gain: 0.04, throttle: 0.12 }
 };
 
+const WEAPON_VARIANT_PROFILES = Object.freeze({
+  orb: Object.freeze({ wave: 'triangle', pitch: 1, durationScale: 0.82, gainScale: 0.92 }),
+  storm: Object.freeze({ wave: 'sawtooth', pitch: 0.62, durationScale: 1.55, gainScale: 1.14 }),
+  lightning: Object.freeze({ wave: 'square', pitch: 1.34, durationScale: 0.68, gainScale: 0.82 }),
+  nova: Object.freeze({ wave: 'sine', pitch: 0.48, durationScale: 2.25, gainScale: 1.28 })
+});
+
 export function createGameAudioEngine({ contextFactory = createBrowserAudioContext } = {}) {
   let context = null;
   let masterGain = null;
@@ -70,13 +77,15 @@ export function createGameAudioEngine({ contextFactory = createBrowserAudioConte
         });
       });
     } else {
-      const pitch = getVariantPitch(event.variant);
+      const variant = getVariantProfile(event.variant);
       scheduleTone(context, masterGain, {
         ...profile,
-        from: profile.from * pitch,
-        to: profile.to * pitch,
+        wave: variant.wave ?? profile.wave,
+        from: profile.from * variant.pitch,
+        to: profile.to * variant.pitch,
         start: now,
-        gain: profile.gain * intensity
+        duration: profile.duration * variant.durationScale,
+        gain: profile.gain * intensity * variant.gainScale
       });
     }
     played += 1;
@@ -110,11 +119,12 @@ export function createGameAudioEngine({ contextFactory = createBrowserAudioConte
   return { unlock, play, setMuted, destroy, getState };
 }
 
-function getVariantPitch(variant) {
-  if (variant === 'storm') return 0.62;
-  if (variant === 'lightning') return 1.34;
-  if (variant === 'nova') return 0.48;
-  return 1;
+function getVariantProfile(variant) {
+  return WEAPON_VARIANT_PROFILES[variant] ?? {
+    pitch: 1,
+    durationScale: 1,
+    gainScale: 1
+  };
 }
 
 function scheduleTone(context, output, { wave, from, to, start, duration, gain }) {

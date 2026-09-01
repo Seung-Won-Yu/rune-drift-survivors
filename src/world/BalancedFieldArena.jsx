@@ -14,20 +14,24 @@ export function BalancedFieldArena({ visualQuality = 'balanced' }) {
 
   return (
     <group>
-      <GroundDecalInstances transforms={arena.edgeShadePatches} shape="circle" segments={28} opacity={visualQuality === 'low' ? 0.055 : 0.11} />
-      <GroundDecalInstances transforms={arena.groveFloorPatches} shape="circle" segments={24} opacity={visualQuality === 'low' ? 0.045 : 0.13} />
-      <GroundDecalInstances transforms={arena.centralPlaza} shape="circle" segments={40} opacity={visualQuality === 'low' ? 0.12 : 0.19} />
-      <GroundDecalInstances transforms={arena.trailSegments} shape="plane" opacity={visualQuality === 'low' ? 0.07 : 0.14} doubleSide />
-      <GroundDecalInstances transforms={arena.rootStrips} shape="plane" opacity={visualQuality === 'low' ? 0.055 : 0.13} doubleSide />
-      <GroundDecalInstances transforms={arena.meadowPatches} shape="circle" segments={24} opacity={visualQuality === 'low' ? 0.035 : 0.082} />
-      <GroundDecalInstances transforms={arena.leafLitter} shape="circle" segments={8} opacity={visualQuality === 'low' ? 0.08 : 0.16} />
+      {visualQuality === 'low' && (
+        <>
+          <GroundDecalInstances transforms={arena.edgeShadePatches} shape="circle" segments={28} opacity={0.055} />
+          <GroundDecalInstances transforms={arena.groveFloorPatches} shape="circle" segments={24} opacity={0.045} />
+          <GroundDecalInstances transforms={arena.centralPlaza} shape="circle" segments={40} opacity={0.12} />
+          <GroundDecalInstances transforms={arena.meadowPatches} shape="circle" segments={24} opacity={0.035} />
+        </>
+      )}
+      <GroundDecalInstances transforms={arena.trailSegments} shape="plane" opacity={visualQuality === 'low' ? 0.07 : 0.095} doubleSide />
+      <GroundDecalInstances transforms={arena.rootStrips} shape="plane" opacity={visualQuality === 'low' ? 0.055 : 0.08} doubleSide />
+      <GroundDecalInstances transforms={arena.leafLitter} shape="circle" segments={8} opacity={visualQuality === 'low' ? 0.08 : 0.13} />
       <GroundDecalInstances transforms={arena.shrinePads} shape="circle" segments={28} opacity={visualQuality === 'low' ? 0.06 : 0.105} />
       <GroundDecalInstances transforms={arena.pondPatches} shape="circle" segments={24} opacity={visualQuality === 'low' ? 0.075 : 0.135} />
       <GroundDecalInstances transforms={arena.pondHighlights} shape="ring" ringArgs={[0.42, 0.52, 18]} opacity={visualQuality === 'low' ? 0.075 : 0.13} doubleSide />
       <GroundDecalInstances transforms={arena.treeShadows} shape="circle" segments={18} opacity={visualQuality === 'low' ? 0.04 : 0.085} />
       <GroundDecalInstances transforms={arena.flowerFlecks} shape="ring" ringArgs={[0.32, 0.52, 5]} opacity={visualQuality === 'low' ? 0.075 : 0.12} doubleSide />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.078, 0]}>
-        <ringGeometry args={[12.8, 13.1, 72]} />
+        <ringGeometry args={[9.2, 9.46, 72]} />
         <meshBasicMaterial color="#b58a45" transparent opacity={0.16} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 8]} position={[0, getTerrainHeight(0, 0) + 0.084, 0]}>
@@ -36,12 +40,18 @@ export function BalancedFieldArena({ visualQuality = 'balanced' }) {
       </mesh>
       <RelicBoxInstances transforms={arena.ruinSlabs} roughness={0.98} />
       <RelicOctahedronInstances transforms={arena.runeCrystals} opacity={visualQuality === 'low' ? 0.42 : 0.58} />
-      <BalancedArenaPropInstances trees={arena.trees} bushes={arena.bushes} rocks={arena.rocks} grassTufts={arena.grassTufts} />
+      <BalancedArenaPropInstances
+        trees={arena.trees}
+        bushes={arena.bushes}
+        rocks={arena.rocks}
+        grassTufts={arena.grassTufts}
+        visualQuality={visualQuality}
+      />
     </group>
   );
 }
 
-function BalancedArenaPropInstances({ trees, bushes, rocks, grassTufts }) {
+function BalancedArenaPropInstances({ trees, bushes, rocks, grassTufts, visualQuality }) {
   const trunkRef = useRef();
   const canopyRef = useRef();
   const bushRef = useRef();
@@ -117,25 +127,25 @@ function BalancedArenaPropInstances({ trees, bushes, rocks, grassTufts }) {
 
   return (
     <group>
-      <instancedMesh ref={trunkRef} args={[null, null, trees.length]} frustumCulled={false}>
+      <instancedMesh ref={trunkRef} args={[null, null, trees.length]} frustumCulled={false} castShadow={visualQuality !== 'low'} receiveShadow>
         <cylinderGeometry args={[1, 0.78, 1, 6]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+        <meshStandardMaterial color="#ffffff" roughness={0.9} metalness={0} />
       </instancedMesh>
-      <instancedMesh ref={canopyRef} args={[null, null, trees.length]} frustumCulled={false}>
+      <instancedMesh ref={canopyRef} args={[null, null, trees.length]} frustumCulled={false} castShadow={visualQuality !== 'low'} receiveShadow>
         <coneGeometry args={[1, 1.35, 6]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+        <meshStandardMaterial color="#ffffff" roughness={0.88} metalness={0} />
       </instancedMesh>
-      <instancedMesh ref={bushRef} args={[null, null, bushes.length]} frustumCulled={false}>
+      <instancedMesh ref={bushRef} args={[null, null, bushes.length]} frustumCulled={false} castShadow={visualQuality !== 'low'} receiveShadow>
         <dodecahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+        <meshStandardMaterial color="#ffffff" roughness={0.9} metalness={0} />
       </instancedMesh>
-      <instancedMesh ref={rockRef} args={[null, null, rocks.length]} frustumCulled={false}>
+      <instancedMesh ref={rockRef} args={[null, null, rocks.length]} frustumCulled={false} castShadow={visualQuality !== 'low'} receiveShadow>
         <dodecahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+        <meshStandardMaterial color="#ffffff" roughness={0.94} metalness={0.01} />
       </instancedMesh>
-      <instancedMesh ref={tuftRef} args={[null, null, grassTufts.length]} frustumCulled={false}>
+      <instancedMesh ref={tuftRef} args={[null, null, grassTufts.length]} frustumCulled={false} receiveShadow>
         <coneGeometry args={[1, 1, 5]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+        <meshStandardMaterial color="#ffffff" roughness={0.96} metalness={0} />
       </instancedMesh>
     </group>
   );

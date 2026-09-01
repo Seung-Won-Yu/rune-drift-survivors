@@ -27,7 +27,7 @@
   .runeRunClock {
     grid-column: 1;
     grid-row: 1;
-    width: 165px;
+    width: 190px;
     min-width: 0;
     justify-self: center;
     padding: 6px 11px 9px;
@@ -35,6 +35,21 @@
 
   .runeRunClock > strong {
     font-size: 1.05rem;
+  }
+
+  .runeCircuit {
+    gap: 5px;
+    margin-top: 5px;
+    padding-top: 5px;
+  }
+
+  .runeCircuit span,
+  .runeCircuit small {
+    font-size: 0.47rem;
+  }
+
+  .runeCircuit strong {
+    font-size: 0.52rem;
   }
 
   .runeActions {
@@ -73,27 +88,28 @@
 
   .runeDirective,
   .runeObjective {
-    top: 38%;
     left: max(10px, env(safe-area-inset-left));
-    width: min(260px, calc(100vw - 20px));
   }
 
   .runeDirective {
-    grid-template-columns: 36px 1fr;
-    min-height: 108px;
+    top: 190px;
+    grid-template-columns: 26px 1fr;
+    width: min(215px, calc(100vw - 20px));
+    min-height: 60px;
+  }
+
+  .runeObjective {
+    top: 205px;
+    width: min(232px, calc(100vw - 20px));
   }
 
   .runeDirectiveCopy {
-    padding: 13px;
+    padding: 10px 11px;
   }
 
-  .runeDirectiveCopy p {
-    margin: 8px 0 3px;
-    font-size: 0.7rem;
-  }
-
+  .runeDirectiveCopy p,
   .runeDirectiveCopy em {
-    font-size: 0.58rem;
+    display: none;
   }
 
   .runeEncounter {
@@ -103,7 +119,7 @@
   }
 
   .runeBoss {
-    top: 116px;
+    top: 168px;
     grid-template-columns: 1fr auto;
     gap: 5px 10px;
     width: calc(100vw - 20px);
@@ -187,45 +203,37 @@
   }
 
   .runeChoice {
-    grid-template-columns: 24px 1fr;
+    grid-template-columns: 4px 1fr;
     min-height: 0;
   }
 
   .runeChoiceBody {
-    display: grid;
-    grid-template-columns: 78px 1fr;
-    gap: 0 12px;
+    display: flex;
     padding: 12px 12px 11px;
   }
 
   .rewardCardHeader {
-    grid-column: 1 / -1;
     min-height: 18px;
   }
 
+  .rewardCardMain {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 10px;
+    margin: 8px 0;
+  }
+
   .runeChoiceSigil {
-    grid-column: 1;
-    grid-row: 2 / 5;
-    height: 100%;
-    min-height: 108px;
-    margin: 7px 0 0;
+    width: 52px;
+    height: 52px;
   }
 
   .rewardCardEmblem {
-    width: 48px;
-    height: 48px;
+    width: 38px;
+    height: 38px;
   }
 
   .upgradeSigil {
     font-size: 1.25rem;
-  }
-
-  .rewardCardType {
-    display: none;
-  }
-
-  .rewardCardCopy {
-    grid-column: 2;
   }
 
   .rewardCardCopy strong {
@@ -239,9 +247,8 @@
   }
 
   .rewardCardStats {
-    grid-column: 2;
     gap: 2px;
-    padding: 7px 0;
+    padding: 7px 9px;
   }
 
   .rewardCardStats small,
@@ -253,9 +260,13 @@
     display: none;
   }
 
-  .upgradePickCta {
-    grid-column: 2;
+  .rewardCardFooter {
     padding-top: 7px;
+  }
+
+  .upgradePickCta {
+    margin-left: auto;
+    padding-right: 16px;
     font-size: 0.58rem;
   }
 
@@ -267,10 +278,13 @@
     padding: 9px;
   }
 
+  .resultStats em,
+  .resultReplay p {
+    display: none;
+  }
+
   .runSummary {
-    grid-template-columns: 1fr;
-    gap: 5px;
-    padding: 10px 0;
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .resultHighlights {
@@ -286,11 +300,17 @@
   .resultHighlights small {
     display: none;
   }
+
+  .resultReplay {
+    grid-template-columns: 42px 1fr;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+  }
 }
 
 @media (max-width: 420px) {
   .runeRunClock {
-    width: 150px;
+    width: 170px;
   }
 
   .runeRunClockMeta {
@@ -374,7 +394,7 @@
   }
 
   .runeChoice {
-    min-height: 290px;
+    min-height: 220px;
   }
 
   .runeChoiceBody {
@@ -382,11 +402,15 @@
     padding: 10px;
   }
 
+  .rewardCardMain {
+    grid-template-columns: 50px minmax(0, 1fr);
+    gap: 8px;
+    margin: 7px 0;
+  }
+
   .runeChoiceSigil {
-    width: 100%;
-    height: 72px;
-    min-height: 72px;
-    margin: 2px 0 6px;
+    width: 50px;
+    height: 50px;
   }
 
   .rewardCardCopy p {

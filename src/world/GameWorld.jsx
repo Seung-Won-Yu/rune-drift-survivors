@@ -36,18 +36,29 @@ export function GameWorld({
   spawnWarnings
 }) {
   const visualBudget = getVisualBudget(visualQuality);
+  const shadowMapSize = visualQuality === 'high' ? 1536 : 1024;
 
   return (
     <>
-      <hemisphereLight args={['#c6dfd5', '#132722', 0.58]} />
-      <ambientLight intensity={0.22} />
+      <hemisphereLight args={['#d9e5d6', '#18352c', visualQuality === 'low' ? 0.72 : 0.72]} />
+      <ambientLight intensity={visualQuality === 'low' ? 0.3 : 0.26} />
       <directionalLight
-        castShadow={false}
+        castShadow={visualQuality !== 'low'}
         position={[24, 34, 18]}
-        intensity={visualQuality === 'low' ? 1.36 : 1.54}
-        color="#d6dfc9"
+        intensity={visualQuality === 'low' ? 1.52 : 1.9}
+        color="#e3e2ca"
+        shadow-mapSize-width={shadowMapSize}
+        shadow-mapSize-height={shadowMapSize}
+        shadow-camera-left={-64}
+        shadow-camera-right={64}
+        shadow-camera-top={64}
+        shadow-camera-bottom={-64}
+        shadow-camera-near={1}
+        shadow-camera-far={112}
+        shadow-bias={-0.00035}
+        shadow-normalBias={0.035}
       />
-      {visualQuality !== 'low' && <directionalLight position={[-34, 20, -48]} intensity={0.38} color="#75cfc7" />}
+      {visualQuality !== 'low' && <directionalLight position={[-34, 20, -48]} intensity={0.34} color="#75cfc7" />}
       <pointLight position={[0, 2.4, 0]} intensity={visualQuality === 'low' ? 0.46 : 0.64} color={ART_TOKENS.wornGold} distance={13} />
       {visualQuality === 'high' && <pointLight position={[0, 5.8, 0]} intensity={0.34} color={ART_TOKENS.runeMint} distance={32} />}
       {visualQuality === 'high' && <pointLight position={[-42, 3.2, -22]} intensity={0.25} color="#b9915f" distance={34} />}
@@ -83,7 +94,7 @@ export function GameWorld({
       </instancedMesh>
       {visualQuality === 'high' && <GemBeacons gemsRef={xpGems} visualQuality={visualQuality} />}
       <FieldPickupItems itemsRef={fieldItems} visualQuality={visualQuality} />
-      <RuneShrineSites shrinesRef={shrines} visualQuality={visualQuality} />
+      <RuneShrineSites game={game} shrinesRef={shrines} visualQuality={visualQuality} />
       {visualQuality === 'high' ? (
         <Suspense fallback={null}>
           <SourceProjectileInstances projectilesRef={projectiles} type="orb" url={PROJECTILE_MODEL_URLS.orb} scaleMultiplier={1.25} visualQuality={visualQuality} />

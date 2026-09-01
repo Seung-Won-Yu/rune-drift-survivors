@@ -2,6 +2,7 @@ import { BOSS_PATTERN_META } from '../config/gameData.js';
 import { DASH_COOLDOWN, RUN_DURATION } from '../config/gameTuning.js';
 import { getCrisisState } from '../systems/enemyPacing.js';
 import { getRunPhase } from '../systems/progression.js';
+import { getRuneCircuitState } from '../systems/runeCircuit.js';
 import {
   getFirstSessionCue,
   getOnboardingSteps,
@@ -14,6 +15,7 @@ import {
   HudActions,
   HudAlert,
   HudBossBar,
+  HudCircuit,
   HudEncounter,
   HudMeter,
   HudObjectives,
@@ -36,6 +38,7 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
   const bossStatus = game.bossStatus;
   const bossPatternMeta = game.lastBossPattern ? BOSS_PATTERN_META[game.lastBossPattern] : null;
   const runPhase = getRunPhase(game);
+  const circuit = getRuneCircuitState(game);
   const isThreatened = crisis.level >= 3 || bossStatus?.enraged || encounterAlert?.kind === 'boss' || encounterAlert?.kind === 'boss-pattern';
   const onboardingSteps = getOnboardingSteps(game);
   const openingObjectives = getOpeningObjectives(game);
@@ -46,7 +49,7 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
   const completedPhaseObjectives = phaseObjectives.filter(objective => objective.complete).length;
   const completedOpeningObjectives = openingObjectives.filter(objective => objective.complete).length;
   const firstSessionCue = getFirstSessionCue(game, onboardingSteps, openingActiveObjectives);
-  const showFirstSessionCoach = !bossStatus && firstSessionCue && game.time < 128;
+  const showFirstSessionCoach = !bossStatus && firstSessionCue && game.time < 32;
   const showRunObjectives = !bossStatus && !showFirstSessionCoach && visibleObjectives.length > 0 && game.time < 286;
   const showDashTicker = !dashReady;
   const hudAlerts = getHudAlerts({
@@ -93,6 +96,7 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
           <div className="runeRunTrack" aria-hidden="true">
             <i style={{ width: `${runPct}%` }} />
           </div>
+          <HudCircuit circuit={circuit} />
         </div>
         <HudActions
           game={game}

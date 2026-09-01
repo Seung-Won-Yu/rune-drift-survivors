@@ -164,6 +164,49 @@
   box-shadow: 0 0 8px rgba(226, 173, 88, 0.48);
 }
 
+.runeCircuit {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 7px;
+  align-items: center;
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid color-mix(in srgb, var(--tone, var(--rune-cyan)) 30%, transparent);
+  font-size: 0.55rem;
+  line-height: 1;
+}
+
+.runeCircuit span {
+  color: var(--rune-dim);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.runeCircuit strong {
+  overflow: hidden;
+  color: var(--tone, var(--rune-text));
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.runeCircuit small {
+  color: var(--rune-muted);
+  font-size: 0.52rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.runeCircuit.isReady strong,
+.runeCircuit.isReady small {
+  text-shadow: 0 0 9px color-mix(in srgb, var(--tone) 52%, transparent);
+}
+
+.runeCircuit.isComplete strong {
+  color: var(--rune-mint);
+}
+
 .runeActions {
   display: flex;
   gap: 8px;
@@ -425,7 +468,7 @@
   --tone: var(--rune-danger);
   --pattern: var(--rune-ember);
   position: absolute;
-  top: max(86px, calc(var(--rune-safe) + 64px));
+  top: max(118px, calc(var(--rune-safe) + 96px));
   left: 50%;
   display: grid;
   grid-template-columns: 150px minmax(220px, 460px) 170px;

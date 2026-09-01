@@ -17,6 +17,7 @@ import {
   getDirectorPressure,
   getWaveProfile
 } from './enemyPacing.js';
+import { getCircuitEncounterProfile, getCircuitFinaleState } from './runeCircuit.js';
 
 export function updateEnemySpawning({
   dt,
@@ -36,18 +37,27 @@ export function updateEnemySpawning({
 }) {
   spawnTimer.current -= dt;
   const waveProfile = getWaveProfile(currentGame.wave);
+  const circuitProfile = getCircuitEncounterProfile(currentGame, player.current.pos);
+  const encounterWaveProfile = {
+    ...waveProfile,
+    runner: Math.max(0.08, Math.min(0.5, waveProfile.runner + circuitProfile.runnerDelta)),
+    brute: Math.max(0.02, Math.min(0.4, waveProfile.brute + circuitProfile.bruteDelta))
+  };
   const pressure = getDirectorPressure(currentGame);
   const rhythm = getCombatRhythm(currentGame);
   const openingEase = currentGame.time < 30 ? 0.68 + currentGame.time / 30 * 0.26 : 1;
   const enemyLimit = runtimeBudget.maxEnemies;
-  const targetCount = Math.min(Math.floor((waveProfile.targetBase + currentGame.wave * 7) * pressure * openingEase * rhythm.target), enemyLimit - 12);
+  const targetCount = Math.min(
+    Math.floor((waveProfile.targetBase + currentGame.wave * 7) * pressure * openingEase * rhythm.target * circuitProfile.targetScale),
+    enemyLimit - 12
+  );
   const minuteMark = Math.floor(currentGame.time / 60);
   const nextSurge = SURGE_EVENTS[surgeIndex.current];
 
-  if (nextSurge && currentGame.time >= nextSurge.time && enemies.current.length < enemyLimit - 8) {
+  if (nextSurge && currentGame.time >= nextSurge.time && !circuitProfile.delayThreats && enemies.current.length < enemyLimit - 8) {
     const count = Math.min(nextSurge.count + Math.floor(currentGame.wave / 2), enemyLimit - enemies.current.length);
     for (let i = 0; i < count; i += 1) {
-      const enemy = applyCombatRhythm(createEnemy(currentGame.wave + 1, waveProfile, player.current.pos), rhythm);
+      const enemy = applyCombatRhythm(createEnemy(currentGame.wave + 1, encounterWaveProfile, player.current.pos), rhythm);
       enemy.surge = true;
       enemy.hp *= 1.16;
       enemy.maxHp *= 1.16;
@@ -86,7 +96,7 @@ export function updateEnemySpawning({
     surgeIndex.current += 1;
   }
 
-  if (minuteMark >= 1 && minuteMark <= 4 && eliteSpawnedMinute.current < minuteMark) {
+  if (minuteMark >= 1 && minuteMark <= 4 && !circuitProfile.delayThreats && eliteSpawnedMinute.current < minuteMark) {
     const elite = createElite(minuteMark, currentGame.wave, player.current.pos);
     const meta = ELITE_ROLE_META[elite.role] ?? ELITE_ROLE_META.charger;
     enemies.current.push(elite);
@@ -125,8 +135,14 @@ export function updateEnemySpawning({
     eliteSpawnedMinute.current = minuteMark;
   }
 
-  if (BOSS_WAVE_SCHEDULE.includes(currentGame.wave) && bossSpawnedWave.current < currentGame.wave) {
+  if (BOSS_WAVE_SCHEDULE.includes(currentGame.wave) && !circuitProfile.delayThreats && bossSpawnedWave.current < currentGame.wave) {
     const boss = createBoss(currentGame.wave, player.current.pos);
+    const circuitFinale = getCircuitFinaleState(currentGame);
+    if (circuitFinale.active) {
+      boss.hp *= circuitFinale.bossHealthMultiplier;
+      boss.maxHp = boss.hp;
+      boss.circuitWeakened = true;
+    }
     enemies.current.push(boss);
     spawnWarnings.current.push({
       pos: boss.pos.clone(),
@@ -139,10 +155,10 @@ export function updateEnemySpawning({
     hitBursts.current.push({ pos: boss.pos.clone(), life: 1.1, maxLife: 1.1, color: '#d4a84c' });
     showEncounterAlert(updateGame, {
       kind: 'boss',
-      label: 'RIFT BEAST',
-      title: '균열 보스 출현',
-      hint: '패턴 예고 확인',
-      color: '#d4a84c',
+      label: circuitFinale.active ? 'CIRCUIT BREAK' : 'RIFT BEAST',
+      title: circuitFinale.active ? '완성 회로가 균열을 약화합니다' : '균열 보스 출현',
+      hint: circuitFinale.active ? '체력 감소 · 패턴 지연' : '패턴 예고 확인',
+      color: circuitFinale.active ? '#75ddd2' : '#d4a84c',
       threat: {
         kind: 'boss',
         label: 'RIFT BEAST',
@@ -161,10 +177,10 @@ export function updateEnemySpawning({
     const amount = Math.min(
       18,
       enemyLimit - enemies.current.length,
-      Math.ceil((waveProfile.spawnBase + Math.floor(currentGame.time / 72) + catchUp) * Math.min(1.24, pressure) * openingEase * rhythm.spawn)
+      Math.ceil((waveProfile.spawnBase + Math.floor(currentGame.time / 72) + catchUp) * Math.min(1.24, pressure) * openingEase * rhythm.spawn * circuitProfile.spawnScale)
     );
     for (let i = 0; i < amount; i += 1) {
-      const enemy = applyCombatRhythm(createEnemy(currentGame.wave, waveProfile, player.current.pos), rhythm);
+      const enemy = applyCombatRhythm(createEnemy(currentGame.wave, encounterWaveProfile, player.current.pos), rhythm);
       enemies.current.push(enemy);
       if (i === 0 || currentGame.wave > 2) {
         spawnWarnings.current.push({
@@ -176,6 +192,9 @@ export function updateEnemySpawning({
         });
       }
     }
-    spawnTimer.current = Math.max(0.24, (waveProfile.interval - currentGame.wave * 0.018) / Math.max(0.8, rhythm.spawn));
+    spawnTimer.current = Math.max(
+      0.24,
+      (waveProfile.interval - currentGame.wave * 0.018) * circuitProfile.intervalScale / Math.max(0.8, rhythm.spawn)
+    );
   }
 }

@@ -184,6 +184,10 @@ export function useGameSceneRuntime(visualQuality) {
       resolved: enemies.current.reduce((total, enemy) => total + (enemy.contactAttackCount ?? 0), 0),
       hits: enemies.current.reduce((total, enemy) => total + (enemy.contactHitCount ?? 0), 0)
     },
+    combat: {
+      totalDamage: Number((runStats.current.totalDamage ?? 0).toFixed(2)),
+      damageBySource: { ...runStats.current.damageBySource }
+    },
     counts: {
       enemies: enemies.current.length,
       projectiles: projectiles.current.length,

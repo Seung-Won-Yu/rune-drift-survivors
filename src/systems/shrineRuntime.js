@@ -3,6 +3,7 @@ import {
   SHRINE_ACTIVATE_RADIUS,
   SHRINE_CHANNEL_TIME
 } from '../config/gameTuning.js';
+import { SHRINE_SITES } from '../config/gameData.js';
 import {
   withItemPickup,
   withShrineActivation
@@ -11,6 +12,7 @@ import {
   applyBuildFocus,
   getUpgradeFocusKey
 } from './progression.js';
+import { getActiveCircuitShrine } from './runeCircuit.js';
 import { pickArmoryBoost } from './upgradeDrafting.js';
 
 export function updateShrinesRuntime(context) {
@@ -24,9 +26,18 @@ export function updateShrinesRuntime(context) {
     addDamageNumber
   } = context;
 
+  const circuit = getActiveCircuitShrine(shrines.current, currentGame.time);
+
   for (const shrine of shrines.current) {
     if (shrine.activated) continue;
-    shrine.pulse += dt * 2.6;
+    const isCircuitTarget = shrine === circuit.shrine;
+    shrine.pulse += dt * (isCircuitTarget ? 2.6 : 0.8);
+
+    if (!isCircuitTarget || !circuit.ready) {
+      shrine.channel = Math.max(0, shrine.channel - dt * 0.9);
+      continue;
+    }
+
     const distanceSq = shrine.pos.distanceToSquared(player.current.pos);
     if (distanceSq < SHRINE_ACTIVATE_RADIUS * SHRINE_ACTIVATE_RADIUS) {
       shrine.channel = Math.min(SHRINE_CHANNEL_TIME, shrine.channel + dt);
@@ -37,7 +48,7 @@ export function updateShrinesRuntime(context) {
           life: 1.0,
           maxLife: 1.0,
           color: shrine.color,
-          label: 'SHRINE'
+          label: 'SEAL'
         });
         addDamageNumber(shrine.pos, shrine.label, shrine.color, 0.72);
       }
@@ -101,7 +112,7 @@ function activateShrineRuntime(shrine, currentGame, updateGame, context) {
       }
       return {
         ...nextGame,
-        pickupMessage: `무기 제단: ${boosts.map(boost => boost.title).join(' + ')}`,
+        pickupMessage: `${getCircuitStepLabel(current)} · ${boosts.map(boost => boost.title).join(' + ')}`,
         pickupFlash: 2.8
       };
     });
@@ -112,7 +123,7 @@ function activateShrineRuntime(shrine, currentGame, updateGame, context) {
   if (shrine.reward === 'heal') {
     updateGame(current => ({
       ...withShrineActivation(withItemPickup(current, 'heal'), shrine.id),
-      pickupMessage: '생명 제단: 최대 체력 회복',
+      pickupMessage: `${getCircuitStepLabel(current)} · 최대 체력 회복`,
       pickupFlash: 2.6,
       stats: {
         ...current.stats,
@@ -127,7 +138,7 @@ function activateShrineRuntime(shrine, currentGame, updateGame, context) {
     updateGame(current => ({
       ...withShrineActivation(current, shrine.id),
       pendingUpgrades: (current.pendingUpgrades ?? 0) + 1,
-      pickupMessage: '각인 제단: 보상 선택 +1',
+      pickupMessage: `${getCircuitStepLabel(current)} · 보상 선택 +1`,
       pickupFlash: 2.8
     }));
     addDamageNumber(shrine.pos, '보상 선택 +1', shrine.color, 0.98);
@@ -155,8 +166,12 @@ function activateShrineRuntime(shrine, currentGame, updateGame, context) {
   }
   updateGame(current => ({
     ...withShrineActivation(withItemPickup(current, 'purge'), shrine.id),
-    pickupMessage: `정화 제단: ${cleared} 소멸`,
+    pickupMessage: `${getCircuitStepLabel(current)} · ${cleared} 소멸`,
     pickupFlash: 2.6
   }));
   addDamageNumber(shrine.pos, `정화 ${cleared}`, shrine.color, 0.98);
+}
+
+function getCircuitStepLabel(game) {
+  return `룬 회로 ${Math.min(SHRINE_SITES.length, (game.shrineActivations ?? 0) + 1)}/${SHRINE_SITES.length}`;
 }

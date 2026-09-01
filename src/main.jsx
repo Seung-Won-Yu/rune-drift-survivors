@@ -1,8 +1,7 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Canvas } from '@react-three/fiber';
-import { Environment, useGLTF } from '@react-three/drei';
-import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
+import { useGLTF } from '@react-three/drei';
 import {
   BALANCED_PRELOAD_MODEL_URLS,
   CORE_PRELOAD_MODEL_URLS,
@@ -28,6 +27,7 @@ import { GameScene } from './GameScene.jsx';
 import { AUDIO_CUE, emitAudioCue } from './audio/audioCues.js';
 import './styles.css';
 
+const CinematicEffects = lazy(() => import('./world/CinematicEffects.jsx'));
 const preloadedModelUrls = new Set();
 
 function preloadModelUrls(urls) {
@@ -106,10 +106,11 @@ function App() {
     });
   };
 
-  const restart = () => {
+  const restart = replayRouteFamily => {
+    const nextRouteFamily = typeof replayRouteFamily === 'string' ? replayRouteFamily : null;
     sceneApi.current?.reset();
     setUpgradeChoices([]);
-    setGame(createInitialGame());
+    setGame(createInitialGame({ replayRouteFamily: nextRouteFamily }));
   };
 
   const onLevelUp = () => {
@@ -138,7 +139,7 @@ function App() {
     <main className={`shell visual-${runtimeVisualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>
       <ModelPreloads visualQuality={runtimeVisualQuality} />
       <Canvas
-        shadows={false}
+        shadows={runtimeVisualQuality !== 'low'}
         camera={canvasCamera}
         dpr={canvasDpr}
         gl={canvasGl}
@@ -147,8 +148,8 @@ function App() {
           camera.updateProjectionMatrix();
         }}
       >
-        <color attach="background" args={['#06100e']} />
-        <fog attach="fog" args={['#132522', 86, 264]} />
+        <color attach="background" args={['#081512']} />
+        <fog attach="fog" args={['#19332d', 78, 232]} />
         <GameScene
           refApi={sceneApi}
           game={game}
@@ -157,16 +158,13 @@ function App() {
           visualQuality={runtimeVisualQuality}
           touchControlsRef={touchControls}
         />
-        {enableEnvironment && (
+        {(enableEnvironment || enablePostFx) && (
           <Suspense fallback={null}>
-            <Environment preset="sunset" />
+            <CinematicEffects
+              enableEnvironment={enableEnvironment}
+              enablePostFx={enablePostFx}
+            />
           </Suspense>
-        )}
-        {enablePostFx && (
-          <EffectComposer>
-            <Bloom luminanceThreshold={0.34} intensity={0.72} mipmapBlur />
-            <Vignette eskil={false} offset={0.2} darkness={0.62} />
-          </EffectComposer>
         )}
       </Canvas>
       <LoadingOverlay />

@@ -8,7 +8,9 @@ Run the production-oriented browser checks with:
 npm run qa:smoke
 ```
 
-The suite covers loading, desktop movement, buffered dash input, audio unlock and mute persistence, enemy contact windup/recovery, mobile touch controls, pause/resume, upgrade choices, boss HUD, result state, and runtime stress budgets.
+Smoke tests run fully in the background by default. Set `RUNE_QA_HEADED=1` only when an explicit standalone Chrome window is wanted for debugging.
+
+The suite covers loading and balanced payload boundaries, desktop movement, buffered dash input, audio unlock and mute persistence, Rune Circuit locked/ready and encounter-pressure states, enemy contact windup/recovery, all five weapon damage sources, mobile touch controls, pause/resume, upgrade choices, boss HUD, guided replay restart, result state, and runtime stress budgets.
 
 Screenshots and local failure artifacts are generated under `output/playwright/` and `test-results/`. Both folders are ignored by git.
 
@@ -18,15 +20,17 @@ Start the app with `npm run dev`, then use one of these routes:
 
 | Route | Purpose |
 | --- | --- |
+| `?qa=circuit&quality=balanced` | Playable first-seal state, route HUD, and world landmark |
 | `?qa=upgrade&quality=balanced` | Late-run three-card upgrade layout |
 | `?qa=starter-upgrade&quality=balanced` | First upgrade pacing and copy |
 | `?qa=contact&quality=balanced` | Enemy contact windup, hit, and recovery |
+| `?qa=combat&quality=balanced` | Live five-weapon cadence, hit-shape, and damage-source comparison |
 | `?qa=stress&quality=balanced` | Runtime caps, effects load, and frame metrics |
 | `?qa=silhouette&quality=balanced` | Dense enemy silhouette comparison |
 | `?qa=victory&quality=balanced` | Victory result overlay |
 | `?qa=defeat&quality=balanced` | Defeat result overlay |
 
-Development builds also expose `window.__RUNE_DRIFT_QA__` for boss, result, upgrade, stress, contact-attack, reset, and metrics controls.
+Development builds also expose `window.__RUNE_DRIFT_QA__` for circuit, boss, result, upgrade, combat identity, stress, contact-attack, reset, and metrics controls.
 
 ## Render quality flags
 

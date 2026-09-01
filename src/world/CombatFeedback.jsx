@@ -11,13 +11,13 @@ export function HitBurst({ burst, visualQuality = 'high' }) {
   const qualityShards = visualQuality === 'high' ? 4 : visualQuality === 'balanced' ? 2 : 0;
   const shardCount = visualQuality === 'low'
     ? Math.min(2, profile.shardBonus)
-    : Math.min(10, qualityShards + profile.shardBonus);
+    : Math.min(10, Math.round(qualityShards * profile.shardQualityScale) + profile.shardBonus);
   const showCore = visualQuality !== 'low';
   const ringScale = radius * (0.7 + progress * profile.ringExpansion);
   const [ringInner, ringOuter] = profile.ringThickness;
   return (
     <group position={[burst.pos.x, burst.pos.y + 0.18, burst.pos.z]}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[ringScale, ringScale, 1]}>
+      <mesh rotation={[-Math.PI / 2, 0, profile.ringRotation]} scale={[ringScale, ringScale, 1]}>
         <ringGeometry args={[ringInner, ringOuter, ringSegments]} />
         <meshBasicMaterial color={burst.color} transparent opacity={Math.max(0, 0.8 - progress)} depthWrite={false} toneMapped={false} />
       </mesh>
@@ -32,18 +32,22 @@ export function HitBurst({ burst, visualQuality = 'high' }) {
       )}
       {showCore && (
         <>
-          <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} scale={[radius * (0.46 + progress * 1.9), radius * (0.46 + progress * 1.9), 1]}>
+          <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4 + profile.ringRotation]} scale={[radius * (0.46 + progress * 1.9), radius * (0.46 + progress * 1.9), 1]}>
             <ringGeometry args={[0.12, 0.16, 4]} />
             <meshBasicMaterial color="#ffffff" transparent opacity={Math.max(0, 0.58 - progress * 0.58)} depthWrite={false} toneMapped={false} />
           </mesh>
           <mesh
             position={[0, 0.14 + progress * 0.35, 0]}
             rotation={profile.coreShape === 'diamond' ? [0, progress * Math.PI * 2, Math.PI / 4] : [0, 0, 0]}
-            scale={[0.34 - progress * 0.12, 0.34 - progress * 0.12, 0.34 - progress * 0.12]}
+            scale={[
+              (0.34 - progress * 0.12) * profile.coreScale,
+              (0.34 - progress * 0.12) * profile.coreScale,
+              (0.34 - progress * 0.12) * profile.coreScale
+            ]}
           >
-            {profile.coreShape === 'diamond'
-              ? <boxGeometry args={[1, 1, 1]} />
-              : <octahedronGeometry args={[1, 0]} />}
+            {profile.coreShape === 'diamond' && <boxGeometry args={[1, 1, 1]} />}
+            {profile.coreShape === 'sphere' && <sphereGeometry args={[1, 10, 8]} />}
+            {profile.coreShape === 'octahedron' && <octahedronGeometry args={[1, 0]} />}
             <meshBasicMaterial color={burst.color} transparent opacity={Math.max(0, 0.72 - progress)} depthWrite={false} toneMapped={false} />
           </mesh>
         </>
@@ -55,10 +59,18 @@ export function HitBurst({ burst, visualQuality = 'high' }) {
           <mesh
             key={`hit-shard-${index}`}
             position={[Math.cos(angle) * distance, 0.18 + progress * 0.42, Math.sin(angle) * distance]}
-            rotation={[0.68, -angle, Math.PI / 4 + progress * Math.PI]}
-            scale={[0.1 + radius * 0.035, 0.24 + radius * 0.055, 0.1 + radius * 0.035]}
+            rotation={profile.shardShape === 'slash'
+              ? [0.18, -angle, Math.PI / 4 + progress * Math.PI * 0.5]
+              : [0.68, -angle, Math.PI / 4 + progress * Math.PI]}
+            scale={[
+              (0.1 + radius * 0.035) * profile.shardWidth,
+              (0.24 + radius * 0.055) * profile.shardLength,
+              (0.1 + radius * 0.035) * profile.shardWidth
+            ]}
           >
-            <coneGeometry args={[1, 1, 3]} />
+            {profile.shardShape === 'slash'
+              ? <boxGeometry args={[1, 1, 1]} />
+              : <coneGeometry args={[1, 1, 3]} />}
             <meshBasicMaterial color={index % 2 ? '#ffffff' : burst.color} transparent opacity={shardOpacity} depthWrite={false} toneMapped={false} />
           </mesh>
         );

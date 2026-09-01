@@ -28,7 +28,7 @@
 - `src/hooks/useGameSceneRuntime.js` creates/reset runtime refs, adaptive budgets, scratch objects, and QA metrics.
 - `src/hooks/useGameSceneEffects.js` owns keyboard listeners, level-up effects, and the dev-only scene API.
 - `src/systems/gameSceneActions.js` is the narrow adapter between the frame loop and gameplay systems.
-- `src/systems/` keeps player, enemy, weapon, projectile, pickup, shrine, terrain, pacing, telemetry, and pool logic independent of React rendering.
+- `src/systems/` keeps player, enemy, weapon, projectile, pickup, shrine, Rune Circuit, terrain, pacing, telemetry, and pool logic independent of React rendering.
 - `src/world/GameWorld.jsx` composes the battlefield, actors, telegraphs, projectiles, and visual feedback.
 - `src/ui/` owns accessible DOM presentation; it should not mutate scene refs directly.
 
@@ -63,4 +63,4 @@ assets/blender/*.blend
 
 ## Design records
 
-The visual reboot brief, implementation slices, and verification notes live under [`docs/design/rune-visual-reboot/`](./design/rune-visual-reboot/). They are historical design records rather than runtime dependencies.
+The visual reboot records live under [`docs/design/rune-visual-reboot/`](./design/rune-visual-reboot/). The active gameplay reframe, Rune Circuit experience map, and follow-up slices live under [`docs/design/gameplay-reframe/`](./design/gameplay-reframe/). These are design records rather than runtime dependencies.

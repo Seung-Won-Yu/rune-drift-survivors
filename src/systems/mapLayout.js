@@ -186,9 +186,9 @@ export function createBalancedFieldArenaLayout(visualQuality = 'balanced') {
   });
 
   const centralPlaza = [
-    { position: [0, getTerrainHeight(0, 0) + 0.066, 0], rotation: 0, scale: [18.5, 18.5, 1], color: '#3d5148' },
-    { position: [0, getTerrainHeight(0, 0) + 0.074, 0], rotation: Math.PI / 4, scale: [10.6, 10.6, 1], color: '#6d5b42' },
-    { position: [0, getTerrainHeight(0, 0) + 0.083, 0], rotation: Math.PI / 8, scale: [6.1, 6.1, 1], color: '#356858' }
+    { position: [0, getTerrainHeight(0, 0) + 0.066, 0], rotation: 0, scale: [13.2, 13.2, 1], color: '#32473f' },
+    { position: [0, getTerrainHeight(0, 0) + 0.074, 0], rotation: Math.PI / 4, scale: [7.6, 7.6, 1], color: '#51493a' },
+    { position: [0, getTerrainHeight(0, 0) + 0.083, 0], rotation: Math.PI / 8, scale: [4.2, 4.2, 1], color: '#38705e' }
   ];
 
   const flowerCount = Math.round((visualQuality === 'low' ? 10 : 24) * density);

@@ -11,21 +11,21 @@ export function useCanvasQualitySettings(visualQuality, game) {
     runtimeVisualQuality === 'high' && isOptionalRenderFeatureEnabled('env')
   ), [runtimeVisualQuality]);
   const canvasDpr = useMemo(() => (
-    runtimeVisualQuality === 'low' ? [0.82, 0.92] : runtimeVisualQuality === 'balanced' ? [0.94, 1.04] : [1.0, 1.14]
+    runtimeVisualQuality === 'low' ? [0.82, 0.92] : runtimeVisualQuality === 'balanced' ? [1.0, 1.12] : [1.0, 1.14]
   ), [runtimeVisualQuality]);
   const canvasCamera = useMemo(() => ({
-    position: runtimeVisualQuality === 'low' ? [0, 38, 64] : runtimeVisualQuality === 'balanced' ? [0, 42, 70] : [0, 44, 74],
-    fov: runtimeVisualQuality === 'low' ? 50 : 48,
+    position: runtimeVisualQuality === 'low' ? [0, 34, 56] : runtimeVisualQuality === 'balanced' ? [0, 36, 60] : [0, 38, 62],
+    fov: runtimeVisualQuality === 'low' ? 49 : 47,
     near: 0.1,
     far: 420
   }), [runtimeVisualQuality]);
   const canvasGl = useMemo(() => ({
-    antialias: runtimeVisualQuality !== 'low' && enablePostFx,
+    antialias: runtimeVisualQuality !== 'low',
     alpha: false,
     depth: true,
     stencil: false,
-    powerPreference: runtimeVisualQuality === 'high' && enablePostFx ? 'high-performance' : 'low-power'
-  }), [enablePostFx, runtimeVisualQuality]);
+    powerPreference: runtimeVisualQuality === 'low' ? 'low-power' : 'high-performance'
+  }), [runtimeVisualQuality]);
 
   return {
     runtimeVisualQuality,

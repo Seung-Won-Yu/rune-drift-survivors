@@ -52,7 +52,7 @@ export function RelicBoxInstances({ transforms, roughness = 0.94 }) {
   return (
     <instancedMesh ref={meshRef} args={[null, null, transforms.length]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshBasicMaterial color="#ffffff" toneMapped={false} />
+      <meshStandardMaterial color="#ffffff" roughness={roughness} metalness={0.01} />
     </instancedMesh>
   );
 }
@@ -153,7 +153,7 @@ export function TerrainStoneInstances({ transforms, roll = 0.04 }) {
   return (
     <instancedMesh ref={stoneRef} args={[null, null, transforms.length]} frustumCulled={false}>
       <dodecahedronGeometry args={[1, 0]} />
-      <meshBasicMaterial vertexColors toneMapped={false} />
+      <meshStandardMaterial vertexColors roughness={0.94} metalness={0.01} />
     </instancedMesh>
   );
 }

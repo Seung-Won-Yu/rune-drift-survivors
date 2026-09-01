@@ -1,7 +1,13 @@
 import { useEffect } from 'react';
 
 import { MAX_ENEMIES, MAX_PROJECTILES, MAX_XP_GEMS } from '../config/gameTuning.js';
-import { createInitialGame, createQaBossGame, createQaResultGame, createQaStressGame } from '../systems/gameState.js';
+import {
+  createInitialGame,
+  createQaBossGame,
+  createQaCombatGame,
+  createQaResultGame,
+  createQaStressGame
+} from '../systems/gameState.js';
 import { pickUpgrades } from '../systems/upgradeDrafting.js';
 
 export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
@@ -37,6 +43,23 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
         };
         showQaGame(nextGame);
         window.setTimeout(() => sceneApi.current?.contactAttack?.(), 140);
+      },
+      combat: () => {
+        showQaGame(createQaCombatGame());
+        [140, 300].forEach(delay => {
+          window.setTimeout(() => sceneApi.current?.combatIdentity?.(), delay);
+        });
+      },
+      circuit: () => {
+        showQaGame({
+          ...createInitialGame(),
+          phase: 'playing',
+          time: 20,
+          kills: 8,
+          xp: 12,
+          onboardingMovement: 42,
+          dashUses: 1
+        });
       },
       metrics: () => sceneApi.current?.metrics?.(),
       upgrade: () => {
@@ -94,6 +117,10 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
       }), 120);
     } else if (qaMode === 'contact') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.contactAttack(), 120);
+    } else if (qaMode === 'combat') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.combat(), 120);
+    } else if (qaMode === 'circuit') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.circuit(), 120);
     } else if (qaMode === 'victory' || qaMode === 'defeat') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.result(qaMode), 120);
     }

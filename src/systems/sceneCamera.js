@@ -23,8 +23,8 @@ export function updateFollowCamera({
   const shake = cameraShake.current;
   const shakeX = (Math.random() - 0.5) * shake;
   const shakeZ = (Math.random() - 0.5) * shake;
-  const cameraHeight = compactCamera ? 38 : visualQuality === 'balanced' ? 42 : 44;
-  const cameraDepth = compactCamera ? 64 : visualQuality === 'balanced' ? 70 : 74;
+  const cameraHeight = compactCamera ? 34 : visualQuality === 'balanced' ? 36 : 38;
+  const cameraDepth = compactCamera ? 56 : visualQuality === 'balanced' ? 60 : 62;
   camera.position.lerp(
     scratch.cameraPosition.set(cameraTarget.x + shakeX, cameraHeight + cameraTarget.y * 0.38, cameraTarget.z + cameraDepth + shakeZ),
     0.08

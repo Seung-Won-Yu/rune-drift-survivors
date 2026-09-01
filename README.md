@@ -7,11 +7,11 @@ Play the GitHub Pages build: [seung-won-yu.github.io/rune-drift-survivors](https
 ## Core loop
 
 ```txt
-Learn movement → secure early XP → choose an armory direction
-→ complete weapon synergies → survive elites, bosses, and the final surge
+Learn movement → follow the active seal → ignite the four-step Rune Circuit
+→ complete weapon synergies → survive bosses and the final rift
 ```
 
-Move through a dark rune-ruin battlefield, collect XP and field items, draft upgrades, build weapon synergies, read enemy attack telegraphs, and survive until the five-minute result screen.
+Move through a dark rune-ruin battlefield, collect XP, and follow the next seal's direction and timing. Each circuit activation grants a build or survival reward while redirecting the run across the arena. Draft upgrades, build weapon synergies, read enemy attack telegraphs, and survive until the five-minute result screen.
 
 ## Current build
 
@@ -19,18 +19,19 @@ Move through a dark rune-ruin battlefield, collect XP and field items, draft upg
 
 - Auto-combat weapons: rune orb, storm brand, orbit blade, chain lightning, and solar nova.
 - Synergy paths: storm + lightning, blade + nova, and orb + pierce.
-- First-run guidance for movement, dash, XP collection, and the armory cache.
-- Run phases, wave pacing, surges, field items, shrines, elites, bosses, and boss rage patterns.
+- First-run guidance for movement, dash, XP collection, and the first circuit seal.
+- A four-step Rune Circuit with sequential activation, timed unlocks, navigation, and distinct rewards.
+- Circuit-led run phases, wave pacing, surges, field items, elites, bosses, and boss rage patterns.
 - Contact attacks use approach, windup, resolve, and recovery states with visible reach/countdown rings.
 - Runtime caps and adaptive budgets protect enemy, projectile, XP, number, and effect counts.
 
 ### Presentation and controls
 
-- Dark rune-field HUD with anchored HP/XP, timer, objective, threat, boss, upgrade, pause, and result states.
+- Dark rune-field HUD with anchored HP/XP, timer, circuit navigation, objective, threat, boss, upgrade, pause, and result states.
 - Distinct runner, golem, brute, elite, and boss silhouettes across render-quality modes.
 - Procedural Web Audio cues with browser-safe unlock and persisted mute state.
 - Keyboard, mobile joystick, touch dash, portrait, and landscape support.
-- Forest-ruin arena assembled from procedural terrain and CC0 imported props.
+- Forest-ruin arena with a procedural PBR terrain surface, coherent lit materials, contact shadows, and selectively reused CC0 props.
 
 ## Controls
 
@@ -66,13 +67,15 @@ Run the complete browser smoke suite:
 npm run qa:smoke
 ```
 
-The suite covers loading, keyboard/touch movement, dash buffering, audio, enemy contact timing, HUD/overlays, upgrade selection, boss state, result state, and stress budgets.
+The suite covers loading, keyboard/touch movement, dash buffering, audio, Rune Circuit states, enemy contact timing, HUD/overlays, upgrade selection, boss state, result state, and stress budgets.
 
 Useful deterministic routes include:
 
 ```txt
+?qa=circuit&quality=balanced
 ?qa=starter-upgrade&quality=balanced
 ?qa=contact&quality=balanced
+?qa=combat&quality=balanced
 ?qa=stress&quality=balanced
 ?qa=victory&quality=balanced
 ```
@@ -92,9 +95,9 @@ The default mode is `balanced`.
 ```
 
 - `low` prioritizes mobile and reduced-motion stability.
-- `balanced` is the normal gameplay target.
-- `high` enables imported actor models and additional battlefield detail.
-- `fx=on`, `env=on`, and `cinematic` opt into more expensive presentation layers.
+- `balanced` is the normal gameplay target and avoids the multi-megabyte high-detail forest payload.
+- `high` enables imported actor models and additional battlefield detail on demand.
+- `fx=on`, `env=on`, and `cinematic` lazy-load more expensive presentation layers.
 
 ## Repository structure
 
@@ -143,3 +146,5 @@ The production build uses `import.meta.env.BASE_URL`, so models load correctly f
 - [QA guide](./docs/qa.md)
 - [Asset pipeline and sources](./docs/assets.md)
 - [Visual reboot design records](./docs/design/rune-visual-reboot/)
+- [Gameplay reframe and Rune Circuit](./docs/design/gameplay-reframe/)
+- [Material-first visual foundation](./docs/design/gameplay-reframe/VISUAL_FOUNDATION.md)

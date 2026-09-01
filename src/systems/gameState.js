@@ -1,6 +1,14 @@
 import { BOSS_PATTERN_META, DAMAGE_SOURCE_META } from '../config/gameData.js';
 import { DASH_COOLDOWN, RUN_DURATION } from '../config/gameTuning.js';
 
+const REPLAY_ROUTE_META = Object.freeze({
+  orb: '룬 구체',
+  storm: '폭풍 낙인',
+  blade: '궤도 칼날',
+  chain: '연쇄 번개',
+  nova: '태양 파동'
+});
+
 function createEmptyItemPickups() {
   return { magnet: 0, purge: 0, heal: 0, overload: 0, cache: 0 };
 }
@@ -16,6 +24,7 @@ export function withItemPickup(game, type) {
 }
 
 export function withShrineActivation(game, shrineId) {
+  if (game.activatedShrines?.[shrineId]) return game;
   return {
     ...game,
     shrineActivations: (game.shrineActivations ?? 0) + 1,
@@ -37,7 +46,10 @@ export function createEmptyBuildFocus() {
   return { orb: 0, storm: 0, blade: 0, chain: 0, nova: 0 };
 }
 
-export function createInitialGame() {
+export function createInitialGame(options = {}) {
+  const replayRouteFamily = REPLAY_ROUTE_META[options.replayRouteFamily]
+    ? options.replayRouteFamily
+    : null;
   return {
     phase: 'playing',
     level: 1,
@@ -54,8 +66,10 @@ export function createInitialGame() {
       ready: true
     },
     result: null,
-    pickupMessage: '',
-    pickupFlash: 0,
+    pickupMessage: replayRouteFamily
+      ? `${REPLAY_ROUTE_META[replayRouteFamily]} 경로 예약 · 첫 무기 봉인에서 확정`
+      : '',
+    pickupFlash: replayRouteFamily ? 4.2 : 0,
     encounterAlert: null,
     encounterAlertTimer: 0,
     activeThreat: null,
@@ -72,6 +86,7 @@ export function createInitialGame() {
     itemPickups: createEmptyItemPickups(),
     shrineActivations: 0,
     activatedShrines: {},
+    replayRouteFamily,
     playerPos: { x: 0, z: 0 },
     stats: {
       hp: 120,
@@ -296,6 +311,51 @@ export function createQaStressGame() {
       novaDamage: 1.48,
       novaCooldown: 0.78,
       novaPulse: 1
+    }
+  };
+}
+
+export function createQaCombatGame() {
+  return {
+    ...createInitialGame(),
+    phase: 'playing',
+    level: 8,
+    xp: 18,
+    xpToNext: 68,
+    time: 92,
+    kills: 84,
+    wave: 5,
+    pickupMessage: '전투 아이덴티티 QA: 다섯 무기군 동시 재현',
+    pickupFlash: 4,
+    onboardingMovement: 64,
+    dashUses: 2,
+    shrineActivations: 2,
+    activatedShrines: { armory: true, vital: true },
+    buildFocus: { orb: 2, storm: 2, blade: 2, chain: 2, nova: 2 },
+    upgrades: ['orb-lance', 'storm-burst', 'blade-reaper', 'chain-plus', 'nova-plus'],
+    stats: {
+      ...createInitialGame().stats,
+      hp: 180,
+      maxHp: 180,
+      damage: 1.16,
+      cooldown: 0.86,
+      pierce: 2,
+      orbCount: 2,
+      orbDamage: 1.18,
+      orbScale: 1.12,
+      stormRadius: 1.18,
+      stormDamage: 1.14,
+      stormStrikes: 2,
+      stormCooldown: 0.9,
+      bladeBonus: 1,
+      bladeDamage: 1.18,
+      bladeRadius: 1.08,
+      lightningChains: 5,
+      lightningDamage: 1.16,
+      lightningRange: 1.12,
+      novaRadius: 1.16,
+      novaDamage: 1.18,
+      novaCooldown: 0.9
     }
   };
 }
