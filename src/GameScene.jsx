@@ -31,7 +31,7 @@ export function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'h
     playerMesh,
     weaponEffects,
     stateSyncElapsed,
-    updateRuntimeBudgetForFrame
+    updateFramePressure
   } = runtime;
   const {
     updatePlayer,
@@ -64,7 +64,7 @@ export function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'h
 
   useFrame((state, delta) => {
     recordFrameSample(frameStats, delta);
-    updateRuntimeBudgetForFrame(delta, game.phase);
+    updateFramePressure(delta, game.phase);
     const dt = Math.min(delta, 0.033);
     if (game.phase !== 'playing') {
       stateSyncElapsed.current = 0;

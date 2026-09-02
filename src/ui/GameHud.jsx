@@ -50,7 +50,8 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
   const completedOpeningObjectives = openingObjectives.filter(objective => objective.complete).length;
   const firstSessionCue = getFirstSessionCue(game, onboardingSteps, openingActiveObjectives);
   const showFirstSessionCoach = !bossStatus && firstSessionCue && game.time < 32;
-  const showRunObjectives = !bossStatus && !showFirstSessionCoach && visibleObjectives.length > 0 && game.time < 286;
+  const showRunObjectives = !bossStatus && !encounterAlert && !showFirstSessionCoach && visibleObjectives.length > 0 && game.time < 286;
+  const showEncounterBanner = encounterAlert && !bossStatus;
   const showDashTicker = !dashReady;
   const hudAlerts = getHudAlerts({
     game,
@@ -108,7 +109,7 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
       </div>
       {hudAlerts.length > 0 && (
         <div className="runeAlertStack hudAlertStack" aria-label="전투 알림">
-          {hudAlerts.slice(0, 2).map(alert => (
+          {hudAlerts.slice(0, bossStatus ? 1 : 2).map(alert => (
             <HudAlert key={alert.id} alert={alert} />
           ))}
         </div>
@@ -126,7 +127,7 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
           phaseObjectiveCount={phaseObjectives.length}
         />
       )}
-      {encounterAlert && <HudEncounter alert={encounterAlert} />}
+      {showEncounterBanner && <HudEncounter alert={encounterAlert} />}
       {bossStatus && <HudBossBar bossStatus={bossStatus} />}
     </section>
   );

@@ -1,24 +1,13 @@
-import { Suspense } from 'react';
-
 import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { getTerrainHeight } from '../systems/terrain.js';
 import { BalancedFieldArena } from './BalancedFieldArena.jsx';
-import { BalancedNatureAssetAccents } from './BalancedNatureAssetAccents.jsx';
-import { RuinFieldBackdrop } from './RuinFieldBackdrop.jsx';
-import { FieldBiomeLandmarks } from './FieldBiomeLandmarks.jsx';
-import { FieldCampLandmarks } from './FieldCampLandmarks.jsx';
-import { FieldPathNetwork } from './FieldPathNetwork.jsx';
-import { ImportedForestBattlefield } from './ImportedForestBattlefield.jsx';
-import { NaturalFieldKit } from './NaturalFieldKit.jsx';
-import { OpenFieldTerrainIdentity } from './OpenFieldTerrainIdentity.jsx';
 import { PerimeterGroveSilhouettes } from './PerimeterGroveSilhouettes.jsx';
-import { RiftFloorSigils } from './RiftFloorSigils.jsx';
-import { RuneRelicLandmarks, TerrainStoryDetails } from './RuneRelicLandmarks.jsx';
+import { RuneCircuitLandmarks } from './RuneCircuitLandmarks.jsx';
+import { RuneRelicLandmarks } from './RuneRelicLandmarks.jsx';
 import { SculptedRuinTerrain } from './SculptedRuinTerrain.jsx';
 
 export function MapBaseArena({ visualQuality = 'high' }) {
   const edgeSegments = visualQuality === 'low' ? 80 : visualQuality === 'balanced' ? 112 : 152;
-  const highDetail = visualQuality === 'high';
 
   return (
     <group>
@@ -33,32 +22,10 @@ export function MapBaseArena({ visualQuality = 'high' }) {
       </mesh>
 
       <SculptedRuinTerrain visualQuality={visualQuality} />
-      {highDetail ? (
-        <>
-          <RuinFieldBackdrop visualQuality={visualQuality} />
-          <OpenFieldTerrainIdentity visualQuality={visualQuality} />
-          <FieldPathNetwork visualQuality={visualQuality} />
-          <FieldCampLandmarks visualQuality={visualQuality} />
-          <TerrainStoryDetails />
-          <RiftFloorSigils />
-        </>
-      ) : (
-        <BalancedFieldArena visualQuality={visualQuality} />
-      )}
-      {visualQuality === 'balanced' && (
-        <Suspense fallback={null}>
-          <BalancedNatureAssetAccents />
-        </Suspense>
-      )}
+      <BalancedFieldArena visualQuality={visualQuality} />
       <RuneRelicLandmarks visualQuality={visualQuality} />
-      {highDetail && (
-        <Suspense fallback={null}>
-          <ImportedForestBattlefield visualQuality={visualQuality} />
-        </Suspense>
-      )}
-      {visualQuality !== 'low' && <NaturalFieldKit visualQuality={visualQuality} />}
-      {highDetail && <FieldBiomeLandmarks visualQuality={visualQuality} />}
       {visualQuality !== 'low' && <PerimeterGroveSilhouettes visualQuality={visualQuality} />}
+      <RuneCircuitLandmarks visualQuality={visualQuality} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.07, 0]}>
         <ringGeometry args={[ARENA_RADIUS - 1.35, ARENA_RADIUS - 1.02, edgeSegments]} />

@@ -2,67 +2,33 @@
 
 ## Runtime rule
 
-Only browser-ready assets under `public/models/` ship with the game. Raw downloads, editable source files, and conversion archives stay in ignored local folders under `assets/`.
+The shipped game is model-free. `public/` contains only the project-authored character atlases under `public/sprites/`; there is no `public/models/` directory, model preload group, GLB converter, or runtime model loader.
 
-The active runtime manifest is [`src/config/assets.js`](../src/config/assets.js). When a model is added or removed, update that manifest and its preload group in the same change.
+The active manifest is [`src/config/assets.js`](../src/config/assets.js). It must remain limited to assets that are requested by the current build.
 
-## Active runtime models
+## Project-authored sprites
 
-### Actors and weapons
+- `sprites/rune-warden-animation-atlas-v2.webp`: 4 × 6 atlas containing back, right, front, and left views across idle A/B, walk A/B, cast, and hurt poses.
+- `sprites/riftborn-common-animation-atlas-v1.webp`: 4 × 6 atlas containing runner, golem, and brute walk A/B rows across the same four directions.
+- `sprites/riftborn-threat-animation-atlas-v1.webp`: 4 × 8 atlas containing bulwark, charger, summoner, and boss movement A/B rows across the same four directions.
 
-- `player-wizard.glb`
-- `enemy-demon.glb`
-- `enemy-bat-source.glb`
-- `enemy-cyclops.glb`
-- `boss-cthulhu.glb`
-- `projectile-orb.glb`
-- `projectile-storm.glb`
-- `orbit-blade.glb`
+The atlases were generated with OpenAI's built-in ImageGen tool from the project's dark-rune, stone, cyan-corruption, and worn-gold art direction. `src/systems/playerSprite.js` and `src/systems/enemySprite.js` own deterministic frame selection; `src/world/PlayerAvatar.jsx` and `src/world/EnemyInstances.jsx` own rendering.
 
-### Kenney Nature Kit
+The current lossless WebP sources are RGB with a pale neutral checker. Their decoded pixels are identical to the generated PNG sources while the combined deployable size is about 30% smaller. The shared `src/world/neutralKeyShader.js` material fragment converts that neutral range into a clamped alpha edge and darkens partially keyed edge pixels so a white halo cannot survive filtering. All character atlases disable mipmaps and use linear filtering to prevent pale source pixels bleeding into minified silhouettes. A future true-alpha export can remove this compatibility path without changing frame selection.
 
-- `nature-kit/tree_pineTallA.glb`
-- `nature-kit/tree_pineRoundC.glb`
-- `nature-kit/tree_default.glb`
-- `nature-kit/rock_largeA.glb`
-- `nature-kit/rock_tallE.glb`
-- `nature-kit/plant_bushLarge.glb`
-- `nature-kit/grass_leafsLarge.glb`
+## Code-built visuals
 
-### Quaternius forest accents
+The following systems intentionally use Three.js geometry, materials, shaders, and runtime-generated textures instead of imported models:
 
-- `quaternius/birch-trees.glb`
-- `quaternius/pine-trees.glb`
-- `quaternius/rocks.glb`
-- `quaternius/bushes.glb`
+- terrain, paths, foliage silhouettes, rocks, ruins, camps, and perimeter landmarks;
+- Rune Circuit gates, rank stones, route markers, and relic structures;
+- orb and storm projectiles, orbit blades, weapon strikes, and telegraphs;
+- contact shadows, atmosphere, lighting, and combat feedback.
 
-## Applied sources
+Render quality changes the density and presentation cost of these systems, never the gameplay simulation and never the asset format.
 
-- [Quaternius RPG Characters](https://quaternius.com/packs/rpgcharacters.html), CC0: player and weapon bases.
-- [Quaternius Cute Animated Monsters](https://quaternius.com/packs/cutemonsters.html), CC0: enemy and boss bases.
-- [Kenney Nature Kit](https://kenney.nl/assets/nature-kit), CC0: trees, rocks, bushes, and grass.
-- [Quaternius Ultimate Stylized Nature Pack](https://poly.pizza/bundle/Ultimate-Stylized-Nature-Pack-zyIyYd9yGr), CC0: imported forest accents.
+## Local source workspace
 
-The root [`ASSET_CREDITS.md`](../ASSET_CREDITS.md) keeps the attribution and source links that should remain visible in the repository.
+`assets/source/` remains ignored and may be used for non-runtime visual references. Blender working files, archived GLB packages, and conversion inputs were removed when the model-free runtime became authoritative.
 
-## Local source folders
-
-These paths are intentionally ignored by git:
-
-```txt
-assets/source/
-assets/archive/
-assets/blender/*.blend
-```
-
-Use `assets/source/` for raw downloads, `assets/archive/` for superseded or conversion inputs, and `assets/blender/` for editable Blender files. Do not place raw source packs under `public/`.
-
-## Conversion command
-
-The tracked converter rebuilds the active character and combat models from archived glTF inputs:
-
-```bash
-npm run assets:gltf-to-glb
-```
-
-Review the generated files visually before committing them. Runtime model names must continue to match `src/config/assets.js`.
+The root [`ASSET_CREDITS.md`](../ASSET_CREDITS.md) records the shipped asset provenance.

@@ -36,15 +36,15 @@ function getSurfaceHeight(u, v) {
   const broad = periodicNoise(u, v, 4, 1);
   const clumps = periodicNoise(u, v, 9, 3);
   const grit = periodicNoise(u, v, 19, 7);
-  const grain = Math.sin((u * 5 + v * 2) * Math.PI * 2) * 0.5 + 0.5;
-  return broad * 0.44 + clumps * 0.32 + grit * 0.17 + grain * 0.07;
+  const fine = periodicNoise(u, v, 37, 13);
+  return broad * 0.42 + clumps * 0.31 + grit * 0.19 + fine * 0.08;
 }
 
-function createTexture(data, size, colorSpace = THREE.NoColorSpace) {
+function createTexture(data, size, repeat, colorSpace = THREE.NoColorSpace) {
   const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat, THREE.UnsignedByteType);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(22, 22);
+  texture.repeat.set(repeat, repeat);
   texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.generateMipmaps = true;
@@ -56,6 +56,7 @@ function createTexture(data, size, colorSpace = THREE.NoColorSpace) {
 
 export function createTerrainSurfaceTextures(visualQuality = 'balanced') {
   const size = visualQuality === 'high' ? 256 : 128;
+  const repeat = visualQuality === 'high' ? 24 : 18;
   const pixelCount = size * size;
   const heights = new Float32Array(pixelCount);
   const albedoPixels = new Uint8Array(pixelCount * 4);
@@ -70,8 +71,10 @@ export function createTerrainSurfaceTextures(visualQuality = 'balanced') {
       const height = getSurfaceHeight(u, v);
       const mossBlend = periodicNoise(u, v, 7, 11);
       const earthBlend = periodicNoise(u, v, 5, 17);
+      const stoneBlend = periodicNoise(u, v, 13, 29);
       const fleck = hash2d(x, y, 23);
-      const luminance = 0.88 + (height - 0.5) * 0.24 + (fleck > 0.955 ? 0.08 : 0);
+      const stoneFleck = fleck > 0.982 && stoneBlend > 0.56;
+      const luminance = 0.87 + (height - 0.5) * 0.22 + (stoneFleck ? 0.1 : 0);
       heights[index] = height;
 
       COLOR_DETAIL.copy(COOL_SOIL)
@@ -85,7 +88,7 @@ export function createTerrainSurfaceTextures(visualQuality = 'balanced') {
       albedoPixels[pixelIndex + 2] = clampByte(ENCODED_COLOR.b * 255);
       albedoPixels[pixelIndex + 3] = 255;
 
-      const roughness = 0.78 + mossBlend * 0.16 - (fleck > 0.97 ? 0.12 : 0);
+      const roughness = 0.8 + mossBlend * 0.14 - (stoneFleck ? 0.16 : 0);
       const roughnessByte = clampByte(roughness * 255);
       roughnessPixels[pixelIndex] = roughnessByte;
       roughnessPixels[pixelIndex + 1] = roughnessByte;
@@ -109,9 +112,9 @@ export function createTerrainSurfaceTextures(visualQuality = 'balanced') {
     }
   }
 
-  const map = createTexture(albedoPixels, size, THREE.SRGBColorSpace);
-  const normalMap = createTexture(normalPixels, size);
-  const roughnessMap = createTexture(roughnessPixels, size);
+  const map = createTexture(albedoPixels, size, repeat, THREE.SRGBColorSpace);
+  const normalMap = createTexture(normalPixels, size, repeat);
+  const roughnessMap = createTexture(roughnessPixels, size, repeat);
 
   return {
     map,

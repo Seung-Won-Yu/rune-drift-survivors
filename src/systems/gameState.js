@@ -1,5 +1,9 @@
 import { BOSS_PATTERN_META, DAMAGE_SOURCE_META } from '../config/gameData.js';
-import { DASH_COOLDOWN, RUN_DURATION } from '../config/gameTuning.js';
+import {
+  DASH_COOLDOWN,
+  RUN_DURATION,
+  STARTING_XP_TO_NEXT
+} from '../config/gameTuning.js';
 
 const REPLAY_ROUTE_META = Object.freeze({
   orb: '룬 구체',
@@ -54,7 +58,7 @@ export function createInitialGame(options = {}) {
     phase: 'playing',
     level: 1,
     xp: 0,
-    xpToNext: 30,
+    xpToNext: STARTING_XP_TO_NEXT,
     time: 0,
     kills: 0,
     wave: 1,
@@ -186,16 +190,17 @@ export function createQaBossGame(options = {}) {
 
 export function createQaResultGame(result = 'victory') {
   const didWin = result === 'victory';
+  const didSurvive = didWin || result === 'survived';
   return {
     ...createInitialGame(),
     phase: 'ended',
     result,
-    level: didWin ? 13 : 9,
-    xp: didWin ? 48 : 22,
+    level: didWin ? 13 : didSurvive ? 11 : 9,
+    xp: didWin ? 48 : didSurvive ? 34 : 22,
     xpToNext: 84,
-    time: didWin ? RUN_DURATION : 214,
-    kills: didWin ? 682 : 391,
-    wave: didWin ? 14 : 10,
+    time: didSurvive ? RUN_DURATION : 214,
+    kills: didWin ? 682 : didSurvive ? 524 : 391,
+    wave: didSurvive ? 14 : 10,
     onboardingMovement: 120,
     dashUses: 8,
     eliteKills: didWin ? 9 : 5,
@@ -221,7 +226,7 @@ export function createQaResultGame(result = 'victory') {
     ],
     stats: {
       ...createInitialGame().stats,
-      hp: didWin ? 86 : 0,
+      hp: didWin ? 86 : didSurvive ? 44 : 0,
       maxHp: 160,
       damage: 1.42,
       cooldown: 0.78,

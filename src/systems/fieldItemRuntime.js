@@ -52,7 +52,8 @@ export function updateFieldItemsRuntime(context) {
       life: 1.05,
       maxLife: 1.05,
       color: meta.color,
-      label: meta.label
+      label: meta.label,
+      signal: 'reward'
     });
     scheduledFieldItems.current.add(scheduled.id);
     fieldItemTimer.current = Math.max(fieldItemTimer.current, 3.8);
@@ -68,7 +69,8 @@ export function updateFieldItemsRuntime(context) {
       life: 0.9,
       maxLife: 0.9,
       color: meta.color,
-      label: meta.label
+      label: meta.label,
+      signal: 'reward'
     });
     fieldItemTimer.current = currentGame.time < 125
       ? 5.4 + Math.random() * 3.2
@@ -176,7 +178,8 @@ function applyFieldItemRuntime(item, currentGame, updateGame, context) {
       life: 0.7,
       maxLife: 0.7,
       color,
-      radius: 11
+      radius: 11,
+      signal: 'reward'
     });
     addDamageNumber(player.current.pos, '과부하 8초', color, 0.98);
     cameraShake.current = Math.max(cameraShake.current, 0.22);
@@ -206,7 +209,8 @@ function applyFieldItemRuntime(item, currentGame, updateGame, context) {
       life: 0.62,
       maxLife: 0.62,
       color,
-      radius: 8.5
+      radius: 8.5,
+      signal: 'reward'
     });
     cameraShake.current = Math.max(cameraShake.current, 0.18);
     updateGame(current => {

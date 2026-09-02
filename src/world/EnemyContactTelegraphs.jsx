@@ -5,7 +5,6 @@ import * as THREE from 'three';
 import { MAX_ENEMIES } from '../config/gameTuning.js';
 import { getVisualBudget } from '../hooks/useVisualQuality.js';
 import { useVisualFrameGate } from '../hooks/useVisualFrameGate.js';
-import { getEnemyAccentColor } from '../systems/enemyDirector.js';
 import {
   getEnemyContactReach,
   getEnemyContactWindupProgress
@@ -25,7 +24,7 @@ export function EnemyContactTelegraphs({ enemiesRef, visualQuality = 'balanced' 
     scale: new THREE.Vector3(),
     pos: new THREE.Vector3(),
     color: new THREE.Color(),
-    dangerColor: new THREE.Color('#f28b63'),
+    dangerColor: new THREE.Color('#f07b62'),
     active: [],
     impacts: []
   }), []);
@@ -63,7 +62,7 @@ export function EnemyContactTelegraphs({ enemiesRef, visualQuality = 'balanced' 
         scratch.scale.setScalar(reach * pulse)
       );
       reachMesh.current.setMatrixAt(count, scratch.matrix);
-      scratch.color.set(getEnemyAccentColor(enemy)).lerp(scratch.dangerColor, progress * 0.68);
+      scratch.color.copy(scratch.dangerColor);
       reachMesh.current.setColorAt(count, scratch.color);
 
       scratch.pos.y += 0.012;
@@ -98,16 +97,16 @@ export function EnemyContactTelegraphs({ enemiesRef, visualQuality = 'balanced' 
   return (
     <>
       <instancedMesh ref={reachMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <ringGeometry args={[0.91, 1, 32]} />
-        <meshBasicMaterial transparent opacity={0.68} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+        <ringGeometry args={[0.94, 1, 28, 1, Math.PI * 0.08, Math.PI * 1.72]} />
+        <meshBasicMaterial transparent opacity={0.56} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={countdownMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <ringGeometry args={[0.78, 0.91, 32]} />
-        <meshBasicMaterial transparent opacity={0.38} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+        <ringGeometry args={[0.82, 0.9, 24, 1, Math.PI * 0.08, Math.PI * 1.56]} />
+        <meshBasicMaterial transparent opacity={0.3} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={impactMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <ringGeometry args={[0.76, 0.98, 32]} />
-        <meshBasicMaterial color="#ffc08e" transparent opacity={0.56} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+        <ringGeometry args={[0.8, 1, 16]} />
+        <meshBasicMaterial color="#ffad82" transparent opacity={0.42} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
       </instancedMesh>
     </>
   );

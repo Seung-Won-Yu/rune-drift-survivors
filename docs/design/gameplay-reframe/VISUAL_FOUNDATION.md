@@ -1,16 +1,16 @@
-# Visual Foundation — Material Before More Models
+# Visual Foundation — Model-Free Material System
 
 ## Decision
 
-The battlefield will not depend on adding more Blender assets to become attractive. The visual order is:
+The battlefield does not depend on Blender or imported 3D models. The visual order is:
 
 1. coherent terrain surface;
 2. directional lighting and contact shadows;
 3. restrained color and material response;
 4. readable landmarks and silhouettes;
-5. selective authored models only where they carry identity.
+5. authored 2.5D sprites only where a character needs identity.
 
-Blender remains useful for the player, signature enemies, the four seals, and a small number of hero landmarks. It is not the default tool for ground fill, broad biome color, paths, or repeated surface detail.
+Characters use project-authored 2.5D atlases. Terrain, landmarks, weapons, foliage, and repeated surface detail use code-built geometry, shaders, and runtime textures. Blender, glTF, and GLB are outside the active production pipeline.
 
 ## Target look
 
@@ -31,9 +31,9 @@ Blender remains useful for the player, signature enemies, the four seals, and a 
 
 ### 2. Materials
 
-- Imported GLB textures and PBR maps are preserved in balanced and high quality.
-- Art-direction colors tint source materials instead of replacing them with unlit `MeshBasicMaterial`.
-- Repeated field props use lit, rough materials so the same key light binds procedural and imported geometry together.
+- Runtime terrain textures and PBR maps are generated deterministically for balanced and high quality.
+- Art-direction colors come from shared tokens and material families rather than source-model overrides.
+- Repeated field props use lit, rough materials so one key light binds every code-built surface together.
 - Emissive materials are reserved for runes, pickups, telegraphs, and combat feedback.
 
 ### 3. Lighting
@@ -48,16 +48,17 @@ Blender remains useful for the player, signature enemies, the four seals, and a 
 - The central combat area stays open and low-frequency.
 - Shrines, perimeter trees, and ruin clusters create navigation anchors outside the combat core.
 - Broad decorative patches cannot compete with the Rune Circuit route.
+- Low, balanced, and high share one authoritative field composition; quality tiers cannot reintroduce a separate decorative battlefield.
 - Repetition should be broken through scale, rotation, palette tint, and clustered placement before adding more asset types.
 
 ## Delivered in this slice
 
 - Runtime-generated terrain albedo, normal, and roughness maps for balanced/high.
 - Smoother balanced/high terrain geometry and corrected texture color handling.
-- PBR-preserving tinting for imported environment models.
-- PBR materials for balanced trees, bushes, rocks, grass, and ruin slabs.
+- Model-free PBR materials for trees, bushes, rocks, grass, and ruin slabs.
 - Balanced anti-aliasing, dynamic contact shadows, and rebalanced field lighting.
 - Removal of broad intersecting decals that caused large broken triangles on the ground.
+- Removal of the legacy high-only backdrop stack that reintroduced intersecting decals and duplicated field landmarks.
 
 ## Next art slices
 
@@ -65,12 +66,12 @@ Blender remains useful for the player, signature enemies, the four seals, and a 
 2. Build a small reusable material library for moss stone, bark, leaf, soil, and rune metal.
 3. Add clustered grass/pebble detail with distance-based density rather than unique scene models.
 4. Establish one fog and color-grade profile per quality tier.
-5. Revisit character/enemy models after the world palette and scale guide are locked.
+5. Tune character atlas scale and animation cadence after the world palette is locked.
 
 ## Acceptance checks
 
 - At the standard balanced camera, the ground reads as a continuous surface without black crushing or decal intersection artifacts.
 - Player and nearby enemies remain readable in motion and in shadow.
-- Imported props react to the same lighting as procedural props.
+- Code-built props react consistently to the shared lighting system.
 - Low quality remains functional without dynamic shadows or procedural material maps.
 - The stress scene stays within its existing runtime budget assertions.

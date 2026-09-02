@@ -18,6 +18,3 @@ test-results/
 
 # Local asset source workspace
 assets/source/
-assets/archive/
-assets/blender/*.blend
-*.blend1

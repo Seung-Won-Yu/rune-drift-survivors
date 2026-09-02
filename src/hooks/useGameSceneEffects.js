@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { populateCombatIdentityScene } from '../qa/populateCombatIdentityScene.js';
 import { populateContactAttackScene } from '../qa/populateContactAttackScene.js';
 import { populateStressScene } from '../qa/populateStressScene.js';
+import { populateThreatIdentityScene } from '../qa/populateThreatIdentityScene.js';
 import { resetFrameStats } from '../systems/runTelemetry.js';
 
 export function useGameSceneEffects({
@@ -82,6 +83,20 @@ export function useGameSceneEffects({
       },
       combatIdentity: () => {
         populateCombatIdentityScene({
+          player,
+          enemies,
+          projectiles,
+          xpGems,
+          fieldItems,
+          scheduledFieldItems,
+          hitBursts,
+          weaponEffects,
+          damageNumbers,
+          spawnWarnings
+        });
+      },
+      threatIdentity: () => {
+        populateThreatIdentityScene({
           player,
           enemies,
           projectiles,

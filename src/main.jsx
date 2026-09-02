@@ -1,12 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Canvas } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
-import {
-  BALANCED_PRELOAD_MODEL_URLS,
-  CORE_PRELOAD_MODEL_URLS,
-  HIGH_DETAIL_PRELOAD_MODEL_URLS
-} from './config/assets.js';
 import { useVisualQuality } from './hooks/useVisualQuality.js';
 import { useCanvasQualitySettings } from './hooks/useCanvasQualitySettings.js';
 import { useGameAudio } from './hooks/useGameAudio.js';
@@ -28,36 +22,17 @@ import { AUDIO_CUE, emitAudioCue } from './audio/audioCues.js';
 import './styles.css';
 
 const CinematicEffects = lazy(() => import('./world/CinematicEffects.jsx'));
-const preloadedModelUrls = new Set();
-
-function preloadModelUrls(urls) {
-  urls.forEach(url => {
-    if (preloadedModelUrls.has(url)) return;
-    preloadedModelUrls.add(url);
-    useGLTF.preload(url);
-  });
-}
-
-function ModelPreloads({ visualQuality }) {
-  useEffect(() => {
-    preloadModelUrls(CORE_PRELOAD_MODEL_URLS);
-    if (visualQuality !== 'low') {
-      preloadModelUrls(BALANCED_PRELOAD_MODEL_URLS);
-    }
-    if (visualQuality === 'high') {
-      preloadModelUrls(HIGH_DETAIL_PRELOAD_MODEL_URLS);
-    }
-  }, [visualQuality]);
-
-  return null;
-}
-
 function App() {
   const [game, setGame] = useState(() => createInitialGame());
   const [upgradeChoices, setUpgradeChoices] = useState([]);
   const sceneApi = useRef(null);
   const touchControls = useRef(createTouchControlsState());
-  const visualQuality = useVisualQuality();
+  const {
+    visualQuality,
+    qualityMode,
+    setQualityMode,
+    qualityLockedByUrl
+  } = useVisualQuality();
   const { muted: audioMuted, toggleMuted: toggleAudioMuted } = useGameAudio();
   const {
     runtimeVisualQuality,
@@ -137,7 +112,6 @@ function App() {
 
   return (
     <main className={`shell visual-${runtimeVisualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>
-      <ModelPreloads visualQuality={runtimeVisualQuality} />
       <Canvas
         shadows={runtimeVisualQuality !== 'low'}
         camera={canvasCamera}
@@ -176,7 +150,17 @@ function App() {
         onToggleAudio={toggleAudioMuted}
       />
       {game.phase === 'playing' && <TouchControls controlsRef={touchControls} />}
-      {game.phase === 'paused' && <PauseOverlay game={game} onResume={resume} onRestart={restart} />}
+      {game.phase === 'paused' && (
+        <PauseOverlay
+          game={game}
+          onResume={resume}
+          onRestart={restart}
+          visualQuality={visualQuality}
+          qualityMode={qualityMode}
+          onQualityModeChange={setQualityMode}
+          qualityLockedByUrl={qualityLockedByUrl}
+        />
+      )}
       {game.phase === 'upgrade' && (
         <UpgradeOverlay game={game} choices={upgradeChoices} onChoose={chooseUpgrade} />
       )}

@@ -29,11 +29,11 @@ export function GemBeacons({ gemsRef, visualQuality = 'high' }) {
       const gem = gemsRef.current[count * stride];
       if (!gem) continue;
       const pulse = 0.82 + Math.sin(gem.pulse) * 0.18;
-      scratch.pos.set(gem.pos.x, gem.pos.y + 0.92, gem.pos.z);
+      scratch.pos.set(gem.pos.x, gem.pos.y + 0.72, gem.pos.z);
       scratch.matrix.compose(
         scratch.pos,
         scratch.quat,
-        scratch.scale.set(0.055 * pulse, 1.2 + gem.value * 0.025, 0.055 * pulse)
+        scratch.scale.set(0.032 * pulse, 0.78 + gem.value * 0.018, 0.032 * pulse)
       );
       beamMesh.current.setMatrixAt(count, scratch.matrix);
     }
@@ -43,7 +43,7 @@ export function GemBeacons({ gemsRef, visualQuality = 'high' }) {
   return (
     <instancedMesh ref={beamMesh} args={[null, null, MAX_XP_GEMS]} frustumCulled={false}>
       <cylinderGeometry args={[1, 1, 1, 8, 1, true]} />
-      <meshBasicMaterial color="#7fc9d8" transparent opacity={0.22} depthWrite={false} toneMapped={false} />
+      <meshBasicMaterial color="#78bac2" transparent opacity={0.14} depthWrite={false} toneMapped={false} />
     </instancedMesh>
   );
 }

@@ -77,7 +77,8 @@ export function updateEnemyAbilityRuntime({
         life: 0.38,
         maxLife: 0.38,
         color: ELITE_ROLE_META.charger.color,
-        width: 0.08
+        width: 0.08,
+        signal: 'threat'
       });
     }
     return;
@@ -137,7 +138,8 @@ export function updateEnemyAbilityRuntime({
         life: 0.72,
         maxLife: 0.72,
         color: BOSS_PATTERN_META.shockwave.color,
-        radius
+        radius,
+        signal: 'threat-impact'
       });
       if (distance < radius && distance > 3.4 && damagePlayer((enemy.damage + 5) * getEnemyDamagePressure(currentGame) * circuitFinale.bossDamageMultiplier, updateGame, 0.86)) {
         player.current.pos.addScaledVector(toPlayer, 4.2);
@@ -171,7 +173,8 @@ export function updateEnemyAbilityRuntime({
         life: 0.68,
         maxLife: 0.68,
         color: meta.color,
-        radius: 10.5
+        radius: 10.5,
+        signal: 'threat-impact'
       });
       cameraShake.current = Math.max(cameraShake.current, 0.22);
     }
@@ -199,7 +202,8 @@ export function updateEnemyAbilityRuntime({
         life: 0.78,
         maxLife: 0.78,
         color: meta.color,
-        radius: 9.8
+        radius: 9.8,
+        signal: 'threat-impact'
       });
       cameraShake.current = Math.max(cameraShake.current, 0.18);
     }
@@ -229,14 +233,6 @@ export function updateEnemyAbilityRuntime({
     cue: meta.cue,
     radius: warningRadius,
     shape: meta.shape
-  });
-  weaponEffects.current.push({
-    type: 'ring',
-    pos: enemy.pos.clone(),
-    life: warningLife,
-    maxLife: warningLife,
-    color: meta.color,
-    radius: warningRadius
   });
   showEncounterAlert(updateGame, {
     kind: 'boss-pattern',

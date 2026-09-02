@@ -21,17 +21,26 @@ Move through a dark rune-ruin battlefield, collect XP, and follow the next seal'
 - Synergy paths: storm + lightning, blade + nova, and orb + pierce.
 - First-run guidance for movement, dash, XP collection, and the first circuit seal.
 - A four-step Rune Circuit with sequential activation, timed unlocks, navigation, and distinct rewards.
+- Each completed seal receives a dedicated circuit signal that states the connected seal and earned reward without stacking another objective panel.
+- Three honest run outcomes: full circuit seal, five-minute survival with an incomplete circuit, and defeat.
 - Circuit-led run phases, wave pacing, surges, field items, elites, bosses, and boss rage patterns.
-- Contact attacks use approach, windup, resolve, and recovery states with visible reach/countdown rings.
-- Runtime caps and adaptive budgets protect enemy, projectile, XP, number, and effect counts.
+- Contact attacks use approach, readable anticipation, impact snap, and recovery states with visible reach/countdown rings.
+- The opening curve reaches its first card sooner and exposes the first three circuit seals by 145 seconds without changing late-run scaling.
+- Combat signals use distinct shapes: warm open rings for danger, filled pulses for player attacks, and diamond marks for rewards and circuit objectives.
+- A quality-independent simulation budget keeps enemy, projectile, and XP rules identical across devices.
+- Adaptive visual budgets protect optional effects, numbers, and render cadence without changing combat difficulty.
 
 ### Presentation and controls
 
 - Dark rune-field HUD with anchored HP/XP, timer, circuit navigation, objective, threat, boss, upgrade, pause, and result states.
-- Distinct runner, golem, brute, elite, and boss silhouettes across render-quality modes.
+- A hand-painted 2.5D Rune Warden with 24 authored direction/action cells: two-frame idle and walk cycles plus cast and hurt poses in all four directions.
+- A complete 2.5D animated Riftborn cast: runner, golem, brute, bulwark, charger, summoner, and the Rift Warden boss.
+- Lossless WebP atlases and shared clean-edge sprite compositing reduce character transfer size while removing pale source fringes.
+- Lightweight generated alpha materials give projectiles, runner afterimages, and storm fields soft game-like motion without Blender or downloaded VFX textures.
 - Procedural Web Audio cues with browser-safe unlock and persisted mute state.
 - Keyboard, mobile joystick, touch dash, portrait, and landscape support.
-- Forest-ruin arena with a procedural PBR terrain surface, coherent lit materials, contact shadows, and selectively reused CC0 props.
+- Forest-ruin arena with multi-scale procedural PBR terrain, code-built foliage and ruins, coherent lit materials, and contact shadows.
+- Code-built Rune Circuit gates, seal-colored rank stones, and ground routes keep the four gameplay landmarks readable with no Blender or GLB runtime dependency.
 
 ## Controls
 
@@ -67,24 +76,27 @@ Run the complete browser smoke suite:
 npm run qa:smoke
 ```
 
-The suite covers loading, keyboard/touch movement, dash buffering, audio, Rune Circuit states, enemy contact timing, HUD/overlays, upgrade selection, boss state, result state, and stress budgets.
+The suite covers loading, keyboard/touch movement, dash buffering, audio, opening progression, Rune Circuit states and landmark structure, enemy contact timing and pose response, HUD/overlays, upgrade selection, boss state, result state, desktop stress budgets, and mobile stress-frame overflow/HUD separation.
 
 Useful deterministic routes include:
 
 ```txt
 ?qa=circuit&quality=balanced
+?qa=objectives&quality=balanced
 ?qa=starter-upgrade&quality=balanced
 ?qa=contact&quality=balanced
 ?qa=combat&quality=balanced
+?qa=threats&quality=balanced
 ?qa=stress&quality=balanced
 ?qa=victory&quality=balanced
+?qa=survived&quality=balanced
 ```
 
 See [docs/qa.md](./docs/qa.md) for the complete route table, browser expectations, and generated artifact locations.
 
 ## Render quality
 
-The default mode is `balanced`.
+The default mode automatically resolves to the balanced web target. Pause the game to switch between Auto, Performance, Balanced, and Quality; the choice persists locally. URL flags remain available for deterministic QA and override the in-game selector.
 
 ```txt
 ?quality=low
@@ -95,9 +107,10 @@ The default mode is `balanced`.
 ```
 
 - `low` prioritizes mobile and reduced-motion stability.
-- `balanced` is the normal gameplay target and avoids the multi-megabyte high-detail forest payload.
-- `high` enables imported actor models and additional battlefield detail on demand.
+- `balanced` is the normal gameplay target and keeps the full runtime model-free.
+- `high` keeps the same coherent battlefield composition while enhancing lighting, shadows, atmosphere, and effect detail without adding model downloads.
 - `fx=on`, `env=on`, and `cinematic` lazy-load more expensive presentation layers.
+- Quality changes affect presentation only. Enemy density, projectile limits, and XP reward limits remain the same.
 
 ## Repository structure
 
@@ -111,34 +124,28 @@ src/
   systems/    frame-level gameplay logic
   ui/         DOM HUD, overlays, cards, touch controls
   world/      React Three Fiber battlefield and effects
-public/models/  runtime GLB assets
-scripts/        Playwright QA and model conversion
+public/sprites/ project-authored RGB sprite atlases with runtime clean-edge compositing
+scripts/        Playwright QA
 docs/           project, QA, asset, and design documentation
 ```
 
-All runtime modules under `src/` are connected to the `src/main.jsx` import graph. Generated output, browser artifacts, raw asset downloads, archives, and Blender working files are git-ignored.
+All runtime modules under `src/` are connected to the `src/main.jsx` import graph. Generated output, browser artifacts, and raw asset downloads are git-ignored.
 
 See [docs/project-structure.md](./docs/project-structure.md) for ownership boundaries and the full repository map.
 
 ## Assets
 
-Only browser-ready assets under `public/models/` ship with the game. Raw downloads and editable sources stay in ignored local folders under `assets/`.
+Only the project-authored atlases under `public/sprites/` ship as external visual assets. Characters use 2.5D sprites; terrain, landmarks, foliage, weapons, and effects are assembled in Three.js code.
 
 - Active runtime manifest: `src/config/assets.js`
 - Attribution: [ASSET_CREDITS.md](./ASSET_CREDITS.md)
-- Inventory and conversion workflow: [docs/assets.md](./docs/assets.md)
-
-Rebuild archived character/combat glTF sources with:
-
-```bash
-npm run assets:gltf-to-glb
-```
+- Inventory and runtime rules: [docs/assets.md](./docs/assets.md)
 
 ## Deployment
 
 `.github/workflows/deploy.yml` builds, runs the headless smoke suite, and deploys `dist/` to GitHub Pages on pushes to `main`.
 
-The production build uses `import.meta.env.BASE_URL`, so models load correctly from the `/rune-drift-survivors/` Pages subpath.
+The production build uses `import.meta.env.BASE_URL`, so sprite atlases load correctly from the `/rune-drift-survivors/` Pages subpath.
 
 ## Documentation
 

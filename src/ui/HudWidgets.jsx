@@ -62,7 +62,7 @@ export function HudCircuit({ circuit }) {
     <div className={`runeCircuit ${circuit.ready ? 'isReady' : 'isLocked'}`} style={{ '--tone': circuit.nextSite.color }} aria-label="다음 룬 회로 봉인">
       <span>CIRCUIT {circuit.completed}/{circuit.total}</span>
       <strong>{circuit.direction?.arrow} {circuit.nextSite.label}</strong>
-      <small>{circuit.distance}m · {status}</small>
+      <small>{circuit.nextSite.rewardLabel} · {circuit.distance}m · {status}</small>
     </div>
   );
 }

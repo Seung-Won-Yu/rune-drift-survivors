@@ -5,13 +5,13 @@
   --rune-stone-0: #142722;
   --rune-stone-1: #1d342f;
   --rune-stone-2: #2d4b44;
-  --rune-line: rgba(127, 210, 198, 0.2);
-  --rune-line-strong: rgba(127, 210, 198, 0.48);
+  --rune-line: rgba(137, 180, 167, 0.14);
+  --rune-line-strong: rgba(137, 180, 167, 0.34);
   --rune-cyan: #75ddd2;
   --rune-cyan-soft: #b9f3e8;
   --rune-ember: #e2ad58;
   --rune-danger: #e06b5f;
-  --rune-text: #f1e7cc;
+  --rune-text: #e9dfc7;
   --rune-muted: #aebeb3;
   --rune-dim: #71867c;
   --rune-shadow: rgba(0, 7, 6, 0.72);

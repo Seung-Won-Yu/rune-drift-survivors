@@ -244,8 +244,9 @@ export function getRunScore(game) {
     build: Math.round(buildScore),
     combat: Math.round(combatScore)
   };
-  if (total >= 90) return { ...rounded, grade: 'S', label: '균열 지배', color: '#d4a84c' };
-  if (total >= 76) return { ...rounded, grade: 'A', label: '회로 완성', color: '#64c98d' };
+  const circuitComplete = getRuneCircuitState(game).complete;
+  if (total >= 90 && circuitComplete) return { ...rounded, grade: 'S', label: '균열 지배', color: '#d4a84c' };
+  if (total >= 76) return { ...rounded, grade: 'A', label: circuitComplete ? '회로 완성' : '생존 귀환', color: '#64c98d' };
   if (total >= 60) return { ...rounded, grade: 'B', label: '빌드 성립', color: '#58b9d4' };
   if (total >= 42) return { ...rounded, grade: 'C', label: '성장 중', color: '#aa91cf' };
   return { ...rounded, grade: 'D', label: '재정비 필요', color: '#d96d58' };
@@ -282,6 +283,40 @@ function getActivatedShrineLabels(game) {
   return labels.length > 0 ? labels.join(' · ') : '미활성';
 }
 
+function getRunOutcome(game) {
+  const circuit = getRuneCircuitState(game);
+  if (game.result === 'victory') {
+    return {
+      id: 'victory',
+      eyebrow: 'RIFT SEALED',
+      title: '5분 생존과 회로 봉인에 성공했습니다',
+      detail: '4개 봉인과 생존 목표를 모두 완수했습니다',
+      mark: '◇',
+      color: '#d4a84c'
+    };
+  }
+  if (game.result === 'survived') {
+    return {
+      id: 'survived',
+      eyebrow: 'RIFT ENDURED',
+      title: '5분을 생존했지만 회로가 미완성입니다',
+      detail: `${circuit.nextSite?.label ?? '남은 봉인'}부터 연결하면 완전 봉인이 가능합니다`,
+      mark: '△',
+      color: '#58b9d4'
+    };
+  }
+  return {
+    id: 'defeat',
+    eyebrow: 'INSCRIPTION BROKEN',
+    title: '룬이 끊어졌습니다',
+    detail: circuit.completed > 0
+      ? `회로 ${circuit.completed}/${circuit.total} 지점에서 붕괴했습니다`
+      : '첫 무기 봉인을 향해 움직이며 초반 화력을 확보하세요',
+    mark: '×',
+    color: '#d96d58'
+  };
+}
+
 export function getRunResultSummary(game) {
   const topWeapon = getTopDamageSource(game);
   const synergy = getBuildSynergyStates(game).find(item => item.level > 0);
@@ -291,6 +326,7 @@ export function getRunResultSummary(game) {
     gradeLabel: score.label,
     gradeColor: score.color,
     score,
+    outcome: getRunOutcome(game),
     topWeapon,
     synergy: synergy
       ? { ...synergy, detail: `${synergy.label} ${formatFocusLevel(synergy.level)}` }

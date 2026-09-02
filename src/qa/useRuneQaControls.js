@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 
+import { SHRINE_SITES } from '../config/gameData.js';
 import { MAX_ENEMIES, MAX_PROJECTILES, MAX_XP_GEMS } from '../config/gameTuning.js';
 import {
   createInitialGame,
@@ -8,6 +9,7 @@ import {
   createQaResultGame,
   createQaStressGame
 } from '../systems/gameState.js';
+import { getShrineActivationAlert } from '../systems/shrineRuntime.js';
 import { pickUpgrades } from '../systems/upgradeDrafting.js';
 
 export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
@@ -50,6 +52,12 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
           window.setTimeout(() => sceneApi.current?.combatIdentity?.(), delay);
         });
       },
+      threats: () => {
+        showQaGame({ ...createQaCombatGame(), phase: 'qa-preview' });
+        [140, 300].forEach(delay => {
+          window.setTimeout(() => sceneApi.current?.threatIdentity?.(), delay);
+        });
+      },
       circuit: () => {
         showQaGame({
           ...createInitialGame(),
@@ -59,6 +67,41 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
           xp: 12,
           onboardingMovement: 42,
           dashUses: 1
+        });
+      },
+      seal: () => {
+        const shrine = SHRINE_SITES[0];
+        const openingGame = {
+          ...createInitialGame(),
+          phase: 'playing',
+          time: 28,
+          kills: 16,
+          onboardingMovement: 48,
+          dashUses: 1
+        };
+        showQaGame({
+          ...openingGame,
+          shrineActivations: 1,
+          activatedShrines: { [shrine.id]: true },
+          pickupMessage: '룬 회로 1/4 · 빌드 보급',
+          pickupFlash: 2.8,
+          encounterAlert: getShrineActivationAlert(shrine, openingGame),
+          encounterAlertTimer: 2.8
+        });
+      },
+      objectives: () => {
+        showQaGame({
+          ...createInitialGame(),
+          phase: 'playing',
+          time: 182,
+          level: 8,
+          kills: 284,
+          eliteKills: 2,
+          shrineActivations: 3,
+          activatedShrines: { armory: true, vital: true, purge: true },
+          buildFocus: { orb: 2, storm: 3, blade: 0, chain: 2, nova: 0 },
+          onboardingMovement: 120,
+          dashUses: 4
         });
       },
       metrics: () => sceneApi.current?.metrics?.(),
@@ -119,9 +162,15 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.contactAttack(), 120);
     } else if (qaMode === 'combat') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.combat(), 120);
+    } else if (qaMode === 'threats') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.threats(), 120);
     } else if (qaMode === 'circuit') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.circuit(), 120);
-    } else if (qaMode === 'victory' || qaMode === 'defeat') {
+    } else if (qaMode === 'seal') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.seal(), 120);
+    } else if (qaMode === 'objectives') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.objectives(), 120);
+    } else if (qaMode === 'victory' || qaMode === 'survived' || qaMode === 'defeat') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.result(qaMode), 120);
     }
 

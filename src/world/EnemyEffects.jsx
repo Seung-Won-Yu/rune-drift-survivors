@@ -7,6 +7,7 @@ import { MAX_ENEMIES } from '../config/gameTuning.js';
 import { getVisualBudget } from '../hooks/useVisualQuality.js';
 import { useVisualFrameGate } from '../hooks/useVisualFrameGate.js';
 import { getEnemyAccentColor } from '../systems/enemyDirector.js';
+import { getCombatEffectTextures } from './combatEffectTextures.js';
 import { syncInstanceMesh } from './instancedMeshUtils.js';
 
 export function EnemyGroundAuras({ enemiesRef, visualQuality = 'high' }) {
@@ -29,7 +30,8 @@ export function EnemyGroundAuras({ enemiesRef, visualQuality = 'high' }) {
     const time = performance.now() * 0.003;
     let count = 0;
     for (const enemy of enemiesRef.current) {
-      if (count >= maxAuras && enemy.kind !== 'boss' && enemy.kind !== 'elite') continue;
+      if (enemy.kind !== 'boss' && enemy.kind !== 'elite') continue;
+      if (count >= maxAuras) break;
       if (count >= MAX_ENEMIES) break;
       const pulse = 1 + Math.sin(time + enemy.wobble) * 0.07;
       scratch.euler.set(Math.PI / 2, 0, 0);
@@ -40,14 +42,10 @@ export function EnemyGroundAuras({ enemiesRef, visualQuality = 'high' }) {
         scratch.quat,
         scratch.scale.setScalar((
           enemy.kind === 'boss'
-            ? 3.1 + (enemy.bossGuard > 0 ? 1.0 : 0)
+            ? 2.65 + (enemy.bossGuard > 0 ? 0.72 : 0)
             : enemy.kind === 'elite'
-              ? 2.6 + ((enemy.shield ?? 0) > 0 ? 0.56 : 0)
-              : enemy.kind === 'brute'
-                ? enemy.radius * 2.15
-                : enemy.kind === 'runner'
-                  ? enemy.radius * 1.62
-                  : enemy.radius * 1.88
+              ? 2.05 + ((enemy.shield ?? 0) > 0 ? 0.42 : 0)
+              : 1
         ) * pulse)
       );
       auraMesh.current.setMatrixAt(count, scratch.matrix);
@@ -60,8 +58,8 @@ export function EnemyGroundAuras({ enemiesRef, visualQuality = 'high' }) {
 
   return (
     <instancedMesh ref={auraMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-      <ringGeometry args={[0.58, 0.68, 32]} />
-      <meshBasicMaterial transparent opacity={0.42} depthWrite={false} toneMapped={false} />
+      <circleGeometry args={[1, 12]} />
+      <meshBasicMaterial transparent opacity={0.13} depthWrite={false} toneMapped={false} />
     </instancedMesh>
   );
 }
@@ -82,6 +80,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
   const eliteAuraMesh = useRef();
   const threatRingMesh = useRef();
   const chargeTellMesh = useRef();
+  const motionTrailTexture = useMemo(() => getCombatEffectTextures().motionTrail, []);
   const scratch = useMemo(() => ({
     matrix: new THREE.Matrix4(),
     quat: new THREE.Quaternion(),
@@ -91,7 +90,15 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
     euler: new THREE.Euler(),
     forward: new THREE.Vector3(),
     right: new THREE.Vector3(),
-    yAxis: new THREE.Vector3(0, 1, 0)
+    yAxis: new THREE.Vector3(0, 1, 0),
+    visibleEnemies: [],
+    flashingEnemies: [],
+    runnerEnemies: [],
+    bruteEnemies: [],
+    golemEnemies: [],
+    eliteEnemies: [],
+    threatEnemies: [],
+    chargingEnemies: []
   }), []);
   const showDecor = visualQuality !== 'low';
   const shouldRenderVisualFrame = useVisualFrameGate(visualQuality, 30, 18);
@@ -100,35 +107,35 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
     if (!shouldRenderVisualFrame(state.clock.elapsedTime)) return;
     const budget = getVisualBudget(visualQuality);
     const maxAccents = Math.min(MAX_ENEMIES, budget.enemyAccents);
-    const time = performance.now() * 0.004;
-    const visibleEnemies = [];
-    const flashingEnemies = [];
-    const runnerEnemies = [];
-    const bruteEnemies = [];
-    const golemEnemies = [];
-    const eliteEnemies = [];
-    const threatEnemies = [];
-    const chargingEnemies = [];
+    const time = state.clock.elapsedTime * 4;
+    scratch.visibleEnemies.length = 0;
+    scratch.flashingEnemies.length = 0;
+    scratch.runnerEnemies.length = 0;
+    scratch.bruteEnemies.length = 0;
+    scratch.golemEnemies.length = 0;
+    scratch.eliteEnemies.length = 0;
+    scratch.threatEnemies.length = 0;
+    scratch.chargingEnemies.length = 0;
 
     for (const enemy of enemiesRef.current) {
       const isPriority = enemy.kind === 'boss' || enemy.kind === 'elite';
-      if (visibleEnemies.length < MAX_ENEMIES && (visibleEnemies.length < maxAccents || isPriority)) {
-        visibleEnemies.push(enemy);
+      if (scratch.visibleEnemies.length < MAX_ENEMIES && (scratch.visibleEnemies.length < maxAccents || isPriority)) {
+        scratch.visibleEnemies.push(enemy);
       }
-      if (enemy.flash > 0 && flashingEnemies.length < maxAccents + 6) flashingEnemies.push(enemy);
-      if (enemy.kind === 'runner' && runnerEnemies.length < maxAccents) runnerEnemies.push(enemy);
-      if (enemy.kind === 'brute' && bruteEnemies.length < maxAccents) bruteEnemies.push(enemy);
-      if (enemy.kind === 'golem' && golemEnemies.length < maxAccents) golemEnemies.push(enemy);
-      if (enemy.kind === 'elite' && eliteEnemies.length < 8) eliteEnemies.push(enemy);
-      if ((enemy.kind === 'boss' || enemy.kind === 'elite' || enemy.chargeTimer > 0) && threatEnemies.length < 12) {
-        threatEnemies.push(enemy);
+      if (enemy.flash > 0 && scratch.flashingEnemies.length < maxAccents + 6) scratch.flashingEnemies.push(enemy);
+      if (enemy.kind === 'runner' && scratch.runnerEnemies.length < maxAccents) scratch.runnerEnemies.push(enemy);
+      if (enemy.kind === 'brute' && scratch.bruteEnemies.length < maxAccents) scratch.bruteEnemies.push(enemy);
+      if (enemy.kind === 'golem' && scratch.golemEnemies.length < maxAccents) scratch.golemEnemies.push(enemy);
+      if (enemy.kind === 'elite' && scratch.eliteEnemies.length < 8) scratch.eliteEnemies.push(enemy);
+      if ((enemy.kind === 'boss' || enemy.kind === 'elite' || enemy.chargeTimer > 0) && scratch.threatEnemies.length < 12) {
+        scratch.threatEnemies.push(enemy);
       }
-      if ((enemy.chargeTimer ?? 0) > 0 && chargingEnemies.length < 8) chargingEnemies.push(enemy);
+      if ((enemy.chargeTimer ?? 0) > 0 && scratch.chargingEnemies.length < 8) scratch.chargingEnemies.push(enemy);
     }
 
     if (coreMesh.current) {
       let count = 0;
-      for (const enemy of visibleEnemies) {
+      for (const enemy of scratch.visibleEnemies) {
         const bob = Math.sin(time + enemy.wobble) * 0.08;
         const height = enemy.kind === 'boss'
           ? 2.55
@@ -164,7 +171,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (eyeMesh.current) {
       let count = 0;
-      for (const enemy of visibleEnemies) {
+      for (const enemy of scratch.visibleEnemies) {
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.right.set(scratch.forward.z, 0, -scratch.forward.x);
         const eyeHeight = enemy.kind === 'boss'
@@ -211,7 +218,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (flashMesh.current) {
       let count = 0;
-      for (const enemy of flashingEnemies) {
+      for (const enemy of scratch.flashingEnemies) {
         if (enemy.kind === 'boss') continue;
         scratch.euler.set(Math.PI / 2, 0, enemy.wobble);
         scratch.quat.setFromEuler(scratch.euler);
@@ -222,6 +229,8 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
           scratch.scale.setScalar(enemy.hitRadius * 1.08)
         );
         flashMesh.current.setMatrixAt(count, scratch.matrix);
+        scratch.color.set(getEnemyAccentColor(enemy));
+        flashMesh.current.setColorAt(count, scratch.color);
         count += 1;
       }
       syncInstanceMesh(flashMesh.current, count);
@@ -229,7 +238,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (hitSparkMesh.current) {
       let count = 0;
-      for (const enemy of flashingEnemies) {
+      for (const enemy of scratch.flashingEnemies) {
         const hitPower = THREE.MathUtils.clamp(enemy.flash / 0.18, 0, 1);
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.pos.copy(enemy.pos).addScaledVector(scratch.forward, enemy.radius * 0.72);
@@ -251,7 +260,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (showDecor && runnerTrailMesh.current) {
       let count = 0;
-      for (const enemy of runnerEnemies) {
+      for (const enemy of scratch.runnerEnemies) {
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.pos.set(enemy.pos.x - scratch.forward.x * 0.78, enemy.pos.y + 0.13, enemy.pos.z - scratch.forward.z * 0.78);
         scratch.euler.set(-Math.PI / 2, 0, -enemy.facingAngle);
@@ -269,7 +278,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (showDecor && runnerChevronMesh.current) {
       let count = 0;
-      for (const enemy of runnerEnemies) {
+      for (const enemy of scratch.runnerEnemies) {
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.pos.set(enemy.pos.x + scratch.forward.x * 0.42, enemy.pos.y + 0.28, enemy.pos.z + scratch.forward.z * 0.42);
         scratch.euler.set(Math.PI / 2, 0, -enemy.facingAngle + Math.PI);
@@ -287,7 +296,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (showDecor && bruteMarkMesh.current) {
       let count = 0;
-      for (const enemy of bruteEnemies) {
+      for (const enemy of scratch.bruteEnemies) {
         scratch.euler.set(Math.PI / 2, 0, enemy.wobble * 0.35);
         scratch.quat.setFromEuler(scratch.euler);
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.56, enemy.pos.z);
@@ -304,7 +313,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (showDecor && brutePlateMesh.current) {
       let count = 0;
-      for (const enemy of bruteEnemies) {
+      for (const enemy of scratch.bruteEnemies) {
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.right.set(scratch.forward.z, 0, -scratch.forward.x);
         for (let side = -1; side <= 1; side += 2) {
@@ -329,7 +338,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (showDecor && bruteHornMesh.current) {
       let count = 0;
-      for (const enemy of bruteEnemies) {
+      for (const enemy of scratch.bruteEnemies) {
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.right.set(scratch.forward.z, 0, -scratch.forward.x);
         for (let side = -1; side <= 1; side += 2) {
@@ -354,7 +363,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (showDecor && golemShardMesh.current) {
       let count = 0;
-      for (const enemy of golemEnemies) {
+      for (const enemy of scratch.golemEnemies) {
         scratch.euler.set(0.38, enemy.facingAngle + Math.PI / 4, 0.16);
         scratch.quat.setFromEuler(scratch.euler);
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 1.36 + Math.sin(enemy.wobble) * 0.035, enemy.pos.z);
@@ -371,7 +380,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (showDecor && golemGroundMesh.current) {
       let count = 0;
-      for (const enemy of golemEnemies) {
+      for (const enemy of scratch.golemEnemies) {
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.045, enemy.pos.z);
         scratch.euler.set(Math.PI / 2, 0, enemy.facingAngle + Math.PI / 4);
         scratch.quat.setFromEuler(scratch.euler);
@@ -388,7 +397,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (showDecor && eliteCrownMesh.current) {
       let count = 0;
-      for (const enemy of eliteEnemies) {
+      for (const enemy of scratch.eliteEnemies) {
         for (let i = 0; i < 4; i += 1) {
           if (count >= MAX_ENEMIES * 4) break;
           const angle = enemy.wobble * 0.6 + i * Math.PI * 2 / 4;
@@ -413,7 +422,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (showDecor && eliteAuraMesh.current) {
       let count = 0;
-      for (const enemy of eliteEnemies) {
+      for (const enemy of scratch.eliteEnemies) {
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.07, enemy.pos.z);
         scratch.euler.set(Math.PI / 2, 0, -enemy.wobble * 0.28);
         scratch.quat.setFromEuler(scratch.euler);
@@ -430,7 +439,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (threatRingMesh.current) {
       let count = 0;
-      for (const enemy of threatEnemies) {
+      for (const enemy of scratch.threatEnemies) {
         const chargePulse = enemy.chargeTimer > 0 ? 0.34 : 0;
         const shieldPulse = (enemy.shield ?? 0) > 0 ? 0.16 : 0;
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.09, enemy.pos.z);
@@ -457,7 +466,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
 
     if (chargeTellMesh.current) {
       let count = 0;
-      for (const enemy of chargingEnemies) {
+      for (const enemy of scratch.chargingEnemies) {
         const chargeTimer = enemy.chargeTimer ?? 0;
         scratch.forward.set(Math.sin(enemy.facingAngle), 0, Math.cos(enemy.facingAngle));
         scratch.pos.copy(enemy.pos).addScaledVector(scratch.forward, enemy.hitRadius * 1.45);
@@ -494,7 +503,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
       </instancedMesh>
       <instancedMesh ref={flashMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
         <ringGeometry args={[0.62, 0.72, 28]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.58} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial vertexColors transparent opacity={0.46} depthWrite={false} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={hitSparkMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
         <octahedronGeometry args={[1, 0]} />
@@ -508,7 +517,7 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
         <>
           <instancedMesh ref={runnerTrailMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
             <planeGeometry args={[1, 1]} />
-            <meshBasicMaterial color="#58b9d4" transparent opacity={0.3} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+            <meshBasicMaterial map={motionTrailTexture} color="#58b9d4" transparent opacity={0.38} alphaTest={0.015} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
           </instancedMesh>
           <instancedMesh ref={runnerChevronMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
             <coneGeometry args={[1, 1, 3]} />

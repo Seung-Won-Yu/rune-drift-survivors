@@ -106,7 +106,8 @@ export function updatePlayerRuntime({
       life: 0.34,
       maxLife: 0.34,
       color: '#58b9d4',
-      radius: 7.2
+      radius: 7.2,
+      signal: 'mobility'
     });
     addDamageNumber(player.current.pos, '회피', '#7fc9d8', 0.74);
     cameraShake.current = Math.max(cameraShake.current, 0.18);

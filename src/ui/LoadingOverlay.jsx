@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { useProgress } from '@react-three/drei';
 
 export function LoadingOverlay() {
-  const { active, errors, item, progress } = useProgress();
+  const { active, errors, item, progress, total } = useProgress();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (ready || active || errors.length > 0 || progress < 100) return undefined;
+    const assetsSettled = !active && (total === 0 || progress >= 100);
+    if (ready || errors.length > 0 || !assetsSettled) return undefined;
     const timer = window.setTimeout(() => setReady(true), 180);
     return () => window.clearTimeout(timer);
-  }, [active, errors.length, progress, ready]);
+  }, [active, errors.length, progress, ready, total]);
 
   if (ready) return null;
 

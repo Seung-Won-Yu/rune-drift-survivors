@@ -223,7 +223,8 @@ export function updateWeaponCasts({
       life: 0.56,
       maxLife: 0.56,
       color,
-      radius
+      radius,
+      signal: 'attack'
     });
     if (stats.novaPulse > 0) {
       weaponEffects.current.push({
@@ -232,7 +233,8 @@ export function updateWeaponCasts({
         life: 0.78,
         maxLife: 0.78,
         color: '#d4a84c',
-        radius: radius * (0.54 + Math.min(0.24, stats.novaPulse * 0.06))
+        radius: radius * (0.54 + Math.min(0.24, stats.novaPulse * 0.06)),
+        signal: 'attack'
       });
     }
     if (novaFocus >= 2) {
@@ -242,7 +244,8 @@ export function updateWeaponCasts({
         life: 0.9,
         maxLife: 0.9,
         color: '#d4a84c',
-        radius: radius * (0.32 + Math.min(0.18, novaFocus * 0.03))
+        radius: radius * (0.32 + Math.min(0.18, novaFocus * 0.03)),
+        signal: 'attack'
       });
     }
     if (hitCount > 0) cameraShake.current = Math.max(cameraShake.current, 0.16);

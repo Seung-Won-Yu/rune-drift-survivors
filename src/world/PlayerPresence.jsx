@@ -135,7 +135,7 @@ export function PlayerPresence({ player, game, visualQuality = 'high' }) {
       </mesh>
       <mesh position={[0, 1.58, -0.38]} rotation={[0, 0, Math.PI / 4]} scale={[0.42 + stage * 0.05, 0.42 + stage * 0.05, 1]}>
         <ringGeometry args={[0.4, 0.45, 4]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.18} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#c6d9c9" transparent opacity={0.16} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
       </mesh>
       <group ref={shoulderRune} position={[0, 1.36, 0]}>
         {Array.from({ length: shoulderRuneCount }, (_, index) => {

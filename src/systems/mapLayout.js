@@ -3,88 +3,6 @@ import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { SHRINE_SITES } from '../config/gameData.js';
 import { getTerrainHeight } from './terrain.js';
 
-function withModelScale(transform, width = 1, height = 1, depth = width) {
-  return {
-    ...transform,
-    modelScale: [transform.scale * width, transform.scale * height, transform.scale * depth]
-  };
-}
-
-export function createBalancedNatureAssetTransforms() {
-  const place = (angle, radius, scale, yOffset = 0.02, tilt = 0) => {
-    const x = Math.cos(angle) * radius;
-    const z = Math.sin(angle) * radius;
-    return {
-      position: new THREE.Vector3(x, getTerrainHeight(x, z) + yOffset, z),
-      rotation: -angle + Math.PI / 2 + Math.sin(angle * 2.8 + radius * 0.04) * 0.16,
-      scale,
-      tilt
-    };
-  };
-
-  const sightlineClear = transform => {
-    const { x, z } = transform.position;
-    const distance = Math.hypot(x, z);
-    const centerCombat = distance < 42;
-    const foregroundBlock = z < -54 && Math.abs(x) < 74;
-    const hudLane = z > 28 && x < -12 && Math.abs(x) < 92;
-    const shrineBlock = SHRINE_SITES.some(site => {
-      const sx = Math.cos(site.angle) * site.radius;
-      const sz = Math.sin(site.angle) * site.radius;
-      return Math.hypot(x - sx, z - sz) < 7.2;
-    });
-    return !centerCombat && !foregroundBlock && !hudLane && !shrineBlock && distance < ARENA_RADIUS - 5;
-  };
-
-  const outerTrees = Array.from({ length: 10 }, (_, index) => {
-    const angle = index * Math.PI * 2 / 10 + 0.24 + Math.sin(index * 1.47) * 0.08;
-    const radius = 94 + (index % 4) * 4.4 + Math.cos(index * 0.9) * 1.8;
-    const tree = place(angle, radius, 2.4 + (index % 3) * 0.18, -0.04, index % 3 === 0 ? 0.04 : 0);
-    return withModelScale(tree, 0.72, 0.68, 0.72);
-  }).filter(sightlineClear);
-
-  const groveTrees = SHRINE_SITES.map((site, index) => {
-    const side = index % 2 ? -1 : 1;
-    const angle = site.angle + side * 0.32 + Math.sin(index * 1.8) * 0.05;
-    const radius = site.radius + 18 + (index % 2) * 4.5;
-    const tree = place(angle, radius, 1.78 + index * 0.06, -0.04, side * 0.035);
-    return withModelScale(tree, 0.7, 0.64, 0.7);
-  }).filter(sightlineClear);
-
-  const rocks = Array.from({ length: 9 }, (_, index) => {
-    const angle = index * 1.76 + 0.38 + Math.sin(index * 1.22) * 0.08;
-    const radius = 48 + (index % 9) * 6.6 + Math.cos(index * 0.9) * 1.4;
-    const rock = place(angle, radius, 1.25 + (index % 4) * 0.18, 0.04, index % 2 ? 0.06 : -0.04);
-    return withModelScale(rock, 0.72, 0.52, 0.72);
-  }).filter(sightlineClear);
-
-  const bushes = Array.from({ length: 13 }, (_, index) => {
-    const site = SHRINE_SITES[index % SHRINE_SITES.length];
-    const angle = site.angle + (index % 5 - 2) * 0.2 + Math.sin(index * 1.11) * 0.08;
-    const radius = site.radius + 10 + (index % 4) * 4.2;
-    const bush = place(angle, radius, 1.05 + (index % 3) * 0.13, 0.02, 0);
-    return withModelScale(bush, 1.12, 0.62, 0.94);
-  }).filter(sightlineClear);
-
-  const grass = Array.from({ length: 18 }, (_, index) => {
-    const angle = index * 2.17 + 0.16;
-    const radius = 34 + (index % 22) * 3.1 + Math.sin(index * 1.3) * 1.1;
-    const tuft = place(angle, radius, 0.74 + (index % 4) * 0.08, 0.02, 0);
-    return withModelScale(tuft, 0.72, 0.58, 0.72);
-  }).filter(transform => {
-    const distance = transform.position.length();
-    return distance > 28 && distance < ARENA_RADIUS - 9 && !(transform.position.z > 16 && Math.abs(transform.position.x) < 58);
-  });
-
-  return {
-    pineTall: outerTrees.filter((_, index) => index % 2 === 0),
-    treeDefault: [...outerTrees.filter((_, index) => index % 2 === 1), ...groveTrees],
-    rocks,
-    bushes,
-    grass
-  };
-}
-
 export function createBalancedFieldArenaLayout(visualQuality = 'balanced') {
   const density = visualQuality === 'low' ? 0.62 : 1;
   const laneAngles = [-0.22, 0.72, 1.76, 2.52, 3.86];
@@ -328,46 +246,10 @@ export function createBalancedFieldArenaLayout(visualQuality = 'balanced') {
     }).filter(slab => {
       const distance = Math.hypot(slab.position[0], slab.position[2]);
       return distance > 19 && distance < ARENA_RADIUS - 18;
-    }),
-    ...SHRINE_SITES.flatMap((site, siteIndex) => {
-      const x = Math.cos(site.angle) * site.radius;
-      const z = Math.sin(site.angle) * site.radius;
-      const y = getTerrainHeight(x, z);
-      const tangent = site.angle + Math.PI / 2;
-      return [
-        {
-          position: [x, y + 0.18, z],
-          rotation: [0.02, -site.angle, 0],
-          scale: [2.9, 0.28, 1.15],
-          color: siteIndex % 2 ? '#6d7654' : '#7b7959'
-        },
-        {
-          position: [x + Math.cos(tangent) * 1.75, y + 0.78, z + Math.sin(tangent) * 1.75],
-          rotation: [0.04, -site.angle + 0.12, 0.02],
-          scale: [0.42, 1.28, 0.42],
-          color: '#5e684d'
-        },
-        {
-          position: [x - Math.cos(tangent) * 1.75, y + 0.72, z - Math.sin(tangent) * 1.75],
-          rotation: [-0.03, -site.angle - 0.1, -0.02],
-          scale: [0.38, 1.18, 0.38],
-          color: '#686b50'
-        }
-      ];
     })
   ];
 
   const runeCrystals = [
-    ...SHRINE_SITES.map((site, index) => {
-      const x = Math.cos(site.angle) * (site.radius - 2.8);
-      const z = Math.sin(site.angle) * (site.radius - 2.8);
-      return {
-        position: [x, getTerrainHeight(x, z) + 0.72, z],
-        rotation: [0.18, -site.angle + index * 0.3, 0.12],
-        scale: [0.34, 0.58, 0.34],
-        color: index % 2 ? '#9b8b4f' : '#668d58'
-      };
-    }),
     ...Array.from({ length: visualQuality === 'low' ? 4 : 8 }, (_, index) => {
       const angle = index * Math.PI * 2 / (visualQuality === 'low' ? 4 : 8) + 0.42;
       const radius = 43 + (index % 2) * 8;
@@ -408,5 +290,95 @@ export function createBalancedFieldArenaLayout(visualQuality = 'balanced') {
     ruinSlabs,
     runeCrystals,
     treeShadows
+  };
+}
+
+export function createRuneCircuitLandmarkLayout(visualQuality = 'balanced') {
+  const place = (site, radialOffset = 0, lateralOffset = 0, yOffset = 0) => {
+    const radius = site.radius + radialOffset;
+    const x = Math.cos(site.angle) * radius - Math.sin(site.angle) * lateralOffset;
+    const z = Math.sin(site.angle) * radius + Math.cos(site.angle) * lateralOffset;
+    return [x, getTerrainHeight(x, z) + yOffset, z];
+  };
+  const yaw = site => Math.PI / 2 - site.angle;
+  const stone = '#46554d';
+  const edgeStone = '#667067';
+  const accentColor = site => new THREE.Color(site.color).lerp(new THREE.Color('#738078'), 0.58).getStyle();
+  const stepCount = visualQuality === 'low' ? 2 : 4;
+
+  const lowerBases = SHRINE_SITES.map(site => ({
+    position: place(site, 0, 0, 0.22),
+    rotation: [0, yaw(site), 0],
+    scale: [6.4, 0.44, 5.2],
+    color: stone
+  }));
+  const upperBases = SHRINE_SITES.map(site => ({
+    position: place(site, 0, 0, 0.52),
+    rotation: [0, yaw(site) + Math.PI / 4, 0],
+    scale: [4.7, 0.28, 4.7],
+    color: accentColor(site)
+  }));
+  const approachSteps = SHRINE_SITES.flatMap(site => Array.from({ length: stepCount }, (_, index) => ({
+    position: place(site, -4.2 - index * 2.15, 0, 0.12),
+    rotation: [0, yaw(site), 0],
+    scale: [3.5 - index * 0.18, 0.2, 1.55],
+    color: index % 2 ? '#3d4b45' : edgeStone
+  })));
+  const pylons = SHRINE_SITES.flatMap(site => [-1, 1].map(side => ({
+    position: place(site, 1.05, side * 3.45, 2.45),
+    rotation: [0.04, yaw(site), side * 0.055],
+    scale: [0.82, 4.4, 0.9],
+    color: side > 0 ? edgeStone : '#59655d'
+  })));
+  const pylonCaps = SHRINE_SITES.flatMap(site => [-1, 1].map(side => ({
+    position: place(site, 1.05, side * 3.45, 4.86),
+    rotation: [0.18, yaw(site) + Math.PI / 4, side * 0.08],
+    scale: [0.92, 0.92, 0.92],
+    color: site.color
+  })));
+  const lintels = SHRINE_SITES.map(site => ({
+    position: place(site, 1.05, 0, 4.58),
+    rotation: [0, yaw(site), 0],
+    scale: [7.35, 0.42, 0.72],
+    color: accentColor(site)
+  }));
+  const rankStones = visualQuality === 'low' ? [] : SHRINE_SITES.flatMap(site => (
+    Array.from({ length: site.order }, (_, index) => ({
+      position: place(site, -2.25, (index - (site.order - 1) / 2) * 0.72, 0.79),
+      rotation: [0.18, yaw(site) + Math.PI / 4, 0.18],
+      scale: [0.23, 0.34, 0.23],
+      color: site.color
+    }))
+  ));
+  const floorRings = SHRINE_SITES.map(site => ({
+    position: place(site, 0, 0, 0.755),
+    rotation: yaw(site),
+    scale: [5.1, 5.1, 1],
+    color: site.color
+  }));
+  const routeRuneCount = visualQuality === 'low' ? 2 : 5;
+  const routeRunes = SHRINE_SITES.flatMap(site => (
+    Array.from({ length: routeRuneCount }, (_, index) => {
+      const progress = (index + 1) / (routeRuneCount + 1);
+      const radius = 17 + (site.radius - 28) * progress;
+      return {
+        position: place(site, radius - site.radius, 0, 0.085),
+        rotation: yaw(site) + Math.PI / 4,
+        scale: [0.78, 0.78, 1],
+        color: site.color
+      };
+    })
+  ));
+
+  return {
+    lowerBases,
+    upperBases,
+    approachSteps,
+    pylons,
+    pylonCaps,
+    lintels,
+    rankStones,
+    floorRings,
+    routeRunes
   };
 }

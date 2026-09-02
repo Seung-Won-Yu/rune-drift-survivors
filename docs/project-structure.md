@@ -13,8 +13,8 @@
 │   ├── systems/            Frame-level gameplay logic
 │   ├── ui/                 DOM HUD, overlays, cards, touch controls
 │   └── world/              React Three Fiber scene components
-├── public/models/          Browser-ready GLB assets
-├── scripts/                QA and model-conversion tooling
+├── public/sprites/         Project-authored character atlases
+├── scripts/                Browser QA tooling
 ├── docs/                   Architecture, QA, assets, and design records
 ├── assets/                 Ignored local source/archive workspace
 ├── index.html              Vite document entry
@@ -30,14 +30,15 @@
 - `src/systems/gameSceneActions.js` is the narrow adapter between the frame loop and gameplay systems.
 - `src/systems/` keeps player, enemy, weapon, projectile, pickup, shrine, Rune Circuit, terrain, pacing, telemetry, and pool logic independent of React rendering.
 - `src/world/GameWorld.jsx` composes the battlefield, actors, telegraphs, projectiles, and visual feedback.
+- `src/world/MapBaseArena.jsx` keeps low, balanced, and high on one terrain/landmark composition; quality tiers may change density, lighting, shadows, and effects but must not swap in a second battlefield.
 - `src/ui/` owns accessible DOM presentation; it should not mutate scene refs directly.
 
 ## Assets
 
-- `src/config/assets.js` is the runtime asset manifest and preload contract.
-- `public/models/` contains only models loaded by the current build.
-- `scripts/gltf-to-glb.mjs` converts archived glTF sources into runtime GLB files.
-- See [`assets.md`](./assets.md) for the active inventory, sources, and local asset workflow.
+- `src/config/assets.js` is the sprite manifest.
+- `public/sprites/` contains the complete deployable visual-asset inventory.
+- The runtime intentionally contains no Blender, glTF, GLB, or model-loader path.
+- See [`assets.md`](./assets.md) for the active inventory and rendering rules.
 
 ## QA and generated files
 
@@ -57,8 +58,6 @@ test-results/
 .tools/
 .agents/
 assets/source/
-assets/archive/
-assets/blender/*.blend
 ```
 
 ## Design records

@@ -32,6 +32,15 @@ export function getEnemyContactMotionScale(enemy) {
   return 1;
 }
 
+export function getEnemyContactDisplacement(enemy) {
+  const windupProgress = getEnemyContactWindupProgress(enemy);
+  if (windupProgress > 0) {
+    return -Math.sin(windupProgress * Math.PI * 0.5) * enemy.radius * 0.18;
+  }
+  const impactProgress = Math.min(1, Math.max(0, (enemy.contactAttackPulse ?? 0) / 0.34));
+  return impactProgress * enemy.radius * 0.34;
+}
+
 export function updateEnemyContactAttack({
   enemy,
   dt,

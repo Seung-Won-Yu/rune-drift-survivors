@@ -10,8 +10,11 @@ const DEFAULT_PROFILE = {
   shardWidth: 1,
   shardShape: 'spike',
   showEcho: false,
+  showCore: true,
+  fillDisc: false,
   coreShape: 'octahedron',
-  coreScale: 1
+  coreScale: 1,
+  highlightColor: '#b6ddd0'
 };
 
 const HIT_BURST_PROFILES = {
@@ -34,7 +37,9 @@ const HIT_BURST_PROFILES = {
     shardDistance: 1.42,
     shardLength: 1.38,
     shardWidth: 0.72,
-    showEcho: true,
+    showEcho: false,
+    showCore: false,
+    fillDisc: true,
     coreShape: 'diamond',
     coreScale: 1.14
   },
@@ -72,7 +77,9 @@ const HIT_BURST_PROFILES = {
     ringExpansion: 0.7,
     ringThickness: [0.74, 0.88],
     shardQualityScale: 0,
-    showEcho: true,
+    showEcho: false,
+    showCore: false,
+    fillDisc: true,
     coreShape: 'sphere',
     coreScale: 1.45
   },
@@ -94,7 +101,8 @@ const HIT_BURST_PROFILES = {
     shardBonus: 4,
     shardDistance: 1.16,
     showEcho: true,
-    coreShape: 'diamond'
+    coreShape: 'diamond',
+    highlightColor: '#f3a18f'
   },
   death: {
     ...DEFAULT_PROFILE,
@@ -104,7 +112,8 @@ const HIT_BURST_PROFILES = {
     shardBonus: 3,
     shardDistance: 1.24,
     showEcho: false,
-    coreShape: 'diamond'
+    coreShape: 'diamond',
+    highlightColor: '#9fcabf'
   },
   eliteDeath: {
     ...DEFAULT_PROFILE,
@@ -114,7 +123,8 @@ const HIT_BURST_PROFILES = {
     shardBonus: 5,
     shardDistance: 1.42,
     showEcho: true,
-    coreShape: 'diamond'
+    coreShape: 'diamond',
+    highlightColor: '#d7c58b'
   },
   bossDeath: {
     ...DEFAULT_PROFILE,
@@ -124,7 +134,8 @@ const HIT_BURST_PROFILES = {
     shardBonus: 7,
     shardDistance: 1.58,
     showEcho: true,
-    coreShape: 'diamond'
+    coreShape: 'diamond',
+    highlightColor: '#e0c77e'
   }
 };
 

@@ -40,7 +40,12 @@ export function createEnemy(wave, waveProfile = getWaveProfile(wave), playerPos 
   const survivalScale = 1.1 + Math.max(0, wave - 1) * 0.05;
   const affix = waveProfile.affix ?? 'scout';
   const statMods = getWaveEnemyMods(affix, kind);
-  const pos = getSpawnPositionAroundPlayer(playerPos, (isRunner ? 37 : isBrute ? 42 : 35) + (affix === 'siege' ? 4 : 0), 24);
+  const openingDistanceOffset = wave <= 1 ? -4 : wave === 2 ? -2 : 0;
+  const pos = getSpawnPositionAroundPlayer(
+    playerPos,
+    (isRunner ? 37 : isBrute ? 42 : 35) + openingDistanceOffset + (affix === 'siege' ? 4 : 0),
+    24
+  );
   const facingAngle = Math.atan2(playerPos.x - pos.x, playerPos.z - pos.z);
   const maxHp = hp * survivalScale * statMods.hp;
   return {
@@ -63,7 +68,8 @@ export function createEnemy(wave, waveProfile = getWaveProfile(wave), playerPos 
   };
 }
 
-export function applyCombatRhythm(enemy, rhythm = COMBAT_RHYTHM[0]) {
+export function applyCombatRhythm(enemy, rhythm) {
+  if (!rhythm) return enemy;
   enemy.hp *= rhythm.hp;
   enemy.maxHp *= rhythm.hp;
   return enemy;

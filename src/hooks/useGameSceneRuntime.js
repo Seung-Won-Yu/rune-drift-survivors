@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
-import {
-  applyRuntimeBudgetPressure,
-  getRuntimeBudget
-} from './useVisualQuality.js';
+import { SIMULATION_BUDGET } from '../config/gameTuning.js';
 import {
   createEmptyRunStats
 } from '../systems/gameState.js';
@@ -59,6 +56,7 @@ function createRuntimeScratch() {
     color: new THREE.Color(),
     scale: new THREE.Vector3(),
     quat: new THREE.Quaternion(),
+    euler: new THREE.Euler(),
     vec: new THREE.Vector3(),
     input: new THREE.Vector3(),
     moveDirection: new THREE.Vector3(),
@@ -105,33 +103,25 @@ export function useGameSceneRuntime(visualQuality) {
   const cameraShake = useRef(0);
   const compactCamera = typeof window !== 'undefined'
     && (window.matchMedia?.('(pointer: coarse)').matches || window.innerWidth <= 700);
-  const baseRuntimeBudget = useMemo(() => getRuntimeBudget(visualQuality), [visualQuality]);
-  const runtimeBudget = useLazyRef(() => ({ ...baseRuntimeBudget }));
+  const runtimeBudget = useLazyRef(() => ({ ...SIMULATION_BUDGET }));
   const framePressure = useRef(0);
   const scratch = useMemo(createRuntimeScratch, []);
 
-  useEffect(() => {
-    framePressure.current = 0;
-    applyRuntimeBudgetPressure(runtimeBudget.current, baseRuntimeBudget, 0);
-  }, [baseRuntimeBudget]);
-
-  const updateRuntimeBudgetForFrame = useCallback((rawDelta, phase) => {
+  const updateFramePressure = useCallback((rawDelta, phase) => {
     const delta = Math.min(rawDelta, 0.12);
-    if (visualQuality === 'low' || phase !== 'playing') {
+    if (phase !== 'playing') {
       framePressure.current = Math.max(0, framePressure.current - delta * 0.72);
-      applyRuntimeBudgetPressure(runtimeBudget.current, baseRuntimeBudget, framePressure.current);
       return;
     }
 
-    const targetFrame = visualQuality === 'high' ? 0.038 : 0.045;
+    const targetFrame = visualQuality === 'high' ? 0.038 : visualQuality === 'balanced' ? 0.045 : 0.055;
     const frameDebt = delta - targetFrame;
     framePressure.current = THREE.MathUtils.clamp(
       framePressure.current + (frameDebt > 0 ? frameDebt * 5.2 : -delta * 0.42),
       0,
       1
     );
-    applyRuntimeBudgetPressure(runtimeBudget.current, baseRuntimeBudget, framePressure.current);
-  }, [baseRuntimeBudget, visualQuality]);
+  }, [visualQuality]);
 
   const resetRuntime = useCallback(touchControlsRef => {
     resetPlayerRuntime(player.current);
@@ -235,7 +225,7 @@ export function useGameSceneRuntime(visualQuality) {
     compactCamera,
     runtimeBudget,
     scratch,
-    updateRuntimeBudgetForFrame,
+    updateFramePressure,
     resetRuntime,
     getMetrics
   };

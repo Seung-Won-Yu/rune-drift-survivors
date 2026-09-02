@@ -62,6 +62,10 @@ export function getRuneCircuitState(game) {
   };
 }
 
+export function getRunCompletionResult(game) {
+  return getRuneCircuitState(game).complete ? 'victory' : 'survived';
+}
+
 export function getActiveCircuitShrine(shrines = [], time = 0) {
   const nextShrine = shrines.find(shrine => !shrine.activated) ?? null;
   if (!nextShrine) return { shrine: null, ready: false, unlockIn: 0 };

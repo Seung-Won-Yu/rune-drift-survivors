@@ -17,11 +17,10 @@ export function UpgradeCard({ game, choice, index, onChoose }) {
     <button
       className={`runeChoice upgradeCard rewardCard family-${visualFamilyKey} rarity-${cardMeta.rarity} ${cardMeta.recommended ? 'isRecommended' : ''}`}
       type="button"
-      style={{ '--tone': tone, '--icon-tone': iconMeta.color ?? tone }}
+      style={{ '--tone': tone, '--icon-tone': iconMeta.color ?? tone, '--choice-order': index }}
       aria-label={`${displayTitle}: ${cardMeta.quickSummary}, ${cardMeta.statLine}`}
       onClick={() => onChoose(choice)}
     >
-      <span className="runeChoiceIndex rewardCardCorner" aria-hidden="true">0{index + 1}</span>
       <span className="runeChoiceRail" aria-hidden="true" />
       <div className="runeChoiceBody">
         <header className="rewardCardHeader">

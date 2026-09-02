@@ -13,7 +13,19 @@ import {
   getUpgradeFocusKey
 } from './progression.js';
 import { getActiveCircuitShrine } from './runeCircuit.js';
+import { showEncounterAlert } from './runTelemetry.js';
 import { pickArmoryBoost } from './upgradeDrafting.js';
+
+export function getShrineActivationAlert(shrine, game) {
+  const step = Math.min(SHRINE_SITES.length, (game?.shrineActivations ?? 0) + 1);
+  return {
+    kind: 'circuit',
+    label: `CIRCUIT ${step}/${SHRINE_SITES.length}`,
+    title: `${shrine.label} 연결`,
+    hint: `${shrine.rewardLabel} 확보`,
+    color: shrine.color
+  };
+}
 
 export function updateShrinesRuntime(context) {
   const {
@@ -48,7 +60,8 @@ export function updateShrinesRuntime(context) {
           life: 1.0,
           maxLife: 1.0,
           color: shrine.color,
-          label: 'SEAL'
+          label: 'SEAL',
+          signal: 'objective'
         });
         addDamageNumber(shrine.pos, shrine.label, shrine.color, 0.72);
       }
@@ -87,9 +100,11 @@ function activateShrineRuntime(shrine, currentGame, updateGame, context) {
     life: 0.82,
     maxLife: 0.82,
     color: shrine.color,
-    radius: 13.5
+    radius: 13.5,
+    signal: 'objective'
   });
   cameraShake.current = Math.max(cameraShake.current, 0.2);
+  showEncounterAlert(updateGame, getShrineActivationAlert(shrine, currentGame), 2.8);
 
   if (shrine.reward === 'cache') {
     updateGame(current => {

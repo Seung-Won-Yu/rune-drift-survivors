@@ -1,4 +1,5 @@
 import { DASH_COOLDOWN, RUN_DURATION, WAVE_DURATION } from '../config/gameTuning.js';
+import { getRunCompletionResult } from './runeCircuit.js';
 
 export function applyFrameStateUpdate({ current, elapsed, player, bossStatus, runStats }) {
   const nextTime = current.time + elapsed;
@@ -30,7 +31,7 @@ export function applyFrameStateUpdate({ current, elapsed, player, bossStatus, ru
     }
   };
   if (nextTime >= RUN_DURATION) {
-    return { ...current, ...basePatch, phase: 'ended', result: 'victory' };
+    return { ...current, ...basePatch, phase: 'ended', result: getRunCompletionResult(current) };
   }
   return { ...current, ...basePatch };
 }

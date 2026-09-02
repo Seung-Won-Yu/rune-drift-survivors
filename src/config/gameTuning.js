@@ -34,8 +34,9 @@ export const FIELD_ITEM_ATTRACT_RADIUS = 12;
 export const FIELD_ITEM_PICKUP_RADIUS = 3.05;
 export const SHRINE_ACTIVATE_RADIUS = 6.4;
 export const SHRINE_CHANNEL_TIME = 1.15;
-export const PLAYER_VISUAL_BASE_SCALE = 1.52;
-
+export const STARTING_XP_TO_NEXT = 26;
+export const XP_THRESHOLD_GROWTH = 1.16;
+export const XP_THRESHOLD_FLAT = 11;
 export const STARTING_WEAPON_FAMILIES = new Set(['orb']);
 export const ADVANCED_ORB_UNLOCK_LEVEL = 4;
 export const ADVANCED_ORB_UNLOCK_TIME = 72;
@@ -87,20 +88,11 @@ export const VISUAL_BUDGETS = {
   }
 };
 
-export const RUNTIME_BUDGETS = {
-  high: {
-    maxEnemies: 68,
-    maxProjectiles: 58,
-    maxXpGems: 100
-  },
-  balanced: {
-    maxEnemies: 40,
-    maxProjectiles: 30,
-    maxXpGems: 56
-  },
-  low: {
-    maxEnemies: 24,
-    maxProjectiles: 16,
-    maxXpGems: 32
-  }
-};
+// Combat density is a gameplay rule, not a render-quality setting. Optional
+// effects and update cadence may scale down, but every player gets the same
+// enemy, projectile, and reward limits.
+export const SIMULATION_BUDGET = Object.freeze({
+  maxEnemies: 40,
+  maxProjectiles: 30,
+  maxXpGems: 56
+});

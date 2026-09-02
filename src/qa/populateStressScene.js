@@ -5,9 +5,9 @@ import {
   MAX_DAMAGE_NUMBERS,
   MAX_HIT_BURSTS,
   MAX_SPAWN_WARNINGS,
-  MAX_WEAPON_EFFECTS
+  MAX_WEAPON_EFFECTS,
+  SIMULATION_BUDGET
 } from '../config/gameTuning.js';
-import { getRuntimeBudget } from '../hooks/useVisualQuality.js';
 import {
   applyCombatRhythm,
   createBoss,
@@ -21,7 +21,6 @@ import { getEnemyTerrainY, getPlayerTerrainY } from '../systems/terrain.js';
 
 export function populateStressScene({
   options = {},
-  visualQuality,
   player,
   enemies,
   projectiles,
@@ -31,7 +30,7 @@ export function populateStressScene({
   damageNumbers,
   spawnWarnings
 }) {
-  const stressBudget = getRuntimeBudget(visualQuality);
+  const stressBudget = SIMULATION_BUDGET;
   const wave = options.wave ?? 12;
   const enemyCount = Math.min(stressBudget.maxEnemies - 1, options.enemies ?? 160);
   const projectileCount = Math.min(stressBudget.maxProjectiles, options.projectiles ?? 210);
@@ -89,7 +88,7 @@ export function populateStressScene({
       stage: 4,
       burstRadius: 3.6,
       trailLength: 2.4,
-      color: type === 'storm' ? '#7fc9d8' : '#58b9d4'
+      color: type === 'storm' ? '#aa91cf' : '#d4a84c'
     };
   });
 
@@ -124,7 +123,8 @@ export function populateStressScene({
       life: 0.38 + (index % 6) * 0.08,
       maxLife: 0.86,
       color: index % 2 === 0 ? '#64c98d' : '#aa91cf',
-      radius: 4.2 + (index % 4)
+      radius: 4.2 + (index % 4),
+      signal: 'attack'
     };
   });
 
@@ -151,7 +151,8 @@ export function populateStressScene({
       maxLife: 1.1,
       color: index % 2 === 0 ? '#d96d58' : '#58b9d4',
       label: index < 3 ? 'SURGE' : '',
-      radius: 2.8 + (index % 4) * 0.6
+      radius: 2.8 + (index % 4) * 0.6,
+      signal: 'threat'
     };
   });
 }

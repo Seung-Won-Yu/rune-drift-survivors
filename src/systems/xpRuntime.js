@@ -1,8 +1,14 @@
 import {
   XP_BASE_MAGNET_RADIUS,
-  XP_PICKUP_RADIUS
+  XP_PICKUP_RADIUS,
+  XP_THRESHOLD_FLAT,
+  XP_THRESHOLD_GROWTH
 } from '../config/gameTuning.js';
 import { pushXpGem } from './runtimePools.js';
+
+export function getNextXpThreshold(currentThreshold) {
+  return Math.floor(currentThreshold * XP_THRESHOLD_GROWTH + XP_THRESHOLD_FLAT);
+}
 
 export function addXpGemRuntime({ xpGems, pos, value, runtimeBudget }) {
   pushXpGem(xpGems.current, pos, value, runtimeBudget.maxXpGems);
@@ -56,7 +62,7 @@ export function updateXpGemsRuntime({
     while (nextXp >= nextXpToNext) {
       nextXp -= nextXpToNext;
       nextLevel += 1;
-      nextXpToNext = Math.floor(nextXpToNext * 1.16 + 11);
+      nextXpToNext = getNextXpThreshold(nextXpToNext);
       earnedUpgrades += 1;
       shouldLevel = true;
     }

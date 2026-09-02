@@ -1,57 +1,138 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { useTexture } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-import { MAX_ENEMIES } from '../config/gameTuning.js';
-import { getRuntimeBudget } from '../hooks/useVisualQuality.js';
+import { SPRITE_URLS } from '../config/assets.js';
+import { MAX_ENEMIES, SIMULATION_BUDGET } from '../config/gameTuning.js';
 import { useVisualFrameGate } from '../hooks/useVisualFrameGate.js';
-import { getEnemyContactWindupProgress } from '../systems/enemyContactRuntime.js';
+import {
+  getEnemyContactDisplacement,
+  getEnemyContactWindupProgress
+} from '../systems/enemyContactRuntime.js';
+import {
+  RIFTBORN_COMMON_ATLAS,
+  RIFTBORN_THREAT_ATLAS,
+  getRiftbornAnimationFrame,
+  getRiftbornThreatAnimationFrame
+} from '../systems/enemySprite.js';
 import { getTerrainHeight } from '../systems/terrain.js';
-import { syncInstanceMesh, syncInstanceMeshes } from './instancedMeshUtils.js';
-import { useInstancedModelParts } from './useInstancedModelParts.js';
+import { syncInstanceMeshes } from './instancedMeshUtils.js';
+import { NEUTRAL_KEY_ALPHA_TEST, applyNeutralKeyFragment } from './neutralKeyShader.js';
+
+const COMMON_SPRITE_META = Object.freeze({
+  runner: Object.freeze({ width: 2.5, height: 3.8, lift: 0.2, tint: '#3aa6c2' }),
+  golem: Object.freeze({ width: 3.2, height: 3.6, lift: 0.12, tint: '#6f8f47' }),
+  brute: Object.freeze({ width: 3.7, height: 3.3, lift: 0.08, tint: '#a94732' })
+});
+
+const THREAT_SPRITE_META = Object.freeze({
+  bulwark: Object.freeze({ width: 3.65, height: 4.15, lift: 0.1, tint: '#8e68bd' }),
+  charger: Object.freeze({ width: 3.5, height: 3.85, lift: 0.16, tint: '#c05248' }),
+  summoner: Object.freeze({ width: 3.15, height: 4.35, lift: 0.24, tint: '#9f7ad0' }),
+  boss: Object.freeze({ width: 4.85, height: 5.2, lift: 0.12, tint: '#d4a84c' })
+});
+
+function useAtlasMaterial(url, atlas, cacheKey) {
+  const sourceTexture = useTexture(url);
+  const texture = useMemo(() => {
+    const next = sourceTexture.clone();
+    next.colorSpace = THREE.SRGBColorSpace;
+    next.wrapS = THREE.ClampToEdgeWrapping;
+    next.wrapT = THREE.ClampToEdgeWrapping;
+    next.generateMipmaps = false;
+    next.minFilter = THREE.LinearFilter;
+    next.magFilter = THREE.LinearFilter;
+    next.needsUpdate = true;
+    return next;
+  }, [sourceTexture]);
+  const material = useMemo(() => {
+    const next = new THREE.MeshBasicMaterial({
+      map: texture,
+      color: '#ffffff',
+      transparent: true,
+      alphaTest: NEUTRAL_KEY_ALPHA_TEST,
+      depthWrite: false,
+      toneMapped: false,
+      side: THREE.DoubleSide
+    });
+    next.onBeforeCompile = shader => {
+      shader.vertexShader = `attribute vec2 instanceRuneUv;
+      attribute vec3 instanceRuneTint;
+      varying vec3 vRuneTint;
+      ${shader.vertexShader}`;
+      shader.vertexShader = shader.vertexShader.replace(
+        'void main() {',
+        `void main() {
+        vRuneTint = instanceRuneTint;`
+      );
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <uv_vertex>',
+        `#include <uv_vertex>
+        #ifdef USE_MAP
+          vMapUv = uv * vec2(${1 / atlas.columns}, ${1 / atlas.rows}) + instanceRuneUv;
+        #endif`
+      );
+      shader.fragmentShader = `varying vec3 vRuneTint;\n${shader.fragmentShader}`;
+      applyNeutralKeyFragment(shader, 'diffuseColor.rgb += vRuneTint * 0.02;');
+    };
+    next.customProgramCacheKey = () => cacheKey;
+    return next;
+  }, [atlas.columns, atlas.rows, cacheKey, texture]);
+
+  useEffect(() => () => {
+    material.dispose();
+    texture.dispose();
+  }, [material, texture]);
+
+  return material;
+}
 
 export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' }) {
-  const bodyRef = useRef();
-  const headRef = useRef();
-  const faceRef = useRef();
-  const accentRef = useRef();
-  const shadowRef = useRef();
-  const enemyLimit = getRuntimeBudget(visualQuality).maxEnemies;
+  const commonRef = useRef();
+  const commonShadowRef = useRef();
+  const commonUvRef = useRef();
+  const commonTintRef = useRef();
+  const threatRef = useRef();
+  const threatShadowRef = useRef();
+  const threatUvRef = useRef();
+  const threatTintRef = useRef();
+  const enemyLimit = SIMULATION_BUDGET.maxEnemies;
   const shouldRenderVisualFrame = useVisualFrameGate(visualQuality, 36, 22);
-  const meta = useMemo(() => ({
-    runner: { color: '#2f557d', head: '#52799e', accent: '#88bfd1', face: '#d7bd68', scale: [0.74, 0.52, 1.72], lift: 0.2, headSize: [0.3, 0.26, 0.23], accentSize: [0.2, 0.72, 0.2], shadow: [0.92, 0.48] },
-    golem: { color: '#4f754d', head: '#6f8d5e', accent: '#b29b56', face: '#d8bd68', scale: [1.18, 1.18, 1.02], lift: 0.12, headSize: [0.32, 0.34, 0.32], accentSize: [0.2, 0.34, 0.24], shadow: [0.9, 0.68] },
-    brute: { color: '#914338', head: '#b15d4d', accent: '#c99c54', face: '#dbc06a', scale: [1.74, 1.08, 1.28], lift: 0.08, headSize: [0.38, 0.3, 0.34], accentSize: [0.28, 0.36, 0.26], shadow: [1.08, 0.74] },
-    elite: { color: '#684f8e', head: '#8d74ad', accent: '#d3b95e', face: '#dfcb88', scale: [1.34, 1.42, 1.16], lift: 0.18, headSize: [0.44, 0.38, 0.38], accentSize: [0.36, 0.54, 0.3], shadow: [1.02, 0.78] },
-    boss: { color: '#8d713f', head: '#ac824b', accent: '#d2b867', face: '#e1c986', scale: [2.2, 1.62, 1.86], lift: 0.22, headSize: [0.5, 0.48, 0.44], accentSize: [0.42, 0.62, 0.34], shadow: [1.22, 0.84] }
-  }), []);
+  const commonMaterial = useAtlasMaterial(
+    SPRITE_URLS.riftbornCommon,
+    RIFTBORN_COMMON_ATLAS,
+    'riftborn-common-atlas-v7-clean-edge'
+  );
+  const threatMaterial = useAtlasMaterial(
+    SPRITE_URLS.riftbornThreat,
+    RIFTBORN_THREAT_ATLAS,
+    'riftborn-threat-atlas-v2-clean-edge'
+  );
   const local = useMemo(() => ({
     pos: new THREE.Vector3(),
-    headPos: new THREE.Vector3(),
-    facePos: new THREE.Vector3(),
-    accentPos: new THREE.Vector3(),
     scale: new THREE.Vector3(),
-    headScale: new THREE.Vector3(),
-    faceScale: new THREE.Vector3(),
-    accentScale: new THREE.Vector3(),
-    shadowScale: new THREE.Vector3(),
     quat: new THREE.Quaternion(),
-    headQuat: new THREE.Quaternion(),
-    faceQuat: new THREE.Quaternion(),
-    accentQuat: new THREE.Quaternion(),
     shadowQuat: new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)),
     matrix: new THREE.Matrix4(),
     color: new THREE.Color(),
-    flashColor: new THREE.Color('#d4a84c')
+    flashColor: new THREE.Color('#d4a84c'),
+    forward: new THREE.Vector3()
   }), []);
 
   useFrame(state => {
-    if (!bodyRef.current || !headRef.current || !faceRef.current || !accentRef.current || !shadowRef.current) return;
+    if (!commonRef.current || !commonShadowRef.current || !commonUvRef.current || !commonTintRef.current || !threatRef.current || !threatShadowRef.current || !threatUvRef.current || !threatTintRef.current) return;
     if (!shouldRenderVisualFrame(state.clock.elapsedTime)) return;
-    let count = 0;
+    let commonCount = 0;
+    let threatCount = 0;
+
     for (const enemy of enemiesRef.current) {
-      if (count >= enemyLimit) break;
-      const kindMeta = meta[enemy.kind] ?? meta.golem;
+      if (commonCount + threatCount >= enemyLimit) break;
+      const isThreat = enemy.kind === 'elite' || enemy.kind === 'boss';
+      const role = enemy.kind === 'boss' ? 'boss' : enemy.role ?? 'charger';
+      const spriteMeta = isThreat
+        ? THREAT_SPRITE_META[role] ?? THREAT_SPRITE_META.charger
+        : COMMON_SPRITE_META[enemy.kind] ?? COMMON_SPRITE_META.golem;
       const hitReact = THREE.MathUtils.clamp((enemy.flash ?? 0) / 0.18, 0, 1);
       const chargePower = enemy.chargeTimer > 0 ? 1 : 0;
       const contactPower = getEnemyContactWindupProgress(enemy);
@@ -59,295 +140,89 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
       const guardPower = enemy.bossGuard > 0 ? 1 : 0;
       const motionIntent = enemy.motionIntent ?? 0.55;
       const wobble = enemy.wobble ?? 0;
-      const stride = wobble * (enemy.kind === 'runner' ? 2.1 : enemy.kind === 'boss' ? 0.54 : 1.05);
-      const step = Math.sin(stride);
-      const bob = Math.max(0, step) * kindMeta.lift * (0.66 + motionIntent * 0.28) + hitReact * 0.08 + chargePower * 0.05 - contactPower * 0.08 + contactImpact * 0.1;
-      const squash = 1 + Math.max(0, -step) * 0.06 - hitReact * 0.07 + guardPower * 0.04 - contactPower * 0.08 + contactImpact * 0.05;
-      const widthPulse = 1 + Math.max(0, step) * 0.045 + hitReact * 0.1 + chargePower * 0.08 + contactPower * 0.08;
-      const depthPulse = 1 + motionIntent * 0.035 + chargePower * 0.12 + contactPower * 0.1;
-      const radius = enemy.radius * (enemy.kind === 'boss' ? 2.55 : enemy.kind === 'brute' ? 2.28 : enemy.kind === 'runner' ? 2.05 : 2.08);
-      const facing = enemy.facingAngle ?? wobble;
+      const strideRate = enemy.kind === 'runner' ? 2.1 : enemy.kind === 'boss' ? 0.54 : 1.05;
+      const step = Math.sin(wobble * strideRate);
+      const bob = Math.max(0, step) * spriteMeta.lift * (0.66 + motionIntent * 0.28)
+        + hitReact * 0.08 + chargePower * 0.05 - contactPower * 0.08 + contactImpact * 0.1;
+      const frame = isThreat
+        ? getRiftbornThreatAnimationFrame({
+          kind: enemy.kind,
+          role: enemy.role,
+          facingAngle: enemy.facingAngle ?? wobble,
+          animationPhase: wobble,
+          motionIntent
+        })
+        : getRiftbornAnimationFrame({
+          kind: enemy.kind,
+          facingAngle: enemy.facingAngle ?? wobble,
+          animationPhase: wobble,
+          motionIntent
+        });
+      const spriteWidth = enemy.radius * spriteMeta.width
+        * (1 + chargePower * 0.08 + contactPower * 0.08 + hitReact * 0.1 + guardPower * 0.035);
+      const spriteHeight = enemy.radius * spriteMeta.height
+        * (1 - contactPower * 0.07 + contactImpact * 0.06 + guardPower * 0.03);
+      const count = isThreat ? threatCount : commonCount;
+      const spriteRef = isThreat ? threatRef.current : commonRef.current;
+      const shadowRef = isThreat ? threatShadowRef.current : commonShadowRef.current;
+      const uvRef = isThreat ? threatUvRef.current : commonUvRef.current;
+      const tintRef = isThreat ? threatTintRef.current : commonTintRef.current;
 
-      local.pos.set(enemy.pos.x, enemy.pos.y + bob, enemy.pos.z);
-      local.quat.setFromEuler(new THREE.Euler(
-        enemy.kind === 'runner'
-          ? -0.2 - chargePower * 0.18 - contactPower * 0.18
-          : hitReact * -0.08 - contactPower * 0.12 + contactImpact * 0.08,
-        facing,
-        Math.sin(stride * 0.72) * (enemy.kind === 'runner' ? 0.16 : 0.07) + hitReact * 0.08
-      ));
-      local.scale.set(
-        radius * kindMeta.scale[0] * widthPulse,
-        radius * kindMeta.scale[1] * squash,
-        radius * kindMeta.scale[2] * depthPulse
-      );
+      const contactDisplacement = getEnemyContactDisplacement(enemy);
+      const hitRecoil = -hitReact * enemy.radius * 0.12;
+      local.forward.set(Math.sin(enemy.facingAngle ?? 0), 0, Math.cos(enemy.facingAngle ?? 0));
+      local.pos.copy(enemy.pos).addScaledVector(local.forward, contactDisplacement + hitRecoil);
+      local.pos.y = enemy.pos.y + spriteHeight * 0.5 + bob;
+      local.quat.copy(state.camera.quaternion);
+      local.scale.set(spriteWidth, spriteHeight, 1);
       local.matrix.compose(local.pos, local.quat, local.scale);
-      bodyRef.current.setMatrixAt(count, local.matrix);
-      local.color.set(kindMeta.color).lerp(local.flashColor, hitReact * 0.55);
-      bodyRef.current.setColorAt(count, local.color);
-
-      const headDistance = radius * (enemy.kind === 'runner' ? 0.58 : enemy.kind === 'boss' ? 0.48 : 0.42);
-      const headHeight = radius * (enemy.kind === 'boss' ? 1.2 : enemy.kind === 'brute' ? 0.96 : 0.86);
-      local.headPos.set(
-        enemy.pos.x + Math.sin(facing) * headDistance,
-        enemy.pos.y + bob + headHeight,
-        enemy.pos.z + Math.cos(facing) * headDistance
-      );
-      local.headQuat.setFromEuler(new THREE.Euler(
-        enemy.kind === 'runner' ? -0.08 : 0.05,
-        facing,
-        Math.sin(stride * 0.82) * 0.08 + hitReact * 0.12
-      ));
-      local.headScale.set(
-        radius * kindMeta.headSize[0],
-        radius * kindMeta.headSize[1],
-        radius * kindMeta.headSize[2]
-      );
-      local.matrix.compose(local.headPos, local.headQuat, local.headScale);
-      headRef.current.setMatrixAt(count, local.matrix);
-      local.color.set(kindMeta.head).lerp(local.flashColor, hitReact * 0.45);
-      headRef.current.setColorAt(count, local.color);
-
-      local.facePos.set(
-        enemy.pos.x + Math.sin(facing) * (headDistance + radius * 0.2),
-        enemy.pos.y + bob + headHeight + radius * 0.03,
-        enemy.pos.z + Math.cos(facing) * (headDistance + radius * 0.2)
-      );
-      local.faceQuat.setFromEuler(new THREE.Euler(0.03, facing, 0));
-      local.faceScale.set(
-        radius * (enemy.kind === 'runner' ? 0.22 : enemy.kind === 'boss' ? 0.28 : 0.24),
-        radius * 0.07,
-        radius * 0.035
-      );
-      local.matrix.compose(local.facePos, local.faceQuat, local.faceScale);
-      faceRef.current.setMatrixAt(count, local.matrix);
-      local.color.set(kindMeta.face).lerp(local.flashColor, hitReact * 0.32);
-      faceRef.current.setColorAt(count, local.color);
-
-      const accentDistance = radius * (enemy.kind === 'runner' ? 0.62 : 0.42);
-      local.accentPos.set(
-        enemy.pos.x + Math.sin(facing) * accentDistance,
-        enemy.pos.y + bob + radius * (enemy.kind === 'boss' ? 1.12 : 0.82),
-        enemy.pos.z + Math.cos(facing) * accentDistance
-      );
-      local.accentQuat.setFromEuler(new THREE.Euler(0.48, facing, Math.PI / 4 + step * 0.12));
-      local.accentScale.set(
-        radius * kindMeta.accentSize[0],
-        radius * kindMeta.accentSize[1],
-        radius * kindMeta.accentSize[2]
-      );
-      local.matrix.compose(local.accentPos, local.accentQuat, local.accentScale);
-      accentRef.current.setMatrixAt(count, local.matrix);
-      local.color.set(kindMeta.accent).lerp(local.flashColor, hitReact * 0.35);
-      accentRef.current.setColorAt(count, local.color);
+      spriteRef.setMatrixAt(count, local.matrix);
+      uvRef.setXY(count, frame.offsetX, frame.offsetY);
+      local.color.set(spriteMeta.tint).lerp(local.flashColor, hitReact * 0.48);
+      tintRef.setXYZ(count, local.color.r, local.color.g, local.color.b);
 
       local.pos.set(enemy.pos.x, getTerrainHeight(enemy.pos.x, enemy.pos.z) + 0.055, enemy.pos.z);
-      const shadowSize = radius * (enemy.kind === 'boss' ? 1.2 : 0.86);
-      local.matrix.compose(local.pos, local.shadowQuat, local.shadowScale.set(shadowSize * kindMeta.shadow[0], shadowSize * kindMeta.shadow[1], 1));
-      shadowRef.current.setMatrixAt(count, local.matrix);
+      local.matrix.compose(
+        local.pos,
+        local.shadowQuat,
+        local.scale.set(spriteWidth * 0.42, spriteWidth * 0.24, 1)
+      );
+      shadowRef.setMatrixAt(count, local.matrix);
 
-      count += 1;
+      if (isThreat) threatCount += 1;
+      else commonCount += 1;
     }
 
-    syncInstanceMeshes([bodyRef.current, headRef.current, faceRef.current, accentRef.current, shadowRef.current], count);
+    commonUvRef.current.needsUpdate = true;
+    commonTintRef.current.needsUpdate = true;
+    threatUvRef.current.needsUpdate = true;
+    threatTintRef.current.needsUpdate = true;
+    syncInstanceMeshes([commonRef.current, commonShadowRef.current], commonCount);
+    syncInstanceMeshes([threatRef.current, threatShadowRef.current], threatCount);
   });
 
   return (
     <group>
-      <instancedMesh ref={shadowRef} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+      <instancedMesh ref={commonShadowRef} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
         <circleGeometry args={[1, 18]} />
         <meshBasicMaterial color="#2d3d27" transparent opacity={0.16} depthWrite={false} toneMapped={false} />
       </instancedMesh>
-      <instancedMesh ref={bodyRef} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <dodecahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+      <instancedMesh ref={commonRef} args={[null, null, MAX_ENEMIES]} material={commonMaterial} frustumCulled={false} renderOrder={4}>
+        <planeGeometry args={[1, 1]}>
+          <instancedBufferAttribute ref={commonUvRef} attach="attributes-instanceRuneUv" args={[new Float32Array(MAX_ENEMIES * 2), 2]} />
+          <instancedBufferAttribute ref={commonTintRef} attach="attributes-instanceRuneTint" args={[new Float32Array(MAX_ENEMIES * 3), 3]} />
+        </planeGeometry>
       </instancedMesh>
-      <instancedMesh ref={headRef} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <dodecahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+      <instancedMesh ref={threatShadowRef} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
+        <circleGeometry args={[1, 22]} />
+        <meshBasicMaterial color="#241c2e" transparent opacity={0.22} depthWrite={false} toneMapped={false} />
       </instancedMesh>
-      <instancedMesh ref={faceRef} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+      <instancedMesh ref={threatRef} args={[null, null, MAX_ENEMIES]} material={threatMaterial} frustumCulled={false} renderOrder={5}>
+        <planeGeometry args={[1, 1]}>
+          <instancedBufferAttribute ref={threatUvRef} attach="attributes-instanceRuneUv" args={[new Float32Array(MAX_ENEMIES * 2), 2]} />
+          <instancedBufferAttribute ref={threatTintRef} attach="attributes-instanceRuneTint" args={[new Float32Array(MAX_ENEMIES * 3), 3]} />
+        </planeGeometry>
       </instancedMesh>
-      <instancedMesh ref={accentRef} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <coneGeometry args={[1, 1, 4]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
-      </instancedMesh>
-    </group>
-  );
-}
-
-export function SourceEnemyInstances({ enemiesRef, kind, url, scaleMultiplier = 1, materialTone, visualQuality = 'high' }) {
-  const parts = useInstancedModelParts(url);
-  const enemyLimit = getRuntimeBudget(visualQuality).maxEnemies;
-  const styledParts = useMemo(() => {
-    if (!materialTone) return parts;
-    const tone = new THREE.Color(materialTone);
-    const warmLift = new THREE.Color('#c9a85f');
-    const tintStrength = visualQuality === 'high' ? 0.62 : 1;
-    const liftStrength = visualQuality === 'high' ? 0.03 : 0.08;
-    return parts.map(part => {
-      const material = Array.isArray(part.material)
-        ? part.material.map(item => {
-          const clone = item.clone();
-          if (clone.color) {
-            if (visualQuality === 'high') clone.color.lerp(tone, tintStrength).lerp(warmLift, liftStrength);
-            else clone.color.copy(tone).lerp(warmLift, liftStrength);
-          }
-          if (visualQuality !== 'high' && clone.map) clone.map = null;
-          clone.roughness = Math.min(0.98, clone.roughness ?? 0.86);
-          clone.metalness = Math.min(0.04, clone.metalness ?? 0.01);
-          if ('emissive' in clone) {
-            clone.emissive = clone.emissive ?? new THREE.Color('#000000');
-            clone.emissive.lerp(tone, visualQuality === 'high' ? 0.2 : 0.36);
-            clone.emissiveIntensity = Math.max(clone.emissiveIntensity ?? 0, visualQuality === 'high' ? 0.12 : 0.14);
-          }
-          return clone;
-        })
-        : part.material.clone();
-      if (!Array.isArray(material)) {
-        if (material.color) {
-          if (visualQuality === 'high') material.color.lerp(tone, tintStrength).lerp(warmLift, liftStrength);
-          else material.color.copy(tone).lerp(warmLift, liftStrength);
-        }
-        if (visualQuality !== 'high' && material.map) material.map = null;
-        material.roughness = Math.min(0.98, material.roughness ?? 0.86);
-        material.metalness = Math.min(0.04, material.metalness ?? 0.01);
-        if ('emissive' in material) {
-          material.emissive = material.emissive ?? new THREE.Color('#000000');
-          material.emissive.lerp(tone, visualQuality === 'high' ? 0.2 : 0.36);
-          material.emissiveIntensity = Math.max(material.emissiveIntensity ?? 0, visualQuality === 'high' ? 0.12 : 0.14);
-        }
-      }
-      return { ...part, material };
-    });
-  }, [materialTone, parts, visualQuality]);
-  const meshRefs = useRef([]);
-  const local = useMemo(() => ({
-    pos: new THREE.Vector3(),
-    scale: new THREE.Vector3(),
-    quat: new THREE.Quaternion(),
-    euler: new THREE.Euler(),
-    base: new THREE.Matrix4(),
-    final: new THREE.Matrix4(),
-    baseMatrices: Array.from({ length: MAX_ENEMIES }, () => new THREE.Matrix4())
-  }), []);
-
-  useFrame(() => {
-    let count = 0;
-    for (const enemy of enemiesRef.current) {
-      if (enemy.kind !== kind) continue;
-      if (count >= enemyLimit) break;
-      const motionIntent = enemy.motionIntent ?? 0.55;
-      const hitReact = THREE.MathUtils.clamp((enemy.flash ?? 0) / 0.18, 0, 1);
-      const contactPower = getEnemyContactWindupProgress(enemy);
-      const contactImpact = THREE.MathUtils.clamp((enemy.contactAttackPulse ?? 0) / 0.34, 0, 1);
-      const shockedPower = enemy.shocked > 0 ? 0.18 : 0;
-      const stride = enemy.wobble * (kind === 'runner' ? 2.1 : kind === 'brute' ? 0.92 : kind === 'boss' ? 0.48 : 1.1) * (0.82 + motionIntent * 0.26);
-      const step = Math.sin(stride);
-      const stepLift = Math.max(0, step);
-      const chargePower = enemy.chargeTimer > 0 ? 1 : 0;
-      const guardPower = enemy.bossGuard > 0 ? 1 : 0;
-      const bob = kind === 'runner'
-        ? stepLift * (0.2 + motionIntent * 0.18) + chargePower * 0.1 - contactPower * 0.08 + contactImpact * 0.12
-        : kind === 'brute'
-          ? Math.abs(step) * (0.032 + motionIntent * 0.035) - contactPower * 0.06 + contactImpact * 0.08
-          : kind === 'boss'
-            ? Math.sin(stride) * 0.045 + guardPower * 0.035
-            : kind === 'golem'
-              ? Math.abs(step) * (0.032 + motionIntent * 0.025) - contactPower * 0.04 + contactImpact * 0.06
-              : Math.abs(step) * (0.05 + motionIntent * 0.045) - contactPower * 0.05 + contactImpact * 0.08;
-      const squash = kind === 'runner'
-          ? 0.76 + stepLift * (0.16 + motionIntent * 0.08) + chargePower * 0.1 - hitReact * 0.08 - contactPower * 0.08 + contactImpact * 0.05
-        : kind === 'brute'
-          ? 0.92 + Math.max(0, -step) * 0.05 - hitReact * 0.04 - contactPower * 0.07 + contactImpact * 0.04
-          : kind === 'elite'
-            ? 1.0 + stepLift * 0.045 + chargePower * 0.05 - hitReact * 0.04
-            : kind === 'boss'
-              ? 1.0 + Math.sin(stride) * 0.025 - guardPower * 0.08 - hitReact * 0.03
-              : kind === 'golem'
-                ? 1.12 + Math.max(0, -step) * 0.025 - hitReact * 0.035
-              : 1.0 + stepLift * 0.045 - hitReact * 0.04 - contactPower * 0.06 + contactImpact * 0.04;
-      const pitch = kind === 'runner'
-          ? -0.18 - stepLift * 0.14 - chargePower * 0.3 - hitReact * 0.12 - contactPower * 0.2 + contactImpact * 0.12
-        : kind === 'brute'
-          ? -0.01 + Math.max(0, -step) * 0.045 - hitReact * 0.055 - contactPower * 0.13 + contactImpact * 0.08
-          : kind === 'boss'
-            ? guardPower * 0.08 - hitReact * 0.04
-            : kind === 'golem'
-              ? 0.035 + step * 0.018 - hitReact * 0.035
-              : -0.045 + step * 0.035 - hitReact * 0.055 - contactPower * 0.1 + contactImpact * 0.07;
-      const roll = kind === 'runner'
-        ? Math.sin(stride * 0.5) * (0.17 + motionIntent * 0.1) + hitReact * Math.sin(enemy.wobble * 1.7) * 0.16
-        : kind === 'brute'
-          ? Math.sin(stride * 0.72) * 0.036 + hitReact * Math.sin(enemy.wobble * 1.3) * 0.07
-          : kind === 'elite'
-            ? Math.sin(stride * 0.82) * 0.075 + chargePower * 0.08 + hitReact * 0.06
-            : kind === 'boss'
-              ? Math.sin(stride * 0.62) * 0.035 + hitReact * 0.035
-              : kind === 'golem'
-                ? Math.sin(stride * 0.5) * 0.028 + hitReact * 0.045
-                : Math.sin(stride * 0.74) * 0.06 + hitReact * Math.sin(enemy.wobble * 1.5) * 0.07;
-      local.pos.set(enemy.pos.x, enemy.pos.y + bob + hitReact * 0.04 + shockedPower * 0.03, enemy.pos.z);
-      local.euler.set(pitch, enemy.facingAngle ?? enemy.wobble, roll);
-      local.quat.setFromEuler(local.euler);
-      const bossPulse = kind === 'boss' ? 1 + Math.sin(enemy.wobble * 0.72) * 0.035 + hitReact * 0.03 : 1;
-      const widthPulse = kind === 'runner'
-        ? 0.74 + stepLift * 0.06 + hitReact * 0.08
-        : kind === 'brute'
-          ? 1.24 + Math.max(0, -step) * 0.035 + hitReact * 0.08
-          : kind === 'boss'
-            ? 1.0 + guardPower * 0.08
-            : kind === 'golem'
-              ? 1.02 + Math.max(0, -step) * 0.02 + hitReact * 0.04
-              : 1 + hitReact * 0.04;
-      const depthPulse = kind === 'runner'
-          ? 1.34 + motionIntent * 0.08 + chargePower * 0.24 + contactPower * 0.12
-        : kind === 'brute'
-          ? 1.16 + stepLift * 0.02 + hitReact * 0.06 + contactPower * 0.1
-          : kind === 'elite'
-            ? 1.0 + chargePower * 0.12 + hitReact * 0.04
-            : kind === 'boss'
-              ? 1.0 + guardPower * 0.06
-              : kind === 'golem'
-                ? 0.92 + stepLift * 0.015 + hitReact * 0.035
-                : 1.02 + contactPower * 0.08;
-      local.scale.set(
-        enemy.radius * scaleMultiplier * widthPulse * bossPulse,
-        enemy.radius * scaleMultiplier * squash * bossPulse,
-        enemy.radius * scaleMultiplier * depthPulse * bossPulse
-      );
-      local.base.compose(local.pos, local.quat, local.scale);
-      local.baseMatrices[count].copy(local.base);
-      count += 1;
-    }
-
-    styledParts.forEach((part, partIndex) => {
-      const mesh = meshRefs.current[partIndex];
-      if (!mesh) return;
-      for (let index = 0; index < count; index += 1) {
-        local.final.multiplyMatrices(local.baseMatrices[index], part.localMatrix);
-        mesh.setMatrixAt(index, local.final);
-      }
-      syncInstanceMesh(mesh, count);
-    });
-  });
-
-  return (
-    <group>
-      {styledParts.map((part, index) => (
-        <instancedMesh
-          key={`${url}-${index}`}
-          ref={node => {
-            meshRefs.current[index] = node;
-          }}
-          args={[part.geometry, part.material, MAX_ENEMIES]}
-          frustumCulled={false}
-          castShadow={visualQuality === 'high'}
-          receiveShadow={visualQuality !== 'low'}
-        />
-      ))}
     </group>
   );
 }
