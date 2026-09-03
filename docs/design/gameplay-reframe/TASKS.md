@@ -264,3 +264,14 @@
 - [x] Re-run a three-route 145-second pressure sample and a complete five-minute balance sample.
 - [x] Pass the production build, complete 44-test browser suite, and Codex in-app route check.
 - [ ] Recheck dodge timing and thumb response on physical iOS and Android devices.
+
+## Slice 27 — Future-safe module boundaries
+
+- [x] Keep existing runtime import paths as stable facade modules.
+- [x] Separate normal game state from deterministic QA fixtures.
+- [x] Separate run objectives/onboarding from scoring and result summaries.
+- [x] Split weapon casting into orb, blade, storm, lightning, and nova modules.
+- [x] Separate enemy core, common-role, threat, and ground-aura presentation.
+- [x] Separate field pickups from Rune Shrine presentation.
+- [x] Split HUD and overlay CSS by screen responsibility without changing cascade order.
+- [x] Pass the production build, complete 44-test browser suite, and three-route five-minute balance sampler.

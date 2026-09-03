@@ -133,8 +133,8 @@ src/
   config/     asset manifest, tuning, metadata, upgrades
   hooks/      React-owned runtime lifecycle
   qa/         deterministic development scenes
-  styles/     tokens, shell, HUD, overlays, responsive rules
-  systems/    frame-level gameplay logic
+  styles/     tokens, shell, screen-scoped HUD/overlay modules, responsive rules
+  systems/    frame-level gameplay logic and feature-scoped runtime modules
   ui/         DOM HUD, overlays, cards, touch controls
   world/      React Three Fiber battlefield and effects
 public/sprites/ project-authored RGB sprite atlases with runtime clean-edge compositing
@@ -143,6 +143,8 @@ docs/           project, QA, asset, and design documentation
 ```
 
 All runtime modules under `src/` are connected to the `src/main.jsx` import graph. Generated output, browser artifacts, and raw asset downloads are git-ignored.
+
+Stable facade files such as `gameState.js`, `runProgress.js`, `weaponRuntime.js`, `EnemyEffects.jsx`, and `FieldItemsAndShrines.jsx` preserve existing imports. Their implementations live in responsibility-scoped subfolders so future gameplay and presentation changes do not collect in a single file.
 
 See [docs/project-structure.md](./docs/project-structure.md) for ownership boundaries and the full repository map.
 

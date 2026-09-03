@@ -9,8 +9,8 @@
 │   ├── config/             Assets, tuning, upgrades, and metadata
 │   ├── hooks/              React-owned runtime lifecycle
 │   ├── qa/                 Deterministic development scenes
-│   ├── styles/             Tokens, shell, HUD, overlays, responsive rules
-│   ├── systems/            Frame-level gameplay logic
+│   ├── styles/             Tokens, shell, screen-scoped HUD/overlays, responsive rules
+│   ├── systems/            Frame-level gameplay logic and scoped runtime modules
 │   ├── ui/                 DOM HUD, overlays, cards, touch controls
 │   └── world/              React Three Fiber scene components
 ├── public/sprites/         Project-authored character atlases
@@ -29,9 +29,19 @@
 - `src/hooks/useGameSceneEffects.js` owns keyboard listeners, level-up effects, and the dev-only scene API.
 - `src/systems/gameSceneActions.js` is the narrow adapter between the frame loop and gameplay systems.
 - `src/systems/` keeps player, enemy, weapon, projectile, pickup, shrine, Rune Circuit, terrain, pacing, telemetry, and pool logic independent of React rendering.
+- `src/systems/game-state/` separates normal game state from deterministic QA fixtures; `gameState.js` is the stable public facade.
+- `src/systems/run-progress/` separates onboarding/objectives from score, defense, and result summaries; `runProgress.js` is the stable public facade.
+- `src/systems/weapon-runtime/` owns one cast module per weapon family; `weaponRuntime.js` only coordinates shared timing and preserves the existing frame-loop contract.
 - `src/world/GameWorld.jsx` composes the battlefield, actors, telegraphs, projectiles, and visual feedback.
+- `src/world/enemy-effects/` separates shared actor accents, common-role decoration, elite/threat signals, and ground auras.
+- `src/world/field-items/` separates collectible presentation from Rune Shrine rendering and initialization.
 - `src/world/MapBaseArena.jsx` keeps low, balanced, and high on one terrain/landmark composition; quality tiers may change density, lighting, shadows, and effects but must not swap in a second battlefield.
 - `src/ui/` owns accessible DOM presentation; it should not mutate scene refs directly.
+- `src/styles/hud/` and `src/styles/overlays/` own screen-level CSS while the top-level `hud.css` and `overlays.css` files preserve cascade order through imports.
+
+## Stable facade rule
+
+Files already imported across the runtime remain thin facades when an implementation grows. New work should enter the responsibility-scoped module first, and the facade should only coordinate or re-export. This keeps call sites stable while preventing state, presentation, and weapon-specific changes from colliding in one file.
 
 ## Assets
 
