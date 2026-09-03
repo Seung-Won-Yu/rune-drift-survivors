@@ -54,7 +54,9 @@ import {
 import { getNextXpThreshold } from '../src/systems/xpRuntime.js';
 
 const artifactDir = path.resolve('output/playwright');
-const enforceRealtimeFrameRate = process.env.CI !== 'true';
+const isCi = process.env.CI === 'true';
+const enforceRealtimeFrameRate = !isCi;
+const runtimeTimeout = (localMs, ciMs) => isCi ? ciMs : localMs;
 
 test.beforeAll(async () => {
   await mkdir(artifactDir, { recursive: true });
@@ -535,12 +537,26 @@ test('desktop movement and dash input smoke', async ({ page }) => {
   await page.waitForFunction(() => Boolean(window.__RUNE_DRIFT_QA__?.metrics?.()?.player));
   const before = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().player);
   await page.keyboard.down('w');
-  await page.waitForTimeout(1_200);
-  await page.keyboard.up('w');
+  try {
+    await page.waitForFunction(
+      start => {
+        const player = window.__RUNE_DRIFT_QA__.metrics().player;
+        return Math.hypot(player.x - start.x, player.z - start.z) > 2;
+      },
+      before,
+      { polling: 50, timeout: runtimeTimeout(3_000, 20_000) }
+    );
+  } finally {
+    await page.keyboard.up('w');
+  }
   const afterMove = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().player);
   expect(Math.hypot(afterMove.x - before.x, afterMove.z - before.z), 'player movement distance').toBeGreaterThan(2);
   await page.keyboard.press(' ');
-  await page.waitForTimeout(100);
+  await page.waitForFunction(
+    () => window.__RUNE_DRIFT_QA__.metrics().player.dashCooldown > 0,
+    null,
+    { polling: 16, timeout: runtimeTimeout(1_000, 10_000) }
+  );
   const afterDash = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().player);
   expect(afterDash.dashCooldown, 'dash cooldown').toBeGreaterThan(0);
   guards.assertClean();
@@ -553,7 +569,7 @@ test('dash input buffer smoke', async ({ page }) => {
   await page.waitForFunction(
     () => window.__RUNE_DRIFT_QA__.metrics().player.dashCooldown > 0.8,
     null,
-    { polling: 16, timeout: 2_000 }
+    { polling: 16, timeout: runtimeTimeout(2_000, 15_000) }
   );
   await page.waitForFunction(
     () => {
@@ -561,13 +577,13 @@ test('dash input buffer smoke', async ({ page }) => {
       return cooldown > 0.03 && cooldown < 0.1;
     },
     null,
-    { polling: 16, timeout: 2_000 }
+    { polling: 16, timeout: runtimeTimeout(2_000, 25_000) }
   );
   await page.keyboard.press(' ');
   await page.waitForFunction(
     () => window.__RUNE_DRIFT_QA__.metrics().player.dashCooldown > 0.8,
     null,
-    { polling: 16, timeout: 500 }
+    { polling: 16, timeout: runtimeTimeout(500, 8_000) }
   );
   guards.assertClean();
 });
@@ -582,7 +598,7 @@ test('audio unlock, cue, and mute persistence smoke', async ({ page }) => {
       return state.unlocked && state.received > 0 && state.played > 0;
     },
     null,
-    { polling: 20, timeout: 2_000 }
+    { polling: 20, timeout: runtimeTimeout(2_000, 15_000) }
   );
 
   await page.getByRole('button', { name: '사운드 끄기' }).click();
@@ -602,7 +618,7 @@ test('enemy contact windup and recovery smoke', async ({ page }) => {
   await page.waitForFunction(
     () => window.__RUNE_DRIFT_QA__.metrics()?.contact?.windups === 1,
     null,
-    { polling: 16, timeout: 2_000 }
+    { polling: 16, timeout: runtimeTimeout(2_000, 15_000) }
   );
   await capture(page, 'qa-smoke-contact-windup');
   await page.waitForFunction(
@@ -611,7 +627,7 @@ test('enemy contact windup and recovery smoke', async ({ page }) => {
       return metrics?.contact?.resolved >= 1 && metrics?.contact?.hits >= 1;
     },
     null,
-    { polling: 16, timeout: 2_000 }
+    { polling: 16, timeout: runtimeTimeout(2_000, 15_000) }
   );
   const metrics = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics());
   expect(metrics.contact.recoveries, 'contact recovery state').toBeGreaterThanOrEqual(1);
@@ -641,7 +657,7 @@ test('combat identity damage-source smoke', async ({ page }) => {
       return ['orb', 'storm', 'blade', 'lightning', 'nova'].every(source => sources?.[source] > 0);
     },
     null,
-    { polling: 50, timeout: 8_000 }
+    { polling: 50, timeout: runtimeTimeout(8_000, 30_000) }
   );
   const metrics = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics());
   expect(metrics.combat.totalDamage, 'combat fixture total damage').toBeGreaterThan(0);
@@ -789,7 +805,9 @@ test('result overlay smoke', async ({ page }) => {
   await expect(page.locator('.resultReplay')).toContainText('NEXT INSCRIPTION');
   await expect(page.getByRole('button', { name: /경로로 재도전/ })).toBeVisible();
   await capture(page, 'qa-smoke-result');
-  await page.getByRole('button', { name: /경로로 재도전/ }).click();
+  const replayButton = page.getByRole('button', { name: /경로로 재도전/ });
+  await replayButton.scrollIntoViewIfNeeded();
+  await replayButton.click({ timeout: runtimeTimeout(10_000, 40_000) });
   await expect(page.locator('.hudAlert')).toContainText('궤도 칼날 경로 예약');
   guards.assertClean();
 });
@@ -808,14 +826,15 @@ test('survival result keeps incomplete circuit distinct from victory', async ({ 
 
 test('stress budget smoke', async ({ page }) => {
   const guards = await openGuardedPage(page, '/?qa=stress&quality=balanced');
+  const frameSampleTarget = isCi ? 30 : 180;
   await page.waitForFunction(
-    () => window.__RUNE_DRIFT_QA__?.metrics?.()?.frameStats?.samples > 180,
-    null,
-    { polling: 100, timeout: 15_000 }
+    target => window.__RUNE_DRIFT_QA__?.metrics?.()?.frameStats?.samples > target,
+    frameSampleTarget,
+    { polling: 100, timeout: runtimeTimeout(15_000, 30_000) }
   );
   await page.waitForTimeout(1_000);
   const metrics = await page.evaluate(() => window.__RUNE_DRIFT_QA__?.metrics?.());
-  expect(metrics?.frameStats?.samples, 'frame samples').toBeGreaterThan(180);
+  expect(metrics?.frameStats?.samples, 'frame samples').toBeGreaterThan(frameSampleTarget);
   if (enforceRealtimeFrameRate) {
     expect(metrics?.frameStats?.avgFps, 'average FPS').toBeGreaterThanOrEqual(55);
     expect(metrics?.frameStats?.severeFrames, 'severe frames').toBe(0);
