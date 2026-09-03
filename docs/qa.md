@@ -81,6 +81,6 @@ For character-edge review, use `silhouette`, `combat`, and `threats` at the stan
 ## Local and CI expectations
 
 - Local system-Chrome runs enforce the real-time stress FPS threshold.
-- CI runs use bundled Chromium and software WebGL, so they verify behavior and budgets without enforcing the local FPS threshold. Runtime-sensitive checks wait for observable game state instead of assuming wall-clock frame throughput, and the stress fixture uses a smaller but representative frame sample.
+- CI runs use bundled Chromium and software WebGL, so they verify behavior and budgets without enforcing the local FPS threshold. Quality invariance is covered separately; runtime-sensitive checks use the low presentation tier, wait for observable game state instead of assuming wall-clock frame throughput, and use a minimal stress-frame sample.
 - Every pushed change intended for `main` should pass `npm run build` and `npm run qa:smoke`.
 - Physical iOS and Android checks remain necessary before release for browser chrome, touch latency, audio latency, and safe-area behavior.

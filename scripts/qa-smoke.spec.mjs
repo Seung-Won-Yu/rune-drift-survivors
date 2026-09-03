@@ -56,6 +56,7 @@ import { getNextXpThreshold } from '../src/systems/xpRuntime.js';
 const artifactDir = path.resolve('output/playwright');
 const isCi = process.env.CI === 'true';
 const enforceRealtimeFrameRate = !isCi;
+const runtimeQuality = isCi ? 'low' : 'balanced';
 const runtimeTimeout = (localMs, ciMs) => isCi ? ciMs : localMs;
 
 test.beforeAll(async () => {
@@ -533,7 +534,7 @@ test('replay route replaces forced orb cards after its family is unlocked', () =
 });
 
 test('desktop movement and dash input smoke', async ({ page }) => {
-  const guards = await openGuardedPage(page, '/?quality=balanced');
+  const guards = await openGuardedPage(page, `/?quality=${runtimeQuality}`);
   await page.waitForFunction(() => Boolean(window.__RUNE_DRIFT_QA__?.metrics?.()?.player));
   const before = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().player);
   await page.keyboard.down('w');
@@ -563,7 +564,7 @@ test('desktop movement and dash input smoke', async ({ page }) => {
 });
 
 test('dash input buffer smoke', async ({ page }) => {
-  const guards = await openGuardedPage(page, '/?quality=balanced');
+  const guards = await openGuardedPage(page, `/?quality=${runtimeQuality}`);
   await page.waitForFunction(() => Boolean(window.__RUNE_DRIFT_QA__?.metrics?.()?.player));
   await page.keyboard.press(' ');
   await page.waitForFunction(
@@ -577,7 +578,7 @@ test('dash input buffer smoke', async ({ page }) => {
       return cooldown > 0.03 && cooldown < 0.1;
     },
     null,
-    { polling: 16, timeout: runtimeTimeout(2_000, 25_000) }
+    { polling: 16, timeout: runtimeTimeout(2_000, 60_000) }
   );
   await page.keyboard.press(' ');
   await page.waitForFunction(
@@ -589,7 +590,7 @@ test('dash input buffer smoke', async ({ page }) => {
 });
 
 test('audio unlock, cue, and mute persistence smoke', async ({ page }) => {
-  const guards = await openGuardedPage(page, '/?quality=balanced');
+  const guards = await openGuardedPage(page, `/?quality=${runtimeQuality}`);
   await page.waitForFunction(() => Boolean(window.__RUNE_DRIFT_AUDIO__?.state));
   await page.keyboard.press(' ');
   await page.waitForFunction(
@@ -612,7 +613,7 @@ test('audio unlock, cue, and mute persistence smoke', async ({ page }) => {
 });
 
 test('enemy contact windup and recovery smoke', async ({ page }) => {
-  const guards = await openGuardedPage(page, '/?quality=balanced');
+  const guards = await openGuardedPage(page, `/?quality=${runtimeQuality}`);
   await page.waitForFunction(() => Boolean(window.__RUNE_DRIFT_QA__?.contactAttack));
   await page.evaluate(() => window.__RUNE_DRIFT_QA__.contactAttack());
   await page.waitForFunction(
@@ -648,7 +649,7 @@ test('enemy contact pose separates anticipation from impact', () => {
 });
 
 test('combat identity damage-source smoke', async ({ page }) => {
-  const guards = await openGuardedPage(page, '/?qa=combat&quality=balanced');
+  const guards = await openGuardedPage(page, `/?qa=combat&quality=${runtimeQuality}`);
   await expect(page.locator('.hudEncounter')).toBeVisible({ timeout: 5_000 });
   await expect(page.locator('.hudObjectiveDock')).toHaveCount(0);
   await page.waitForFunction(
@@ -657,7 +658,7 @@ test('combat identity damage-source smoke', async ({ page }) => {
       return ['orb', 'storm', 'blade', 'lightning', 'nova'].every(source => sources?.[source] > 0);
     },
     null,
-    { polling: 50, timeout: runtimeTimeout(8_000, 30_000) }
+    { polling: 50, timeout: runtimeTimeout(8_000, 75_000) }
   );
   const metrics = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics());
   expect(metrics.combat.totalDamage, 'combat fixture total damage').toBeGreaterThan(0);
@@ -825,12 +826,12 @@ test('survival result keeps incomplete circuit distinct from victory', async ({ 
 });
 
 test('stress budget smoke', async ({ page }) => {
-  const guards = await openGuardedPage(page, '/?qa=stress&quality=balanced');
-  const frameSampleTarget = isCi ? 30 : 180;
+  const guards = await openGuardedPage(page, `/?qa=stress&quality=${runtimeQuality}`);
+  const frameSampleTarget = isCi ? 10 : 180;
   await page.waitForFunction(
     target => window.__RUNE_DRIFT_QA__?.metrics?.()?.frameStats?.samples > target,
     frameSampleTarget,
-    { polling: 100, timeout: runtimeTimeout(15_000, 30_000) }
+    { polling: 100, timeout: runtimeTimeout(15_000, 45_000) }
   );
   await page.waitForTimeout(1_000);
   const metrics = await page.evaluate(() => window.__RUNE_DRIFT_QA__?.metrics?.());

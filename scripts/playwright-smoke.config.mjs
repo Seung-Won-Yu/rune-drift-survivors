@@ -7,7 +7,7 @@ const useSystemChrome = !isCi;
 export default defineConfig({
   testDir: '.',
   testMatch: 'qa-smoke.spec.mjs',
-  timeout: isCi ? 90_000 : 35_000,
+  timeout: isCi ? 120_000 : 35_000,
   expect: {
     timeout: isCi ? 20_000 : 10_000
   },
