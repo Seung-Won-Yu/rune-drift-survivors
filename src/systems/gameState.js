@@ -1,4 +1,8 @@
-import { BOSS_PATTERN_META, DAMAGE_SOURCE_META } from '../config/gameData.js';
+import {
+  BOSS_PATTERN_META,
+  DAMAGE_SOURCE_META,
+  RUN_PHASES
+} from '../config/gameData.js';
 import {
   DASH_COOLDOWN,
   RUN_DURATION,
@@ -40,9 +44,20 @@ export function withShrineActivation(game, shrineId) {
 }
 
 export function createEmptyRunStats() {
+  const createDamageBySource = () => (
+    Object.fromEntries(Object.keys(DAMAGE_SOURCE_META).map(source => [source, 0]))
+  );
   return {
+    phaseId: RUN_PHASES[0].id,
     totalDamage: 0,
-    damageBySource: Object.fromEntries(Object.keys(DAMAGE_SOURCE_META).map(source => [source, 0]))
+    damageBySource: createDamageBySource(),
+    damageByPhase: Object.fromEntries(
+      RUN_PHASES.map(phase => [phase.id, createDamageBySource()])
+    ),
+    damageTaken: 0,
+    damageTakenByPhase: Object.fromEntries(RUN_PHASES.map(phase => [phase.id, 0])),
+    healingReceived: 0,
+    healingByPhase: Object.fromEntries(RUN_PHASES.map(phase => [phase.id, 0]))
   };
 }
 
@@ -175,6 +190,7 @@ export function createQaBossGame(options = {}) {
     buildFocus: { ...createEmptyBuildFocus(), orb: 2, storm: 2, chain: 2, nova: 1 },
     upgrades: ['orb-lance', 'pierce', 'storm-volley', 'chain-plus', 'chain-web', 'nova-plus'],
     runStats: {
+      ...createEmptyRunStats(),
       totalDamage: 16540,
       damageBySource: {
         ...createEmptyRunStats().damageBySource,
@@ -236,7 +252,20 @@ export function createQaResultGame(result = 'victory') {
       pierce: 3
     },
     runStats: {
+      ...createEmptyRunStats(),
       totalDamage: didWin ? 84200 : 48750,
+      damageTaken: didWin ? 168 : 224,
+      healingReceived: didWin ? 134 : 86,
+      damageTakenByPhase: didWin
+        ? { learn: 12, anchor: 25, armory: 36, synergy: 42, final: 53 }
+        : didSurvive
+          ? { learn: 18, anchor: 34, armory: 48, synergy: 56, final: 68 }
+          : { learn: 22, anchor: 44, armory: 66, synergy: 92, final: 0 },
+      healingByPhase: didWin
+        ? { learn: 8, anchor: 24, armory: 36, synergy: 38, final: 28 }
+        : didSurvive
+          ? { learn: 8, anchor: 18, armory: 20, synergy: 22, final: 18 }
+          : { learn: 6, anchor: 16, armory: 26, synergy: 38, final: 0 },
       damageBySource: {
         ...createEmptyRunStats().damageBySource,
         storm: didWin ? 23800 : 14200,

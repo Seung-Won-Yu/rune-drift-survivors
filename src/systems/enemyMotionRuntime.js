@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 import { PLAYER_RADIUS } from '../config/gameTuning.js';
 import { getEnemyContactMotionScale } from './enemyContactRuntime.js';
-import { getEnemyMovePressure } from './enemyPacing.js';
+import { getEnemyMovePressure, getEnemyPursuitSpeedScale } from './enemyPacing.js';
 import { getBuildFocus } from './progression.js';
 import {
   getEnemyTerrainY,
@@ -24,7 +24,8 @@ export function advanceEnemyMotion({
   const speedMultiplier = (enemy.chargeTimer > 0 ? 3.1 : enemy.bossGuard > 0 ? 0.72 : 1)
     * contactMotionScale
     * shockMultiplier
-    * getEnemyMovePressure(currentGame);
+    * getEnemyMovePressure(currentGame)
+    * getEnemyPursuitSpeedScale(enemy, currentGame);
   enemy.motionSpeed = enemy.speed * speedMultiplier;
   enemy.motionIntent = distance > enemy.radius + PLAYER_RADIUS
     ? THREE.MathUtils.clamp(enemy.motionSpeed / 5.4, 0.16, 1.36)

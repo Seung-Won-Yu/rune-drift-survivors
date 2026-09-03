@@ -48,8 +48,21 @@
 
 .shell.isHurt::before {
   background:
-    radial-gradient(circle at 50% 50%, transparent 23%, rgba(224, 107, 95, 0.18) 62%, rgba(96, 16, 11, 0.86) 110%),
-    linear-gradient(180deg, rgba(224, 107, 95, 0.18), transparent 36%);
+    radial-gradient(circle at 50% 50%, transparent 27%, rgba(224, 107, 95, 0.12) 66%, rgba(96, 16, 11, 0.58) 110%),
+    linear-gradient(180deg, rgba(224, 107, 95, 0.12), transparent 34%);
+  animation: rune-hurt-vignette 620ms ease-out both;
+}
+
+@keyframes rune-hurt-vignette {
+  from { opacity: 1; }
+  to { opacity: 0.42; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell.isHurt::before {
+    animation: none;
+    opacity: 0.58;
+  }
 }
 
 .loadingLayer {

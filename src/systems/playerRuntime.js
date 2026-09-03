@@ -16,7 +16,8 @@ export function damagePlayerRuntime({
   player,
   hitBursts,
   cameraShake,
-  addDamageNumber
+  addDamageNumber,
+  recordDamageTaken
 }) {
   if (player.current.invuln > 0) return false;
   const bladeFocus = getBuildFocus(game, 'blade');
@@ -28,6 +29,7 @@ export function damagePlayerRuntime({
   player.current.hurtPulse = Math.max(player.current.hurtPulse ?? 0, 0.62);
   cameraShake.current = Math.max(cameraShake.current, 0.28);
   const damageValue = Math.ceil(guardedAmount);
+  recordDamageTaken?.(Math.min(game.stats.hp, guardedAmount));
   hitBursts.current.push({
     pos: player.current.pos.clone(),
     life: 0.42,
@@ -47,7 +49,7 @@ export function damagePlayerRuntime({
       phase: nextHp <= 0 ? 'ended' : current.phase,
       result: nextHp <= 0 ? 'defeat' : current.result,
       damageFlash: 0.62,
-      damageMessage: hpRatio <= 0.34 ? '위험: 체력 낮음' : `피격 -${damageValue}`,
+      damageMessage: hpRatio <= 0.34 ? `${Math.ceil(nextHp)} HP · 즉시 회피` : `-${damageValue} HP`,
       stats: { ...current.stats, hp: nextHp }
     };
   });

@@ -57,6 +57,27 @@ export function getEnemyMovePressure(game) {
   return rhythm.move;
 }
 
+export function getEnemyPursuitLead(enemy, game) {
+  if (enemy?.kind !== 'runner') return 0;
+  const baseLead = game.time < 35
+    ? 0.34
+    : game.time < 85
+      ? 0.26
+      : game.time < 145
+        ? 0.16
+        : 0.08;
+  return baseLead + (enemy.summoned || enemy.splitSpawn ? 0.04 : 0);
+}
+
+export function getEnemyPursuitSpeedScale(enemy, game) {
+  if (enemy?.kind !== 'runner') return 1;
+  if (game.time < 35) return 1.14;
+  if (game.time < 85) return 1.34;
+  if (game.time < 145) return 1.5;
+  if (game.time < 210) return 1.34;
+  return 1.2;
+}
+
 export function getEnemyDamagePressure(game) {
   const rhythm = getCombatRhythm(game);
   if (game.time >= 245) return 1.42 * rhythm.damage;

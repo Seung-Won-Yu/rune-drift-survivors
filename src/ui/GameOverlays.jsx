@@ -209,6 +209,47 @@ export function EndOverlay({ game, onRestart }) {
             <small>{resultSummary.shrineLabels}</small>
           </span>
         </div>
+        {resultSummary.damageBreakdown.length > 0 && (
+          <section className="resultDamageMix" aria-label="공격 기여도">
+            <header>
+              <span>DAMAGE ROUTE</span>
+              <small>전체 피해 기준 상위 3개</small>
+            </header>
+            <div>
+              {resultSummary.damageBreakdown.map(source => (
+                <span
+                  key={source.source}
+                  className="resultDamageRow"
+                  style={{ '--tone': source.color, '--share': `${source.share * 100}%` }}
+                  aria-label={`${source.label} 공격 기여도 ${source.sharePercent}%`}
+                >
+                  <b>{source.label}</b>
+                  <i aria-hidden="true" />
+                  <em>{source.sharePercent}%</em>
+                  <small>{source.dps} / s</small>
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+        <section className="resultDefense" aria-label="생존 기록">
+          <header>
+            <span>SURVIVAL RECORD</span>
+            <small>실제 체력 변화 기준</small>
+          </header>
+          <div>
+            <span><small>받은 피해</small><b>{resultSummary.defense.damageTaken}</b></span>
+            <span><small>실제 회복</small><b>{resultSummary.defense.healingReceived}</b></span>
+            <span style={{ '--tone': resultSummary.defense.dangerPhase?.color ?? '#64c98d' }}>
+              <small>위험 구간</small>
+              <b>
+                {resultSummary.defense.dangerPhase
+                  ? `${resultSummary.defense.dangerPhase.title} · ${resultSummary.defense.dangerPhase.damage}`
+                  : '무피격'}
+              </b>
+            </span>
+          </div>
+        </section>
         <aside className="resultReplay" style={{ '--tone': resultSummary.replay.color }} aria-label="다음 런 추천 빌드">
           <span aria-hidden="true">{resultSummary.replay.glyph}</span>
           <div>

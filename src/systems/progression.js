@@ -14,6 +14,20 @@ export function getRunPhase(game) {
   return RUN_PHASES.find(phase => game.time < phase.until) ?? RUN_PHASES[RUN_PHASES.length - 1];
 }
 
+export function getRunPhaseTransition(previousTime, nextTime) {
+  const previous = getRunPhase({ time: previousTime });
+  const next = getRunPhase({ time: nextTime });
+  if (previous.id === next.id) return null;
+  return {
+    kind: 'phase',
+    label: next.label,
+    title: next.title,
+    hint: next.goal,
+    color: next.color,
+    phaseId: next.id
+  };
+}
+
 export function getWeaponStage(game) {
   return Math.min(3, Math.max(0, Math.floor((game.level - 1) / 2.2) + Math.floor(game.upgrades.length / 4)));
 }
@@ -63,6 +77,14 @@ export function getNovaColor(stats, stage = 0) {
 export function getBladeCount(stats, bladeFocus = 0, unlocked = true) {
   if (!unlocked) return 0;
   return Math.min(MAX_ORBIT_BLADES, 2 + stats.bladeBonus + Math.floor(stats.pierce / 2) + Math.floor(bladeFocus / 2) + (stats.damage > 1.5 ? 1 : 0));
+}
+
+export function getBladeSize(stats) {
+  return (0.78 + stats.pierce * 0.035) * Math.min(1.38, stats.bladeDamage);
+}
+
+export function getBladeOrbitRadius(stats, weaponStage = 0, bladeFocus = 0) {
+  return (2.5 + weaponStage * 0.16 + bladeFocus * 0.08) * stats.bladeRadius;
 }
 
 export function getUpgradeFocusKey(upgrade) {

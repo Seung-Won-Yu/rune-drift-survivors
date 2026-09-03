@@ -1,3 +1,5 @@
+import { ART_TOKENS } from '../config/gameData.js';
+
 export function getHudAlerts({
   game,
   crisis,
@@ -11,6 +13,20 @@ export function getHudAlerts({
 }) {
   const alerts = [];
 
+  if (game.damageFlash > 0) {
+    alerts.push({
+      id: 'damage',
+      label: '피격',
+      value: game.damageMessage,
+      kind: 'danger',
+      tone: ART_TOKENS.dangerRed
+    });
+  }
+
+  if (crisis.level > 0) {
+    alerts.push({ id: 'crisis', label: '위험', value: crisis.label, kind: crisis.level >= 3 ? 'danger' : 'warning' });
+  }
+
   if (showDashTicker) {
     alerts.push({
       id: 'dash',
@@ -19,14 +35,6 @@ export function getHudAlerts({
       kind: dashReady ? 'ready' : 'cooldown',
       pct: dashPct
     });
-  }
-
-  if (crisis.level > 0) {
-    alerts.push({ id: 'crisis', label: '위험', value: crisis.label, kind: crisis.level >= 3 ? 'danger' : 'warning' });
-  }
-
-  if (game.damageFlash > 0) {
-    alerts.push({ id: 'damage', label: '피격', value: game.damageMessage, kind: 'danger' });
   }
 
   if (!bossStatus && activeThreat) {

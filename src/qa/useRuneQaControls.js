@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { SHRINE_SITES } from '../config/gameData.js';
 import { MAX_ENEMIES, MAX_PROJECTILES, MAX_XP_GEMS } from '../config/gameTuning.js';
@@ -10,9 +10,67 @@ import {
   createQaStressGame
 } from '../systems/gameState.js';
 import { getShrineActivationAlert } from '../systems/shrineRuntime.js';
+import {
+  getBladeOrbitRadius,
+  getBuildFocus,
+  getRunPhaseTransition,
+  getWeaponStage
+} from '../systems/progression.js';
+import { getRuneCircuitState } from '../systems/runeCircuit.js';
 import { pickUpgrades } from '../systems/upgradeDrafting.js';
 
-export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
+export function getQaGameSnapshot(game) {
+  const circuit = getRuneCircuitState(game);
+  const weaponStage = getWeaponStage(game);
+  const bladeFocus = getBuildFocus(game, 'blade');
+  return {
+    phase: game.phase,
+    result: game.result,
+    time: Number(game.time.toFixed(2)),
+    level: game.level,
+    xp: Number(game.xp.toFixed(2)),
+    xpToNext: game.xpToNext,
+    kills: game.kills,
+    wave: game.wave,
+    hp: Number(game.stats.hp.toFixed(2)),
+    maxHp: game.stats.maxHp,
+    eliteKills: game.eliteKills ?? 0,
+    bossKills: game.bossKills ?? 0,
+    shrineActivations: game.shrineActivations ?? 0,
+    buildFocus: { ...game.buildFocus },
+    upgrades: [...game.upgrades],
+    replayRouteFamily: game.replayRouteFamily,
+    weaponRanges: {
+      bladeOrbit: Number(getBladeOrbitRadius(game.stats, weaponStage, bladeFocus).toFixed(2))
+    },
+    circuit: {
+      complete: circuit.complete,
+      completed: circuit.completed,
+      ready: circuit.ready,
+      distance: circuit.distance,
+      direction: circuit.direction?.arrow ?? null,
+      nextSite: circuit.nextSite?.id ?? null
+    },
+    runStats: {
+      totalDamage: Number((game.runStats?.totalDamage ?? 0).toFixed(2)),
+      damageBySource: { ...game.runStats?.damageBySource },
+      damageByPhase: Object.fromEntries(
+        Object.entries(game.runStats?.damageByPhase ?? {}).map(([phaseId, damage]) => (
+          [phaseId, { ...damage }]
+        ))
+      ),
+      damageTaken: Number((game.runStats?.damageTaken ?? 0).toFixed(2)),
+      damageTakenByPhase: { ...game.runStats?.damageTakenByPhase },
+      healingReceived: Number((game.runStats?.healingReceived ?? 0).toFixed(2)),
+      healingByPhase: { ...game.runStats?.healingByPhase }
+    }
+  };
+}
+
+export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }) {
+  const gameRef = useRef(game);
+  gameRef.current = game;
+
   useEffect(() => {
     if (!import.meta.env.DEV) return undefined;
 
@@ -89,6 +147,21 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
           encounterAlertTimer: 2.8
         });
       },
+      phase: () => {
+        showQaGame({
+          ...createInitialGame(),
+          phase: 'playing',
+          time: 46,
+          level: 3,
+          kills: 38,
+          xp: 18,
+          xpToNext: 58,
+          onboardingMovement: 90,
+          dashUses: 2,
+          encounterAlert: getRunPhaseTransition(44.9, 45.1),
+          encounterAlertTimer: 3.2
+        });
+      },
       objectives: () => {
         showQaGame({
           ...createInitialGame(),
@@ -105,6 +178,7 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
         });
       },
       metrics: () => sceneApi.current?.metrics?.(),
+      snapshot: () => getQaGameSnapshot(gameRef.current),
       upgrade: () => {
         const nextGame = {
           ...createQaStressGame(),
@@ -132,10 +206,10 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
         setUpgradeChoices(pickUpgrades(nextGame));
         setGame(nextGame);
       },
-      reset: () => {
+      reset: options => {
         sceneApi.current?.reset();
         setUpgradeChoices([]);
-        setGame(createInitialGame());
+        setGame(createInitialGame(options));
       }
     };
 
@@ -168,6 +242,8 @@ export function useRuneQaControls({ sceneApi, setGame, setUpgradeChoices }) {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.circuit(), 120);
     } else if (qaMode === 'seal') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.seal(), 120);
+    } else if (qaMode === 'phase') {
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.phase(), 120);
     } else if (qaMode === 'objectives') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.objectives(), 120);
     } else if (qaMode === 'victory' || qaMode === 'survived' || qaMode === 'defeat') {

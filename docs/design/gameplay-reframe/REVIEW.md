@@ -477,3 +477,173 @@
 
 - Physical iOS and Android testing remains necessary for touch latency, alpha shimmer, outdoor brightness, safe-area behavior, and sustained thermal load.
 - Further art gains should come from authored sprite/VFX source improvements or terrain shading, not from restoring broad decorative rings or a second quality-specific battlefield.
+
+## Slice 21 — Run readability and build telemetry
+
+### Delivered
+
+- Added explicit signals at the 45, 115, 170, and 235 second phase boundaries so objective changes no longer arrive silently.
+- Reused the encounter presentation layer for one short phase message, keeping objectives suppressed while the signal owns attention.
+- Added a distinct three-note phase cue without changing spawn, damage, XP, circuit, or timing balance.
+- Added a compact result damage route that ranks the top three weapon sources by contribution share and DPS.
+- Made narrow-screen touch controls depend on usable viewport width as well as coarse-pointer detection, avoiding hidden controls in mobile browser configurations with unreliable media reporting.
+
+### Verification
+
+- `npm run build`: passed with 691 transformed modules; the main game chunk is 231.25 kB (68.87 kB gzip).
+- `npm run qa:smoke`: 32/32 passed, including phase-boundary, result-contribution, 360 × 740 touch flow, and mobile stress checks.
+- Codex in-app browser review confirmed clean phase-signal hierarchy and a restrained desktop result breakdown without opening an external browser.
+- The 360 × 740 captured result keeps all three contribution bars legible and the replay action reachable by scrolling.
+
+### Known follow-ups
+
+- The next balance pass should collect real five-minute run samples across at least three build routes before changing weapon or enemy tuning.
+- Physical iOS and Android checks remain necessary for touch latency, browser safe areas, outdoor contrast, and sustained thermal behavior.
+
+## Slice 22 — Repeatable balance sampling
+
+### Delivered
+
+- Added a development-only game snapshot that reports run phase, health, progression, build focus, upgrades, circuit navigation, and per-source damage without exposing mutable state.
+- Added `npm run qa:balance`, a headless live-loop sampler that runs three guided routes with a fixed seed, follows seals, drafts toward the selected route, and stores screenshots plus JSON evidence outside Git.
+- Recorded the first full five-minute baseline: storm-chain reached 1,226.9 DPS and 2,066 KOs, blade-nova reached 756.4 DPS and 1,404 KOs, and orb-pierce reached 1,316.0 DPS and 2,212 KOs; all three sealed 4/4, defeated three bosses, and won.
+- Found and fixed two combat-contract defects from the baseline: orbit blades ignored their rendered length and ground-plane footprint, while stationary storm and moving orb projectiles could repeatedly spend pierce on the same enemy across frames.
+- Fixed guided replay drafting so an unlocked replay family replaces the forced starter-orb slot during levels 2–7.
+- Improved the sampler's melee behavior and card selection so unavailable secondary-family cards no longer cause it to skip an available primary route card.
+
+### Verification
+
+- `npm run build`: passed with 691 transformed modules; the main game chunk is 231.80 kB (69.06 kB gzip).
+- `npm run qa:smoke`: 36/36 passed, including immutable snapshots, blade footprint, distinct-target pierce, guided replay drafting, mobile flows, results, and stress budgets.
+- The initial `npm run qa:balance` baseline completed in 5.2 minutes with all three routes at approximately 60 average FPS.
+- Focused 60-second reruns verified that storm-chain damage became 77% route-aligned after repeat-hit removal and that blade replay focus reached blade V with only orb II after the draft fix.
+- Codex in-app review confirmed that the corrected combat path preserves the existing clean battlefield and HUD hierarchy without opening an external browser.
+
+### Known follow-ups
+
+- Blade-nova still contributes only about 7% of damage in the 60-second route sample despite correct focus, so it needs at least two more full-run seeds before choosing between active reach, retaliation, or defensive-contribution visibility.
+- The current sampler approximates player intent; its fixed seed stabilizes random choices but frame timing can still change exact spawn and hit order.
+- Physical iOS and Android verification remains necessary for real touch behavior, thermal load, and browser safe areas.
+
+## Slice 23 — Route identity and traversal combat
+
+### Delivered
+
+- Extended run telemetry with damage buckets for all five run phases plus post-mitigation damage taken and actual healing instead of inferring survivability from final HP.
+- Preserved separate JSON artifacts for non-default balance seeds so full-run evidence is not overwritten between samples.
+- Unified orbit-blade render and collision positioning around one radius calculation and exposed that live radius to the QA snapshot.
+- Reordered the early draft so an available synergy partner is shown before unrelated weapon families; blade routes can now surface solar nova instead of silently filling all three slots first.
+- Added a short, bounded blade sweep against nearby targets. The orbit remains the close-defense layer, while the sweep gives the family useful contribution during mandatory circuit travel.
+- Kept raw weapon multipliers unchanged; the behavior correction is based on live-loop evidence rather than compensating for missed contact with larger numbers.
+
+### Balance evidence
+
+- Default post-correction seed: storm-chain 1,012.0 DPS / 79% route share, blade-nova 541.9 DPS / 28%, and orb-pierce 719.7 DPS / 24%; all three completed the circuit and won.
+- Seed `439041101`: storm-chain 940.5 DPS / 84% route share, blade-nova 677.7 DPS / 30%, and orb-pierce 885.9 DPS / 67%; all three completed the circuit and won.
+- Incoming/healing telemetry distinguished the second seed's outcomes: storm took and healed 31 damage, blade took 49 with no healing, and orb took no damage.
+- After synergy-slot and blade-sweep changes, the 60-second comparison measured storm-chain at 179.1 DPS, blade-nova at 107.0 DPS, and orb-pierce at 104.7 DPS. Blade-nova was no longer below the comparable orb route, while storm retained its intended early crowd-control lead.
+- A focused 60-second blade sample attributed 32% to blade and 25% to nova, for 57% combined route contribution.
+
+### Verification
+
+- `npm run qa:smoke`: 39/39 passed, covering phase telemetry, immutable QA snapshots, shared blade radius, bounded blade sweep, synergy-aware replay drafting, live combat identity, results, and the 360 × 740 mobile stress frame.
+- `npm run build`: passed with 691 transformed modules; the main game chunk is 234.25 kB (69.87 kB gzip).
+- Codex in-app browser review kept the balanced combat scene stable; the latest background capture shows the gold blade layer without white sprite borders, oversized sweep geometry, or HUD overlap.
+- No external browser was opened or focused during the QA pass.
+
+### Known follow-ups
+
+- General enemy pressure remains low in the first three minutes; tune contact pressure separately from weapon identity using the new incoming-damage data.
+- Storm keeps a material early AoE advantage. Revisit its strike/radius stacking only after another post-sweep five-minute set, not from the 60-second checkpoint alone.
+- Physical-device testing remains required for touch movement, blade-sweep legibility, thermal load, and browser safe areas.
+
+## Slice 24 — Saturation and pursuit balance
+
+### Delivered
+
+- Added per-phase incoming-damage and healing buckets so early ease, mid-run pressure, and final danger can be compared without inferring timing from final HP.
+- Bounded the fully upgraded storm at five simultaneous strikes and five distinct targets per field, with a 0.48-second minimum cast interval.
+- Bounded chain lightning at ten targets, a 0.38-second minimum interval, and a positive 28% final-target floor. This removes the previous negative falloff at very high chain counts.
+- Added a short runner-only pursuit lead that predicts no more than 3.2 meters ahead of the player. Physical distance still controls contact windup and hits, so the change improves approach lines without granting invisible reach.
+- Left base damage, enemy contact damage, contact reach, spawn density, circuit timing, and quality-independent simulation budgets unchanged.
+
+### Balance evidence
+
+- The post-blade, pre-saturation reference measured storm-chain at 1,442.7 DPS / 2,305 KOs, blade-nova at 586.6 / 1,247, and orb-pierce at 636.0 / 1,320.
+- After saturation and pursuit changes, the five-minute sample measured storm-chain at 728.5 DPS / 1,530 KOs, blade-nova at 695.8 / 1,340, and orb-pierce at 846.1 / 1,456.
+- All three routes completed the four-seal circuit and won. Final health was 109/140 for storm, 97/120 for blade, and 105/140 for orb; recorded incoming damage stayed in a narrow 23–35 range.
+- At 180 seconds the kill totals were 887 storm, 698 blade, and 682 orb. At 270 seconds they were 1,402, 1,194, and 1,275, showing that the former two-times storm lead now converges through the final phase.
+- A 60-second pursuit checkpoint remained avoidable for a continuously moving and dashing bot. The improvement changes interception lines rather than forcing unavoidable early damage.
+
+### Decision
+
+- Stop tuning this pass. The remaining spread is smaller than normal run-to-run drafting and frame-order variance, and further equalization would flatten the intended weapon identities.
+- Preserve the new phase telemetry for future enemy-pressure work and require another multi-seed sample before changing raw damage values.
+
+### Verification
+
+- `npm run build`: passed with 691 transformed modules; the main game chunk is 235.12 kB (70.14 kB gzip).
+- `npm run qa:smoke`: 41/41 passed in 47.8 seconds, including pure saturation/pursuit contracts, live contact timing, desktop combat, all result states, and the 360 × 740 stress frame.
+- Codex in-app browser review confirmed the balanced combat scene remained stable. Desktop and mobile captures show no restored white sprite borders, oversized storm radius geometry, or HUD overlap.
+- No external browser was opened or focused during verification.
+
+### Known follow-ups
+
+- Guided replay identifies an opening route, not a locked loadout. After a family reaches its rank cap, later cards can still produce a hybrid build and change final source share.
+- Physical-device review remains necessary for runner interception readability, touch dodging, thermal load, and safe-area behavior.
+
+## Slice 25 — Result survival record
+
+### Delivered
+
+- Added a compact survival record below the result damage route using the existing incoming-damage and actual-healing telemetry.
+- Reported received damage, actual recovered health, and the run phase with the highest incoming damage without adding another large result card.
+- Added a no-hit fallback so incomplete or diagnostic runs never invent a dangerous phase.
+- Aligned deterministic victory, survived, and defeat fixtures so their phase damage and healing buckets sum to their reported run totals.
+- Added the missing shared mint interface token already referenced by completed-circuit styling.
+
+### Verification
+
+- `npm run build`: passed with 691 transformed modules; the main game chunk is 236.29 kB (70.47 kB gzip).
+- `npm run qa:smoke`: 42/42 passed in 48.3 seconds, including survival-summary logic, victory/survival overlays, mobile touch flow, and the 360 × 740 stress frame.
+- Desktop and 360 × 740 result captures keep the survival line visually subordinate, preserve the replay action, and show no horizontal overflow or bright panel outlines.
+- QA remained headless/background-only; no external browser was opened or focused.
+
+### Known follow-ups
+
+- Physical iOS and Android review remains required for real browser chrome, safe areas, outdoor contrast, and touch latency.
+- Future result additions should replace or consolidate existing facts rather than increasing the panel height.
+
+## Slice 26 — Dodgeable opening pressure
+
+### Delivered
+
+- Added a runner-only approach-speed curve that peaks during the 85–145 second pressure window and tapers before the final density spike.
+- Preserved player speed, enemy counts, contact reach, contact windup, recovery, and raw damage. Faster approach creates more readable attack attempts without granting invisible hits.
+- Moved hit feedback ahead of crisis and dash notices, replaced the duplicate `피격 피격 -N` copy with `-N HP`, and assigned the actual danger-red signal color.
+- Added a short, reduced-motion-safe edge vignette and temporarily hid onboarding/objective cards during the 0.62-second hit response.
+- Attached the mobile hit row directly below the vitals panel with matching width, keeping the XP meter and touch controls unobstructed.
+
+### Balance evidence
+
+- Before this slice, the latest default five-minute sample recorded zero incoming damage through the first 145 seconds for all three guided routes.
+- The final 145-second diagnostic recorded 6 damage for blade-nova and 26 for orb-pierce, with the blade damage fully recovered by the life seal. Storm-chain remained unharmed through its stronger opening clear.
+- The complete five-minute sample ended in three victories and 4/4 circuits: storm-chain 829.5 DPS / 32 damage taken, blade-nova 741.0 / 0, and orb-pierce 822.9 / 0.
+- The changing hit recipient across deterministic-seed runs confirms frame-order variance rather than a forced damage script. No route suffered chained early hits or lost its ability to complete the circuit.
+
+### Decision
+
+- Keep the new runner curve. It removes the universally empty opening without flattening build identity or increasing raw damage.
+- Do not add another early surge or shorten contact telegraphs in this pass.
+
+### Verification
+
+- `npm run build`: passed with 691 transformed modules; the main game chunk is 236.54 kB (70.54 kB gzip).
+- `npm run qa:smoke`: 44/44 passed in 49.8 seconds, including runner pressure, damage-notice priority, desktop/mobile post-impact captures, touch flow, and stress budgets.
+- `npm run qa:balance`: all three five-minute guided routes won and completed 4/4 circuits.
+- The Codex in-app browser loaded the deterministic contact route while remaining in the background; no external browser was opened or focused.
+
+### Known follow-ups
+
+- Physical iOS and Android review remains required for real dodge timing, thumb reach, browser safe areas, and vibration expectations.
+- If future samples again show universally empty openings, inspect spawn approach geometry before raising damage or enemy caps.

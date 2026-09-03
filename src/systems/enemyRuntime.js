@@ -6,6 +6,7 @@ import {
 import { resolveDefeatedEnemies } from './enemyDeathRuntime.js';
 import { updateEnemyContactAttack } from './enemyContactRuntime.js';
 import { advanceEnemyMotion } from './enemyMotionRuntime.js';
+import { getEnemyPursuitLead } from './enemyPacing.js';
 import { resolveProjectileHitsForEnemy } from './projectileRuntime.js';
 
 export function updateEnemiesRuntime({
@@ -39,7 +40,12 @@ export function updateEnemiesRuntime({
   for (const enemy of enemies.current) {
     const toPlayer = scratch.enemyDirection.copy(playerPos).sub(enemy.pos).setY(0);
     const distance = Math.max(0.001, toPlayer.length());
-    toPlayer.divideScalar(distance);
+    const pursuitLead = getEnemyPursuitLead(enemy, currentGame);
+    const playerSpeed = player.current.vel.length();
+    if (pursuitLead > 0 && playerSpeed > 0.1) {
+      toPlayer.addScaledVector(player.current.vel, Math.min(pursuitLead, 3.2 / playerSpeed));
+    }
+    toPlayer.normalize();
 
     triggerBossRagePhase({
       enemy,

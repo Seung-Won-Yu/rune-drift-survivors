@@ -82,7 +82,8 @@ function activateShrineRuntime(shrine, currentGame, updateGame, context) {
     hitBursts,
     weaponEffects,
     cameraShake,
-    addDamageNumber
+    addDamageNumber,
+    recordHealing
   } = context;
 
   hitBursts.current.push({
@@ -136,6 +137,8 @@ function activateShrineRuntime(shrine, currentGame, updateGame, context) {
   }
 
   if (shrine.reward === 'heal') {
+    const actualHealing = Math.max(0, currentGame.stats.maxHp - currentGame.stats.hp);
+    recordHealing?.(actualHealing);
     updateGame(current => ({
       ...withShrineActivation(withItemPickup(current, 'heal'), shrine.id),
       pickupMessage: `${getCircuitStepLabel(current)} · 최대 체력 회복`,

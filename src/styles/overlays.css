@@ -735,6 +735,140 @@
   font-size: 0.58rem;
 }
 
+.resultDamageMix {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  margin: -4px 0 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rune-line);
+}
+
+.resultDamageMix > header {
+  display: grid;
+  gap: 4px;
+}
+
+.resultDamageMix > header span {
+  color: var(--rune-cyan-soft);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.resultDamageMix > header small,
+.resultDamageRow small {
+  color: var(--rune-dim);
+  font-size: 0.54rem;
+}
+
+.resultDamageMix > div {
+  display: grid;
+  gap: 7px;
+}
+
+.resultDamageRow {
+  display: grid;
+  grid-template-columns: 80px minmax(54px, 1fr) 34px 48px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.resultDamageRow b,
+.resultDamageRow em {
+  font-size: 0.6rem;
+}
+
+.resultDamageRow b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resultDamageRow i {
+  position: relative;
+  height: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--tone) 10%, transparent);
+}
+
+.resultDamageRow i::after {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--share);
+  content: "";
+  background: var(--tone);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tone) 48%, transparent);
+}
+
+.resultDamageRow em {
+  color: var(--tone);
+  font-style: normal;
+  font-weight: 800;
+  text-align: right;
+}
+
+.resultDamageRow small {
+  text-align: right;
+}
+
+.resultDefense {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  margin: -4px 0 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--rune-line);
+}
+
+.resultDefense > header {
+  display: grid;
+  gap: 3px;
+}
+
+.resultDefense > header span {
+  color: var(--rune-mint);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.resultDefense > header small,
+.resultDefense > div small {
+  color: var(--rune-dim);
+  font-size: 0.54rem;
+}
+
+.resultDefense > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+}
+
+.resultDefense > div > span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  padding: 0 12px;
+  border-left: 1px solid var(--rune-line);
+}
+
+.resultDefense > div > span:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.resultDefense > div b {
+  overflow: hidden;
+  color: var(--tone, var(--rune-text));
+  font-size: 0.64rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .resultReplay {
   display: grid;
   grid-template-columns: 48px 1fr;

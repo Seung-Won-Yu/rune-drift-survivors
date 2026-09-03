@@ -21,6 +21,8 @@ import {
 import { trimSceneRuntimePools } from './runtimePools.js';
 import {
   recordRunDamage,
+  recordRunDamageTaken,
+  recordRunHealing,
   showEncounterAlert
 } from './runTelemetry.js';
 import { updateFollowCamera } from './sceneCamera.js';
@@ -56,6 +58,7 @@ export function createGameSceneActions({ runtime, visualQuality, touchControlsRe
     eliteSpawnedMinute,
     surgeIndex,
     orbTimer,
+    bladeTimer,
     stormTimer,
     lightningTimer,
     novaTimer,
@@ -73,6 +76,8 @@ export function createGameSceneActions({ runtime, visualQuality, touchControlsRe
   const recordDamage = (source, amount) => {
     recordRunDamage(runStats, source, amount);
   };
+  const recordDamageTaken = amount => recordRunDamageTaken(runStats, amount);
+  const recordHealing = amount => recordRunHealing(runStats, amount);
 
   const pulsePlayerCast = (strength = 0.18) => {
     player.current.castPulse = Math.max(player.current.castPulse ?? 0, Math.min(0.68, strength * 1.24));
@@ -134,6 +139,7 @@ export function createGameSceneActions({ runtime, visualQuality, touchControlsRe
       player,
       enemies,
       orbTimer,
+      bladeTimer,
       stormTimer,
       lightningTimer,
       novaTimer,
@@ -184,7 +190,8 @@ export function createGameSceneActions({ runtime, visualQuality, touchControlsRe
       player,
       hitBursts,
       cameraShake,
-      addDamageNumber
+      addDamageNumber,
+      recordDamageTaken
     });
 
     return updateEnemiesRuntime({
@@ -239,11 +246,13 @@ export function createGameSceneActions({ runtime, visualQuality, touchControlsRe
     weaponEffects,
     cameraShake,
     orbTimer,
+    bladeTimer,
     stormTimer,
     lightningTimer,
     novaTimer,
     scratch,
-    addDamageNumber
+    addDamageNumber,
+    recordHealing
   });
 
   const updateShrines = (dt, currentGame, updateGame) => updateShrinesRuntime({
@@ -257,7 +266,8 @@ export function createGameSceneActions({ runtime, visualQuality, touchControlsRe
     hitBursts,
     weaponEffects,
     cameraShake,
-    addDamageNumber
+    addDamageNumber,
+    recordHealing
   });
 
   const updateFeedback = dt => updateVisualFeedbackPools({

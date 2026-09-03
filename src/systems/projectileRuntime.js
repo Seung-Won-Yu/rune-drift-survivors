@@ -8,6 +8,8 @@ import { applyDamageToEnemy } from './enemyDirector.js';
 import {
   getBladeColor,
   getBladeCount,
+  getBladeOrbitRadius,
+  getBladeSize,
   getBuildFocus,
   getWeaponStage,
   isWeaponFamilyUnlocked
@@ -17,6 +19,13 @@ import { getCircuitFinaleState } from './runeCircuit.js';
 const projectilePush = new THREE.Vector3();
 const bladePos = new THREE.Vector3();
 const bladeOffset = new THREE.Vector3();
+
+export function isOrbitBladeHit(enemyPosition, bladePosition, enemyHitRadius, bladeSize) {
+  const dx = enemyPosition.x - bladePosition.x;
+  const dz = enemyPosition.z - bladePosition.z;
+  const contactRadius = enemyHitRadius + bladeSize * 0.55;
+  return dx * dx + dz * dz < contactRadius * contactRadius;
+}
 
 function getProjectileGridCoord(value) {
   return Math.floor(value / PROJECTILE_GRID_CELL_SIZE);
@@ -60,16 +69,16 @@ export function updateProjectileRuntime({
   const circuitDamage = getCircuitFinaleState(currentGame).damageMultiplier;
   const bladeFocus = getBuildFocus(currentGame, 'blade');
   const bladeUnlocked = isWeaponFamilyUnlocked(currentGame, 'blade');
-  const bladeRadius = (2.5 + weaponStage * 0.16 + bladeFocus * 0.08) * stats.bladeRadius;
+  const bladeRadius = getBladeOrbitRadius(stats, weaponStage, bladeFocus);
   const bladeCount = getBladeCount(stats, bladeFocus, bladeUnlocked);
+  const bladeSize = getBladeSize(stats);
   const bladeColor = getBladeColor(stats, weaponStage);
 
   for (let i = 0; i < bladeCount; i += 1) {
     const offset = angle + i * (Math.PI * 2 / bladeCount);
     bladePos.copy(player.current.pos).add(bladeOffset.set(Math.cos(offset) * bladeRadius, 0.22, Math.sin(offset) * bladeRadius));
     for (const enemy of enemies.current) {
-      const hitRadiusSq = enemy.hitRadius * enemy.hitRadius;
-      if (enemy.pos.distanceToSquared(bladePos) < hitRadiusSq) {
+      if (isOrbitBladeHit(enemy.pos, bladePos, enemy.hitRadius, bladeSize)) {
         const bladeDamage = weaponCatalog[2].damage * stats.damage * stats.bladeDamage * overloadDamage * circuitDamage * dt * (6 + weaponStage * 0.75 + bladeFocus * 0.32);
         const dealt = applyDamageToEnemy(enemy, bladeDamage, 'blade');
         recordDamage('blade', dealt);
@@ -162,7 +171,10 @@ export function resolveProjectileHitsForEnemy({
 }) {
   for (const projectile of projectiles) {
     if (projectile.life <= 0 || projectile.pierce < 0) continue;
+    if (projectile.hitTargets?.has(enemy)) continue;
     if (projectile.pos.distanceToSquared(enemy.pos) < (enemy.hitRadius + projectile.radius) ** 2) {
+      projectile.hitTargets ??= new WeakSet();
+      projectile.hitTargets.add(enemy);
       const dealt = applyDamageToEnemy(enemy, projectile.damage, projectile.type);
       recordDamage(projectile.type, dealt);
       enemy.flash = 0.14;

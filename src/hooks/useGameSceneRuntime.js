@@ -91,6 +91,7 @@ export function useGameSceneRuntime(visualQuality) {
   const eliteSpawnedMinute = useRef(0);
   const surgeIndex = useRef(0);
   const orbTimer = useRef(0);
+  const bladeTimer = useRef(0.45);
   const stormTimer = useRef(0);
   const lightningTimer = useRef(0.28);
   const novaTimer = useRef(1.25);
@@ -146,6 +147,7 @@ export function useGameSceneRuntime(visualQuality) {
     eliteSpawnedMinute.current = 0;
     surgeIndex.current = 0;
     orbTimer.current = 0;
+    bladeTimer.current = 0.45;
     stormTimer.current = 0;
     lightningTimer.current = 0.28;
     novaTimer.current = 1.25;
@@ -153,41 +155,62 @@ export function useGameSceneRuntime(visualQuality) {
     weaponEffects.current = [];
   }, []);
 
-  const getMetrics = useCallback(() => ({
-    visualQuality,
-    framePressure: Number(framePressure.current.toFixed(3)),
-    runtimeBudget: { ...runtimeBudget.current },
-    frameStats: getFrameStatsSnapshot(frameStats),
-    player: {
-      x: Number(player.current.pos.x.toFixed(2)),
-      z: Number(player.current.pos.z.toFixed(2)),
-      speed: Number(player.current.vel.length().toFixed(2)),
-      dashCooldown: Number(player.current.dashCd.toFixed(2)),
-      dashActive: player.current.dashTimer > 0,
-      dashBuffered: player.current.dashBuffer > 0,
-      invulnerable: player.current.invuln > 0,
-      hurtPulse: Number((player.current.hurtPulse ?? 0).toFixed(2))
-    },
-    contact: {
-      windups: enemies.current.filter(enemy => (enemy.contactAttackTimer ?? 0) > 0).length,
-      recoveries: enemies.current.filter(enemy => (enemy.contactAttackTimer ?? 0) <= 0 && (enemy.contactAttackCooldown ?? 0) > 0).length,
-      resolved: enemies.current.reduce((total, enemy) => total + (enemy.contactAttackCount ?? 0), 0),
-      hits: enemies.current.reduce((total, enemy) => total + (enemy.contactHitCount ?? 0), 0)
-    },
-    combat: {
-      totalDamage: Number((runStats.current.totalDamage ?? 0).toFixed(2)),
-      damageBySource: { ...runStats.current.damageBySource }
-    },
-    counts: {
-      enemies: enemies.current.length,
-      projectiles: projectiles.current.length,
-      xpGems: xpGems.current.length,
-      hitBursts: hitBursts.current.length,
-      weaponEffects: weaponEffects.current.length,
-      damageNumbers: damageNumbers.current.length,
-      spawnWarnings: spawnWarnings.current.length
+  const getMetrics = useCallback(() => {
+    let nearestEnemy = null;
+    let nearestEnemyDistance = Infinity;
+    for (const enemy of enemies.current) {
+      if (enemy.hp <= 0) continue;
+      const distance = enemy.pos.distanceTo(player.current.pos);
+      if (distance >= nearestEnemyDistance) continue;
+      nearestEnemy = enemy;
+      nearestEnemyDistance = distance;
     }
-  }), [visualQuality]);
+
+    return {
+      visualQuality,
+      framePressure: Number(framePressure.current.toFixed(3)),
+      runtimeBudget: { ...runtimeBudget.current },
+      frameStats: getFrameStatsSnapshot(frameStats),
+      player: {
+        x: Number(player.current.pos.x.toFixed(2)),
+        z: Number(player.current.pos.z.toFixed(2)),
+        speed: Number(player.current.vel.length().toFixed(2)),
+        dashCooldown: Number(player.current.dashCd.toFixed(2)),
+        dashActive: player.current.dashTimer > 0,
+        dashBuffered: player.current.dashBuffer > 0,
+        invulnerable: player.current.invuln > 0,
+        hurtPulse: Number((player.current.hurtPulse ?? 0).toFixed(2))
+      },
+      nearestEnemy: nearestEnemy && {
+        x: Number(nearestEnemy.pos.x.toFixed(2)),
+        z: Number(nearestEnemy.pos.z.toFixed(2)),
+        distance: Number(nearestEnemyDistance.toFixed(2))
+      },
+      contact: {
+        windups: enemies.current.filter(enemy => (enemy.contactAttackTimer ?? 0) > 0).length,
+        recoveries: enemies.current.filter(enemy => (enemy.contactAttackTimer ?? 0) <= 0 && (enemy.contactAttackCooldown ?? 0) > 0).length,
+        resolved: enemies.current.reduce((total, enemy) => total + (enemy.contactAttackCount ?? 0), 0),
+        hits: enemies.current.reduce((total, enemy) => total + (enemy.contactHitCount ?? 0), 0)
+      },
+      combat: {
+        totalDamage: Number((runStats.current.totalDamage ?? 0).toFixed(2)),
+        damageBySource: { ...runStats.current.damageBySource },
+        damageTaken: Number((runStats.current.damageTaken ?? 0).toFixed(2)),
+        damageTakenByPhase: { ...runStats.current.damageTakenByPhase },
+        healingReceived: Number((runStats.current.healingReceived ?? 0).toFixed(2)),
+        healingByPhase: { ...runStats.current.healingByPhase }
+      },
+      counts: {
+        enemies: enemies.current.length,
+        projectiles: projectiles.current.length,
+        xpGems: xpGems.current.length,
+        hitBursts: hitBursts.current.length,
+        weaponEffects: weaponEffects.current.length,
+        damageNumbers: damageNumbers.current.length,
+        spawnWarnings: spawnWarnings.current.length
+      }
+    };
+  }, [visualQuality]);
 
   return {
     player,
@@ -212,6 +235,7 @@ export function useGameSceneRuntime(visualQuality) {
     eliteSpawnedMinute,
     surgeIndex,
     orbTimer,
+    bladeTimer,
     stormTimer,
     lightningTimer,
     novaTimer,

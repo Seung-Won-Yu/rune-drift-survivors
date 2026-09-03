@@ -10,6 +10,7 @@ const CUE_PROFILES = {
   [AUDIO_CUE.bossDefeat]: { wave: 'square', from: 105, to: 42, duration: 0.42, gain: 0.09, throttle: 0.5 },
   [AUDIO_CUE.eliteWarning]: { wave: 'triangle', from: 220, to: 150, duration: 0.22, gain: 0.055, throttle: 0.5 },
   [AUDIO_CUE.bossWarning]: { wave: 'sawtooth', from: 92, to: 62, duration: 0.36, gain: 0.075, throttle: 0.8 },
+  [AUDIO_CUE.phaseShift]: { notes: [196, 294, 392], duration: 0.16, gap: 0.075, gain: 0.045, throttle: 1 },
   [AUDIO_CUE.levelUp]: { notes: [392, 523, 659], duration: 0.12, gap: 0.065, gain: 0.05, throttle: 0.3 },
   [AUDIO_CUE.upgradeSelect]: { notes: [440, 660], duration: 0.1, gap: 0.055, gain: 0.04, throttle: 0.12 }
 };

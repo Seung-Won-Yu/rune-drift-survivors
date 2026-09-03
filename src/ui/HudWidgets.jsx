@@ -38,7 +38,7 @@ export function HudActions({ game, onPause, onRestart, audioMuted, onToggleAudio
 
 export function HudAlert({ alert }) {
   return (
-    <span className={`runeAlert runeAlert-${alert.kind} hudAlert`} style={{ '--tone': alert.tone }}>
+    <span className={`runeAlert runeAlert-${alert.kind} hudAlert hudAlert-${alert.id}`} style={{ '--tone': alert.tone }}>
       <b>{alert.label}</b>
       <small>{alert.value}</small>
       {Number.isFinite(alert.pct) && <i style={{ width: `${alert.pct}%` }} />}
@@ -119,6 +119,9 @@ export function HudEncounter({ alert }) {
     <div
       className={`runeEncounter hudEncounter ${alert.kind === 'boss' || alert.kind === 'boss-pattern' ? 'isBoss' : ''}`}
       style={{ '--tone': alert.color }}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
     >
       <span>{alert.label} · RIFT SIGNAL</span>
       <strong>{alert.title}</strong>

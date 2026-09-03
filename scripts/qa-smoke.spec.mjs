@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import * as THREE from 'three';
 import {
   EARLY_FIELD_ITEM_SCHEDULE,
   SHRINE_SITES
@@ -10,22 +11,46 @@ import {
   STARTING_XP_TO_NEXT
 } from '../src/config/gameTuning.js';
 import { getEnemyContactDisplacement } from '../src/systems/enemyContactRuntime.js';
+import { getEnemyPursuitLead, getEnemyPursuitSpeedScale } from '../src/systems/enemyPacing.js';
 import {
   getRiftbornAnimationFrame,
   getRiftbornThreatAnimationFrame
 } from '../src/systems/enemySprite.js';
-import { createInitialGame, withItemPickup } from '../src/systems/gameState.js';
+import { createInitialGame, createQaResultGame, withItemPickup } from '../src/systems/gameState.js';
 import { createRuneCircuitLandmarkLayout } from '../src/systems/mapLayout.js';
 import { getRuneWardenAnimationFrame } from '../src/systems/playerSprite.js';
-import { getUpgradeFocusKey } from '../src/systems/progression.js';
+import {
+  isOrbitBladeHit,
+  resolveProjectileHitsForEnemy
+} from '../src/systems/projectileRuntime.js';
+import {
+  getBladeOrbitRadius,
+  getRunPhaseTransition,
+  getUpgradeFocusKey
+} from '../src/systems/progression.js';
 import { applyFrameStateUpdate } from '../src/systems/runFrameState.js';
+import { getDamageSourceBreakdown, getRunDefenseSummary } from '../src/systems/runProgress.js';
+import {
+  getRunStatsSnapshot,
+  recordRunDamage,
+  recordRunDamageTaken,
+  recordRunHealing
+} from '../src/systems/runTelemetry.js';
+import { getQaGameSnapshot } from '../src/qa/useRuneQaControls.js';
+import { getHudAlerts } from '../src/ui/hudAlerts.js';
 import {
   getCircuitEncounterProfile,
   getCircuitFinaleState,
   getRunCompletionResult
 } from '../src/systems/runeCircuit.js';
 import { getShrineActivationAlert } from '../src/systems/shrineRuntime.js';
-import { pickArmoryBoost } from '../src/systems/upgradeDrafting.js';
+import { pickArmoryBoost, pickUpgrades } from '../src/systems/upgradeDrafting.js';
+import {
+  getBladeSweepProfile,
+  getLightningDamageFalloff,
+  getLightningTargetCount,
+  getStormStrikeCount
+} from '../src/systems/weaponRuntime.js';
 import { getNextXpThreshold } from '../src/systems/xpRuntime.js';
 
 const artifactDir = path.resolve('output/playwright');
@@ -203,6 +228,26 @@ test('opening pacing reaches upgrades and three seals inside three minutes', () 
   expect(SHRINE_SITES[2].unlockAt).toBeLessThan(180);
 });
 
+test('run phase transitions announce each pacing beat once', async ({ page }) => {
+  expect(getRunPhaseTransition(44.9, 45.1)).toMatchObject({
+    kind: 'phase',
+    label: 'ROUTE',
+    title: '경로 확보',
+    phaseId: 'anchor'
+  });
+  expect(getRunPhaseTransition(46, 60)).toBeNull();
+  expect(getRunPhaseTransition(114.9, 115.1)).toMatchObject({ phaseId: 'armory' });
+  expect(getRunPhaseTransition(169.9, 170.1)).toMatchObject({ phaseId: 'synergy' });
+  expect(getRunPhaseTransition(234.9, 235.1)).toMatchObject({ phaseId: 'final' });
+
+  const guards = await openGuardedPage(page, '/?qa=phase&quality=balanced');
+  await expect(page.locator('.hudEncounter')).toContainText('ROUTE');
+  await expect(page.locator('.hudEncounter')).toContainText('경로 확보');
+  await expect(page.locator('.hudObjectiveDock')).toHaveCount(0);
+  await capture(page, 'qa-smoke-phase-transition');
+  guards.assertClean();
+});
+
 test('code-built circuit landmarks keep one readable kit across all seals', () => {
   const balanced = createRuneCircuitLandmarkLayout('balanced');
   const low = createRuneCircuitLandmarkLayout('low');
@@ -251,6 +296,56 @@ test('Riftborn threat atlas keeps elite roles and boss directions deterministic'
   expect(getRiftbornThreatAnimationFrame({ role: 'unknown' })).toMatchObject({ role: 'charger', row: 2 });
 });
 
+test('orbit blade collision matches the rendered blade footprint on the ground plane', () => {
+  const blade = { x: 0, y: 0.8, z: 0 };
+  const enemy = { x: 1.5, y: 0, z: 0 };
+  expect(isOrbitBladeHit(enemy, blade, 1, 1)).toBe(true);
+  expect(isOrbitBladeHit({ ...enemy, x: 1.6 }, blade, 1, 1)).toBe(false);
+});
+
+test('piercing projectiles cannot spend multiple hits on the same enemy', () => {
+  const projectile = {
+    type: 'storm',
+    pos: new THREE.Vector3(),
+    vel: new THREE.Vector3(1, 0, 0),
+    life: 1,
+    pierce: 2,
+    radius: 2,
+    damage: 10,
+    color: '#7fc9d8'
+  };
+  const enemy = {
+    kind: 'golem',
+    pos: new THREE.Vector3(),
+    hp: 100,
+    maxHp: 100,
+    hitRadius: 1
+  };
+  let recordedDamage = 0;
+  const resolve = target => resolveProjectileHitsForEnemy({
+    enemy: target,
+    projectiles: [projectile],
+    player: { current: { pos: new THREE.Vector3(-1, 0, 0) } },
+    hitBursts: [],
+    cameraShake: { current: 0 },
+    recordDamage: (_source, amount) => { recordedDamage += amount; },
+    addDamageNumber: () => {},
+    canAddHitBurst: () => false
+  });
+
+  resolve(enemy);
+  resolve(enemy);
+  expect(enemy.hp).toBe(90);
+  expect(projectile.pierce).toBe(1);
+  expect(recordedDamage).toBe(10);
+
+  const secondEnemy = { ...enemy, pos: new THREE.Vector3(), hp: 100 };
+  resolve(secondEnemy);
+  expect(secondEnemy.hp).toBe(90);
+  expect(projectile.pierce).toBe(0);
+  expect(recordedDamage).toBe(20);
+});
+
 test('run completion distinguishes a sealed circuit from survival', () => {
   expect(getRunCompletionResult({ activatedShrines: {} })).toBe('survived');
   expect(getRunCompletionResult({
@@ -277,9 +372,162 @@ test('render quality does not change simulation rules', () => {
   expect(Object.isFrozen(SIMULATION_BUDGET)).toBe(true);
 });
 
+test('QA snapshot exposes balance data without mutating the run', () => {
+  const game = createQaResultGame('victory');
+  const snapshot = getQaGameSnapshot(game);
+  expect(snapshot).toMatchObject({
+    phase: 'ended',
+    result: 'victory',
+    time: 300,
+    level: 13,
+    shrineActivations: 4,
+    circuit: { complete: true, completed: 4, nextSite: null }
+  });
+  expect(snapshot.buildFocus).not.toBe(game.buildFocus);
+  expect(snapshot.upgrades).not.toBe(game.upgrades);
+  expect(snapshot.runStats.damageBySource).not.toBe(game.runStats.damageBySource);
+  expect(snapshot.runStats.damageByPhase).not.toBe(game.runStats.damageByPhase);
+});
+
+test('run telemetry separates phase damage, incoming damage, and actual healing', () => {
+  const runStats = { current: createInitialGame().runStats };
+  runStats.current.phaseId = 'anchor';
+  recordRunDamage(runStats, 'blade', 24);
+  recordRunDamage(runStats, 'unknown-source', 6);
+  recordRunDamageTaken(runStats, 13.5);
+  recordRunHealing(runStats, 8);
+  const snapshot = getRunStatsSnapshot(runStats);
+
+  expect(snapshot.totalDamage).toBe(30);
+  expect(snapshot.damageBySource).toMatchObject({ blade: 24, generic: 6 });
+  expect(snapshot.damageByPhase.anchor).toMatchObject({ blade: 24, generic: 6 });
+  expect(snapshot.damageByPhase.learn.blade).toBe(0);
+  expect(snapshot.damageTaken).toBe(13.5);
+  expect(snapshot.damageTakenByPhase.anchor).toBe(13.5);
+  expect(snapshot.damageTakenByPhase.learn).toBe(0);
+  expect(snapshot.healingReceived).toBe(8);
+  expect(snapshot.healingByPhase.anchor).toBe(8);
+  expect(snapshot.healingByPhase.learn).toBe(0);
+  expect(snapshot.damageByPhase.anchor).not.toBe(runStats.current.damageByPhase.anchor);
+});
+
+test('result defense summary identifies the most dangerous phase', () => {
+  const victoryGame = createQaResultGame('victory');
+  const victory = getRunDefenseSummary(victoryGame);
+  expect(victory).toMatchObject({
+    damageTaken: 168,
+    healingReceived: 134,
+    dangerPhase: { id: 'final', title: '균열 종결', damage: 53 }
+  });
+  expect(Object.values(victoryGame.runStats.damageTakenByPhase).reduce((total, damage) => total + damage, 0))
+    .toBe(victoryGame.runStats.damageTaken);
+  expect(Object.values(victoryGame.runStats.healingByPhase).reduce((total, healing) => total + healing, 0))
+    .toBe(victoryGame.runStats.healingReceived);
+
+  const untouched = getRunDefenseSummary(createInitialGame());
+  expect(untouched).toMatchObject({ damageTaken: 0, healingReceived: 0, dangerPhase: null });
+});
+
+test('blade orbit presentation and collision share one radius calculation', () => {
+  const game = createInitialGame({ replayRouteFamily: 'blade' });
+  const radius = getBladeOrbitRadius(
+    { ...game.stats, bladeRadius: 1.18 },
+    2,
+    4
+  );
+  expect(radius).toBeCloseTo((2.5 + 2 * 0.16 + 4 * 0.08) * 1.18);
+  expect(getQaGameSnapshot({
+    ...game,
+    level: 5,
+    stats: { ...game.stats, bladeRadius: 1.18 },
+    buildFocus: { ...game.buildFocus, blade: 4 }
+  }).weaponRanges.bladeOrbit).toBeGreaterThan(3.5);
+});
+
+test('blade route gains a bounded mid-range sweep for objective travel', () => {
+  const locked = getBladeSweepProfile(createInitialGame());
+  const game = {
+    ...createInitialGame({ replayRouteFamily: 'blade' }),
+    level: 8,
+    buildFocus: { ...createInitialGame().buildFocus, blade: 4, nova: 2 },
+    upgrades: ['blade-plus', 'blade-guard', 'blade-reaper', 'nova-plus', 'nova-pulse'],
+    stats: {
+      ...createInitialGame().stats,
+      bladeBonus: 3,
+      bladeDamage: 1.45
+    }
+  };
+  const active = getBladeSweepProfile(game);
+
+  expect(locked.unlocked).toBe(false);
+  expect(active).toMatchObject({ unlocked: true, focus: 4, targetCount: 4 });
+  expect(active.range).toBeGreaterThan(14);
+  expect(active.range).toBeLessThan(24);
+  expect(active.damage).toBeGreaterThan(35);
+  expect(active.cooldown).toBeGreaterThanOrEqual(0.62);
+});
+
+test('storm and chain saturation stays inside bounded hit budgets', () => {
+  expect(getStormStrikeCount({ stormStrikes: 1 }, 0)).toBe(1);
+  expect(getStormStrikeCount({ stormStrikes: 4 }, 5)).toBe(5);
+  expect(getLightningTargetCount({ lightningChains: 3 }, 0, 0)).toBe(3);
+  expect(getLightningTargetCount({ lightningChains: 11 }, 3, 5)).toBe(10);
+  expect(getLightningDamageFalloff(0)).toBe(1);
+  expect(getLightningDamageFalloff(9)).toBeCloseTo(0.28);
+  expect(getLightningDamageFalloff(99)).toBe(0.28);
+});
+
+test('only runners receive a short, front-loaded pursuit lead', () => {
+  expect(getEnemyPursuitLead({ kind: 'golem' }, { time: 10 })).toBe(0);
+  expect(getEnemyPursuitLead({ kind: 'runner' }, { time: 10 })).toBe(0.34);
+  expect(getEnemyPursuitLead({ kind: 'runner' }, { time: 60 })).toBe(0.26);
+  expect(getEnemyPursuitLead({ kind: 'runner' }, { time: 120 })).toBe(0.16);
+  expect(getEnemyPursuitLead({ kind: 'runner', summoned: true }, { time: 220 })).toBeCloseTo(0.12);
+});
+
+test('runner pursuit pressure peaks before the late-game density spike', () => {
+  const runner = { kind: 'runner' };
+  expect(getEnemyPursuitSpeedScale({ kind: 'golem' }, { time: 100 })).toBe(1);
+  expect(getEnemyPursuitSpeedScale(runner, { time: 20 })).toBe(1.14);
+  expect(getEnemyPursuitSpeedScale(runner, { time: 100 })).toBe(1.5);
+  expect(getEnemyPursuitSpeedScale(runner, { time: 240 })).toBe(1.2);
+});
+
+test('damage feedback stays ahead of dash and crisis notices', () => {
+  const alerts = getHudAlerts({
+    game: { damageFlash: 0.5, damageMessage: '-7 HP', pickupFlash: 0 },
+    crisis: { level: 4, label: 'FINAL SURGE' },
+    activeThreat: null,
+    bossPatternMeta: null,
+    bossStatus: null,
+    dashPct: 40,
+    dashReady: false,
+    dashCooldown: 0.7,
+    showDashTicker: true
+  });
+  expect(alerts.map(alert => alert.id).slice(0, 3)).toEqual(['damage', 'crisis', 'dash']);
+  expect(alerts[0]).toMatchObject({ value: '-7 HP', tone: '#e06b5f' });
+});
+
 test('replay route guarantees the first armory family', () => {
   const guidedRun = withItemPickup(createInitialGame({ replayRouteFamily: 'blade' }), 'cache');
   expect(getUpgradeFocusKey(pickArmoryBoost(guidedRun))).toBe('blade');
+});
+
+test('replay route replaces forced orb cards after its family is unlocked', () => {
+  const routedGame = {
+    ...createInitialGame({ replayRouteFamily: 'blade' }),
+    level: 4,
+    time: 34,
+    shrineActivations: 1,
+    activatedShrines: { armory: true },
+    buildFocus: { orb: 0, storm: 0, blade: 1, chain: 0, nova: 0 },
+    upgrades: ['blade-plus']
+  };
+  const choices = pickUpgrades(routedGame);
+  expect(choices.some(choice => getUpgradeFocusKey(choice) === 'blade')).toBe(true);
+  expect(choices.some(choice => getUpgradeFocusKey(choice) === 'nova')).toBe(true);
+  expect(choices.some(choice => getUpgradeFocusKey(choice) === 'orb')).toBe(false);
 });
 
 test('desktop movement and dash input smoke', async ({ page }) => {
@@ -368,6 +616,11 @@ test('enemy contact windup and recovery smoke', async ({ page }) => {
   const metrics = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics());
   expect(metrics.contact.recoveries, 'contact recovery state').toBeGreaterThanOrEqual(1);
   expect(metrics.player.invulnerable, 'player hit invulnerability').toBe(true);
+  const hitAlert = page.locator('.hudAlert').first();
+  await expect(hitAlert).toContainText('피격');
+  await expect(hitAlert).toContainText(/-\d+ HP/);
+  await expect(hitAlert).toHaveCSS('border-left-color', 'rgb(224, 107, 95)');
+  await capture(page, 'qa-smoke-contact-hit');
   guards.assertClean();
 });
 
@@ -429,6 +682,23 @@ test('mobile HUD, touch movement, dash, and pause smoke', async ({ browser }) =>
   await page.waitForTimeout(100);
   const afterDash = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().player);
   expect(afterDash.dashCooldown, 'mobile dash cooldown').toBeGreaterThan(0);
+
+  await page.evaluate(() => window.__RUNE_DRIFT_QA__.contactAttack());
+  await page.waitForFunction(
+    () => window.__RUNE_DRIFT_QA__.metrics()?.contact?.hits >= 1,
+    null,
+    { polling: 16, timeout: 2_000 }
+  );
+  const mobileHitAlert = page.locator('.hudAlert').first();
+  await expect(mobileHitAlert).toContainText('피격');
+  const mobileHitBox = await mobileHitAlert.boundingBox();
+  const mobileVitalsBox = await page.locator('.runeVitals').boundingBox();
+  expect(mobileHitBox.x).toBeGreaterThanOrEqual(0);
+  expect(mobileHitBox.x + mobileHitBox.width).toBeLessThanOrEqual(360);
+  expect(Math.abs(mobileHitBox.x - mobileVitalsBox.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(mobileHitBox.width - mobileVitalsBox.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(mobileHitBox.y - (mobileVitalsBox.y + mobileVitalsBox.height))).toBeLessThanOrEqual(2);
+  await capture(page, 'qa-smoke-mobile-hit');
 
   await page.getByRole('button', { name: '일시정지' }).click();
   await expect(page.locator('.pausePanel')).toBeVisible();
@@ -504,6 +774,17 @@ test('result overlay smoke', async ({ page }) => {
   await expect(page.locator('.resultHighlights em')).toHaveCount(3);
   await expect(page.locator('.resultHighlights b')).toHaveCount(3);
   await expect(page.locator('.resultHighlights small')).toHaveCount(3);
+  const damageBreakdown = getDamageSourceBreakdown(createQaResultGame('victory'));
+  expect(damageBreakdown.map(source => source.source)).toEqual(['lightning', 'storm', 'orb']);
+  expect(damageBreakdown.reduce((total, source) => total + source.share, 0))
+    .toBeCloseTo((28_600 + 23_800 + 17_600) / 84_200);
+  await expect(page.locator('.resultDamageRow')).toHaveCount(3);
+  await expect(page.locator('.resultDamageRow').first()).toContainText('연쇄 번개');
+  await expect(page.locator('.resultDamageRow').first()).toContainText('34%');
+  await expect(page.locator('.resultDefense')).toBeVisible();
+  await expect(page.locator('.resultDefense')).toContainText('받은 피해168');
+  await expect(page.locator('.resultDefense')).toContainText('실제 회복134');
+  await expect(page.locator('.resultDefense')).toContainText('균열 종결 · 53');
   await expect(page.locator('.resultReplay')).toBeVisible();
   await expect(page.locator('.resultReplay')).toContainText('NEXT INSCRIPTION');
   await expect(page.getByRole('button', { name: /경로로 재도전/ })).toBeVisible();

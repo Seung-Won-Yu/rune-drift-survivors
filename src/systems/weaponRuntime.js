@@ -3,6 +3,8 @@ import { AUDIO_CUE, emitAudioCue } from '../audio/audioCues.js';
 import { WEAPON_CATALOG as weaponCatalog } from '../config/gameData.js';
 import { applyDamageToEnemy } from './enemyDirector.js';
 import {
+  getBladeColor,
+  getBladeCount,
   getBuildFocus,
   getLightningColor,
   getNovaColor,
@@ -25,6 +27,7 @@ export function updateWeaponCasts({
   player,
   enemies,
   orbTimer,
+  bladeTimer,
   stormTimer,
   lightningTimer,
   novaTimer,
@@ -56,6 +59,7 @@ export function updateWeaponCasts({
   const orbPierceLevel = getSynergyLevel(currentGame, 'orb-pierce');
 
   orbTimer.current -= dt;
+  bladeTimer.current -= dt;
   stormTimer.current -= dt;
   lightningTimer.current -= dt;
   novaTimer.current -= dt;
@@ -93,11 +97,52 @@ export function updateWeaponCasts({
     orbTimer.current = Math.max(0.16, weaponCatalog[0].cooldown * stats.cooldown * overloadCooldown * circuitFinale.cooldownMultiplier * (1 - weaponStage * 0.04) * (1 - Math.min(0.12, orbFocus * 0.02)));
   }
 
+  const bladeSweep = getBladeSweepProfile(currentGame);
+  if (bladeSweep.unlocked && bladeTimer.current <= 0) {
+    const targets = nearestEnemies(bladeSweep.targetCount, bladeSweep.range);
+    if (targets.length > 0) {
+      emitAudioCue(AUDIO_CUE.weaponCast, { variant: 'blade', intensity: 0.66 });
+      pulsePlayerCast(0.2 + bladeSweep.focus * 0.012);
+      targets.forEach((enemy, index) => {
+        const dealt = applyDamageToEnemy(enemy, bladeSweep.damage * (1 - index * 0.08), 'blade');
+        recordDamage('blade', dealt);
+        enemy.flash = 0.16;
+        addDamageNumber(enemy.pos, Math.ceil(dealt), bladeSweep.color, 0.6);
+        if (canAddHitBurst(8)) {
+          hitBursts.current.push({
+            pos: enemy.pos.clone(),
+            life: 0.3,
+            maxLife: 0.3,
+            color: bladeSweep.color,
+            type: 'blade',
+            stage: bladeSweep.stage,
+            radius: 1.05 + bladeSweep.stage * 0.12
+          });
+        }
+        if (canAddWeaponEffect(6)) {
+          weaponEffects.current.push({
+            type: 'beam',
+            from: new THREE.Vector3(player.current.pos.x, player.current.pos.y + 0.4, player.current.pos.z),
+            to: new THREE.Vector3(enemy.pos.x, enemy.pos.y + 0.55, enemy.pos.z),
+            life: 0.15,
+            maxLife: 0.15,
+            color: bladeSweep.color,
+            width: 0.16 + bladeSweep.stage * 0.012
+          });
+        }
+      });
+      cameraShake.current = Math.max(cameraShake.current, 0.11);
+      bladeTimer.current = bladeSweep.cooldown;
+    } else {
+      bladeTimer.current = 0.12;
+    }
+  }
+
   if (stormUnlocked && stormTimer.current <= 0 && enemies.current.length > 3) {
     emitAudioCue(AUDIO_CUE.weaponCast, { variant: 'storm', intensity: 0.8 });
     pulsePlayerCast(0.22 + stormFocus * 0.012);
     const tier = getWeaponTier(stats, weaponStage);
-    const strikeCount = Math.min(7, Math.max(1, Math.round(stats.stormStrikes) + Math.floor(stormFocus / 2)));
+    const strikeCount = getStormStrikeCount(stats, stormFocus);
     for (let strike = 0; strike < strikeCount; strike += 1) {
       const target = enemies.current[Math.floor(Math.random() * enemies.current.length)];
       if (!target) continue;
@@ -112,7 +157,7 @@ export function updateWeaponCasts({
         angle: Math.random() * Math.PI * 2,
         life: 0.34 * stats.stormDuration * (1 + stormFocus * 0.06),
         damage: weaponCatalog[1].damage * stats.damage * stats.stormDamage * overloadDamage * circuitFinale.damageMultiplier * (1 + stormFocus * 0.03 + stormChainLevel * 0.035),
-        pierce: weaponCatalog[1].pierce,
+        pierce: Math.min(4, weaponCatalog[1].pierce),
         radius: 1.55 * (tier + weaponStage * 0.08) * stats.stormRadius * (1 + stormFocus * 0.035),
         visualScale: tier + weaponStage * 0.18,
         stage: weaponStage,
@@ -131,13 +176,13 @@ export function updateWeaponCasts({
         });
       }
     }
-    stormTimer.current = Math.max(0.38, weaponCatalog[1].cooldown * stats.cooldown * stats.stormCooldown * overloadCooldown * circuitFinale.cooldownMultiplier * (1 - weaponStage * 0.06) * (1 - Math.min(0.14, stormFocus * 0.025 + stormChainLevel * 0.018)));
+    stormTimer.current = Math.max(0.48, weaponCatalog[1].cooldown * stats.cooldown * stats.stormCooldown * overloadCooldown * circuitFinale.cooldownMultiplier * (1 - weaponStage * 0.06) * (1 - Math.min(0.14, stormFocus * 0.025 + stormChainLevel * 0.018)));
   }
 
   if (chainUnlocked && lightningTimer.current <= 0 && enemies.current.length > 0) {
     pulsePlayerCast(0.18 + chainFocus * 0.01);
     const chainTargets = nearestEnemies(
-      stats.lightningChains + Math.floor(weaponStage / 2) + Math.floor(chainFocus / 2),
+      getLightningTargetCount(stats, weaponStage, chainFocus),
       weaponCatalog[3].range * stats.lightningRange + weaponStage * 4 + chainFocus * 3 + stormChainLevel * 3.5
     );
     let previousX = player.current.pos.x;
@@ -151,7 +196,7 @@ export function updateWeaponCasts({
       const executeBoost = stats.lightningExecute > 0 && enemy.hp / enemy.maxHp < 0.45
         ? 1 + stats.lightningExecute * 0.34
         : 1;
-      const damage = weaponCatalog[3].damage * stats.damage * stats.lightningDamage * overloadDamage * circuitFinale.damageMultiplier * executeBoost * (1 - index * 0.08) * (1 + chainFocus * 0.035 + stormChainLevel * 0.035);
+      const damage = weaponCatalog[3].damage * stats.damage * stats.lightningDamage * overloadDamage * circuitFinale.damageMultiplier * executeBoost * getLightningDamageFalloff(index) * (1 + chainFocus * 0.035 + stormChainLevel * 0.035);
       const dealt = applyDamageToEnemy(enemy, damage, 'lightning');
       recordDamage('lightning', dealt);
       enemy.flash = 0.2;
@@ -186,7 +231,7 @@ export function updateWeaponCasts({
       previousZ = enemy.pos.z;
     });
     if (chainTargets.length > 0) cameraShake.current = Math.max(cameraShake.current, 0.1);
-    lightningTimer.current = Math.max(0.3, weaponCatalog[3].cooldown * stats.cooldown * overloadCooldown * circuitFinale.cooldownMultiplier * (1 - weaponStage * 0.05) * (1 - Math.min(0.12, chainFocus * 0.02)));
+    lightningTimer.current = Math.max(0.38, weaponCatalog[3].cooldown * stats.cooldown * overloadCooldown * circuitFinale.cooldownMultiplier * (1 - weaponStage * 0.05) * (1 - Math.min(0.12, chainFocus * 0.02)));
   }
 
   if (novaUnlocked && novaTimer.current <= 0 && enemies.current.length > 0) {
@@ -254,4 +299,50 @@ export function updateWeaponCasts({
     }
     novaTimer.current = Math.max(0.58, weaponCatalog[4].cooldown * stats.cooldown * stats.novaCooldown * overloadCooldown * circuitFinale.cooldownMultiplier * (1 - weaponStage * 0.05) * (1 - Math.min(0.16, novaFocus * 0.028 + bladeNovaLevel * 0.014)));
   }
+}
+
+export function getStormStrikeCount(stats, focus = 0) {
+  return Math.min(5, Math.max(1, Math.round(stats.stormStrikes) + Math.floor(focus / 3)));
+}
+
+export function getLightningTargetCount(stats, weaponStage = 0, focus = 0) {
+  return Math.min(10, Math.max(1, stats.lightningChains + Math.floor(weaponStage / 2) + Math.floor(focus / 2)));
+}
+
+export function getLightningDamageFalloff(index) {
+  return Math.max(0.28, 1 - Math.max(0, index) * 0.09);
+}
+
+export function getBladeSweepProfile(game) {
+  const stats = game.stats;
+  const stage = getWeaponStage(game);
+  const focus = getBuildFocus(game, 'blade');
+  const synergyLevel = getSynergyLevel(game, 'blade-nova');
+  const unlocked = isWeaponFamilyUnlocked(game, 'blade');
+  const bladeCount = getBladeCount(stats, focus, unlocked);
+  const overloadDamage = game.overloadTimer > 0 ? 1.25 : 1;
+  const overloadCooldown = game.overloadTimer > 0 ? 0.58 : 1;
+  const circuitFinale = getCircuitFinaleState(game);
+  return {
+    unlocked,
+    stage,
+    focus,
+    targetCount: Math.min(4, Math.max(1, Math.ceil(bladeCount / 2))),
+    range: 10 + stage * 1.2 + focus * 1.1 + synergyLevel * 0.8,
+    damage: weaponCatalog[2].damage
+      * stats.damage
+      * stats.bladeDamage
+      * overloadDamage
+      * circuitFinale.damageMultiplier
+      * (1.35 + focus * 0.08 + synergyLevel * 0.06),
+    cooldown: Math.max(
+      0.62,
+      1.45
+        * stats.cooldown
+        * overloadCooldown
+        * circuitFinale.cooldownMultiplier
+        * (1 - Math.min(0.2, focus * 0.03 + synergyLevel * 0.02))
+    ),
+    color: getBladeColor(stats, stage)
+  };
 }

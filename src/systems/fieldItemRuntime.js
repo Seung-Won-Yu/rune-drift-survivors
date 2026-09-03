@@ -107,10 +107,12 @@ function applyFieldItemRuntime(item, currentGame, updateGame, context) {
     weaponEffects,
     cameraShake,
     orbTimer,
+    bladeTimer,
     stormTimer,
     lightningTimer,
     novaTimer,
-    addDamageNumber
+    addDamageNumber,
+    recordHealing
   } = context;
 
   if (item.type === 'magnet') {
@@ -138,6 +140,10 @@ function applyFieldItemRuntime(item, currentGame, updateGame, context) {
 
   if (item.type === 'heal') {
     const healAmount = 34;
+    const actualHealing = Math.min(
+      healAmount,
+      Math.max(0, currentGame.stats.maxHp - currentGame.stats.hp)
+    );
     hitBursts.current.push({
       pos: player.current.pos.clone(),
       life: 0.78,
@@ -147,8 +153,14 @@ function applyFieldItemRuntime(item, currentGame, updateGame, context) {
       stage: 3,
       radius: 4.2
     });
-    addDamageNumber(player.current.pos, `회복 +${healAmount}`, FIELD_ITEM_META.heal.color, 0.9);
+    addDamageNumber(
+      player.current.pos,
+      actualHealing > 0 ? `회복 +${Math.ceil(actualHealing)}` : '체력 최대',
+      FIELD_ITEM_META.heal.color,
+      0.9
+    );
     cameraShake.current = Math.max(cameraShake.current, 0.12);
+    recordHealing?.(actualHealing);
     updateGame(current => ({
       ...withItemPickup(current, 'heal'),
       pickupMessage: '생명 결정: 체력 회복',
@@ -242,6 +254,7 @@ function applyFieldItemRuntime(item, currentGame, updateGame, context) {
     });
     addDamageNumber(player.current.pos, currentGame.time < ARMORY_DOUBLE_BOOST_TIME ? '무기 강화 x1' : currentGame.time > ARMORY_TRIPLE_BOOST_TIME ? '무기 강화 x3' : '무기 강화 x2', color, 1.0);
     orbTimer.current = Math.min(orbTimer.current, 0.04);
+    bladeTimer.current = Math.min(bladeTimer.current, 0.06);
     stormTimer.current = Math.min(stormTimer.current, 0.08);
     lightningTimer.current = Math.min(lightningTimer.current, 0.06);
     novaTimer.current = Math.min(novaTimer.current, currentGame.time < 35 ? 0.55 : 0.12);

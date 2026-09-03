@@ -8,6 +8,7 @@ import { createInitialGame } from './systems/gameState.js';
 import {
   applyBuildFocus,
   getFocusMessage,
+  getRunPhase,
   getUpgradeFocusKey,
   isWeaponFamilyAtCap
 } from './systems/progression.js';
@@ -26,7 +27,10 @@ function App() {
   const [game, setGame] = useState(() => createInitialGame());
   const [upgradeChoices, setUpgradeChoices] = useState([]);
   const sceneApi = useRef(null);
+  const previousRunPhase = useRef(null);
   const touchControls = useRef(createTouchControlsState());
+  const runPhaseId = getRunPhase(game).id;
+  const hasRunStarted = game.time > 0;
   const {
     visualQuality,
     qualityMode,
@@ -108,7 +112,14 @@ function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  useRuneQaControls({ sceneApi, setGame, setUpgradeChoices });
+  useEffect(() => {
+    if (hasRunStarted && previousRunPhase.current && previousRunPhase.current !== runPhaseId) {
+      emitAudioCue(AUDIO_CUE.phaseShift, { variant: runPhaseId });
+    }
+    previousRunPhase.current = runPhaseId;
+  }, [hasRunStarted, runPhaseId]);
+
+  useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices });
 
   return (
     <main className={`shell visual-${runtimeVisualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>

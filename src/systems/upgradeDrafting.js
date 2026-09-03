@@ -254,6 +254,10 @@ export function pickUpgrades(game) {
   const weaponChoices = draftable.filter(upgrade => WEAPON_UPGRADE_IDS.has(upgrade.id));
   const utilityChoices = draftable.filter(upgrade => !WEAPON_UPGRADE_IDS.has(upgrade.id));
   const starterChoices = weaponChoices.filter(upgrade => getUpgradeFocusKey(upgrade) === 'orb');
+  const replayStarterChoices = game.replayRouteFamily && isWeaponFamilyUnlocked(game, game.replayRouteFamily)
+    ? weaponChoices.filter(upgrade => getUpgradeFocusKey(upgrade) === game.replayRouteFamily)
+    : [];
+  const openingWeaponChoices = replayStarterChoices.length > 0 ? replayStarterChoices : starterChoices;
   const starterUtilityChoices = utilityChoices.filter(upgrade => STARTER_UTILITY_UPGRADE_IDS.has(upgrade.id));
   const newWeaponUnlocked = canDraftNewWeaponFamily(game);
   const intentionalArmoryUnlock = hasIntentionalArmoryUnlock(game);
@@ -262,24 +266,28 @@ export function pickUpgrades(game) {
     return key && !isWeaponFamilyUnlocked(game, key);
   });
   const dominant = getDominantBuild(game);
+  const synergyChoices = weaponChoices.filter(upgrade => (
+    getUpgradeSynergyMatches(game, upgrade).some(synergy => synergy.nextLevel > synergy.currentLevel)
+  ));
+  const synergyFocusKey = game.replayRouteFamily ?? dominant?.key;
+  const focusedSynergyChoices = synergyFocusKey
+    ? synergyChoices.filter(upgrade => getUpgradeSynergyMatches(game, upgrade).some(synergy => (
+      synergy.nextLevel > synergy.currentLevel && synergy.keys.includes(synergyFocusKey)
+    )))
+    : [];
   const choices = [];
 
-  if (game.level <= 3) {
-    addDraftChoice(choices, starterChoices, game);
+  if (game.level <= 7) {
+    addDraftChoice(choices, openingWeaponChoices, game);
     addDraftChoice(choices, starterUtilityChoices, game);
-  } else if (game.level <= 5) {
-    addDraftChoice(choices, starterChoices, game);
-    addDraftChoice(choices, starterUtilityChoices, game);
-    addDraftChoice(choices, utilityChoices, game);
-  } else if (game.level <= 7) {
-    addDraftChoice(choices, starterChoices, game);
-    if (newWeaponUnlocked && intentionalArmoryUnlock) addDraftChoice(choices, lockedWeaponChoices, game);
-    addDraftChoice(choices, starterUtilityChoices, game);
+  }
+  addDraftChoice(choices, focusedSynergyChoices.length > 0 ? focusedSynergyChoices : synergyChoices, game);
+  if (game.level <= 7 && newWeaponUnlocked && intentionalArmoryUnlock) {
+    addDraftChoice(choices, lockedWeaponChoices, game);
   }
   if (dominant?.focus >= 2) {
     addDraftChoice(choices, weaponChoices.filter(upgrade => getUpgradeFocusKey(upgrade) === dominant.key), game);
   }
-  addDraftChoice(choices, weaponChoices.filter(upgrade => getUpgradeSynergyMatches(game, upgrade).some(synergy => synergy.nextLevel > synergy.currentLevel)), game);
   if (newWeaponUnlocked && game.level >= 6 && game.level <= 9) {
     for (let index = 0; index < 2; index += 1) {
       addDraftChoice(choices, weaponChoices.filter(upgrade => {

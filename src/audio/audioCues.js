@@ -6,6 +6,7 @@ export const AUDIO_CUE = Object.freeze({
   enemyDefeat: 'enemy-defeat',
   eliteDefeat: 'elite-defeat',
   bossDefeat: 'boss-defeat',
+  phaseShift: 'phase-shift',
   levelUp: 'level-up',
   upgradeSelect: 'upgrade-select',
   eliteWarning: 'elite-warning',

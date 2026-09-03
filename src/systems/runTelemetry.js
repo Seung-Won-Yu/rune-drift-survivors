@@ -47,14 +47,46 @@ export function getBossStatusSnapshot(enemies) {
 export function recordRunDamage(runStats, source, amount) {
   if (!Number.isFinite(amount) || amount <= 0) return;
   const key = DAMAGE_SOURCE_META[source] ? source : 'generic';
-  runStats.current.damageBySource[key] = (runStats.current.damageBySource[key] ?? 0) + amount;
-  runStats.current.totalDamage += amount;
+  const stats = runStats.current;
+  stats.damageBySource[key] = (stats.damageBySource[key] ?? 0) + amount;
+  const phaseId = stats.damageByPhase?.[stats.phaseId] ? stats.phaseId : null;
+  if (phaseId) {
+    stats.damageByPhase[phaseId][key] = (stats.damageByPhase[phaseId][key] ?? 0) + amount;
+  }
+  stats.totalDamage += amount;
+}
+
+export function recordRunDamageTaken(runStats, amount) {
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  const stats = runStats.current;
+  stats.damageTaken = (stats.damageTaken ?? 0) + amount;
+  if (stats.damageTakenByPhase?.[stats.phaseId] !== undefined) {
+    stats.damageTakenByPhase[stats.phaseId] += amount;
+  }
+}
+
+export function recordRunHealing(runStats, amount) {
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  const stats = runStats.current;
+  stats.healingReceived = (stats.healingReceived ?? 0) + amount;
+  if (stats.healingByPhase?.[stats.phaseId] !== undefined) {
+    stats.healingByPhase[stats.phaseId] += amount;
+  }
 }
 
 export function getRunStatsSnapshot(runStats) {
   return {
     totalDamage: runStats.current.totalDamage,
-    damageBySource: { ...runStats.current.damageBySource }
+    damageBySource: { ...runStats.current.damageBySource },
+    damageByPhase: Object.fromEntries(
+      Object.entries(runStats.current.damageByPhase ?? {}).map(([phaseId, damage]) => (
+        [phaseId, { ...damage }]
+      ))
+    ),
+    damageTaken: runStats.current.damageTaken ?? 0,
+    damageTakenByPhase: { ...runStats.current.damageTakenByPhase },
+    healingReceived: runStats.current.healingReceived ?? 0,
+    healingByPhase: { ...runStats.current.healingByPhase }
   };
 }
 

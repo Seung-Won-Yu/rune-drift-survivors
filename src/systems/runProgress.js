@@ -1,4 +1,4 @@
-import { DAMAGE_SOURCE_META, SHRINE_SITES } from '../config/gameData.js';
+import { DAMAGE_SOURCE_META, RUN_PHASES, SHRINE_SITES } from '../config/gameData.js';
 import { RUN_DURATION } from '../config/gameTuning.js';
 import { BUILD_FOCUS_META } from '../config/upgrades.js';
 import { createEmptyRunStats } from './gameState.js';
@@ -211,18 +211,60 @@ function getObjectiveCue(objective, progress = 0) {
   };
 }
 
-function getTopDamageSource(game) {
+export function getDamageSourceBreakdown(game, limit = 3) {
   const damageBySource = { ...createEmptyRunStats().damageBySource, ...(game?.runStats?.damageBySource ?? {}) };
-  const [source, damage] = Object.entries(damageBySource)
-    .filter(([key]) => key !== 'generic')
-    .sort((a, b) => b[1] - a[1])[0] ?? ['generic', 0];
-  const meta = DAMAGE_SOURCE_META[source] ?? DAMAGE_SOURCE_META.generic;
-  const dps = game?.time > 0 ? damage / Math.max(1, game.time) : 0;
+  const entries = Object.entries(damageBySource)
+    .filter(([, damage]) => damage > 0)
+    .sort((a, b) => b[1] - a[1]);
+  const totalDamage = entries.reduce((total, [, damage]) => total + damage, 0);
+
+  return entries.slice(0, Math.max(0, limit)).map(([source, damage]) => {
+    const meta = DAMAGE_SOURCE_META[source] ?? DAMAGE_SOURCE_META.generic;
+    const share = totalDamage > 0 ? damage / totalDamage : 0;
+    const dps = game?.time > 0 ? damage / Math.max(1, game.time) : 0;
+    return {
+      source,
+      damage,
+      share,
+      sharePercent: Math.round(share * 100),
+      dps: dps.toFixed(1),
+      ...meta
+    };
+  });
+}
+
+export function getRunDefenseSummary(game) {
+  const runStats = game?.runStats ?? createEmptyRunStats();
+  const damageTaken = Math.max(0, Number(runStats.damageTaken) || 0);
+  const healingReceived = Math.max(0, Number(runStats.healingReceived) || 0);
+  const damageByPhase = runStats.damageTakenByPhase ?? {};
+  const dangerPhase = RUN_PHASES
+    .map(phase => ({
+      id: phase.id,
+      label: phase.label,
+      title: phase.title,
+      color: phase.color,
+      damage: Math.max(0, Number(damageByPhase[phase.id]) || 0)
+    }))
+    .reduce((danger, phase) => phase.damage > (danger?.damage ?? 0) ? phase : danger, null);
+
   return {
-    source,
-    damage,
-    dps: dps.toFixed(1),
-    ...meta
+    damageTaken: Math.round(damageTaken),
+    healingReceived: Math.round(healingReceived),
+    dangerPhase: dangerPhase?.damage > 0
+      ? { ...dangerPhase, damage: Math.round(dangerPhase.damage) }
+      : null
+  };
+}
+
+function getTopDamageSource(game) {
+  return getDamageSourceBreakdown(game, 1)[0] ?? {
+    source: 'generic',
+    damage: 0,
+    share: 0,
+    sharePercent: 0,
+    dps: '0.0',
+    ...DAMAGE_SOURCE_META.generic
   };
 }
 
@@ -319,6 +361,8 @@ function getRunOutcome(game) {
 
 export function getRunResultSummary(game) {
   const topWeapon = getTopDamageSource(game);
+  const damageBreakdown = getDamageSourceBreakdown(game);
+  const defense = getRunDefenseSummary(game);
   const synergy = getBuildSynergyStates(game).find(item => item.level > 0);
   const score = getRunScore(game);
   return {
@@ -328,6 +372,8 @@ export function getRunResultSummary(game) {
     score,
     outcome: getRunOutcome(game),
     topWeapon,
+    damageBreakdown,
+    defense,
     synergy: synergy
       ? { ...synergy, detail: `${synergy.label} ${formatFocusLevel(synergy.level)}` }
       : { title: '미완성', label: '조합 없음', detail: '다음 런에서 조합 완성', color: '#aa91cf' },

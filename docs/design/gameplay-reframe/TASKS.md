@@ -195,3 +195,72 @@
 - [x] Bring the first upgrade threshold forward while retaining the existing late-run XP growth rate.
 - [x] Add deterministic checks for the opening XP curve, first three seal timings, and contact pose response.
 - [x] Pass the production build, 31-test browser suite, and final Codex in-app visual review.
+
+## Slice 21 — Run readability and build telemetry
+
+- [x] Announce all four five-minute run-phase transitions once without changing combat tuning.
+- [x] Add a dedicated procedural phase-change audio cue and accessible live status semantics.
+- [x] Add a deterministic phase-transition QA route and pure boundary assertions.
+- [x] Rank the top three damage sources by total share and DPS on the result screen.
+- [x] Keep the damage breakdown visually quiet and readable at desktop and 360 × 740 mobile sizes.
+- [x] Make touch controls available at narrow web widths even when pointer media detection is unreliable.
+- [x] Pass the production build, 32-test browser suite, and Codex in-app visual review.
+
+## Slice 22 — Repeatable balance sampling
+
+- [x] Expose an immutable development snapshot for run, build, circuit, and damage data.
+- [x] Add a headless live-loop sampler for storm-chain, blade-nova, and orb-pierce routes.
+- [x] Record a fixed-seed five-minute baseline with progression, survival, damage share, and frame metrics.
+- [x] Match orbit-blade collision to its rendered XZ footprint instead of a zero-size 3D point.
+- [x] Prevent piercing projectiles from spending multiple hits on the same target.
+- [x] Keep guided replay families in the early draft after their first-seal unlock.
+- [x] Add close-combat behavior and route-aware card selection to the sampler.
+- [x] Pass the production build, 36-test browser suite, and Codex in-app combat review.
+- [x] Collect two additional post-fix five-minute seeds before applying raw weapon multipliers.
+- [x] Decide whether blade needs active reach or defensive-contribution telemetry after post-fix samples.
+
+## Slice 23 — Route identity and traversal combat
+
+- [x] Record per-phase weapon damage, post-mitigation damage taken, and actual healing.
+- [x] Preserve separate balance artifacts for non-default random seeds.
+- [x] Collect two five-minute post-correction seeds across all three guided routes.
+- [x] Share one orbit-radius calculation between blade rendering, collision, and QA movement.
+- [x] Reserve an early draft slot for an available synergy partner before unrelated weapon families.
+- [x] Add a bounded mid-range blade sweep so objective travel does not suppress the melee route.
+- [x] Recompare all three routes at 60 seconds before changing raw weapon multipliers.
+- [x] Pass the production build, 39-test browser suite, and Codex in-app combat review.
+- [ ] Verify touch feel and blade-sweep readability on physical iOS and Android devices.
+
+## Slice 24 — Saturation and pursuit balance
+
+- [x] Split damage taken and actual healing into the same five phase buckets as outgoing damage.
+- [x] Capture a post-sweep five-minute reference before changing storm or enemy behavior.
+- [x] Bound fully upgraded storm strikes and distinct targets without changing base damage multipliers.
+- [x] Cap chain target count, prevent negative late-chain falloff, and protect its minimum cooldown.
+- [x] Give runners a short, capped predictive pursuit direction without extending contact reach.
+- [x] Verify the combined changes in a second full five-minute three-route sample.
+- [x] Keep all three routes within a comparable final DPS and survival band.
+- [x] Pass the production build, 41-test browser suite, and Codex in-app combat review.
+- [ ] Recheck opening pursuit feel and touch dodging on physical iOS and Android devices.
+
+## Slice 25 — Result survival record
+
+- [x] Convert incoming-damage and actual-healing telemetry into a compact result summary.
+- [x] Identify the highest-damage run phase from the same five phase buckets used by balance QA.
+- [x] Keep the survival record subordinate to build contribution and the replay recommendation.
+- [x] Make QA result fixtures internally consistent so phase totals match run totals.
+- [x] Cover the normal and no-hit summaries with deterministic assertions.
+- [x] Verify the result hierarchy at desktop and 360 × 740 mobile sizes without opening an external browser.
+- [x] Pass the production build and complete 42-test browser suite.
+
+## Slice 26 — Dodgeable opening pressure
+
+- [x] Use phase defense telemetry to confirm that the first 145 seconds were usually damage-free.
+- [x] Increase only runner approach speed through a bounded curve that peaks before late-game density.
+- [x] Keep player speed, contact reach, windup, base damage, spawn count, and simulation budgets unchanged.
+- [x] Prioritize hit feedback over dash and crisis notices and remove duplicate damage wording.
+- [x] Suppress lower-priority guidance during the short hit response window.
+- [x] Align the mobile hit row to the vitals panel and verify its viewport bounds at 360 × 740.
+- [x] Re-run a three-route 145-second pressure sample and a complete five-minute balance sample.
+- [x] Pass the production build, complete 44-test browser suite, and Codex in-app route check.
+- [ ] Recheck dodge timing and thumb response on physical iOS and Android devices.

@@ -1,11 +1,15 @@
 import { DASH_COOLDOWN, RUN_DURATION, WAVE_DURATION } from '../config/gameTuning.js';
+import { getRunPhaseTransition } from './progression.js';
 import { getRunCompletionResult } from './runeCircuit.js';
 
 export function applyFrameStateUpdate({ current, elapsed, player, bossStatus, runStats }) {
   const nextTime = current.time + elapsed;
   const nextWave = Math.max(1, Math.floor(nextTime / WAVE_DURATION) + 1);
+  const runPhaseTransition = getRunPhaseTransition(current.time, nextTime);
   const pickupFlash = Math.max(0, (current.pickupFlash ?? 0) - elapsed);
-  const encounterAlertTimer = Math.max(0, (current.encounterAlertTimer ?? 0) - elapsed);
+  const encounterAlertTimer = runPhaseTransition
+    ? 3.2
+    : Math.max(0, (current.encounterAlertTimer ?? 0) - elapsed);
   const damageFlash = Math.max(0, (current.damageFlash ?? 0) - elapsed);
   const dashCooldownMax = DASH_COOLDOWN * current.stats.dashCooldown;
   const movementDelta = player.vel.length() > 0.1 ? player.vel.length() * elapsed : 0;
@@ -15,7 +19,7 @@ export function applyFrameStateUpdate({ current, elapsed, player, bossStatus, ru
     pickupFlash,
     pickupMessage: pickupFlash > 0 ? current.pickupMessage : '',
     encounterAlertTimer,
-    encounterAlert: encounterAlertTimer > 0 ? current.encounterAlert : null,
+    encounterAlert: runPhaseTransition ?? (encounterAlertTimer > 0 ? current.encounterAlert : null),
     damageFlash,
     damageMessage: damageFlash > 0 ? current.damageMessage : '',
     bossStatus,

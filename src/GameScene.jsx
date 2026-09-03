@@ -5,6 +5,7 @@ import { useGameSceneEffects } from './hooks/useGameSceneEffects.js';
 import { useGameSceneRuntime } from './hooks/useGameSceneRuntime.js';
 import { getStateSyncInterval } from './hooks/useVisualQuality.js';
 import { createGameSceneActions } from './systems/gameSceneActions.js';
+import { getRunPhase } from './systems/progression.js';
 import { applyFrameStateUpdate } from './systems/runFrameState.js';
 import {
   getBossStatusSnapshot,
@@ -71,6 +72,8 @@ export function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'h
       renderInstances();
       return;
     }
+
+    runStats.current.phaseId = getRunPhase(game).id;
 
     stateSyncElapsed.current += dt;
     const stateSyncInterval = getStateSyncInterval(visualQuality, game);

@@ -7,7 +7,7 @@ import { SPRITE_URLS } from '../config/assets.js';
 import { ART_TOKENS } from '../config/gameData.js';
 import { MAX_ORBIT_BLADES, PLAYER_SPEED } from '../config/gameTuning.js';
 import { RUNE_WARDEN_ATLAS, getRuneWardenAnimationFrame } from '../systems/playerSprite.js';
-import { getBladeCount, getBuildFocus, getDominantBuild, getOrbColor, getWeaponStage, isWeaponFamilyUnlocked } from '../systems/progression.js';
+import { getBladeCount, getBladeOrbitRadius, getBladeSize, getBuildFocus, getDominantBuild, getOrbColor, getWeaponStage, isWeaponFamilyUnlocked } from '../systems/progression.js';
 import { syncInstanceMeshes } from './instancedMeshUtils.js';
 import { NEUTRAL_KEY_ALPHA_TEST, applyNeutralKeyFragment } from './neutralKeyShader.js';
 
@@ -206,6 +206,7 @@ export function OrbitBlades({ player, game, visualQuality = 'high' }) {
 
 function StylizedOrbitBlades({ player, game, visualQuality = 'balanced' }) {
   const stats = game.stats;
+  const stage = getWeaponStage(game);
   const bladeFocus = getBuildFocus(game, 'blade');
   const bladeCount = getBladeCount(stats, bladeFocus, isWeaponFamilyUnlocked(game, 'blade'));
   const bladeRef = useRef();
@@ -226,8 +227,8 @@ function StylizedOrbitBlades({ player, game, visualQuality = 'balanced' }) {
     }
 
     const spin = performance.now() * (0.0022 + Math.min(0.001, (1 - stats.cooldown) * 0.0018));
-    const radius = (2.5 + Math.min(0.5, stats.bladeBonus * 0.08) + bladeFocus * 0.08) * stats.bladeRadius;
-    const size = (0.78 + stats.pierce * 0.035) * Math.min(1.38, stats.bladeDamage);
+    const radius = getBladeOrbitRadius(stats, stage, bladeFocus);
+    const size = getBladeSize(stats);
 
     for (let index = 0; index < blades; index += 1) {
       const angle = spin + index * (Math.PI * 2 / blades);

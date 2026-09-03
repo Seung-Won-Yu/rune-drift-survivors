@@ -24,15 +24,21 @@ Move through a dark rune-ruin battlefield, collect XP, and follow the next seal'
 - Each completed seal receives a dedicated circuit signal that states the connected seal and earned reward without stacking another objective panel.
 - Three honest run outcomes: full circuit seal, five-minute survival with an incomplete circuit, and defeat.
 - Circuit-led run phases, wave pacing, surges, field items, elites, bosses, and boss rage patterns.
+- Each five-minute run-phase change receives one restrained central signal and a distinct procedural audio cue.
 - Contact attacks use approach, readable anticipation, impact snap, and recovery states with visible reach/countdown rings.
 - The opening curve reaches its first card sooner and exposes the first three circuit seals by 145 seconds without changing late-run scaling.
+- Guided replay routes continue into the early draft after the first seal, and an available synergy partner receives a protected card slot before unrelated weapon families.
 - Combat signals use distinct shapes: warm open rings for danger, filled pulses for player attacks, and diamond marks for rewards and circuit objectives.
+- Projectile pierce is spent on distinct targets, while orbit-blade collision matches its rendered ground-plane footprint and periodically sweeps nearby targets during objective travel.
+- Storm and chain upgrades retain their crowd-control identity with bounded simultaneous-hit budgets, while runners use a short predictive line and a phase-bounded approach boost to create dodgeable early/mid-run pressure.
 - A quality-independent simulation budget keeps enemy, projectile, and XP rules identical across devices.
 - Adaptive visual budgets protect optional effects, numbers, and render cadence without changing combat difficulty.
 
 ### Presentation and controls
 
 - Dark rune-field HUD with anchored HP/XP, timer, circuit navigation, objective, threat, boss, upgrade, pause, and result states.
+- Player hits receive a restrained edge vignette, an HP-first alert, and a compact mobile layout that temporarily yields lower-priority guidance.
+- The result screen ranks the top three damage sources by share and DPS, then summarizes damage taken, actual healing, and the run's most dangerous phase.
 - A hand-painted 2.5D Rune Warden with 24 authored direction/action cells: two-frame idle and walk cycles plus cast and hurt poses in all four directions.
 - A complete 2.5D animated Riftborn cast: runner, golem, brute, bulwark, charger, summoner, and the Rift Warden boss.
 - Lossless WebP atlases and shared clean-edge sprite compositing reduce character transfer size while removing pale source fringes.
@@ -76,12 +82,19 @@ Run the complete browser smoke suite:
 npm run qa:smoke
 ```
 
-The suite covers loading, keyboard/touch movement, dash buffering, audio, opening progression, Rune Circuit states and landmark structure, enemy contact timing and pose response, HUD/overlays, upgrade selection, boss state, result state, desktop stress budgets, and mobile stress-frame overflow/HUD separation.
+Run the three-route five-minute balance sampler in the background:
+
+```bash
+npm run qa:balance
+```
+
+The suite covers loading, keyboard/touch movement, dash buffering, audio, opening progression and phase transitions, Rune Circuit states and landmark structure, enemy contact timing and pose response, HUD/overlays, synergy-aware upgrade selection, boss state, result damage and survival summaries, desktop stress budgets, and mobile stress-frame overflow/HUD separation. The balance sampler also records damage by run phase, damage taken, and actual healing.
 
 Useful deterministic routes include:
 
 ```txt
 ?qa=circuit&quality=balanced
+?qa=phase&quality=balanced
 ?qa=objectives&quality=balanced
 ?qa=starter-upgrade&quality=balanced
 ?qa=contact&quality=balanced
@@ -155,3 +168,5 @@ The production build uses `import.meta.env.BASE_URL`, so sprite atlases load cor
 - [Visual reboot design records](./docs/design/rune-visual-reboot/)
 - [Gameplay reframe and Rune Circuit](./docs/design/gameplay-reframe/)
 - [Material-first visual foundation](./docs/design/gameplay-reframe/VISUAL_FOUNDATION.md)
+- [Balance pass 02: saturation and pursuit](./docs/design/gameplay-reframe/BALANCE_PASS_02.md)
+- [Balance pass 03: opening pressure and hit feedback](./docs/design/gameplay-reframe/BALANCE_PASS_03.md)
