@@ -2,7 +2,10 @@ import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { getTerrainHeight } from '../systems/terrain.js';
 import { BalancedFieldArena } from './BalancedFieldArena.jsx';
 import { PerimeterGroveSilhouettes } from './PerimeterGroveSilhouettes.jsx';
+import { RuneBiomeZones } from './RuneBiomeZones.jsx';
 import { RuneCircuitLandmarks } from './RuneCircuitLandmarks.jsx';
+import { RuneCircuitPaths } from './RuneCircuitPaths.jsx';
+import { RuneHeartPlaza } from './RuneHeartPlaza.jsx';
 import { RuneRelicLandmarks } from './RuneRelicLandmarks.jsx';
 import { SculptedRuinTerrain } from './SculptedRuinTerrain.jsx';
 
@@ -22,9 +25,12 @@ export function MapBaseArena({ visualQuality = 'high' }) {
       </mesh>
 
       <SculptedRuinTerrain visualQuality={visualQuality} />
+      <RuneBiomeZones visualQuality={visualQuality} />
       <BalancedFieldArena visualQuality={visualQuality} />
       <RuneRelicLandmarks visualQuality={visualQuality} />
       {visualQuality !== 'low' && <PerimeterGroveSilhouettes visualQuality={visualQuality} />}
+      <RuneCircuitPaths visualQuality={visualQuality} />
+      <RuneHeartPlaza visualQuality={visualQuality} />
       <RuneCircuitLandmarks visualQuality={visualQuality} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.07, 0]}>

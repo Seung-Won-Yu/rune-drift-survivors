@@ -12,6 +12,12 @@ The Rune Warden atlas contains idle, walk, cast, and hurt poses. The Riftborn at
 
 All three ship as lossless WebP. Their decoded RGB pixels match the generated PNG sources exactly while reducing the combined transfer size by about 30%.
 
+## Project-authored interface atlas
+
+- `public/art/ui/rune-upgrade-atlas-v1.png`
+
+The transparent 3 × 3 rune ability atlas was generated specifically for this repository with OpenAI's built-in ImageGen tool. It supplies the upgrade-card illustrations for weapon, movement, survival, collection, and general arcane choices and does not reuse third-party UI art.
+
 ## Runtime treatment
 
 Rune Drift Survivors ships no Blender, glTF, or GLB assets. Terrain, foliage, ruins, landmarks, projectiles, orbit blades, telegraphs, lighting, and effects are assembled from project-authored Three.js geometry, shaders, and runtime-generated textures.

@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { ART_TOKENS } from '../config/gameData.js';
+import { ART_TOKENS } from '../config/artDirection.js';
 import { MAX_XP_GEMS } from '../config/gameTuning.js';
 import { getVisualBudget } from '../hooks/useVisualQuality.js';
 import { BossNameplates, BossPresence } from './BossIndicators.jsx';

@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-import { ART_TOKENS } from '../../config/gameData.js';
+import { ART_TOKENS } from '../../config/artDirection.js';
 import { MAX_ENEMIES } from '../../config/gameTuning.js';
 import { getVisualBudget } from '../../hooks/useVisualQuality.js';
 import { useVisualFrameGate } from '../../hooks/useVisualFrameGate.js';
@@ -172,4 +172,3 @@ export function EnemyAccents({ enemiesRef, visualQuality = 'high' }) {
     </>
   );
 }
-

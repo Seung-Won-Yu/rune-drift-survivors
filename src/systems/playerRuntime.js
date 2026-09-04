@@ -1,4 +1,4 @@
-import { ART_TOKENS } from '../config/gameData.js';
+import { ART_TOKENS } from '../config/artDirection.js';
 import { AUDIO_CUE, emitAudioCue } from '../audio/audioCues.js';
 import { getBuildFocus } from './progression.js';
 import {

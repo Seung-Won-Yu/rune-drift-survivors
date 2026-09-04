@@ -6,12 +6,13 @@
   max-width: 52ch;
   margin: 7px 0 0;
   color: var(--rune-muted);
-  font-size: 0.64rem;
+  font-size: var(--rune-type-caption);
+  line-height: 1.45;
 }
 
 .endPanel {
   --outcome-tone: var(--rune-cyan);
-  width: min(820px, 100%);
+  width: min(790px, 100%);
 }
 
 .endPanel::before {
@@ -22,9 +23,11 @@
 .resultVerdict {
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr);
-  margin-bottom: 12px;
-  border-top: 1px solid var(--rune-line);
-  border-bottom: 1px solid var(--rune-line);
+  margin-bottom: 10px;
+  overflow: hidden;
+  border-left: 2px solid var(--outcome-tone);
+  background: linear-gradient(105deg, color-mix(in srgb, var(--outcome-tone) 8%, transparent), rgba(4, 14, 12, 0.5));
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
 }
 
 .resultStats {
@@ -44,7 +47,7 @@
 
 .resultStats small {
   color: var(--rune-dim);
-  font-size: 0.58rem;
+  font-size: var(--rune-type-micro);
 }
 
 .resultStats b {
@@ -54,7 +57,7 @@
 .resultStats em {
   overflow: hidden;
   color: var(--rune-muted);
-  font-size: 0.56rem;
+  font-size: 0.6rem;
   font-style: normal;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -73,7 +76,7 @@
 .resultGrade span,
 .resultGrade small {
   color: var(--rune-dim);
-  font-size: 0.56rem;
+  font-size: 0.6rem;
 }
 
 .resultGrade strong {
@@ -113,7 +116,7 @@
   min-width: 0;
   padding: 0 10px;
   color: var(--rune-muted);
-  font-size: 0.62rem;
+  font-size: var(--rune-type-micro);
   border-left: 1px solid var(--rune-line);
 }
 
@@ -128,8 +131,8 @@
 .resultHighlights {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  margin: 12px 0 16px;
-  border-bottom: 1px solid var(--rune-line);
+  gap: 7px;
+  margin: 10px 0 14px;
 }
 
 .resultHighlights span {
@@ -139,17 +142,13 @@
   align-content: center;
   gap: 3px;
   padding: 10px 14px;
-  border-left: 1px solid var(--rune-line);
-  border-top: 1px solid color-mix(in srgb, var(--tone) 55%, transparent);
-}
-
-.resultHighlights span:first-child {
-  border-left: 0;
+  border-top: 1px solid color-mix(in srgb, var(--tone) 58%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tone) 7%, transparent), rgba(4, 14, 12, 0.22));
 }
 
 .resultHighlights em {
   color: var(--tone);
-  font-size: 0.55rem;
+  font-size: 0.6rem;
   font-style: normal;
   font-weight: 800;
 }
@@ -160,27 +159,37 @@
 
 .resultHighlights small {
   color: var(--rune-dim);
-  font-size: 0.58rem;
+  font-size: 0.6rem;
+}
+
+.resultTelemetry {
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+  gap: 24px;
+  margin-bottom: 14px;
+  padding: 13px 0;
+  border-top: 1px solid var(--rune-line);
+  border-bottom: 1px solid var(--rune-line);
 }
 
 .resultDamageMix {
   display: grid;
-  grid-template-columns: 128px minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
-  margin: -4px 0 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--rune-line);
+  gap: 9px;
+  align-content: start;
+  margin: 0;
+  padding: 0;
 }
 
 .resultDamageMix > header {
-  display: grid;
-  gap: 4px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .resultDamageMix > header span {
   color: var(--rune-cyan-soft);
-  font-size: 0.58rem;
+  font-size: var(--rune-type-micro);
   font-weight: 800;
   letter-spacing: 0.1em;
 }
@@ -188,7 +197,7 @@
 .resultDamageMix > header small,
 .resultDamageRow small {
   color: var(--rune-dim);
-  font-size: 0.54rem;
+  font-size: 0.58rem;
 }
 
 .resultDamageMix > div {
@@ -198,7 +207,7 @@
 
 .resultDamageRow {
   display: grid;
-  grid-template-columns: 80px minmax(54px, 1fr) 34px 48px;
+  grid-template-columns: 74px minmax(54px, 1fr) 34px;
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -206,7 +215,7 @@
 
 .resultDamageRow b,
 .resultDamageRow em {
-  font-size: 0.6rem;
+  font-size: var(--rune-type-micro);
 }
 
 .resultDamageRow b {
@@ -239,27 +248,27 @@
 }
 
 .resultDamageRow small {
-  text-align: right;
+  display: none;
 }
 
 .resultDefense {
   display: grid;
-  grid-template-columns: 128px minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
-  margin: -4px 0 16px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--rune-line);
+  gap: 9px;
+  align-content: start;
+  margin: 0;
+  padding: 0;
 }
 
 .resultDefense > header {
-  display: grid;
-  gap: 3px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .resultDefense > header span {
   color: var(--rune-mint);
-  font-size: 0.58rem;
+  font-size: var(--rune-type-micro);
   font-weight: 800;
   letter-spacing: 0.1em;
 }
@@ -267,7 +276,7 @@
 .resultDefense > header small,
 .resultDefense > div small {
   color: var(--rune-dim);
-  font-size: 0.54rem;
+  font-size: 0.58rem;
 }
 
 .resultDefense > div {
@@ -292,7 +301,7 @@
 .resultDefense > div b {
   overflow: hidden;
   color: var(--tone, var(--rune-text));
-  font-size: 0.64rem;
+  font-size: var(--rune-type-micro);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -315,9 +324,14 @@
   place-items: center;
   color: var(--tone);
   border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
-  border-radius: 50%;
-  font-size: 1rem;
+  transform: rotate(45deg);
   text-shadow: 0 0 14px color-mix(in srgb, var(--tone) 42%, transparent);
+}
+
+.resultReplay > span .runeUiIcon {
+  width: 20px;
+  height: 20px;
+  transform: rotate(-45deg);
 }
 
 .resultReplay div {
@@ -327,7 +341,7 @@
 
 .resultReplay small {
   color: var(--tone);
-  font-size: 0.54rem;
+  font-size: var(--rune-type-micro);
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -339,7 +353,7 @@
 .resultReplay p {
   margin: 0;
   color: var(--rune-muted);
-  font-size: 0.62rem;
+  font-size: var(--rune-type-micro);
 }
 
 .endPanel > .primaryButton {
@@ -356,4 +370,3 @@
     transform: translateY(0);
   }
 }
-

@@ -23,7 +23,7 @@ import {
 } from './HudWidgets.jsx';
 
 export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
-  const hpPct = Math.max(0, game.stats.hp / game.stats.maxHp) * 100;
+  const hpPct = Math.max(0, Math.min(100, game.stats.hp / game.stats.maxHp * 100));
   const hpRatio = game.stats.hp / game.stats.maxHp;
   const xpPct = Math.min(100, (game.xp / game.xpToNext) * 100);
   const runPct = Math.min(100, (game.time / RUN_DURATION) * 100);
@@ -49,7 +49,7 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
   const completedPhaseObjectives = phaseObjectives.filter(objective => objective.complete).length;
   const completedOpeningObjectives = openingObjectives.filter(objective => objective.complete).length;
   const firstSessionCue = getFirstSessionCue(game, onboardingSteps, openingActiveObjectives);
-  const showFirstSessionCoach = !bossStatus && game.damageFlash <= 0 && firstSessionCue && game.time < 32;
+  const showFirstSessionCoach = !bossStatus && !encounterAlert && game.damageFlash <= 0 && firstSessionCue && game.time < 32;
   const showRunObjectives = !bossStatus && !encounterAlert && game.damageFlash <= 0 && !showFirstSessionCoach && visibleObjectives.length > 0 && game.time < 286;
   const showEncounterBanner = encounterAlert && !bossStatus;
   const showDashTicker = !dashReady;
@@ -59,6 +59,7 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
     activeThreat,
     bossPatternMeta,
     bossStatus,
+    encounterAlert,
     dashPct,
     dashReady,
     dashCooldown,
@@ -94,7 +95,15 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
             <small>{game.kills} KOs</small>
           </div>
           <strong>{formatTime(timeRemaining)}</strong>
-          <div className="runeRunTrack" aria-hidden="true">
+          <div
+            className="runeRunTrack"
+            role="progressbar"
+            aria-label="런 진행도"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(runPct)}
+            aria-valuetext={`${formatTime(game.time)} 경과, ${formatTime(timeRemaining)} 남음`}
+          >
             <i style={{ width: `${runPct}%` }} />
           </div>
           <HudCircuit circuit={circuit} />
@@ -106,14 +115,14 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
           audioMuted={audioMuted}
           onToggleAudio={onToggleAudio}
         />
+        {hudAlerts.length > 0 && (
+          <div className="runeAlertStack hudAlertStack" aria-label="전투 알림" aria-live="polite" aria-atomic="false">
+            {hudAlerts.slice(0, bossStatus ? 1 : 2).map(alert => (
+              <HudAlert key={alert.id} alert={alert} />
+            ))}
+          </div>
+        )}
       </div>
-      {hudAlerts.length > 0 && (
-        <div className="runeAlertStack hudAlertStack" aria-label="전투 알림" aria-live="polite" aria-atomic="false">
-          {hudAlerts.slice(0, bossStatus ? 1 : 2).map(alert => (
-            <HudAlert key={alert.id} alert={alert} />
-          ))}
-        </div>
-      )}
       {showFirstSessionCoach && (
         <HudPrompt cue={firstSessionCue} />
       )}

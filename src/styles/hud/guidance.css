@@ -56,9 +56,12 @@
   grid-template-columns: 46px 1fr;
   min-height: 128px;
   border: 1px solid color-mix(in srgb, var(--tone, var(--rune-cyan)) 30%, transparent);
-  border-radius: var(--rune-radius);
-  background: rgba(7, 19, 16, 0.88);
-  box-shadow: 0 20px 48px rgba(0, 7, 6, 0.38);
+  border-radius: 0;
+  background:
+    linear-gradient(118deg, color-mix(in srgb, var(--tone, var(--rune-cyan)) 8%, transparent), transparent 58%),
+    rgba(7, 19, 16, 0.9);
+  box-shadow: 0 16px 38px rgba(0, 7, 6, 0.3);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
   backdrop-filter: blur(10px);
   animation: rune-enter 180ms ease-out;
 }
@@ -124,22 +127,45 @@
 }
 
 .runeObjective {
-  padding: 14px;
+  padding: var(--rune-space-3) var(--rune-space-4) var(--rune-space-4);
+  border-top: 1px solid var(--rune-line-strong);
   border-left: 2px solid var(--rune-cyan);
-  background: linear-gradient(90deg, rgba(7, 20, 17, 0.9), rgba(7, 20, 17, 0.46));
+  background:
+    linear-gradient(105deg, rgba(7, 20, 17, 0.94), rgba(7, 20, 17, 0.58) 72%, transparent),
+    linear-gradient(90deg, rgba(117, 221, 210, 0.05), transparent 48%);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
   backdrop-filter: blur(8px);
 }
 
 .runeObjectivePhase {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 12px;
-  padding-bottom: 10px;
+  grid-template-columns: 30px 1fr auto;
+  gap: var(--rune-space-2) var(--rune-space-3);
+  align-items: center;
+  padding-bottom: var(--rune-space-2);
   border-bottom: 1px solid var(--rune-line);
 }
 
-.runeObjectivePhase > span {
-  grid-column: 1 / -1;
+.runeObjectiveMark {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  color: var(--rune-cyan);
+  border: 1px solid color-mix(in srgb, var(--rune-cyan) 36%, transparent);
+}
+
+.runeObjectiveMark .runeUiIcon {
+  width: 15px;
+  height: 15px;
+}
+
+.runeObjectivePhase > div {
+  display: grid;
+  min-width: 0;
+}
+
+.runeObjectivePhase > div > span {
   color: var(--rune-dim);
   font-size: 0.54rem;
   font-weight: 800;
@@ -147,20 +173,23 @@
 }
 
 .runeObjectivePhase strong {
-  font-size: 0.85rem;
+  margin-top: 1px;
+  font-size: 0.82rem;
 }
 
-.runeObjectivePhase small {
-  color: var(--rune-muted);
+.runeObjectivePhase > small {
+  color: var(--rune-cyan);
   font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
 .runeObjectiveTask {
   position: relative;
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 2px 10px;
-  padding-top: 10px;
+  gap: 2px var(--rune-space-3);
+  padding-top: var(--rune-space-3);
 }
 
 .runeObjectiveTask > span {
@@ -182,9 +211,9 @@
   font-size: 0.66rem;
 }
 
-.runeObjectiveTask > div {
+.runeObjectiveProgress {
   grid-column: 1 / -1;
-  height: 2px;
+  height: 3px;
   margin-top: 5px;
   background: rgba(174, 190, 179, 0.1);
 }
@@ -194,5 +223,3 @@
   height: 100%;
   background: var(--tone);
 }
-
-

@@ -10,11 +10,11 @@ npm run qa:smoke
 
 Smoke tests run fully in the background by default. Set `RUNE_QA_HEADED=1` only when an explicit standalone Chrome window is wanted for debugging.
 
-The suite covers loading, zero-GLB startup in every quality tier, Rune Warden and complete Riftborn sprite delivery, hero and enemy four-direction selection, idle/walk timing, cast/hurt priority, desktop movement, buffered dash input, audio unlock and mute persistence, the opening XP curve, run-phase signals, and first three seal timings, Rune Circuit locked/ready, activation, and encounter-pressure states, code-built landmark structure, current-phase pause objectives, encounter/objective/boss HUD exclusivity, sealed/survived/defeat outcome rules, enemy contact windup/recovery and anticipation/impact pose response, phase-bounded runner pressure, HP-first hit feedback, all five weapon damage sources, result damage contribution and survival records, mobile touch controls, pause/resume, quality selection and persistence, quality-independent simulation limits, upgrade choices, boss HUD, guided replay restart, desktop stress budgets, and a 360 × 740 mobile stress frame with overflow and HUD-overlap guards.
+The suite covers themed loading and its progress semantics, zero-GLB startup in every quality tier, Rune Warden and complete Riftborn sprite delivery, hero and enemy four-direction selection, idle/walk timing, cast/hurt priority, desktop movement, buffered dash input, pointer/keyboard/assistive-click dash feedback, audio unlock and mute persistence, the opening XP curve, run-phase signals, and first three seal timings, Rune Circuit locked/ready, activation, and encounter-pressure states, four distinct code-built biome/landmark identities, semantic live objectives and current-phase pause objectives, dialog naming/focus containment, two-step restart confirmation, HP/XP/run/boss progress semantics, encounter/objective/boss HUD exclusivity, boss-notice deduplication, sealed/survived/defeat outcome rules, priority-preserving combat-effect budgets, late-threat intensity, enemy contact windup/recovery, reach-ring convergence, and anticipation/impact pose response, phase-bounded runner pressure, HP-first hit feedback, all five weapon damage sources, result damage contribution and survival records, mobile touch controls, pause/resume, quality selection and persistence, quality-independent simulation limits, desktop and 360 × 740 upgrade-card selection/overflow, boss HUD, guided replay restart, desktop stress budgets, and 320 × 568 / 360 × 740 mobile HUD-overlap guards.
 
 Screenshots and local failure artifacts are generated under `output/playwright/` and `test-results/`. Both folders are ignored by git.
 
-`qa-smoke-contact-hit.png` and `qa-smoke-mobile-hit.png` capture the post-impact HUD state. On the 360 × 740 target, the hit row must match the vitals panel width and sit directly below it without covering the XP meter or touch controls.
+`qa-smoke-loading.png` captures the Rune Circuit entry state. `qa-smoke-objectives.png` guards the live objective rail, while `qa-smoke-compact-mobile.png` and `qa-smoke-compact-mobile-boss.png` guard the 320 × 568 base and boss frames. `qa-smoke-threat-telegraphs.png` captures the late charge and boss-shockwave hierarchy, and `qa-smoke-contact-windup.png` captures the contact countdown before impact. `qa-smoke-contact-hit.png` and `qa-smoke-mobile-hit.png` capture the post-impact HUD state. On the 360 × 740 target, the hit row must match the vitals panel width and sit directly below it without covering the XP meter or touch controls.
 
 ## Balance sampler
 
@@ -42,7 +42,7 @@ Start the app with `npm run dev`, then use one of these routes:
 
 | Route | Purpose |
 | --- | --- |
-| `?qa=circuit&quality=balanced` | Playable first-seal state, route HUD, code-built gate, and ground route |
+| `?qa=circuit&quality=balanced` | Playable first-seal state, route HUD, armory landmark, biome, and curved ground route |
 | `?qa=seal&quality=balanced` | First-seal completion signal, reward copy, and competing-HUD suppression |
 | `?qa=phase&quality=balanced` | Run-phase transition signal and competing-HUD suppression |
 | `?qa=objectives&quality=balanced` | Mid-run phase objectives, fourth-seal reward, and pause continuity |
@@ -50,7 +50,7 @@ Start the app with `npm run dev`, then use one of these routes:
 | `?qa=starter-upgrade&quality=balanced` | First upgrade pacing and copy |
 | `?qa=contact&quality=balanced` | Enemy contact windup, hit, and recovery |
 | `?qa=combat&quality=balanced` | Live five-weapon cadence, hit-shape, and damage-source comparison |
-| `?qa=threats&quality=balanced` | Bulwark, charger, summoner, and boss sprite-scale comparison |
+| `?qa=threats&quality=balanced` | Bulwark, charger, summoner, and boss comparison with charge, beam, and late shockwave telegraphs |
 | `?qa=stress&quality=balanced` | Runtime caps, combat-signal density, mobile HUD separation, and frame metrics |
 | `?qa=silhouette&quality=balanced` | Dense Rune Warden and Riftborn role-silhouette comparison |
 | `?qa=victory&quality=balanced` | Victory result overlay |

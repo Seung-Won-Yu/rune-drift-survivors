@@ -72,14 +72,73 @@
   display: grid;
   place-items: center;
   padding: 24px;
+  overflow: hidden;
   background:
-    radial-gradient(circle at 50% 45%, rgba(52, 112, 101, 0.18), transparent 34%),
+    radial-gradient(circle at 50% 45%, rgba(52, 112, 101, 0.2), transparent 36%),
     var(--rune-bg-0);
 }
 
+.loadingLayer::before,
+.loadingLayer::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+}
+
+.loadingLayer::before {
+  width: min(72vmin, 680px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(117, 221, 210, 0.08);
+  border-radius: 50%;
+  opacity: 0.72;
+  background:
+    radial-gradient(circle, transparent 0 12%, rgba(117, 221, 210, 0.07) 12.2% 12.5%, transparent 12.8% 32%, rgba(117, 221, 210, 0.055) 32.2% 32.5%, transparent 32.8%),
+    conic-gradient(from 45deg, transparent 0 11%, rgba(117, 221, 210, 0.07) 11.2% 11.8%, transparent 12% 36%, rgba(226, 173, 88, 0.055) 36.2% 36.8%, transparent 37% 61%, rgba(117, 221, 210, 0.07) 61.2% 61.8%, transparent 62% 86%, rgba(226, 173, 88, 0.055) 86.2% 86.8%, transparent 87%);
+  mask-image: radial-gradient(circle, black 0 58%, transparent 76%);
+  animation: loading-circuit-turn 28s linear infinite;
+}
+
+.loadingLayer::after {
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 12%, rgba(117, 221, 210, 0.025) 50%, transparent 88%),
+    radial-gradient(circle at center, transparent 0 34%, rgba(0, 7, 6, 0.34) 78%);
+}
+
 .loadingPanel {
-  width: min(430px, 100%);
-  text-align: center;
+  position: relative;
+  z-index: 1;
+  width: min(540px, 100%);
+  padding: 30px 32px 28px;
+  overflow: hidden;
+  text-align: left;
+  border-top: 1px solid var(--rune-line-strong);
+  border-bottom: 1px solid var(--rune-line);
+  background: linear-gradient(110deg, rgba(8, 25, 21, 0.92), rgba(5, 16, 14, 0.74));
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  box-shadow: 0 26px 70px rgba(0, 7, 6, 0.44);
+}
+
+.loadingPanel::before {
+  position: absolute;
+  top: 0;
+  left: 32px;
+  width: 86px;
+  height: 2px;
+  content: "";
+  background: var(--rune-cyan);
+  box-shadow: 0 0 16px rgba(117, 221, 210, 0.42);
+}
+
+.loadingIdentity {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: var(--rune-space-4);
+  align-items: center;
+}
+
+.loadingCopy {
+  min-width: 0;
 }
 
 .loadingPanel h1 {
@@ -90,9 +149,12 @@
   letter-spacing: -0.03em;
 }
 
-.loadingPanel > p:not(.eyebrow) {
-  margin: 16px 0 22px;
+.loadingCopy > p:not(.eyebrow),
+.loadingRecovery {
+  margin: 8px 0 0;
   color: var(--rune-muted);
+  font-size: var(--rune-type-caption);
+  line-height: 1.5;
 }
 
 .loadingSigil {
@@ -100,7 +162,7 @@
   display: grid;
   width: 70px;
   height: 70px;
-  margin: 0 auto 28px;
+  margin: 0;
   place-items: center;
   color: var(--rune-cyan-soft);
   border: 1px solid var(--rune-line-strong);
@@ -120,14 +182,15 @@
   border-color: rgba(226, 173, 88, 0.42);
 }
 
-.loadingSigil span {
-  font-size: 1.4rem;
+.loadingSigil .runeUiIcon {
+  width: 30px;
+  height: 30px;
   transform: rotate(-45deg);
 }
 
 .loadingGauge {
   height: 2px;
-  margin: 30px 0 12px;
+  margin: 8px 0 14px;
   overflow: hidden;
   background: rgba(127, 210, 198, 0.14);
 }
@@ -140,12 +203,93 @@
   transition: width 180ms ease;
 }
 
-.loadingPanel > small {
+.loadingProgressMeta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--rune-space-3);
+  margin-top: var(--rune-space-5);
   color: var(--rune-dim);
-  font-size: 0.72rem;
+  font-size: var(--rune-type-micro);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.loadingProgressMeta strong {
+  color: var(--rune-cyan-soft);
+}
+
+.loadingRoute {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr auto 1fr auto;
+  align-items: center;
+  gap: var(--rune-space-2);
+  color: var(--rune-dim);
+  font-size: 0.56rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+}
+
+.loadingRoute i {
+  height: 1px;
+  background: linear-gradient(90deg, var(--rune-line-strong), var(--rune-line));
+}
+
+.loadingRecovery {
+  margin: var(--rune-space-5) 0 var(--rune-space-4);
+}
+
+.loadingPanel > .primaryButton {
+  min-height: 46px;
+  padding-inline: var(--rune-space-5);
 }
 
 .loadingLayer.hasError .loadingSigil {
   color: var(--rune-danger);
   border-color: rgba(224, 107, 95, 0.56);
+}
+
+.loadingLayer.hasError .loadingPanel::before {
+  background: var(--rune-danger);
+  box-shadow: 0 0 16px rgba(224, 107, 95, 0.4);
+}
+
+@keyframes loading-circuit-turn {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 520px) {
+  .loadingLayer {
+    padding: var(--rune-space-4);
+  }
+
+  .loadingPanel {
+    padding: 26px 22px 24px;
+  }
+
+  .loadingPanel::before {
+    left: 22px;
+  }
+
+  .loadingIdentity {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: var(--rune-space-3);
+  }
+
+  .loadingSigil {
+    width: 56px;
+    height: 56px;
+  }
+
+  .loadingSigil::after {
+    inset: 12px;
+  }
+
+  .loadingPanel h1 {
+    font-size: 1.28rem;
+  }
+
+  .loadingCopy > p:not(.eyebrow) {
+    font-size: var(--rune-type-micro);
+  }
 }

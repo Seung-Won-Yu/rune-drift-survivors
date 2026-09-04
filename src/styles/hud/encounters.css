@@ -3,32 +3,76 @@
   top: 26%;
   left: 50%;
   display: grid;
-  min-width: min(400px, calc(100vw - 40px));
-  padding: 13px 30px 15px;
+  grid-template-columns: 42px minmax(150px, 1fr) minmax(120px, 0.75fr);
+  align-items: center;
+  gap: var(--rune-space-3);
+  width: min(560px, calc(100vw - 40px));
+  min-height: 66px;
+  padding: var(--rune-space-3) var(--rune-space-4);
+  overflow: hidden;
   color: var(--rune-text);
-  text-align: center;
   border-top: 1px solid color-mix(in srgb, var(--tone, var(--rune-cyan)) 60%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--tone, var(--rune-cyan)) 28%, transparent);
-  background: linear-gradient(90deg, transparent, rgba(6, 17, 15, 0.92) 16%, rgba(6, 17, 15, 0.92) 84%, transparent);
+  background:
+    linear-gradient(90deg, transparent, rgba(6, 17, 15, 0.94) 7%, rgba(6, 17, 15, 0.94) 93%, transparent),
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--tone, var(--rune-cyan)) 7%, transparent), transparent);
   transform: translateX(-50%);
   animation: rune-signal-enter 220ms cubic-bezier(0.2, 0.75, 0.25, 1);
 }
 
-.runeEncounter span {
+.runeEncounter::after {
+  position: absolute;
+  right: 8%;
+  bottom: 0;
+  left: 8%;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, var(--tone, var(--rune-cyan)), transparent);
+  opacity: 0.48;
+}
+
+.runeEncounterMark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: var(--tone, var(--rune-cyan));
+  border: 1px solid color-mix(in srgb, var(--tone, var(--rune-cyan)) 44%, transparent);
+  transform: rotate(45deg);
+}
+
+.runeEncounterMark .runeUiIcon {
+  width: 19px;
+  height: 19px;
+  transform: rotate(-45deg);
+}
+
+.runeEncounterCopy {
+  display: grid;
+  min-width: 0;
+}
+
+.runeEncounterCopy span {
   color: var(--tone);
   font-size: 0.58rem;
   font-weight: 800;
   letter-spacing: 0.16em;
 }
 
-.runeEncounter strong {
-  margin: 3px 0;
-  font-size: 1rem;
+.runeEncounterCopy strong {
+  overflow: hidden;
+  margin-top: var(--rune-space-1);
+  font-size: 1.02rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.runeEncounter small {
+.runeEncounter > small {
+  padding-left: var(--rune-space-3);
   color: var(--rune-muted);
   font-size: 0.68rem;
+  line-height: 1.45;
+  border-left: 1px solid var(--rune-line);
 }
 
 .runeBoss {
@@ -38,17 +82,44 @@
   top: max(118px, calc(var(--rune-safe) + 96px));
   left: 50%;
   display: grid;
-  grid-template-columns: 150px minmax(220px, 460px) 170px;
+  grid-template-columns: 180px minmax(220px, 1fr) 210px;
   align-items: center;
-  gap: 14px;
-  width: min(860px, calc(100vw - 44px));
-  padding: 10px 15px;
+  gap: var(--rune-space-4);
+  width: min(900px, calc(100vw - 44px));
+  min-height: 72px;
+  padding: var(--rune-space-3) var(--rune-space-4);
   border-top: 1px solid color-mix(in srgb, var(--tone) 65%, transparent);
   border-bottom: 1px solid rgba(127, 210, 198, 0.12);
-  background: linear-gradient(90deg, transparent, rgba(6, 16, 14, 0.9) 7%, rgba(6, 16, 14, 0.9) 93%, transparent);
+  background:
+    linear-gradient(90deg, transparent, rgba(6, 16, 14, 0.94) 5%, rgba(6, 16, 14, 0.94) 95%, transparent),
+    linear-gradient(90deg, color-mix(in srgb, var(--tone) 6%, transparent), transparent 38%);
   transform: translateX(-50%);
   backdrop-filter: blur(10px);
   animation: rune-boss-enter 260ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+.runeBossIdentity {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: var(--rune-space-3);
+  align-items: center;
+  min-width: 0;
+}
+
+.runeBossSigil {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--tone);
+  border: 1px solid color-mix(in srgb, var(--tone) 46%, transparent);
+  transform: rotate(45deg);
+}
+
+.runeBossSigil .runeUiIcon {
+  width: 19px;
+  height: 19px;
+  transform: rotate(-45deg);
 }
 
 .runeBossName,
@@ -64,7 +135,8 @@
 }
 
 .runeBossName strong {
-  font-size: 0.84rem;
+  font-size: 0.92rem;
+  line-height: 1.1;
 }
 
 .runeBossName small,
@@ -75,8 +147,30 @@
   font-style: normal;
 }
 
+.runeBossVital {
+  display: grid;
+  gap: var(--rune-space-2);
+  min-width: 0;
+}
+
+.runeBossVitalMeta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  color: var(--rune-dim);
+  font-size: var(--rune-type-micro);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.runeBossVitalMeta strong {
+  color: var(--rune-text);
+  font-size: var(--rune-type-caption);
+  letter-spacing: 0.04em;
+}
+
 .runeBossHp {
-  height: 5px;
+  height: 6px;
   overflow: hidden;
   background: rgba(174, 190, 179, 0.12);
 }
@@ -90,17 +184,61 @@
 }
 
 .runeBossPattern {
-  justify-items: end;
-  text-align: right;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: var(--rune-space-2);
+  align-items: center;
+  min-width: 0;
+  padding-left: var(--rune-space-4);
+  border-left: 1px solid var(--rune-line);
 }
 
-.runeBossPattern span {
+.runeBossPatternIcon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  color: var(--pattern);
+  border: 1px solid color-mix(in srgb, var(--pattern) 38%, transparent);
+}
+
+.runeBossPatternIcon .runeUiIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.runeBossPattern > div {
+  display: grid;
+  min-width: 0;
+}
+
+.runeBossPattern > div > span {
   color: var(--rune-muted);
   font-size: 0.64rem;
 }
 
 .runeBossPattern b {
   color: var(--pattern);
+}
+
+.runeBossPattern em {
+  overflow: hidden;
+  margin-top: 2px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.runeBossPattern > small {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: var(--pattern);
+  border: 1px solid color-mix(in srgb, var(--pattern) 30%, transparent);
+}
+
+.runeBossPattern.isCasting .runeBossPatternIcon {
+  background: color-mix(in srgb, var(--pattern) 12%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--pattern) 18%, transparent);
 }
 
 .runeBoss.isEnraged {
@@ -128,5 +266,4 @@
     transform: translate(-50%, 0);
   }
 }
-
 

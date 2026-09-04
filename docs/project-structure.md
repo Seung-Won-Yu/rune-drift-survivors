@@ -14,9 +14,9 @@
 │   ├── ui/                 DOM HUD, overlays, cards, touch controls
 │   └── world/              React Three Fiber scene components
 ├── public/sprites/         Project-authored character atlases
+├── public/art/             Project-authored transparent UI art atlases
 ├── scripts/                Browser QA tooling
 ├── docs/                   Architecture, QA, assets, and design records
-├── assets/                 Ignored local source/archive workspace
 ├── index.html              Vite document entry
 └── vite.config.js          Build and chunk configuration
 ```
@@ -32,11 +32,16 @@
 - `src/systems/game-state/` separates normal game state from deterministic QA fixtures; `gameState.js` is the stable public facade.
 - `src/systems/run-progress/` separates onboarding/objectives from score, defense, and result summaries; `runProgress.js` is the stable public facade.
 - `src/systems/weapon-runtime/` owns one cast module per weapon family; `weaponRuntime.js` only coordinates shared timing and preserves the existing frame-loop contract.
+- `src/config/artDirection.js` owns shared world/UI color tokens and the four Rune Circuit biome identities.
+- `src/systems/map-layout/` owns feature-scoped deterministic map layout data; `mapLayout.js` remains the stable public facade.
 - `src/world/GameWorld.jsx` composes the battlefield, actors, telegraphs, projectiles, and visual feedback.
 - `src/world/enemy-effects/` separates shared actor accents, common-role decoration, elite/threat signals, and ground auras.
 - `src/world/field-items/` separates collectible presentation from Rune Shrine rendering and initialization.
-- `src/world/MapBaseArena.jsx` keeps low, balanced, and high on one terrain/landmark composition; quality tiers may change density, lighting, shadows, and effects but must not swap in a second battlefield.
+- `src/world/weapon-effects/` separates persistent projectile auras from one-shot strike effects; `WeaponEffects.jsx` remains the stable facade.
+- `src/world/combat-feedback/` separates hit/damage feedback from danger telegraphs; `CombatFeedback.jsx` remains the stable facade.
+- `src/world/MapBaseArena.jsx` keeps low, balanced, and high on one terrain/landmark composition. `RuneBiomeZones`, `RuneCircuitPaths`, `RuneHeartPlaza`, and `ShrineLandmarkVariants` separate ground palette, navigation, the central focal point, and landmark silhouette concerns.
 - `src/ui/` owns accessible DOM presentation; it should not mutate scene refs directly.
+- `src/ui/overlays/` keeps pause, rune-draft, and result presentation independent; `GameOverlays.jsx` remains their stable public facade.
 - `src/styles/hud/` and `src/styles/overlays/` own screen-level CSS while the top-level `hud.css` and `overlays.css` files preserve cascade order through imports.
 
 ## Stable facade rule
@@ -47,6 +52,7 @@ Files already imported across the runtime remain thin facades when an implementa
 
 - `src/config/assets.js` is the sprite manifest.
 - `public/sprites/` contains the complete deployable visual-asset inventory.
+- `public/art/ui/` contains on-demand interface artwork such as the transparent rune-upgrade atlas.
 - The runtime intentionally contains no Blender, glTF, GLB, or model-loader path.
 - See [`assets.md`](./assets.md) for the active inventory and rendering rules.
 
@@ -69,6 +75,8 @@ test-results/
 .agents/
 assets/source/
 ```
+
+`assets/source/` is a reserved ignore path only. The repository workspace should keep it absent unless a temporary, non-runtime reference is actively being evaluated.
 
 ## Design records
 

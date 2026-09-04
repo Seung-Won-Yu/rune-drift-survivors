@@ -14,6 +14,19 @@ export function updateTimedPool(pool, dt, limit, onKeep) {
   pool.length = write;
 }
 
+export function updatePrioritizedTimedPool(pool, dt, limit, getPriority, onKeep) {
+  const survivors = [];
+  for (const item of pool) {
+    item.life -= dt;
+    if (item.life <= 0) continue;
+    onKeep?.(item, dt);
+    survivors.push(item);
+  }
+  survivors.sort((left, right) => getPriority(right) - getPriority(left));
+  pool.length = 0;
+  pool.push(...survivors.slice(0, limit));
+}
+
 export function isPoolBelowLimit(pool, limit, overflow = 0) {
   return pool.length < limit + overflow;
 }

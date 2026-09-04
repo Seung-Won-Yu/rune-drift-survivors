@@ -111,7 +111,12 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
         });
       },
       threats: () => {
-        showQaGame({ ...createQaCombatGame(), phase: 'qa-preview' });
+        showQaGame({
+          ...createQaCombatGame(),
+          phase: 'qa-preview',
+          pickupMessage: '',
+          pickupFlash: 0
+        });
         [140, 300].forEach(delay => {
           window.setTimeout(() => sceneApi.current?.threatIdentity?.(), delay);
         });
@@ -162,10 +167,10 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
           encounterAlertTimer: 3.2
         });
       },
-      objectives: () => {
+      objectives: (options = {}) => {
         showQaGame({
           ...createInitialGame(),
-          phase: 'playing',
+          phase: options.phase ?? 'playing',
           time: 182,
           level: 8,
           kills: 284,
@@ -245,7 +250,7 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
     } else if (qaMode === 'phase') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.phase(), 120);
     } else if (qaMode === 'objectives') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.objectives(), 120);
+      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.objectives({ phase: 'qa-preview' }), 120);
     } else if (qaMode === 'victory' || qaMode === 'survived' || qaMode === 'defeat') {
       window.setTimeout(() => window.__RUNE_DRIFT_QA__?.result(qaMode), 120);
     }

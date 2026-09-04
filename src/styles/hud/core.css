@@ -21,9 +21,9 @@
   padding: 19px 18px 14px;
   overflow: hidden;
   border: 1px solid var(--rune-line);
-  border-radius: var(--rune-radius);
   background: linear-gradient(115deg, rgba(8, 23, 20, 0.92), rgba(12, 30, 26, 0.72));
   box-shadow: 0 16px 38px rgba(0, 7, 6, 0.28);
+  clip-path: var(--rune-frame-md);
   backdrop-filter: blur(10px);
 }
 
@@ -56,9 +56,14 @@
 }
 
 .runeMeterIcon {
+  display: grid;
+  place-items: center;
   color: var(--rune-muted);
-  font-size: 0.82rem;
-  text-align: center;
+}
+
+.runeMeterIcon .runeUiIcon {
+  width: 14px;
+  height: 14px;
 }
 
 .runeMeter-hp .runeMeterIcon {
@@ -221,11 +226,20 @@
   place-items: center;
   color: var(--rune-muted);
   border: 1px solid var(--rune-line);
-  border-radius: var(--rune-radius-sm);
   background: rgba(8, 22, 19, 0.8);
+  clip-path: var(--rune-frame-sm);
   cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+  transition: color var(--rune-motion-fast), border-color var(--rune-motion-fast), background var(--rune-motion-fast), transform var(--rune-motion-fast);
   backdrop-filter: blur(8px);
+}
+
+.runeIconButton .runeUiIcon {
+  width: 19px;
+  height: 19px;
+}
+
+.runeIconButton:active {
+  transform: translateY(1px);
 }
 
 .runeIconButton:hover {
@@ -234,4 +248,9 @@
   background: rgba(18, 42, 36, 0.92);
 }
 
-
+.runeIconButton:focus-visible {
+  outline: 0;
+  color: var(--rune-cyan-soft);
+  border-color: var(--rune-cyan);
+  box-shadow: inset 0 0 0 1px var(--rune-cyan-soft), 0 0 14px rgba(117, 221, 210, 0.2);
+}

@@ -2,11 +2,13 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+import { ART_TOKENS } from '../config/artDirection.js';
 import { MAX_ENEMIES } from '../config/gameTuning.js';
 import { getVisualBudget } from '../hooks/useVisualQuality.js';
 import { useVisualFrameGate } from '../hooks/useVisualFrameGate.js';
 import {
   getEnemyContactReach,
+  getEnemyContactTelegraphState,
   getEnemyContactWindupProgress
 } from '../systems/enemyContactRuntime.js';
 import { syncInstanceMesh } from './instancedMeshUtils.js';
@@ -24,7 +26,8 @@ export function EnemyContactTelegraphs({ enemiesRef, visualQuality = 'balanced' 
     scale: new THREE.Vector3(),
     pos: new THREE.Vector3(),
     color: new THREE.Color(),
-    dangerColor: new THREE.Color('#f07b62'),
+    warningColor: new THREE.Color('#ffb18d'),
+    dangerColor: new THREE.Color(ART_TOKENS.dangerRed),
     active: [],
     impacts: []
   }), []);
@@ -53,8 +56,8 @@ export function EnemyContactTelegraphs({ enemiesRef, visualQuality = 'balanced' 
     for (const enemy of scratch.active) {
       if (count >= maxTelegraphs) break;
       const reach = getEnemyContactReach(enemy);
-      const progress = getEnemyContactWindupProgress(enemy);
-      const pulse = 1 + Math.sin(state.clock.elapsedTime * 15 + enemy.wobble) * 0.025;
+      const { urgency, countdownScale } = getEnemyContactTelegraphState(enemy);
+      const pulse = 1 + Math.sin(state.clock.elapsedTime * 15 + enemy.wobble) * (0.018 + urgency * 0.024);
       scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.075, enemy.pos.z);
       scratch.matrix.compose(
         scratch.pos,
@@ -62,14 +65,14 @@ export function EnemyContactTelegraphs({ enemiesRef, visualQuality = 'balanced' 
         scratch.scale.setScalar(reach * pulse)
       );
       reachMesh.current.setMatrixAt(count, scratch.matrix);
-      scratch.color.copy(scratch.dangerColor);
+      scratch.color.copy(scratch.warningColor).lerp(scratch.dangerColor, urgency);
       reachMesh.current.setColorAt(count, scratch.color);
 
       scratch.pos.y += 0.012;
       scratch.matrix.compose(
         scratch.pos,
         scratch.quat,
-        scratch.scale.setScalar(reach * (0.28 + progress * 0.72))
+        scratch.scale.setScalar(reach * countdownScale)
       );
       countdownMesh.current.setMatrixAt(count, scratch.matrix);
       countdownMesh.current.setColorAt(count, scratch.color);
@@ -97,12 +100,12 @@ export function EnemyContactTelegraphs({ enemiesRef, visualQuality = 'balanced' 
   return (
     <>
       <instancedMesh ref={reachMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <ringGeometry args={[0.94, 1, 28, 1, Math.PI * 0.08, Math.PI * 1.72]} />
-        <meshBasicMaterial transparent opacity={0.56} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+        <ringGeometry args={[0.9, 1, 28]} />
+        <meshBasicMaterial transparent opacity={0.58} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={countdownMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
-        <ringGeometry args={[0.82, 0.9, 24, 1, Math.PI * 0.08, Math.PI * 1.56]} />
-        <meshBasicMaterial transparent opacity={0.3} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+        <ringGeometry args={[0.72, 0.88, 24]} />
+        <meshBasicMaterial transparent opacity={0.74} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={impactMesh} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
         <ringGeometry args={[0.8, 1, 16]} />

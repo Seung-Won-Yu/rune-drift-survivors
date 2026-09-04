@@ -10,6 +10,21 @@
     radial-gradient(circle at 50% 44%, rgba(34, 74, 65, 0.2), transparent 40%),
     rgba(2, 9, 7, 0.76);
   backdrop-filter: blur(8px);
+  isolation: isolate;
+}
+
+.modalLayer::before {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: min(76vmin, 760px);
+  aspect-ratio: 1;
+  content: "";
+  border: 1px solid rgba(117, 221, 210, 0.045);
+  background: repeating-conic-gradient(from 45deg, rgba(117, 221, 210, 0.028) 0 1deg, transparent 1deg 44deg);
+  transform: translate(-50%, -50%) rotate(45deg);
+  pointer-events: none;
 }
 
 .runePanel {
@@ -18,12 +33,29 @@
   padding: clamp(24px, 4vw, 42px);
   overflow: hidden;
   border: 1px solid var(--rune-line);
-  border-radius: var(--rune-radius-lg);
   background:
-    linear-gradient(135deg, rgba(117, 221, 210, 0.035), transparent 28%),
+    linear-gradient(135deg, rgba(117, 221, 210, 0.055), transparent 25%),
+    linear-gradient(315deg, rgba(226, 173, 88, 0.025), transparent 24%),
     var(--rune-panel);
-  box-shadow: 0 30px 80px var(--rune-shadow);
-  animation: rune-enter 180ms ease-out;
+  clip-path: var(--rune-frame-lg);
+  filter: var(--rune-frame-shadow);
+  animation: rune-enter var(--rune-motion-enter);
+}
+
+.runePanel::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  opacity: 0.3;
+  background-image: linear-gradient(90deg, transparent 49.7%, rgba(117, 221, 210, 0.035) 50%, transparent 50.3%);
+  background-size: 72px 100%;
+  mask-image: linear-gradient(90deg, black, transparent 74%);
+}
+
+.runePanel > * {
+  position: relative;
+  z-index: 1;
 }
 
 .runePanel::before,
@@ -57,6 +89,14 @@
   line-height: 1.16;
 }
 
+.pauseLead {
+  max-width: 42ch;
+  margin: 8px 0 0;
+  color: var(--rune-muted);
+  font-size: var(--rune-type-caption);
+  line-height: 1.45;
+}
+
 .runePanelMark {
   position: relative;
   display: grid;
@@ -65,8 +105,8 @@
   flex: 0 0 auto;
   place-items: center;
   color: var(--rune-cyan);
-  font-size: 1.45rem;
   text-shadow: 0 0 18px currentColor;
+  transform: rotate(45deg);
 }
 
 .runePanelMark::before,
@@ -74,8 +114,13 @@
   position: absolute;
   content: "";
   border: 1px solid currentColor;
-  border-radius: 50%;
   opacity: 0.2;
+}
+
+.runePanelMark .runeUiIcon {
+  width: 24px;
+  height: 24px;
+  transform: rotate(-45deg);
 }
 
 .runePanelMark::before {
@@ -89,29 +134,101 @@
 
 .pauseLedger {
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 28px;
+  grid-template-columns: 0.88fr 1.12fr;
+  gap: var(--rune-space-5);
   padding: 24px 0;
+}
+
+.pauseRunIdentity {
+  position: relative;
+  display: grid;
+  align-content: center;
+  min-height: 126px;
+  padding: 18px 20px;
+  overflow: hidden;
+  border-left: 2px solid var(--rune-cyan);
+  background:
+    linear-gradient(110deg, rgba(117, 221, 210, 0.09), transparent 70%),
+    rgba(4, 15, 13, 0.58);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+}
+
+.pauseRunIdentity::after {
+  position: absolute;
+  right: -22px;
+  bottom: -38px;
+  width: 110px;
+  height: 110px;
+  content: "ᚱ";
+  color: rgba(117, 221, 210, 0.07);
+  font-size: 5.6rem;
+  line-height: 1;
+  transform: rotate(-14deg);
+}
+
+.pauseRunIdentity small {
+  color: var(--rune-cyan);
+  font-size: var(--rune-type-micro);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.pauseRunIdentity strong {
+  position: relative;
+  z-index: 1;
+  margin-top: 8px;
+  color: var(--rune-text);
+  font-size: 1.08rem;
+}
+
+.pauseRunIdentity p,
+.pauseRunIdentity span {
+  position: relative;
+  z-index: 1;
+}
+
+.pauseRunIdentity p {
+  margin: 5px 0 12px;
+  color: var(--rune-muted);
+  font-size: var(--rune-type-caption);
+  line-height: 1.4;
+}
+
+.pauseRunIdentity span {
+  color: var(--rune-dim);
+  font-size: var(--rune-type-micro);
+}
+
+.pauseRunData {
+  display: grid;
+  align-content: center;
+  gap: 14px;
 }
 
 .pauseStats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1px;
+  grid-template-columns: repeat(3, 1fr);
   margin: 0;
-  background: var(--rune-line);
+  padding: 10px 0;
+  border-top: 1px solid var(--rune-line);
+  border-bottom: 1px solid var(--rune-line);
 }
 
 .pauseStats div {
   display: grid;
   gap: 4px;
-  padding: 14px;
-  background: var(--rune-bg-1);
+  padding: 2px 13px;
+  border-left: 1px solid var(--rune-line);
+}
+
+.pauseStats div:first-child {
+  padding-left: 0;
+  border-left: 0;
 }
 
 .pauseStats dt {
   color: var(--rune-dim);
-  font-size: 0.62rem;
+  font-size: var(--rune-type-micro);
 }
 
 .pauseStats dd {
@@ -123,29 +240,30 @@
 
 .controlGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
 }
 
 .controlGrid span {
   display: grid;
   align-content: center;
-  min-height: 62px;
-  padding: 10px;
+  min-height: 42px;
+  padding: 8px 6px;
   text-align: center;
-  border: 1px solid var(--rune-line);
+  border-bottom: 1px solid var(--rune-line);
+  background: rgba(117, 221, 210, 0.02);
 }
 
 .controlGrid b {
   color: var(--rune-cyan-soft);
-  font-size: 0.68rem;
+  font-size: var(--rune-type-micro);
   letter-spacing: 0.07em;
 }
 
 .controlGrid small {
   margin-top: 3px;
   color: var(--rune-dim);
-  font-size: 0.58rem;
+  font-size: 0.56rem;
 }
 
 .pauseObjectives {
@@ -190,7 +308,7 @@
 
 .qualitySettingsCopy small {
   color: var(--rune-cyan);
-  font-size: 0.54rem;
+  font-size: var(--rune-type-micro);
   letter-spacing: 0.12em;
 }
 
@@ -202,14 +320,17 @@
 .qualitySettingsCopy p {
   margin: 0;
   color: var(--rune-dim);
-  font-size: 0.6rem;
+  font-size: var(--rune-type-micro);
   text-align: right;
 }
 
 .qualityChoices {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  gap: 1px;
+  padding: 1px;
+  background: var(--rune-line);
+  clip-path: var(--rune-frame-sm);
 }
 
 .qualityChoices button {
@@ -219,11 +340,10 @@
   padding: 8px 10px;
   color: var(--rune-muted);
   text-align: left;
-  border: 1px solid var(--rune-line);
-  border-radius: var(--rune-radius-sm);
-  background: rgba(117, 221, 210, 0.025);
+  border: 0;
+  background: var(--rune-surface-deep);
   cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+  transition: color var(--rune-motion-fast), border-color var(--rune-motion-fast), background var(--rune-motion-fast), transform var(--rune-motion-fast);
 }
 
 .qualityChoices button:hover:not(:disabled),
@@ -231,6 +351,12 @@
   color: var(--rune-text);
   border-color: rgba(117, 221, 210, 0.52);
   background: rgba(117, 221, 210, 0.1);
+}
+
+.qualityChoices button:focus-visible {
+  outline: 0;
+  color: var(--rune-text);
+  box-shadow: inset 0 0 0 2px var(--rune-cyan-soft);
 }
 
 .qualityChoices button[aria-pressed="true"] b {
@@ -248,7 +374,7 @@
 
 .qualityChoices small {
   color: var(--rune-dim);
-  font-size: 0.54rem;
+  font-size: 0.58rem;
 }
 
 .pauseActions {
@@ -262,9 +388,21 @@
   min-height: 48px;
   padding: 0 22px;
   font-weight: 750;
-  border-radius: var(--rune-radius-sm);
+  clip-path: var(--rune-frame-sm);
   cursor: pointer;
-  transition: color 120ms ease, background 120ms ease, border-color 120ms ease;
+  transition: color var(--rune-motion-fast), background var(--rune-motion-fast), border-color var(--rune-motion-fast), transform var(--rune-motion-fast);
+}
+
+.runeButton:active,
+.qualityChoices button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.runeButton:focus-visible,
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 2px var(--rune-bg-0), inset 0 0 0 4px var(--rune-cyan-soft);
 }
 
 .primaryButton {
@@ -289,4 +427,28 @@
   border-color: var(--rune-line-strong);
 }
 
+.restartButton {
+  position: relative;
+}
 
+.restartButton.isArmed {
+  color: #ffd6d1;
+  border-color: color-mix(in srgb, var(--rune-danger) 72%, transparent);
+  background: color-mix(in srgb, var(--rune-danger) 15%, rgba(8, 22, 19, 0.92));
+}
+
+.restartConfirmCue {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 2;
+  padding: 4px 7px;
+  color: #ffd6d1;
+  border: 1px solid color-mix(in srgb, var(--rune-danger) 54%, transparent);
+  background: rgba(31, 12, 10, 0.96);
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}

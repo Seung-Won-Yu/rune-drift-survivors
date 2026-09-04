@@ -647,3 +647,137 @@
 
 - Physical iOS and Android review remains required for real dodge timing, thumb reach, browser safe areas, and vibration expectations.
 - If future samples again show universally empty openings, inspect spawn approach geometry before raising damage or enemy caps.
+
+## Slice 27 — Future-safe module boundaries
+
+### Delivered
+
+- Kept the original public runtime imports as compatibility facades while separating QA fixtures, run objectives, scoring, weapon casts, enemy accents, field pickups, shrines, HUD styles, and overlay styles by responsibility.
+- Preserved game behavior and CSS cascade order so future feature work can replace one subsystem without reopening the full runtime.
+- Added focused contracts around the extracted modules and retained the three-route sampler as the balance boundary.
+
+### Verification
+
+- `npm run build` and the 44-test browser suite passed after the boundary split.
+- The three guided five-minute routes still completed their circuits and won after the refactor.
+
+## Slice 28 — Game-first UI/UX unification
+
+### Delivered
+
+- Confirmed that no deployable Blender, GLB, GLTF, FBX, OBJ, or MTL asset and no runtime model loader remains. Documentation and `.glb` request guards are intentionally retained as the model-free contract.
+- Reframed pause around the current run phase and dominant build, with secondary stats and controls visually subordinate to the run identity.
+- Grouped result damage and survival telemetry into one compact combat record while preserving grade, build highlights, and the next-run recommendation.
+- Added named dialog semantics, initial focus, focus return, and contained Tab navigation to pause, upgrade, and result overlays.
+- Added a 2.6-second two-step restart guard to both the HUD icon and pause action so an active run cannot be reset by one stray click.
+- Removed false button semantics from the pointer-drag joystick, increased critical mobile HUD text, and attached non-boss alert rows to the HUD grid instead of a fragile fixed vertical coordinate.
+- Consolidated spacing, type, motion, and panel-shadow tokens and moved the first-run prompt from a rounded web card toward the cut-corner Rune Circuit frame language.
+
+### Verification
+
+- `npm run build`: passed with 716 transformed modules; the main game chunk is 249.96 kB (74.64 kB gzip).
+- `npm run qa:smoke`: 46/46 passed in 52.2 seconds, including zero-model startup, dialog focus containment, restart confirmation, touch movement, mobile hit/HUD attachment, upgrades, results, and stress budgets.
+- Desktop and 360 × 740 background captures show no new white sprite fringe, heavy overlay outline, horizontal overflow, or hidden primary action.
+- QA stayed headless/background-only; no external browser was opened or focused.
+
+### Known follow-ups
+
+- Physical iOS and Android review remains required for real safe areas, thumb reach, virtual-keyboard interaction, browser focus behavior, and restart-confirmation feel.
+- Future overlay additions should replace or collapse an existing line of information instead of increasing pause or result height.
+
+## Slice 29 — HUD icon and entry coherence
+
+### Delivered
+
+- Replaced mixed Unicode HUD and touch glyphs with one reusable, code-built stroke SVG family for vitals, sound, pause, restart, alerts, and dash.
+- Reframed the generic loader as a cut-corner Rune Circuit entry panel with run identity, a four-seal route, real loading progress, and a distinct recovery state.
+- Added explicit progressbar values and readable progress text to health, experience, run time, boss health, and loading without changing gameplay rules.
+- Added matching pressed feedback and activation paths for pointer, keyboard, and assistive-technology dash input.
+- Added a dedicated compact rule and browser guard so the clock, actions, vitals, guidance, joystick, and dash stay inside a 320 × 568 viewport without overlap.
+
+### Verification
+
+- `npm run build`: passed with 717 transformed modules; the main game chunk is 252.77 kB (75.51 kB gzip).
+- `npm run qa:smoke`: 47/47 passed in 53.8 seconds, including loading, icon delivery, meter semantics, dash input parity, boss state, and the new 320 × 568 compact frame.
+- Desktop, 360 × 740, and 320 × 568 background captures show a consistent icon family, contained controls, and no horizontal overflow or competing HUD regions.
+- QA stayed headless/background-only; no external browser was opened or focused.
+
+### Known follow-ups
+
+- Physical iOS and Android review remains required for native touch latency, safe-area behavior, screen-reader phrasing, and the loading-to-play transition.
+- Future HUD icons should extend `RuneIcon` instead of reintroducing font-dependent symbols.
+
+## Slice 30 — Combat signal hierarchy
+
+### Delivered
+
+- Reworked the live objective dock into a compact rune order with one dominant task, semantic progress, and a clear completed/total count.
+- Gave circuit events and boss signals dedicated rune markers so transient events no longer read like generic centered web notices.
+- Rebuilt the boss strip around three priorities: identity, vitality, and the active pattern. Vitality now includes an explicit percentage and patterns use authored shockwave, summon, or ward glyphs.
+- Suppressed duplicated coach, crisis, threat, boss-pattern, and pickup copy while an encounter already communicates the same state. Immediate damage and dash feedback remain available.
+- Made the objective QA route deterministic instead of allowing live enemy contact to intermittently hide the component under test.
+
+### Verification
+
+- `npm run build`: passed with 717 transformed modules; the main game chunk is 255.11 kB (76.05 kB gzip).
+- `npm run qa:smoke`: 48/48 passed in 54.2 seconds, including objective semantics, encounter signal structure, boss notice deduplication, and compact boss bounds.
+- Desktop, 360 × 740, and 320 × 568 background captures show no competing guidance, duplicate crisis row, horizontal overflow, or overlap between vitals and boss status.
+- QA stayed headless/background-only; no external browser was opened or focused.
+
+### Known follow-ups
+
+- Physical iOS and Android review remains required for real-world boss-pattern reaction time, cast-marker readability, thumb controls, and safe areas.
+- Keep future encounter copy to one action-oriented hint; longer explanation belongs in pause or post-run surfaces.
+
+## Slice 31 — Threat readability and effect boundaries
+
+### Delivered
+
+- Added stable-priority timed pools so danger and impact signals survive visual-budget trimming before optional attack, reward, and objective effects.
+- Changed threat-warning presentation from early fading to impact-led urgency: the ring warms into danger red while its label, cue, and pulse strengthen toward the hit window.
+- Reworked contact windup into a full reach ring plus a closing countdown ring, with the same normalized progress exposed to deterministic QA.
+- Extended the threat-reference scene with a charger beam, charge target, and near-impact boss shockwave while suppressing unrelated HUD copy.
+- Reduced `WeaponEffects.jsx` and `CombatFeedback.jsx` to stable two-line facades. Their implementations now live under `world/weapon-effects/` and `world/combat-feedback/`, separating persistent auras, strike effects, hit feedback, and danger telegraphs.
+
+### Verification
+
+- `npm run build`: passed with 721 transformed modules; the main game chunk is 256.45 kB (76.51 kB gzip).
+- Focused combat regression: 8/8 passed, covering danger-pool priority, late-warning intensity, threat-reference rendering, contact windup/pose/ring behavior, five-weapon identity, and stress budgets.
+- `npm run qa:smoke`: 52/52 passed in 59.3 seconds, including every quality tier, desktop/mobile HUD, overlays, contact combat, threat rendering, results, and stress frames.
+- Background captures show the contact rings on flat ground and the late boss/charger telegraphs above optional effects without duplicated HUD notices.
+- QA stayed headless/background-only; no external browser was opened or focused.
+
+### Known follow-ups
+
+- Physical iOS and Android review remains required for real touch reaction timing, outdoor contrast, thermal load, and browser safe areas.
+- Future weapon or warning visuals should enter the scoped implementation modules while their facade import paths remain stable.
+
+## Slice 32 — Web surface coherence
+
+### Audit finding
+
+- The interface already handled state feedback, domain language, restart protection, keyboard shortcuts, loading recovery, semantic progress, focus containment, and 320px responsive safety well.
+- The main remaining inconsistency was visual: rounded web panels competed with cut-corner rune elements, multiple cards could look simultaneously recommended, and Unicode marks broke the authored icon language.
+
+### Delivered
+
+- Added shared cut-size, frame-polygon, raised/deep surface, and frame-shadow tokens, then applied them across HUD vitals/actions and every overlay surface.
+- Added one restrained circuit field behind modal screens and removed floating-card styling from the quality selector so the hierarchy reads as one game surface rather than nested dashboards.
+- Extended `RuneIcon` with forward and five build-family marks, then replaced loading, pause, outcome, replay, recommendation, and card-action Unicode symbols.
+- Changed upgrade presentation so each draft has one featured recommendation with a filled action, while secondary relevant cards remain calm comparison choices.
+- Added inset focus treatment to clipped action buttons, quality choices, HUD controls, and upgrade cards so the new frame geometry does not hide keyboard state.
+- Reduced `GameOverlays.jsx` from 326 lines to a three-line facade. `PauseOverlay`, `UpgradeOverlay`, and `EndOverlay` now own their screen-specific structure independently.
+
+### Verification
+
+- `npm run build`: passed with 724 transformed modules; the main game chunk is 257.79 kB (76.96 kB gzip) and CSS is 52.84 kB (10.54 kB gzip).
+- Focused Playwright overlay checks passed for loading, HUD, pause objectives, keyboard focus/restart, desktop/mobile upgrade cards, results, boss HUD, and the compact 320px frame.
+- Native headless Playwright verification confirmed one featured card, computed polygon clipping, no horizontal overflow at 1440 × 900 and 360 × 740, a 48px mobile replay target, and no browser errors.
+- `npm run qa:smoke`: 52/52 passed in 55.4 seconds.
+- Desktop and mobile captures show one consistent angular frame language, a single dominant upgrade action, and no restored white fringe, panel collision, or viewport overflow.
+- All browser work stayed headless/background-only; no external browser was opened or focused.
+
+### Known follow-ups
+
+- Physical iOS and Android review remains required for font rendering, real touch focus, safe-area chrome, outdoor contrast, and thermal behavior.
+- New overlays should live under `src/ui/overlays/` and reuse the frame/icon tokens instead of adding another panel vocabulary.

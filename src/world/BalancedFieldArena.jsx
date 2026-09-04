@@ -22,7 +22,6 @@ export function BalancedFieldArena({ visualQuality = 'balanced' }) {
           <GroundDecalInstances transforms={arena.meadowPatches} shape="circle" segments={24} opacity={0.035} />
         </>
       )}
-      <GroundDecalInstances transforms={arena.trailSegments} shape="plane" opacity={visualQuality === 'low' ? 0.07 : 0.095} doubleSide />
       <GroundDecalInstances transforms={arena.rootStrips} shape="plane" opacity={visualQuality === 'low' ? 0.055 : 0.08} doubleSide />
       <GroundDecalInstances transforms={arena.leafLitter} shape="circle" segments={8} opacity={visualQuality === 'low' ? 0.08 : 0.13} />
       <GroundDecalInstances transforms={arena.shrinePads} shape="circle" segments={28} opacity={visualQuality === 'low' ? 0.06 : 0.105} />

@@ -1,7 +1,7 @@
 import { createEnemy } from '../systems/enemyDirector.js';
 import { getEnemyContactReach } from '../systems/enemyContactRuntime.js';
 import { getWaveProfile } from '../systems/enemyPacing.js';
-import { getEnemyTerrainY } from '../systems/terrain.js';
+import { getEnemyTerrainY, getPlayerTerrainY } from '../systems/terrain.js';
 
 export function populateContactAttackScene({
   player,
@@ -13,7 +13,9 @@ export function populateContactAttackScene({
   damageNumbers,
   spawnWarnings
 }) {
-  player.current.pos.set(0, 0.55, 0);
+  const playerX = 11;
+  const playerZ = 8;
+  player.current.pos.set(playerX, getPlayerTerrainY(playerX, playerZ), playerZ);
   player.current.vel.set(0, 0, 0);
   player.current.invuln = 0;
 
@@ -33,7 +35,8 @@ export function populateContactAttackScene({
     contactHitCount: 0
   });
   const attackDistance = getEnemyContactReach(enemy) - 0.82;
-  enemy.pos.set(attackDistance, getEnemyTerrainY(attackDistance, 0), 0);
+  const enemyX = playerX + attackDistance;
+  enemy.pos.set(enemyX, getEnemyTerrainY(enemyX, playerZ), playerZ);
   enemy.facingAngle = -Math.PI / 2;
 
   enemies.current = [enemy];

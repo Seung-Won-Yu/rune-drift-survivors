@@ -1,28 +1,17 @@
 import * as THREE from 'three';
+import { SHRINE_VISUALS } from '../config/artDirection.js';
 import { ARENA_RADIUS } from '../config/gameTuning.js';
 import { SHRINE_SITES } from '../config/gameData.js';
 import { getTerrainHeight } from './terrain.js';
 
+export { createRuneBiomeZoneLayout } from './map-layout/runeBiomeLayout.js';
+export {
+  createRuneCircuitPathMarkLayout,
+  getRuneCircuitPathPoint
+} from './map-layout/runeCircuitPathLayout.js';
+
 export function createBalancedFieldArenaLayout(visualQuality = 'balanced') {
   const density = visualQuality === 'low' ? 0.62 : 1;
-  const laneAngles = [-0.22, 0.72, 1.76, 2.52, 3.86];
-  const pathCount = visualQuality === 'low' ? 3 : 4;
-
-  const trailSegments = laneAngles.flatMap((angle, laneIndex) => (
-    Array.from({ length: pathCount }, (_, index) => {
-      const radius = 17 + index * 19.6;
-      const tangent = angle + Math.PI / 2;
-      const bend = Math.sin(index * 1.18 + laneIndex * 0.92) * 4.2;
-      const x = Math.cos(angle) * radius + Math.cos(tangent) * bend;
-      const z = Math.sin(angle) * radius + Math.sin(tangent) * bend;
-      return {
-        position: [x, getTerrainHeight(x, z) + 0.052, z],
-        rotation: -angle + Math.PI / 2 + Math.sin(index + laneIndex) * 0.11,
-        scale: [13.6 + index * 1.16, 2.95 + (laneIndex % 2) * 0.36, 1],
-        color: laneIndex % 2 ? '#5c5343' : '#355b4d'
-      };
-    })
-  )).filter(mark => Math.hypot(mark.position[0], mark.position[2]) < ARENA_RADIUS - 18);
 
   const groveFloorPatches = Array.from({ length: visualQuality === 'low' ? 7 : 13 }, (_, index) => {
     const angle = index * Math.PI * 2 / (visualQuality === 'low' ? 7 : 13) + 0.22 + Math.sin(index * 1.3) * 0.08;
@@ -273,7 +262,6 @@ export function createBalancedFieldArenaLayout(visualQuality = 'balanced') {
 
   return {
     centralPlaza,
-    trailSegments,
     groveFloorPatches,
     leafLitter,
     rootStrips,
@@ -324,23 +312,11 @@ export function createRuneCircuitLandmarkLayout(visualQuality = 'balanced') {
     scale: [3.5 - index * 0.18, 0.2, 1.55],
     color: index % 2 ? '#3d4b45' : edgeStone
   })));
-  const pylons = SHRINE_SITES.flatMap(site => [-1, 1].map(side => ({
-    position: place(site, 1.05, side * 3.45, 2.45),
-    rotation: [0.04, yaw(site), side * 0.055],
-    scale: [0.82, 4.4, 0.9],
-    color: side > 0 ? edgeStone : '#59655d'
-  })));
-  const pylonCaps = SHRINE_SITES.flatMap(site => [-1, 1].map(side => ({
-    position: place(site, 1.05, side * 3.45, 4.86),
-    rotation: [0.18, yaw(site) + Math.PI / 4, side * 0.08],
-    scale: [0.92, 0.92, 0.92],
-    color: site.color
-  })));
-  const lintels = SHRINE_SITES.map(site => ({
-    position: place(site, 1.05, 0, 4.58),
-    rotation: [0, yaw(site), 0],
-    scale: [7.35, 0.42, 0.72],
-    color: accentColor(site)
+  const signatureSites = SHRINE_SITES.map(site => ({
+    id: site.id,
+    kind: SHRINE_VISUALS[site.id].kind,
+    position: place(site, 0, 0, 0.72),
+    rotation: yaw(site)
   }));
   const rankStones = visualQuality === 'low' ? [] : SHRINE_SITES.flatMap(site => (
     Array.from({ length: site.order }, (_, index) => ({
@@ -356,29 +332,12 @@ export function createRuneCircuitLandmarkLayout(visualQuality = 'balanced') {
     scale: [5.1, 5.1, 1],
     color: site.color
   }));
-  const routeRuneCount = visualQuality === 'low' ? 2 : 5;
-  const routeRunes = SHRINE_SITES.flatMap(site => (
-    Array.from({ length: routeRuneCount }, (_, index) => {
-      const progress = (index + 1) / (routeRuneCount + 1);
-      const radius = 17 + (site.radius - 28) * progress;
-      return {
-        position: place(site, radius - site.radius, 0, 0.085),
-        rotation: yaw(site) + Math.PI / 4,
-        scale: [0.78, 0.78, 1],
-        color: site.color
-      };
-    })
-  ));
-
   return {
     lowerBases,
     upperBases,
     approachSteps,
-    pylons,
-    pylonCaps,
-    lintels,
+    signatureSites,
     rankStones,
-    floorRings,
-    routeRunes
+    floorRings
   };
 }

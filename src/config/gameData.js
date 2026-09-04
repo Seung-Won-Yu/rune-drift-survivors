@@ -6,22 +6,7 @@ export const FIELD_ITEM_META = {
   cache: { color: '#d4a84c', label: 'ARMORY', name: '무기 보급' }
 };
 
-export const ART_TOKENS = {
-  void: '#06100e',
-  deepVoid: '#0b1815',
-  terrainLow: '#162923',
-  terrainMid: '#294239',
-  terrainHigh: '#56645a',
-  moss: '#2f5b4d',
-  oldStone: '#65736b',
-  wornGold: '#b58a45',
-  emberGold: '#e2ad58',
-  runeCyan: '#75ddd2',
-  runeMint: '#77c8a4',
-  dangerRed: '#e06b5f',
-  elderViolet: '#aa91cf',
-  riftViolet: '#8274c5'
-};
+export { ART_TOKENS } from './artDirection.js';
 
 export const WAVE_PROFILES = [
   { name: 'Rift Scouts', trait: '정찰', hint: '균형형 진입', accent: '#64c98d', affix: 'scout', targetBase: 48, spawnBase: 7, runner: 0.16, brute: 0.02, interval: 0.58 },

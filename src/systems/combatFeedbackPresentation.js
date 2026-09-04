@@ -142,3 +142,21 @@ const HIT_BURST_PROFILES = {
 export function getHitBurstPresentation(type) {
   return HIT_BURST_PROFILES[type] ?? DEFAULT_PROFILE;
 }
+
+export function getSpawnWarningPresentation(warning) {
+  const maxLife = Math.max(0.001, warning?.maxLife ?? 0);
+  const progress = Math.min(1, Math.max(0, 1 - (warning?.life ?? 0) / maxLife));
+  const signal = warning?.signal ?? 'threat';
+  const isThreat = signal !== 'reward' && signal !== 'objective';
+  const urgency = progress * progress * (3 - 2 * progress);
+  const pulseStrength = isThreat ? 0.035 + urgency * 0.035 : 0.06;
+  return {
+    progress,
+    urgency,
+    isThreat,
+    pulse: 1 + Math.sin(progress * Math.PI * 8) * pulseStrength,
+    opacity: isThreat ? 0.5 + urgency * 0.42 : Math.max(0, 0.68 - progress * 0.52),
+    labelOpacity: isThreat ? 0.72 + urgency * 0.28 : Math.max(0, 1 - progress),
+    cueOpacity: isThreat ? 0.64 + urgency * 0.26 : Math.max(0, 0.9 - progress * 0.45)
+  };
+}

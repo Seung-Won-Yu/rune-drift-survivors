@@ -25,6 +25,16 @@ export function getEnemyContactWindupProgress(enemy) {
   return Math.min(1, Math.max(0, 1 - enemy.contactAttackTimer / duration));
 }
 
+export function getEnemyContactTelegraphState(enemy) {
+  const progress = getEnemyContactWindupProgress(enemy);
+  const urgency = progress * progress * (3 - 2 * progress);
+  return {
+    progress,
+    urgency,
+    countdownScale: 0.22 + progress * 0.78
+  };
+}
+
 export function getEnemyContactMotionScale(enemy) {
   const profile = getEnemyContactProfile(enemy);
   if ((enemy.contactAttackTimer ?? 0) > 0) return profile.windupMoveScale;

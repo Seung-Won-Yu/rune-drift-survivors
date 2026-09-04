@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { ART_TOKENS } from '../../config/gameData.js';
+import { ART_TOKENS } from '../../config/artDirection.js';
 import { getEnemyAccentColor } from '../../systems/enemyDirector.js';
 import { syncInstanceMesh } from '../instancedMeshUtils.js';
 

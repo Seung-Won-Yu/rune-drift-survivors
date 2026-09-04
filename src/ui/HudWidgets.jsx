@@ -1,14 +1,26 @@
+import { ConfirmRestartButton } from './ConfirmRestartButton.jsx';
+import { RuneIcon } from './RuneIcon.jsx';
+
 export function HudMeter({ tone, label, value, pct, isLow = false, isHit = false }) {
-  const icon = tone === 'hp' ? '♥' : '✦';
+  const icon = tone === 'hp' ? 'heart' : 'spark';
   return (
     <div className={`runeMeter runeMeter-${tone} hudMeter ${isLow ? 'isLow' : ''} ${isHit ? 'isHit' : ''}`}>
-      <span className="runeMeterIcon" aria-hidden="true">{icon}</span>
+      <span className="runeMeterIcon"><RuneIcon name={icon} /></span>
       <div className="runeMeterBody">
         <div className="runeMeterText">
           <span>{label}</span>
           <strong>{value}</strong>
         </div>
-        <div className="runeGauge"><i style={{ width: `${pct}%` }} /></div>
+        <div
+          className="runeGauge"
+          role="progressbar"
+          aria-label={`${label} ${value}`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(pct)}
+        >
+          <i style={{ width: `${pct}%` }} />
+        </div>
       </div>
     </div>
   );
@@ -24,14 +36,16 @@ export function HudActions({ game, onPause, onRestart, audioMuted, onToggleAudio
         aria-label={audioMuted ? '사운드 켜기' : '사운드 끄기'}
         aria-pressed={audioMuted}
       >
-        <span aria-hidden="true">{audioMuted ? '×' : '♪'}</span>
+        <RuneIcon name={audioMuted ? 'muted' : 'sound'} />
       </button>
       <button className="runeIconButton iconButton" type="button" onClick={onPause} aria-label={game.phase === 'paused' ? '계속하기' : '일시정지'}>
-        <span aria-hidden="true">{game.phase === 'paused' ? '▶' : 'Ⅱ'}</span>
+        <RuneIcon name={game.phase === 'paused' ? 'play' : 'pause'} />
       </button>
-      <button className="runeIconButton iconButton" type="button" onClick={onRestart} aria-label="다시 시작">
-        <span aria-hidden="true">↻</span>
-      </button>
+      <ConfirmRestartButton
+        className="runeIconButton iconButton"
+        compact
+        onConfirm={onRestart}
+      />
     </div>
   );
 }
@@ -94,20 +108,34 @@ export function HudObjectives({
 }) {
   const completed = runPhase.id === 'learn' ? completedOpeningObjectives : completedPhaseObjectives;
   const total = runPhase.id === 'learn' ? openingObjectiveCount : phaseObjectiveCount;
+  const phaseTitleId = `rune-objective-${runPhase.id}`;
 
   return (
-    <div className="runeObjective hudObjectiveDock" aria-label="현재 런 단계 목표">
+    <div className="runeObjective hudObjectiveDock" role="region" aria-labelledby={phaseTitleId}>
       <div className="runeObjectivePhase">
-        <span>RIFT ORDER</span>
-        <strong>{runPhase.label}</strong>
-        <small>{runPhase.goal} · {completed}/{total}</small>
+        <span className="runeObjectiveMark" aria-hidden="true"><RuneIcon name="objective" /></span>
+        <div>
+          <span>RIFT ORDER</span>
+          <strong id={phaseTitleId}>{runPhase.label}</strong>
+        </div>
+        <small>{completed}/{total}</small>
       </div>
       {visibleObjectives.slice(0, 1).map(objective => (
         <div key={objective.id} className="runeObjectiveTask" style={{ '--tone': objective.color }}>
-          <span>{objective.title}</span>
+          <span>{runPhase.goal} · {objective.title}</span>
           <strong>{objective.label}</strong>
           <small>{objective.displayValue} / {objective.displayTarget}</small>
-          <div aria-hidden="true"><i style={{ width: `${objective.progress * 100}%` }} /></div>
+          <div
+            className="runeObjectiveProgress"
+            role="progressbar"
+            aria-label={`${objective.label} 진행도`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(Math.max(0, Math.min(1, objective.progress)) * 100)}
+            aria-valuetext={`${objective.displayValue} / ${objective.displayTarget}`}
+          >
+            <i style={{ width: `${Math.max(0, Math.min(1, objective.progress)) * 100}%` }} />
+          </div>
         </div>
       ))}
     </div>
@@ -115,16 +143,22 @@ export function HudObjectives({
 }
 
 export function HudEncounter({ alert }) {
+  const isBossSignal = alert.kind === 'boss' || alert.kind === 'boss-pattern';
+  const icon = isBossSignal ? 'warden' : 'circuit';
   return (
     <div
-      className={`runeEncounter hudEncounter ${alert.kind === 'boss' || alert.kind === 'boss-pattern' ? 'isBoss' : ''}`}
+      className={`runeEncounter hudEncounter ${isBossSignal ? 'isBoss' : ''}`}
       style={{ '--tone': alert.color }}
+      data-kind={alert.kind}
       role="status"
       aria-live="polite"
       aria-atomic="true"
     >
-      <span>{alert.label} · RIFT SIGNAL</span>
-      <strong>{alert.title}</strong>
+      <span className="runeEncounterMark" aria-hidden="true"><RuneIcon name={icon} /></span>
+      <div className="runeEncounterCopy">
+        <span>{alert.label} · RIFT SIGNAL</span>
+        <strong>{alert.title}</strong>
+      </div>
       <small>{alert.hint}</small>
     </div>
   );
@@ -132,23 +166,47 @@ export function HudEncounter({ alert }) {
 
 export function HudBossBar({ bossStatus }) {
   const patternLabel = getBossPatternLabel(bossStatus.patternLabel);
+  const patternIcon = getBossPatternIcon(bossStatus.patternLabel);
+  const bossHpPercent = Math.round(Math.max(0, Math.min(100, bossStatus.hpPct * 100)));
   return (
     <div
       className={`runeBoss hudBoss ${bossStatus.enraged ? 'isEnraged' : ''}`}
       style={{ '--tone': bossStatus.phaseColor, '--pattern': bossStatus.patternColor }}
+      role="region"
+      aria-label={`균열 감시자 ${bossStatus.phaseLabel} 단계`}
     >
-      <div className="runeBossName">
-        <span>RIFT WARDEN · BOSS</span>
-        <strong>{bossStatus.phaseLabel}</strong>
-        <small>Wave {bossStatus.wave}</small>
+      <div className="runeBossIdentity">
+        <span className="runeBossSigil" aria-hidden="true"><RuneIcon name="warden" /></span>
+        <div className="runeBossName">
+          <span>RIFT WARDEN · BOSS</span>
+          <strong>{bossStatus.phaseLabel}</strong>
+          <small>Wave {bossStatus.wave}</small>
+        </div>
       </div>
-      <div className="runeBossHp" aria-label="보스 체력">
-        <i style={{ width: `${bossStatus.hpPct * 100}%` }} />
+      <div className="runeBossVital">
+        <div className="runeBossVitalMeta" aria-hidden="true">
+          <span>VITALITY</span>
+          <strong>{bossHpPercent}%</strong>
+        </div>
+        <div
+          className="runeBossHp"
+          role="progressbar"
+          aria-label="보스 체력"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={bossHpPercent}
+          aria-valuetext={`${bossHpPercent}%`}
+        >
+          <i style={{ width: `${bossHpPercent}%` }} />
+        </div>
       </div>
-      <div className="runeBossPattern">
-        <span>{bossStatus.casting ? '시전' : '다음'} <b>{patternLabel}</b></span>
-        <small>패턴 {bossStatus.patternStage}</small>
-        <em>{bossStatus.patternCue ?? bossStatus.patternHint}</em>
+      <div className={`runeBossPattern ${bossStatus.casting ? 'isCasting' : ''}`}>
+        <span className="runeBossPatternIcon" aria-hidden="true"><RuneIcon name={patternIcon} /></span>
+        <div>
+          <span>{bossStatus.casting ? '시전' : '다음'} <b>{patternLabel}</b></span>
+          <em>{bossStatus.patternCue ?? bossStatus.patternHint}</em>
+        </div>
+        <small>{bossStatus.patternStage}</small>
       </div>
     </div>
   );
@@ -160,4 +218,12 @@ function getBossPatternLabel(label) {
   if (key.includes('summon')) return '소환';
   if (key.includes('ward') || key.includes('guard')) return '보호막';
   return label ?? '패턴';
+}
+
+function getBossPatternIcon(label) {
+  const key = String(label ?? '').toLowerCase();
+  if (key.includes('shock')) return 'shockwave';
+  if (key.includes('summon')) return 'summon';
+  if (key.includes('ward') || key.includes('guard')) return 'ward';
+  return 'alert';
 }

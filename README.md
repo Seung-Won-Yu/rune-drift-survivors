@@ -29,6 +29,7 @@ Move through a dark rune-ruin battlefield, collect XP, and follow the next seal'
 - The opening curve reaches its first card sooner and exposes the first three circuit seals by 145 seconds without changing late-run scaling.
 - Guided replay routes continue into the early draft after the first seal, and an available synergy partner receives a protected card slot before unrelated weapon families.
 - Combat signals use distinct shapes: warm open rings for danger, filled pulses for player attacks, and diamond marks for rewards and circuit objectives.
+- Visual-effect budgets retain danger telegraphs before optional attack effects; threat warnings intensify toward impact and contact countdown rings converge on their real reach.
 - Projectile pierce is spent on distinct targets, while orbit-blade collision matches its rendered ground-plane footprint and periodically sweeps nearby targets during objective travel.
 - Storm and chain upgrades retain their crowd-control identity with bounded simultaneous-hit budgets, while runners use a short predictive line and a phase-bounded approach boost to create dodgeable early/mid-run pressure.
 - A quality-independent simulation budget keeps enemy, projectile, and XP rules identical across devices.
@@ -43,10 +44,16 @@ Move through a dark rune-ruin battlefield, collect XP, and follow the next seal'
 - A complete 2.5D animated Riftborn cast: runner, golem, brute, bulwark, charger, summoner, and the Rift Warden boss.
 - Lossless WebP atlases and shared clean-edge sprite compositing reduce character transfer size while removing pale source fringes.
 - Lightweight generated alpha materials give projectiles, runner afterimages, and storm fields soft game-like motion without Blender or downloaded VFX textures.
+- Upgrade cards use a project-authored nine-icon rune atlas, one featured recommendation per draft, and keyboard shortcuts (`1`–`3`) instead of generic geometric placeholders.
+- Pause and result overlays use a shared focus-contained dialog flow, a run-first information hierarchy, and a two-step restart guard that protects an active run from accidental resets.
+- HUD, loading, upgrade, pause, and result states share one cut-corner Rune Circuit frame grammar and restrained surface hierarchy instead of rounded web-dashboard cards.
+- HUD vitals, actions, overlay marks, build routes, and touch dash use one code-built stroke-icon family, while the Rune Circuit loading screen carries the same visual language into the first playable frame.
+- Health, experience, run time, boss health, and loading progress expose real progress semantics for keyboard and assistive-technology users.
+- Objectives, encounter signals, and boss phases use distinct rune markers and information hierarchy; active encounters suppress duplicated guidance and non-actionable combat notices.
 - Procedural Web Audio cues with browser-safe unlock and persisted mute state.
 - Keyboard, mobile joystick, touch dash, portrait, and landscape support.
-- Forest-ruin arena with multi-scale procedural PBR terrain, code-built foliage and ruins, coherent lit materials, and contact shadows.
-- Code-built Rune Circuit gates, seal-colored rank stones, and ground routes keep the four gameplay landmarks readable with no Blender or GLB runtime dependency.
+- Forest-ruin arena with multi-scale procedural PBR terrain, code-built foliage and ruins, four local biome palettes, coherent lit materials, and contact shadows.
+- Worn curved Rune Circuit paths, sparse rune inlays, and a low-profile central Rune Heart lead to four distinct code-built landmark silhouettes: armory blades, a life tree, a purge brazier, and etching tablets. No Blender or GLB runtime dependency is required.
 
 ## Controls
 
@@ -55,7 +62,7 @@ Move through a dark rune-ruin battlefield, collect XP, and follow the next seal'
 | Move | `WASD`, arrow keys, or mobile joystick |
 | Dash | `Space` or mobile dash button |
 | Pause | `P`, `Esc`, or pause button |
-| Restart | HUD restart button |
+| Restart | HUD or pause restart button, then press once more to confirm |
 | Sound | HUD sound button |
 
 ## Quick start
@@ -88,7 +95,7 @@ Run the three-route five-minute balance sampler in the background:
 npm run qa:balance
 ```
 
-The suite covers loading, keyboard/touch movement, dash buffering, audio, opening progression and phase transitions, Rune Circuit states and landmark structure, enemy contact timing and pose response, HUD/overlays, synergy-aware upgrade selection, boss state, result damage and survival summaries, desktop stress budgets, and mobile stress-frame overflow/HUD separation. The balance sampler also records damage by run phase, damage taken, and actual healing.
+The suite covers themed loading and progress semantics, keyboard/touch movement and dash feedback, audio, opening progression and phase transitions, Rune Circuit states and landmark structure, danger-signal budget priority, late-warning intensity, enemy contact timing and ring convergence, HUD/overlays, dialog focus containment, restart confirmation, synergy-aware upgrade selection, boss state, result damage and survival summaries, desktop stress budgets, and 320 × 568 / 360 × 740 mobile HUD separation. The balance sampler also records damage by run phase, damage taken, and actual healing.
 
 Useful deterministic routes include:
 
@@ -137,20 +144,21 @@ src/
   systems/    frame-level gameplay logic and feature-scoped runtime modules
   ui/         DOM HUD, overlays, cards, touch controls
   world/      React Three Fiber battlefield and effects
-public/sprites/ project-authored RGB sprite atlases with runtime clean-edge compositing
+public/sprites/ project-authored RGB character atlases with runtime clean-edge compositing
+public/art/     project-authored transparent UI art atlases
 scripts/        Playwright QA
 docs/           project, QA, asset, and design documentation
 ```
 
 All runtime modules under `src/` are connected to the `src/main.jsx` import graph. Generated output, browser artifacts, and raw asset downloads are git-ignored.
 
-Stable facade files such as `gameState.js`, `runProgress.js`, `weaponRuntime.js`, `EnemyEffects.jsx`, and `FieldItemsAndShrines.jsx` preserve existing imports. Their implementations live in responsibility-scoped subfolders so future gameplay and presentation changes do not collect in a single file.
+Stable facade files such as `gameState.js`, `runProgress.js`, `weaponRuntime.js`, `EnemyEffects.jsx`, `FieldItemsAndShrines.jsx`, `WeaponEffects.jsx`, `CombatFeedback.jsx`, and `GameOverlays.jsx` preserve existing imports. Their implementations live in responsibility-scoped subfolders so future gameplay and presentation changes do not collect in a single file.
 
 See [docs/project-structure.md](./docs/project-structure.md) for ownership boundaries and the full repository map.
 
 ## Assets
 
-Only the project-authored atlases under `public/sprites/` ship as external visual assets. Characters use 2.5D sprites; terrain, landmarks, foliage, weapons, and effects are assembled in Three.js code.
+Only project-authored atlases under `public/sprites/` and `public/art/` ship as external visual assets. Characters and upgrade icons use 2.5D atlases; terrain, landmarks, foliage, weapons, and effects are assembled in Three.js code.
 
 - Active runtime manifest: `src/config/assets.js`
 - Attribution: [ASSET_CREDITS.md](./ASSET_CREDITS.md)

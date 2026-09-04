@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 import { SPRITE_URLS } from '../config/assets.js';
-import { ART_TOKENS } from '../config/gameData.js';
+import { ART_TOKENS } from '../config/artDirection.js';
 import { MAX_ORBIT_BLADES, PLAYER_SPEED } from '../config/gameTuning.js';
 import { RUNE_WARDEN_ATLAS, getRuneWardenAnimationFrame } from '../systems/playerSprite.js';
 import { getBladeCount, getBladeOrbitRadius, getBladeSize, getBuildFocus, getDominantBuild, getOrbColor, getWeaponStage, isWeaponFamilyUnlocked } from '../systems/progression.js';

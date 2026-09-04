@@ -56,7 +56,8 @@ function createTexture(data, size, repeat, colorSpace = THREE.NoColorSpace) {
 
 export function createTerrainSurfaceTextures(visualQuality = 'balanced') {
   const size = visualQuality === 'high' ? 256 : 128;
-  const repeat = visualQuality === 'high' ? 24 : 18;
+  const albedoRepeat = visualQuality === 'high' ? 10 : 7;
+  const detailRepeat = visualQuality === 'high' ? 28 : 20;
   const pixelCount = size * size;
   const heights = new Float32Array(pixelCount);
   const albedoPixels = new Uint8Array(pixelCount * 4);
@@ -112,9 +113,9 @@ export function createTerrainSurfaceTextures(visualQuality = 'balanced') {
     }
   }
 
-  const map = createTexture(albedoPixels, size, repeat, THREE.SRGBColorSpace);
-  const normalMap = createTexture(normalPixels, size, repeat);
-  const roughnessMap = createTexture(roughnessPixels, size, repeat);
+  const map = createTexture(albedoPixels, size, albedoRepeat, THREE.SRGBColorSpace);
+  const normalMap = createTexture(normalPixels, size, detailRepeat);
+  const roughnessMap = createTexture(roughnessPixels, size, detailRepeat);
 
   return {
     map,

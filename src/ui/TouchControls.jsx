@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { RuneIcon } from './RuneIcon.jsx';
 
 export function createTouchControlsState() {
   return {
@@ -12,7 +13,9 @@ export function createTouchControlsState() {
 export function TouchControls({ controlsRef }) {
   const stickRef = useRef(null);
   const pointerId = useRef(null);
+  const dashReleaseTimer = useRef(null);
   const [stick, setStick] = useState({ active: false, x: 0, z: 0 });
+  const [dashPressed, setDashPressed] = useState(false);
 
   const commitStick = (x, z, active) => {
     if (controlsRef.current) {
@@ -62,16 +65,36 @@ export function TouchControls({ controlsRef }) {
   const queueDash = event => {
     event.preventDefault();
     if (controlsRef.current) controlsRef.current.dashQueued = true;
+    setDashPressed(true);
   };
 
+  const releaseDash = event => {
+    event?.preventDefault();
+    window.clearTimeout(dashReleaseTimer.current);
+    setDashPressed(false);
+  };
+
+  const queueKeyboardDash = event => {
+    if (event.repeat || (event.key !== 'Enter' && event.key !== ' ')) return;
+    queueDash(event);
+  };
+
+  const queueAssistiveDash = event => {
+    if (event.detail !== 0) return;
+    queueDash(event);
+    window.clearTimeout(dashReleaseTimer.current);
+    dashReleaseTimer.current = window.setTimeout(() => setDashPressed(false), 140);
+  };
+
+  useEffect(() => () => window.clearTimeout(dashReleaseTimer.current), []);
+
   return (
-    <div className="touchControls" aria-label="터치 조작">
+    <div className="touchControls" role="group" aria-label="터치 조작">
       <div
         ref={stickRef}
         className={`runeTouchStick touchStick ${stick.active ? 'isActive' : ''}`}
-        role="button"
-        tabIndex={0}
-        aria-label="이동 조이스틱"
+        role="group"
+        aria-label="이동 조이스틱: 누른 채 드래그해 이동"
         style={{
           '--stick-x': `${stick.x * 30}px`,
           '--stick-z': `${stick.z * 30}px`
@@ -85,13 +108,19 @@ export function TouchControls({ controlsRef }) {
         <i aria-hidden="true" />
       </div>
       <button
-        className="runeDashButton touchDashButton"
+        className={`runeDashButton touchDashButton ${dashPressed ? 'isPressed' : ''}`}
         type="button"
         aria-label="대시"
         onPointerDown={queueDash}
+        onPointerUp={releaseDash}
+        onPointerCancel={releaseDash}
+        onKeyDown={queueKeyboardDash}
+        onKeyUp={releaseDash}
+        onClick={queueAssistiveDash}
+        onBlur={releaseDash}
       >
         <small aria-hidden="true">DASH</small>
-        <span aria-hidden="true">↯</span>
+        <RuneIcon name="dash" />
       </button>
     </div>
   );

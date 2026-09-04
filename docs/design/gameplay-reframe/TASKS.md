@@ -275,3 +275,59 @@
 - [x] Separate field pickups from Rune Shrine presentation.
 - [x] Split HUD and overlay CSS by screen responsibility without changing cascade order.
 - [x] Pass the production build, complete 44-test browser suite, and three-route five-minute balance sampler.
+
+## Slice 28 — Game-first UI/UX unification
+
+- [x] Confirm that deployable Blender/GLB assets and runtime model loaders remain absent.
+- [x] Replace the pause dashboard grid with a run-identity-first composition.
+- [x] Consolidate result damage and survival telemetry into one compact combat record.
+- [x] Add named modal semantics, initial focus, focus return, and contained Tab navigation.
+- [x] Protect HUD and pause-menu restarts with a timed two-step confirmation.
+- [x] Remove false keyboard-button semantics from the drag-only touch joystick.
+- [x] Raise critical mobile HUD text sizes and structurally attach hit alerts to the vitals row.
+- [x] Pass the production build and complete 46-test background browser suite.
+- [ ] Verify dialog focus, thumb reach, safe areas, and restart confirmation on physical iOS and Android devices.
+
+## Slice 29 — HUD icon and entry coherence
+
+- [x] Replace mixed Unicode action, vital, and dash glyphs with one code-built stroke SVG family.
+- [x] Reframe loading as a Rune Circuit entry with identity, status, progress, and recovery states.
+- [x] Add semantic progress values to health, experience, run time, boss health, and loading.
+- [x] Give pointer, keyboard, and assistive-click dash input the same visible pressed feedback.
+- [x] Keep the complete HUD and touch controls inside a 320 × 568 viewport.
+- [x] Pass the production build and complete 47-test background browser suite.
+- [ ] Verify loading transition and touch press feedback on physical iOS and Android devices.
+
+## Slice 30 — Combat signal hierarchy
+
+- [x] Give live objectives, encounter events, and boss patterns distinct rune markers and layouts.
+- [x] Promote boss vitality and the active cast above phase metadata.
+- [x] Remove duplicated crisis, threat, pickup, and coach copy while an encounter already owns the screen.
+- [x] Preserve immediate damage and dash feedback during boss and encounter states.
+- [x] Add semantic live-objective progress and deterministic objective QA state.
+- [x] Keep the boss frame clear of vitals at 320 × 568 and 360 × 740.
+- [x] Pass the production build and complete 48-test background browser suite.
+- [ ] Verify boss cast readability and encounter duration on physical iOS and Android devices.
+
+## Slice 31 — Threat readability and effect boundaries
+
+- [x] Preserve danger telegraphs ahead of optional attack effects when visual pools exceed their budget.
+- [x] Intensify threat rings, labels, and cues toward impact while reward and objective signals retain their short decay.
+- [x] Make contact countdown rings converge on the actual attack reach and expose deterministic windup progress to QA.
+- [x] Extend the threat-reference scene with charge, beam, and near-impact boss-shockwave signals on a clean frame.
+- [x] Split strike effects from persistent projectile auras behind the stable `WeaponEffects.jsx` facade.
+- [x] Split hit/damage feedback from danger telegraphs behind the stable `CombatFeedback.jsx` facade.
+- [x] Pass the production build, focused eight-test combat regression, and complete 52-test background browser suite.
+- [ ] Verify late-warning contrast and reaction timing on physical iOS and Android devices.
+
+## Slice 32 — Web surface coherence
+
+- [x] Audit the complete HUD, loading, upgrade, pause, result, and mobile flows against one game-first interface language.
+- [x] Replace rounded dashboard panels with shared cut-corner Rune Circuit frame tokens.
+- [x] Replace mixed Unicode panel and action marks with the shared code-built stroke-icon family.
+- [x] Reduce quality selection from four floating cards to one segmented control surface.
+- [x] Promote exactly one upgrade card per draft as the featured recommendation while keeping all choices equally selectable.
+- [x] Preserve visible keyboard focus inside clipped buttons and cards.
+- [x] Split pause, upgrade, and result implementations behind the stable `GameOverlays.jsx` facade.
+- [x] Pass the production build, focused desktop/mobile overlay checks, native Playwright design-system verification, and complete 52-test background suite.
+- [ ] Verify text rendering, touch focus, and outdoor contrast on physical iOS and Android devices.

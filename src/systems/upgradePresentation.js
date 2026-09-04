@@ -15,6 +15,18 @@ import {
   isWeaponFamilyUnlocked
 } from './progression.js';
 
+const UPGRADE_ICON_ATLAS = {
+  orb: { artKey: 'orb', atlasX: 0, atlasY: 0 },
+  storm: { artKey: 'storm', atlasX: 50, atlasY: 0 },
+  blade: { artKey: 'blade', atlasX: 100, atlasY: 0 },
+  chain: { artKey: 'chain', atlasX: 0, atlasY: 50 },
+  nova: { artKey: 'nova', atlasX: 50, atlasY: 50 },
+  dash: { artKey: 'dash', atlasX: 100, atlasY: 50 },
+  ward: { artKey: 'ward', atlasX: 0, atlasY: 100 },
+  magnet: { artKey: 'magnet', atlasX: 50, atlasY: 100 },
+  arcane: { artKey: 'arcane', atlasX: 100, atlasY: 100 }
+};
+
 export function getUpgradeTone(upgrade) {
   const key = getUpgradeFocusKey(upgrade);
   return key ? BUILD_FOCUS_META[key].color : '#d4a84c';
@@ -22,11 +34,13 @@ export function getUpgradeTone(upgrade) {
 
 export function getUpgradeIconMeta(upgrade) {
   const key = getUpgradeFocusKey(upgrade);
-  if (key && BUILD_FOCUS_META[key]) return BUILD_FOCUS_META[key];
-  if (upgrade.id === 'maxHp') return { glyph: '+', color: '#79f29a' };
-  if (upgrade.id === 'dash' || upgrade.id === 'speed') return { glyph: '›', color: '#64c98d' };
-  if (upgrade.id === 'magnet' || upgrade.id === 'luck') return { glyph: '✦', color: '#d4a84c' };
-  return { glyph: '✚', color: '#d4a84c' };
+  if (key && BUILD_FOCUS_META[key]) {
+    return { ...BUILD_FOCUS_META[key], ...UPGRADE_ICON_ATLAS[key] };
+  }
+  if (upgrade.id === 'maxHp') return { ...UPGRADE_ICON_ATLAS.ward, color: '#79f29a' };
+  if (upgrade.id === 'dash' || upgrade.id === 'speed') return { ...UPGRADE_ICON_ATLAS.dash, color: '#64c98d' };
+  if (upgrade.id === 'magnet' || upgrade.id === 'luck') return { ...UPGRADE_ICON_ATLAS.magnet, color: '#d4a84c' };
+  return { ...UPGRADE_ICON_ATLAS.arcane, color: '#d4a84c' };
 }
 
 function getUpgradeImpactLabel(upgrade) {

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 import { SIMULATION_BUDGET } from '../config/gameTuning.js';
+import { getEnemyContactWindupProgress } from '../systems/enemyContactRuntime.js';
 import {
   createEmptyRunStats
 } from '../systems/gameState.js';
@@ -188,6 +189,9 @@ export function useGameSceneRuntime(visualQuality) {
       },
       contact: {
         windups: enemies.current.filter(enemy => (enemy.contactAttackTimer ?? 0) > 0).length,
+        maxWindupProgress: Number(enemies.current.reduce((highest, enemy) => (
+          Math.max(highest, getEnemyContactWindupProgress(enemy))
+        ), 0).toFixed(3)),
         recoveries: enemies.current.filter(enemy => (enemy.contactAttackTimer ?? 0) <= 0 && (enemy.contactAttackCooldown ?? 0) > 0).length,
         resolved: enemies.current.reduce((total, enemy) => total + (enemy.contactAttackCount ?? 0), 0),
         hits: enemies.current.reduce((total, enemy) => total + (enemy.contactHitCount ?? 0), 0)

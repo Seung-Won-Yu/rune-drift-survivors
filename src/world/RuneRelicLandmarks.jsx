@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ART_TOKENS } from '../config/gameData.js';
+import { ART_TOKENS } from '../config/artDirection.js';
 import { getTerrainHeight } from '../systems/terrain.js';
 import {
   GroundDecalInstances,

@@ -10,14 +10,23 @@ import {
   SIMULATION_BUDGET,
   STARTING_XP_TO_NEXT
 } from '../src/config/gameTuning.js';
-import { getEnemyContactDisplacement } from '../src/systems/enemyContactRuntime.js';
+import { getSpawnWarningPresentation } from '../src/systems/combatFeedbackPresentation.js';
+import {
+  getEnemyContactDisplacement,
+  getEnemyContactTelegraphState
+} from '../src/systems/enemyContactRuntime.js';
 import { getEnemyPursuitLead, getEnemyPursuitSpeedScale } from '../src/systems/enemyPacing.js';
 import {
   getRiftbornAnimationFrame,
   getRiftbornThreatAnimationFrame
 } from '../src/systems/enemySprite.js';
+import { getCombatSignalPriority, updateVisualFeedbackPools } from '../src/systems/feedbackRuntime.js';
 import { createInitialGame, createQaResultGame, withItemPickup } from '../src/systems/gameState.js';
-import { createRuneCircuitLandmarkLayout } from '../src/systems/mapLayout.js';
+import {
+  createRuneBiomeZoneLayout,
+  createRuneCircuitLandmarkLayout,
+  createRuneCircuitPathMarkLayout
+} from '../src/systems/mapLayout.js';
 import { getRuneWardenAnimationFrame } from '../src/systems/playerSprite.js';
 import {
   isOrbitBladeHit,
@@ -84,6 +93,7 @@ async function capture(page, name) {
   await page.screenshot({
     path: path.join(artifactDir, `${name}.png`),
     fullPage: false,
+    animations: 'disabled',
     timeout: 10_000
   });
 }
@@ -103,7 +113,10 @@ test('loading state smoke', async ({ page }) => {
   });
   await page.goto('/?quality=balanced', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.loadingLayer')).toBeVisible();
+  await expect(page.locator('.loadingLayer')).toContainText('RUNE DRIFT · SURVIVORS');
   await expect(page.locator('.loadingLayer')).toContainText('룬 야전을 새기는 중');
+  await expect(page.getByRole('progressbar', { name: '게임 로딩' })).toHaveAttribute('aria-valuenow');
+  await capture(page, 'qa-smoke-loading');
   await expect(page.locator('.loadingLayer')).toBeHidden({ timeout: 20_000 });
   guards.assertClean();
 });
@@ -152,6 +165,10 @@ test('HUD smoke', async ({ page }) => {
   await expect(page.locator('.hudCompact')).toBeVisible();
   await expect(page.locator('.hudMeter')).toHaveCount(2);
   await expect(page.locator('.iconButton')).toHaveCount(3);
+  await expect(page.locator('.hudTopBar .runeUiIcon')).toHaveCount(5);
+  await expect(page.getByRole('progressbar', { name: /체력/ })).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: /레벨 1/ })).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: '런 진행도' })).toBeVisible();
   await expect(page.locator('.runeCircuit')).toBeVisible();
   await expect(page.locator('.runeCircuit')).toContainText('CIRCUIT 0/4');
   await expect(page.locator('.runeCircuit')).toContainText('무기 봉인');
@@ -186,7 +203,11 @@ test('rune circuit activation moment smoke', async ({ page }) => {
   await expect(page.locator('.hudEncounter')).toBeVisible();
   await expect(page.locator('.hudEncounter')).toContainText('CIRCUIT 1/4');
   await expect(page.locator('.hudEncounter')).toContainText('무기 봉인 연결');
+  await expect(page.locator('.hudEncounter')).toHaveAttribute('data-kind', 'circuit');
+  await expect(page.locator('.hudEncounter .runeUiIcon')).toBeVisible();
   await expect(page.locator('.hudObjectiveDock')).toHaveCount(0);
+  await expect(page.locator('.hudCoachCard')).toHaveCount(0);
+  await expect(page.locator('.hudAlertStack')).toHaveCount(0);
   await capture(page, 'qa-smoke-circuit-activation');
   guards.assertClean();
 });
@@ -195,11 +216,44 @@ test('pause uses the current run-phase objectives', async ({ page }) => {
   const guards = await openGuardedPage(page, '/?qa=objectives&quality=balanced');
   await expect(page.locator('.runeCircuit')).toContainText('각인 봉인');
   await expect(page.locator('.runeCircuit')).toContainText('보상 선택');
-  await page.getByRole('button', { name: '일시정지' }).click();
+  const objectiveDock = page.locator('.hudObjectiveDock');
+  await expect(objectiveDock).toBeVisible();
+  await expect(objectiveDock.getByRole('progressbar')).toHaveCount(1);
+  await expect(objectiveDock.locator('.runeUiIcon')).toBeVisible();
+  await capture(page, 'qa-smoke-objectives');
+  await page.evaluate(() => window.__RUNE_DRIFT_QA__.objectives({ phase: 'paused' }));
   const pauseObjectives = page.locator('.pauseObjectives');
   await expect(pauseObjectives).toContainText('봉인 4개 활성');
   await expect(pauseObjectives).not.toContainText('적 12 처치');
   await capture(page, 'qa-smoke-pause-objectives');
+  guards.assertClean();
+});
+
+test('dialogs keep focus contained and restart requires confirmation', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?qa=objectives&quality=balanced');
+  const hudRestart = page.getByRole('button', { name: '다시 시작', exact: true });
+  await hudRestart.click();
+  await expect(page.getByRole('button', { name: /다시 시작 확인/ })).toBeVisible();
+  await expect(page.locator('.runeCircuit')).toContainText('각인 봉인');
+  await page.getByRole('button', { name: /다시 시작 확인/ }).click();
+  await expect(page.locator('.runeCircuit')).toContainText('CIRCUIT 0/4');
+
+  await page.getByRole('button', { name: '일시정지' }).click();
+  const pauseDialog = page.getByRole('dialog', { name: '균열이 잠시 멈췄습니다' });
+  const resumeButton = pauseDialog.getByRole('button', { name: '계속하기' });
+  await expect(pauseDialog).toBeVisible();
+  await expect(resumeButton).toBeFocused();
+
+  const dialogButtons = pauseDialog.getByRole('button');
+  await dialogButtons.last().focus();
+  await page.keyboard.press('Tab');
+  await expect(resumeButton).toBeFocused();
+
+  await pauseDialog.getByRole('button', { name: '다시 시작', exact: true }).click();
+  await expect(pauseDialog).toBeVisible();
+  await expect(pauseDialog.getByRole('button', { name: /다시 시작 확인/ })).toBeVisible();
+  await pauseDialog.getByRole('button', { name: /다시 시작 확인/ }).click();
+  await expect(pauseDialog).toBeHidden();
   guards.assertClean();
 });
 
@@ -251,19 +305,28 @@ test('run phase transitions announce each pacing beat once', async ({ page }) =>
   guards.assertClean();
 });
 
-test('code-built circuit landmarks keep one readable kit across all seals', () => {
+test('code-built circuit landmarks give every seal a distinct biome identity', () => {
   const balanced = createRuneCircuitLandmarkLayout('balanced');
   const low = createRuneCircuitLandmarkLayout('low');
+  const balancedBiomes = createRuneBiomeZoneLayout('balanced');
+  const lowBiomes = createRuneBiomeZoneLayout('low');
+  const balancedPathMarks = createRuneCircuitPathMarkLayout('balanced');
+  const lowPathMarks = createRuneCircuitPathMarkLayout('low');
   expect(balanced.lowerBases).toHaveLength(4);
   expect(balanced.approachSteps).toHaveLength(16);
-  expect(balanced.pylons).toHaveLength(8);
-  expect(balanced.pylonCaps).toHaveLength(8);
-  expect(balanced.lintels).toHaveLength(4);
+  expect(balanced.signatureSites.map(site => site.kind)).toEqual(['armory', 'vital', 'purge', 'etching']);
   expect(balanced.rankStones).toHaveLength(10);
-  expect(balanced.routeRunes).toHaveLength(20);
+  expect(balancedPathMarks).toHaveLength(12);
+  expect(balancedBiomes.kinds).toEqual(['armory', 'vital', 'purge', 'etching']);
+  expect(balancedBiomes.zonePatches).toHaveLength(12);
+  expect(balancedBiomes.zoneRings).toHaveLength(4);
+  expect(balancedBiomes.ruinFragments).toHaveLength(16);
+  expect(balancedBiomes.runeShards).toHaveLength(12);
   expect(low.approachSteps).toHaveLength(8);
   expect(low.rankStones).toHaveLength(0);
-  expect(low.routeRunes).toHaveLength(8);
+  expect(lowPathMarks).toHaveLength(8);
+  expect(lowBiomes.ruinFragments).toHaveLength(8);
+  expect(lowBiomes.runeShards).toHaveLength(4);
 });
 
 test('Rune Warden atlas selects four directions and authored action frames', () => {
@@ -297,6 +360,18 @@ test('Riftborn threat atlas keeps elite roles and boss directions deterministic'
   expect(getRiftbornThreatAnimationFrame({ kind: 'boss', facingAngle: 0 })).toMatchObject({ role: 'boss', direction: 'front', row: 6 });
   expect(getRiftbornThreatAnimationFrame({ role: 'summoner', animationPhase: 1, motionIntent: 1 })).toMatchObject({ row: 5 });
   expect(getRiftbornThreatAnimationFrame({ role: 'unknown' })).toMatchObject({ role: 'charger', row: 2 });
+});
+
+test('threat reference scene keeps late warnings visible above optional effects', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?qa=threats&quality=balanced');
+  await page.waitForFunction(() => {
+    const counts = window.__RUNE_DRIFT_QA__?.metrics?.()?.counts;
+    return counts?.enemies === 4 && counts?.spawnWarnings === 2 && counts?.weaponEffects === 1;
+  });
+  await page.waitForTimeout(620);
+  await expect(page.locator('.hudAlertStack')).toHaveCount(0);
+  await capture(page, 'qa-smoke-threat-telegraphs');
+  guards.assertClean();
 });
 
 test('orbit blade collision matches the rendered blade footprint on the ground plane', () => {
@@ -512,6 +587,57 @@ test('damage feedback stays ahead of dash and crisis notices', () => {
   expect(alerts[0]).toMatchObject({ value: '-7 HP', tone: '#e06b5f' });
 });
 
+test('visual budgets retain threat signals ahead of optional attack effects', () => {
+  const weaponEffects = { current: [
+    { signal: 'attack', life: 1, maxLife: 1 },
+    { signal: 'reward', life: 1, maxLife: 1 },
+    { signal: 'threat', life: 1, maxLife: 1 },
+    { signal: 'threat-impact', life: 1, maxLife: 1 }
+  ] };
+  const spawnWarnings = { current: [
+    { signal: 'objective', life: 1, maxLife: 1 },
+    { signal: 'threat', life: 1, maxLife: 1 },
+    { signal: 'reward', life: 1, maxLife: 1 }
+  ] };
+  updateVisualFeedbackPools({
+    dt: 0.1,
+    visualQuality: 'balanced',
+    hitBursts: { current: [] },
+    weaponEffects,
+    damageNumbers: { current: [] },
+    spawnWarnings
+  });
+  expect(getCombatSignalPriority({ signal: 'threat-impact' })).toBeGreaterThan(getCombatSignalPriority({ signal: 'attack' }));
+  expect(weaponEffects.current.map(effect => effect.signal)).toEqual(['threat-impact', 'threat']);
+  expect(spawnWarnings.current.map(warning => warning.signal)).toEqual(['threat', 'objective']);
+});
+
+test('threat warnings intensify toward impact while reward signals decay', () => {
+  const earlyThreat = getSpawnWarningPresentation({ signal: 'threat', life: 0.9, maxLife: 1 });
+  const lateThreat = getSpawnWarningPresentation({ signal: 'threat', life: 0.1, maxLife: 1 });
+  const earlyReward = getSpawnWarningPresentation({ signal: 'reward', life: 0.9, maxLife: 1 });
+  const lateReward = getSpawnWarningPresentation({ signal: 'reward', life: 0.1, maxLife: 1 });
+  expect(lateThreat.urgency).toBeGreaterThan(earlyThreat.urgency);
+  expect(lateThreat.opacity).toBeGreaterThan(earlyThreat.opacity);
+  expect(lateThreat.labelOpacity).toBeGreaterThan(earlyThreat.labelOpacity);
+  expect(lateReward.opacity).toBeLessThan(earlyReward.opacity);
+});
+
+test('boss state removes duplicate crisis copy but preserves actionable damage', () => {
+  const alerts = getHudAlerts({
+    game: { damageFlash: 0.5, damageMessage: '-11 HP', pickupFlash: 1 },
+    crisis: { level: 4, label: 'FINAL SURGE' },
+    activeThreat: { label: 'RIFT BEAST', weakness: '룬/번개 집중', color: '#d4a84c' },
+    bossPatternMeta: { label: '충격파', cue: '중거리 이탈', color: '#e06b5f' },
+    bossStatus: { enraged: true },
+    dashPct: 40,
+    dashReady: false,
+    dashCooldown: 0.7,
+    showDashTicker: true
+  });
+  expect(alerts.map(alert => alert.id)).toEqual(['damage', 'dash']);
+});
+
 test('replay route guarantees the first armory family', () => {
   const guidedRun = withItemPickup(createInitialGame({ replayRouteFamily: 'blade' }), 'cache');
   expect(getUpgradeFocusKey(pickArmoryBoost(guidedRun))).toBe('blade');
@@ -617,7 +743,10 @@ test('enemy contact windup and recovery smoke', async ({ page }) => {
   await page.waitForFunction(() => Boolean(window.__RUNE_DRIFT_QA__?.contactAttack));
   await page.evaluate(() => window.__RUNE_DRIFT_QA__.contactAttack());
   await page.waitForFunction(
-    () => window.__RUNE_DRIFT_QA__.metrics()?.contact?.windups === 1,
+    () => {
+      const contact = window.__RUNE_DRIFT_QA__.metrics()?.contact;
+      return contact?.windups === 1 && contact.maxWindupProgress >= 0.45;
+    },
     null,
     { polling: 16, timeout: runtimeTimeout(2_000, 15_000) }
   );
@@ -646,6 +775,15 @@ test('enemy contact pose separates anticipation from impact', () => {
   expect(getEnemyContactDisplacement(enemy)).toBeLessThan(-0.1);
   expect(getEnemyContactDisplacement({ ...enemy, contactAttackTimer: 0, contactAttackPulse: 0.34 })).toBeCloseTo(0.34);
   expect(getEnemyContactDisplacement({ ...enemy, contactAttackTimer: 0, contactAttackPulse: 0 })).toBe(0);
+});
+
+test('enemy contact telegraph closes toward the reach ring as impact approaches', () => {
+  const early = getEnemyContactTelegraphState({ contactAttackMax: 1, contactAttackTimer: 0.9 });
+  const late = getEnemyContactTelegraphState({ contactAttackMax: 1, contactAttackTimer: 0.1 });
+  expect(late.progress).toBeGreaterThan(early.progress);
+  expect(late.urgency).toBeGreaterThan(early.urgency);
+  expect(late.countdownScale).toBeGreaterThan(early.countdownScale);
+  expect(late.countdownScale).toBeLessThanOrEqual(1);
 });
 
 test('combat identity damage-source smoke', async ({ page }) => {
@@ -680,6 +818,8 @@ test('mobile HUD, touch movement, dash, and pause smoke', async ({ browser }) =>
   await expect(page.locator('.hudCoachCard')).toBeVisible();
   await expect(page.locator('.hudActions')).toBeVisible();
   await expect(page.locator('.touchControls')).toBeVisible();
+  await expect(page.locator('.touchStick')).not.toHaveAttribute('tabindex');
+  await expect(page.locator('.touchStick')).toHaveAttribute('role', 'group');
 
   const before = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().player);
   const stick = page.locator('.touchStick');
@@ -695,10 +835,19 @@ test('mobile HUD, touch movement, dash, and pause smoke', async ({ browser }) =>
   const afterMove = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().player);
   expect(Math.hypot(afterMove.x - before.x, afterMove.z - before.z), 'mobile player movement distance').toBeGreaterThan(2);
 
-  await page.locator('.touchDashButton').dispatchEvent('pointerdown', { pointerId: 2 });
+  const dashButton = page.locator('.touchDashButton');
+  await dashButton.dispatchEvent('pointerdown', { pointerId: 2 });
+  await expect(dashButton).toHaveClass(/isPressed/);
   await page.waitForTimeout(100);
   const afterDash = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().player);
   expect(afterDash.dashCooldown, 'mobile dash cooldown').toBeGreaterThan(0);
+  await dashButton.dispatchEvent('pointerup', { pointerId: 2 });
+  await expect(dashButton).not.toHaveClass(/isPressed/);
+  await dashButton.focus();
+  await page.keyboard.down('Enter');
+  await expect(dashButton).toHaveClass(/isPressed/);
+  await page.keyboard.up('Enter');
+  await expect(dashButton).not.toHaveClass(/isPressed/);
 
   await page.evaluate(() => window.__RUNE_DRIFT_QA__.contactAttack());
   await page.waitForFunction(
@@ -735,6 +884,63 @@ test('mobile HUD, touch movement, dash, and pause smoke', async ({ browser }) =>
   await context.close();
 });
 
+test('compact 320px HUD keeps timer and controls inside the viewport', async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 320, height: 568 },
+    deviceScaleFactor: 2,
+    hasTouch: true,
+    isMobile: true
+  });
+  const page = await context.newPage();
+  const guards = await openGuardedPage(page, '/?quality=low');
+  const layout = await page.evaluate(() => {
+    const bounds = selector => {
+      const rect = document.querySelector(selector)?.getBoundingClientRect();
+      return rect ? { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom } : null;
+    };
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+      clock: bounds('.hudRunPocket'),
+      actions: bounds('.hudActions'),
+      stick: bounds('.touchStick'),
+      dash: bounds('.touchDashButton')
+    };
+  });
+
+  expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth);
+  for (const bounds of [layout.clock, layout.actions, layout.stick, layout.dash]) {
+    expect(bounds).not.toBeNull();
+    expect(bounds.left).toBeGreaterThanOrEqual(0);
+    expect(bounds.right).toBeLessThanOrEqual(layout.viewportWidth);
+  }
+  expect(layout.clock.right).toBeLessThanOrEqual(layout.actions.left);
+  await capture(page, 'qa-smoke-compact-mobile');
+
+  await page.evaluate(() => window.__RUNE_DRIFT_QA__.boss({ enraged: true }));
+  await expect(page.locator('.hudBoss')).toBeVisible();
+  await page.waitForTimeout(320);
+  const bossLayout = await page.evaluate(() => {
+    const rect = selector => {
+      const bounds = document.querySelector(selector)?.getBoundingClientRect();
+      return bounds ? { left: bounds.left, right: bounds.right, top: bounds.top, bottom: bounds.bottom } : null;
+    };
+    return {
+      boss: rect('.hudBoss'),
+      vitals: rect('.hudVitalsPocket'),
+      viewportHeight: window.innerHeight
+    };
+  });
+  expect(bossLayout.boss.left).toBeGreaterThanOrEqual(0);
+  expect(bossLayout.boss.right).toBeLessThanOrEqual(320);
+  expect(bossLayout.boss.top).toBeGreaterThanOrEqual(bossLayout.vitals.bottom);
+  expect(bossLayout.boss.bottom).toBeLessThanOrEqual(bossLayout.viewportHeight * 0.64);
+  await expect(page.locator('.hudAlertStack')).toHaveCount(0);
+  await capture(page, 'qa-smoke-compact-mobile-boss');
+  guards.assertClean();
+  await context.close();
+});
+
 test('pause quality selector applies and persists a player choice', async ({ page }) => {
   const guards = await openGuardedPage(page, '/');
   await page.getByRole('button', { name: '일시정지' }).click();
@@ -758,12 +964,50 @@ test('pause quality selector applies and persists a player choice', async ({ pag
 
 test('upgrade reward smoke', async ({ page }) => {
   const guards = await openGuardedPage(page, '/?qa=upgrade&quality=balanced');
+  const upgradeDialog = page.getByRole('dialog');
+  await expect(upgradeDialog).toBeVisible();
+  await expect(page.locator('.rewardCard').first()).toBeFocused();
+  await expect(upgradeDialog.getByRole('heading', { level: 1 })).not.toBeEmpty();
   await expect(page.locator('.rewardCard')).toHaveCount(3);
   await expect(page.locator('.rewardCardBadge')).toHaveCount(3);
+  await expect(page.locator('.upgradeIconSprite')).toHaveCount(3);
   await expect(page.locator('.upgradePickCta')).toHaveCount(3);
   await expect(page.locator('.runeChoiceIndex')).toHaveCount(0);
   await capture(page, 'qa-smoke-upgrade');
+  await page.keyboard.press('1');
+  await expect(page.locator('.rewardCard')).toHaveCount(0);
   guards.assertClean();
+});
+
+test('mobile upgrade cards stack inside the safe viewport', async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 360, height: 740 },
+    deviceScaleFactor: 2,
+    hasTouch: true,
+    isMobile: true
+  });
+  const page = await context.newPage();
+  const guards = await openGuardedPage(page, '/?qa=starter-upgrade&quality=low');
+  const upgradeDialog = page.getByRole('dialog');
+  await expect(upgradeDialog).toBeVisible();
+  await expect(page.locator('.rewardCard')).toHaveCount(3);
+
+  const layout = await page.evaluate(() => {
+    const card = document.querySelector('.rewardCard');
+    const bounds = card?.getBoundingClientRect();
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+      cardLeft: bounds?.left ?? -1,
+      cardRight: bounds?.right ?? window.innerWidth + 1
+    };
+  });
+  expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth);
+  expect(layout.cardLeft).toBeGreaterThanOrEqual(0);
+  expect(layout.cardRight).toBeLessThanOrEqual(layout.viewportWidth);
+  await capture(page, 'qa-smoke-mobile-upgrade');
+  guards.assertClean();
+  await context.close();
 });
 
 test('boss HUD smoke', async ({ page }) => {
@@ -774,6 +1018,11 @@ test('boss HUD smoke', async ({ page }) => {
   await expect(page.locator('.hudEncounter')).toHaveCount(0);
   await expect(page.locator('.hudObjectiveDock')).toHaveCount(0);
   await expect(page.locator('.hudBoss')).toContainText('BOSS');
+  await expect(page.getByRole('region', { name: /균열 감시자/ })).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: '보스 체력' })).toBeVisible();
+  await expect(page.locator('.runeBossVitalMeta')).toContainText('40%');
+  await expect(page.locator('.runeBossPattern.isCasting .runeUiIcon')).toBeVisible();
+  await expect(page.locator('.hudAlert-crisis')).toHaveCount(0);
   await expect(page.locator('.runeCircuit')).toContainText('CIRCUIT 1/4');
   await expect(page.locator('.runeCircuit')).toContainText('생명 봉인');
   await capture(page, 'qa-smoke-boss');
@@ -805,6 +1054,7 @@ test('result overlay smoke', async ({ page }) => {
   await expect(page.locator('.resultReplay')).toBeVisible();
   await expect(page.locator('.resultReplay')).toContainText('NEXT INSCRIPTION');
   await expect(page.getByRole('button', { name: /경로로 재도전/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /경로로 재도전/ })).toBeFocused();
   await capture(page, 'qa-smoke-result');
   const replayButton = page.getByRole('button', { name: /경로로 재도전/ });
   await replayButton.scrollIntoViewIfNeeded();
@@ -859,6 +1109,8 @@ test('mobile stress keeps combat signals inside the safe frame', async ({ browse
   const guards = await openGuardedPage(page, '/?qa=stress&quality=balanced');
   await expect(page.locator('.hudCompact')).toBeVisible();
   await page.waitForTimeout(900);
+  await expect(page.locator('.hudAlert-crisis')).toHaveCount(0);
+  await expect(page.locator('.hudAlertStack')).toHaveCount(0);
 
   const layout = await page.evaluate(() => ({
     viewportWidth: window.innerWidth,
