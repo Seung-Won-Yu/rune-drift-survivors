@@ -68,7 +68,6 @@ export function createGameSceneActions({ runtime, visualQuality, touchControlsRe
     weaponEffects,
     cameraTarget,
     cameraShake,
-    compactCamera,
     runtimeBudget,
     scratch
   } = runtime;
@@ -310,8 +309,6 @@ export function createGameSceneActions({ runtime, visualQuality, touchControlsRe
       cameraTarget: cameraTarget.current,
       cameraShake,
       scratch,
-      compactCamera,
-      visualQuality,
       dt
     });
   };

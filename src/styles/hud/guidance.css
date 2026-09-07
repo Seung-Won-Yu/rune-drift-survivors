@@ -52,9 +52,11 @@
 }
 
 .runeDirective {
+  top: 150px;
+  transform: none;
   display: grid;
-  grid-template-columns: 46px 1fr;
-  min-height: 128px;
+  grid-template-columns: 34px 1fr;
+  min-height: 108px;
   border: 1px solid color-mix(in srgb, var(--tone, var(--rune-cyan)) 30%, transparent);
   border-radius: 0;
   background:
@@ -93,7 +95,12 @@
 }
 
 .runeDirectiveCopy {
-  padding: 18px;
+  padding: var(--rune-space-4);
+}
+
+.coachTouchAction,
+.coachTouchDetail {
+  display: none;
 }
 
 .runeDirectiveCopy strong,
@@ -114,7 +121,7 @@
 }
 
 .runeDirectiveCopy p {
-  margin: 13px 0 4px;
+  margin: 8px 0 4px;
   color: var(--rune-text);
   font-size: 0.78rem;
   line-height: 1.5;

@@ -2,6 +2,8 @@ import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
 import * as THREE from 'three';
+import { GAME_CAMERA_FOV, getCameraFrame } from '../src/config/artDirection.js';
+import { upgradePool } from '../src/config/upgrades.js';
 import {
   EARLY_FIELD_ITEM_SCHEDULE,
   SHRINE_SITES
@@ -22,6 +24,9 @@ import {
 } from '../src/systems/enemySprite.js';
 import { getCombatSignalPriority, updateVisualFeedbackPools } from '../src/systems/feedbackRuntime.js';
 import { createInitialGame, createQaResultGame, withItemPickup } from '../src/systems/gameState.js';
+import { createScheduledFieldItem, getFieldDetourState, getRouteDetourPosition } from '../src/systems/fieldItemDirector.js';
+import { updateFieldItemsRuntime } from '../src/systems/fieldItemRuntime.js';
+import { getPlayerTerrainY, hitsStaticCollider } from '../src/systems/terrain.js';
 import {
   createRuneBiomeZoneLayout,
   createRuneCircuitLandmarkLayout,
@@ -38,7 +43,9 @@ import {
   getUpgradeFocusKey
 } from '../src/systems/progression.js';
 import { applyFrameStateUpdate } from '../src/systems/runFrameState.js';
-import { getDamageSourceBreakdown, getRunDefenseSummary } from '../src/systems/runProgress.js';
+import { getDamageSourceBreakdown, getRunDefenseSummary, getFirstSessionCue, getOnboardingSteps } from '../src/systems/runProgress.js';
+import { getOpeningUpgradeRead } from '../src/systems/openingUpgradePresentation.js';
+import { updateFollowCamera } from '../src/systems/sceneCamera.js';
 import {
   getRunStatsSnapshot,
   recordRunDamage,
@@ -54,6 +61,7 @@ import {
 } from '../src/systems/runeCircuit.js';
 import { getShrineActivationAlert } from '../src/systems/shrineRuntime.js';
 import { pickArmoryBoost, pickUpgrades } from '../src/systems/upgradeDrafting.js';
+import { getSpriteMatteAlpha } from '../src/world/spriteAtlasTexture.js';
 import {
   getBladeSweepProfile,
   getLightningDamageFalloff,
@@ -70,6 +78,58 @@ const runtimeTimeout = (localMs, ciMs) => isCi ? ciMs : localMs;
 
 test.beforeAll(async () => {
   await mkdir(artifactDir, { recursive: true });
+});
+
+test('first-seal guidance progresses without requiring dash or XP before an open seal', () => {
+  const game = createInitialGame();
+  const cue = () => getFirstSessionCue(game, getOnboardingSteps(game));
+  expect(cue()).toMatchObject({ stepId: 'move', touchAction: '왼쪽 스틱으로 이동' });
+  game.time = 10;
+  expect(cue().stepId).toBe('move');
+  game.onboardingMovement = 12;
+  expect(cue().stepId).toBe('xp');
+  game.time = SHRINE_SITES[0].unlockAt;
+  expect(game.dashUses).toBe(0);
+  expect(game.xp).toBe(0);
+  expect(cue()).toMatchObject({ stepId: 'circuit' });
+  expect(cue().body).toContain('머무르면');
+  game.activatedShrines = { [SHRINE_SITES[0].id]: true };
+  game.shrineActivations = 1;
+  expect(cue()).toBeNull();
+});
+
+test('opening upgrade comparisons include focus bonuses and do not mutate the run', () => {
+  const game = createInitialGame();
+  const read = id => getOpeningUpgradeRead(game, upgradePool.find(upgrade => upgrade.id === id));
+  const before = JSON.stringify(game);
+  expect(read('orb-count').statLine).toBe('최대 표적 1 → 2');
+  expect(read('maxHp').statLine).toBe('최대 체력 120 → 140');
+  expect(read('luck').summary).toContain('경험치');
+  expect(JSON.stringify(game)).toBe(before);
+  game.stats.orbCount = 2;
+  game.buildFocus.orb = 1;
+  expect(read('orb-count').statLine).toBe('최대 표적 2 → 4');
+});
+
+test('first-seal camera keeps the player and nearby threats visible across orientations', () => {
+  for (const [width, height] of [[1440, 900], [360, 740], [320, 568], [740, 360]]) {
+    const camera = new THREE.PerspectiveCamera(GAME_CAMERA_FOV, width / height, 0.1, 420);
+    const frame = getCameraFrame(camera.aspect);
+    camera.position.set(0, frame.height, frame.depth);
+    const cameraTarget = new THREE.Vector3();
+    const scratch = { vec: new THREE.Vector3(), flat: new THREE.Vector2(), cameraPosition: new THREE.Vector3() };
+    const shrine = SHRINE_SITES[0];
+    for (const fraction of [0, 0.5, 1]) {
+      const playerPos = new THREE.Vector3(Math.cos(shrine.angle) * shrine.radius * fraction, 0.55, Math.sin(shrine.angle) * shrine.radius * fraction);
+      for (let i = 0; i < 180; i += 1) updateFollowCamera({ camera, playerPos, cameraTarget, cameraShake: { current: 0 }, scratch, dt: 1 / 60 });
+      camera.updateMatrixWorld();
+      for (const [dx, dz] of [[0, 0], [-8, 0], [8, 0], [0, -8], [0, 8]]) {
+        const projected = playerPos.clone().add(new THREE.Vector3(dx, 0, dz)).project(camera);
+        expect(Math.abs(projected.x), `${width}×${height}: nearby threat stays horizontally visible`).toBeLessThan(0.92);
+        expect(Math.abs(projected.y), `${width}×${height}: nearby threat stays vertically visible`).toBeLessThan(0.7);
+      }
+    }
+  }
 });
 
 async function attachPageGuards(page) {
@@ -137,6 +197,86 @@ test('balanced startup uses the complete 2.5D cast without model payloads', asyn
   guards.assertClean();
 });
 
+test('sprite matte removes pale neutral backdrops without erasing the cloak or rune colors', () => {
+  expect(getSpriteMatteAlpha(255, 255, 255)).toBe(0);
+  expect(getSpriteMatteAlpha(243, 243, 243)).toBe(0);
+  expect(getSpriteMatteAlpha(15, 51, 48)).toBe(255);
+  expect(getSpriteMatteAlpha(210, 166, 67)).toBe(255);
+  expect(getSpriteMatteAlpha(20, 221, 255)).toBe(255);
+  expect(getSpriteMatteAlpha(15, 51, 48, 96)).toBe(96);
+  expect(getSpriteMatteAlpha(20, 221, 255, 0)).toBe(0);
+});
+
+test('keyed cast atlases preserve visible artwork and transparent borders in every animation cell', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?qa=threats&quality=balanced');
+  const atlases = await page.evaluate(async () => {
+    const THREE = await import('/node_modules/.vite/deps/three.js');
+    const { createSpriteAtlasTexture } = await import('/src/world/spriteAtlasTexture.js');
+    const { SPRITE_URLS } = await import('/src/config/assets.js');
+    const results = [];
+    for (const [role, url] of Object.entries(SPRITE_URLS)) {
+      const source = await new THREE.TextureLoader().loadAsync(url);
+      const texture = createSpriteAtlasTexture(source);
+      const canvas = texture.image;
+      const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+      const rows = role === 'riftbornThreat' ? 8 : 6;
+      const cells = [];
+      for (let row = 0; row < rows; row += 1) {
+        for (let col = 0; col < 4; col += 1) {
+          let opaque = 0;
+          let clear = 0;
+          let total = 0;
+          for (let y = Math.ceil(row * canvas.height / rows); y < (row + 1) * canvas.height / rows; y += 2) {
+            for (let x = Math.ceil(col * canvas.width / 4); x < (col + 1) * canvas.width / 4; x += 2) {
+              const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+              if (alpha > 230) opaque += 1;
+              if (alpha === 0) clear += 1;
+              total += 1;
+            }
+          }
+          cells.push({ row, col, opaque: opaque / total, clear: clear / total });
+        }
+      }
+      results.push({ role, cells });
+      texture.dispose();
+      source.dispose();
+    }
+    return results;
+  });
+  for (const atlas of atlases) {
+    for (const cell of atlas.cells) {
+      const label = `${atlas.role} row ${cell.row} column ${cell.col}`;
+      expect(cell.opaque, `${label}: silhouette survives`).toBeGreaterThan(0.08);
+      expect(cell.clear, `${label}: background stays transparent`).toBeGreaterThan(0.15);
+    }
+  }
+  guards.assertClean();
+});
+
+for (const [quality, width, height] of [
+  ['low', 360, 740], ['balanced', 360, 740], ['high', 360, 740],
+  ['balanced', 320, 568], ['balanced', 568, 320], ['balanced', 740, 360]
+]) {
+  test(`cast readability at ${width}x${height} with ${quality} quality`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    const page = await context.newPage();
+    const guards = await openGuardedPage(page, `/?qa=threats&quality=${quality}`);
+    await page.waitForFunction(() => Boolean(window.__RUNE_DRIFT_QA__?.metrics?.()));
+    // High-quality startup can finish after the URL fixture's initial timers.
+    await page.evaluate(() => window.__RUNE_DRIFT_QA__.threats());
+    await page.waitForFunction(() => window.__RUNE_DRIFT_QA__?.metrics?.()?.counts?.enemies === 4);
+    const clock = await page.locator('.runeRunClock').boundingBox();
+    const objective = await page.locator('.runeObjective').boundingBox();
+    expect(objective.y).toBeGreaterThanOrEqual(clock.y + clock.height + 8);
+    expect(objective.height).toBeLessThanOrEqual(88);
+    if (width < height && height <= 640) expect(objective.y).toBeGreaterThanOrEqual(height * 0.56);
+    await page.waitForTimeout(500);
+    await capture(page, `qa-cast-${width}x${height}-${quality}`);
+    guards.assertClean();
+    await context.close();
+  });
+}
+
 test('high quality stays model-free', async ({ page }) => {
   const modelRequests = [];
   page.on('request', request => {
@@ -172,6 +312,7 @@ test('HUD smoke', async ({ page }) => {
   await expect(page.locator('.runeCircuit')).toBeVisible();
   await expect(page.locator('.runeCircuit')).toContainText('CIRCUIT 0/4');
   await expect(page.locator('.runeCircuit')).toContainText('무기 봉인');
+  await expect(page.getByRole('img', { name: '동쪽 방향' })).toBeVisible();
   await capture(page, 'qa-smoke-hud');
   guards.assertClean();
 });
@@ -179,10 +320,28 @@ test('HUD smoke', async ({ page }) => {
 test('rune circuit ready-state smoke', async ({ page }) => {
   const guards = await openGuardedPage(page, '/?qa=circuit&quality=balanced');
   await expect(page.locator('.runeCircuit')).toContainText('CIRCUIT 0/4');
-  await expect(page.locator('.runeCircuit')).toContainText('READY');
+  await expect(page.locator('.runeCircuitDestination em')).toHaveText('개방');
   await expect(page.locator('.runeCircuit')).toContainText('무기 봉인');
   await expect(page.locator('.runeCircuit')).toContainText('빌드 보급');
+  await expect(page.locator('.hudCoachCard')).toHaveAttribute('data-step', 'circuit');
+  await expect(page.locator('.hudCoachCard p')).toContainText('머무르면');
+  await page.waitForFunction(() => window.__RUNE_DRIFT_QA__?.metrics?.()?.frameStats?.samples > 12);
   await capture(page, 'qa-smoke-circuit');
+  guards.assertClean();
+});
+
+test('seal track distinguishes completed, current and future destinations', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?qa=seal&quality=balanced');
+  const track = page.getByRole('list', { name: '봉인 연결 상태' });
+  await expect(track.locator('.isConnected')).toHaveCount(1);
+  await expect(track.locator('[aria-current="step"]')).toHaveAttribute('aria-label', '생명 봉인: 다음 목표');
+  await page.evaluate(() => window.__RUNE_DRIFT_QA__.objectives({ phase: 'qa-preview' }));
+  await expect(track.locator('.isConnected')).toHaveCount(3);
+  await expect(track.locator('[aria-current="step"]')).toHaveAttribute('aria-label', '각인 봉인: 다음 목표');
+  await page.evaluate(() => window.__RUNE_DRIFT_QA__.result('victory'));
+  await expect(track.locator('.isConnected')).toHaveCount(4);
+  await expect(track.locator('[aria-current="step"]')).toHaveCount(0);
+  await expect(page.getByLabel('룬 회로 완성')).toContainText('회로 연결 완료');
   guards.assertClean();
 });
 
@@ -640,7 +799,155 @@ test('boss state removes duplicate crisis copy but preserves actionable damage',
 
 test('replay route guarantees the first armory family', () => {
   const guidedRun = withItemPickup(createInitialGame({ replayRouteFamily: 'blade' }), 'cache');
+  guidedRun.buildFocus.orb = 2;
   expect(getUpgradeFocusKey(pickArmoryBoost(guidedRun))).toBe('blade');
+});
+
+test('armory rewards follow the active build and respect replay ties', () => {
+  const game = withItemPickup(createInitialGame({ replayRouteFamily: 'blade' }), 'cache');
+  game.buildFocus = { orb: 0, storm: 2, blade: 1, chain: 0, nova: 0 };
+  for (let i = 0; i < 30; i += 1) expect(getUpgradeFocusKey(pickArmoryBoost(game))).toBe('storm');
+  game.buildFocus.blade = 2;
+  for (let i = 0; i < 30; i += 1) expect(getUpgradeFocusKey(pickArmoryBoost(game))).toBe('blade');
+  game.replayRouteFamily = null;
+  for (let i = 0; i < 30; i += 1) expect(['storm', 'blade']).toContain(getUpgradeFocusKey(pickArmoryBoost(game)));
+});
+
+test('armory focus preference preserves caps, exclusions and unlock gates', () => {
+  const game = withItemPickup(createInitialGame(), 'cache');
+  game.buildFocus.storm = 4;
+  game.upgrades = Array(4).fill('storm-burst');
+  game.stats.stormStrikes = 4;
+  expect(pickArmoryBoost(game).id).toBe('storm-carpet');
+  expect(pickArmoryBoost(game, new Set(['storm-carpet'])).id).not.toBe('storm-carpet');
+  game.buildFocus.storm = 5;
+  game.buildFocus.blade = 1;
+  expect(getUpgradeFocusKey(pickArmoryBoost(game))).toBe('blade');
+  const locked = createInitialGame({ replayRouteFamily: 'storm' });
+  for (let i = 0; i < 20; i += 1) expect(getUpgradeFocusKey(pickArmoryBoost(locked))).toBe('orb');
+  expect(pickArmoryBoost(game, new Set(upgradePool.map(upgrade => upgrade.id)))).toBeUndefined();
+});
+
+test('first-seal detour relocates one existing reward with a clear approach', () => {
+  const game = createInitialGame();
+  const scheduled = EARLY_FIELD_ITEM_SCHEDULE.find(item => item.id === 'starter-overload');
+  const playerPos = new THREE.Vector3(34, getPlayerTerrainY(34, 0), 0);
+  game.time = 20;
+  expect(createScheduledFieldItem(scheduled, game, playerPos)).toBeNull();
+  game.activatedShrines.armory = true;
+  const item = createScheduledFieldItem(scheduled, game, playerPos);
+  expect(item).toMatchObject({ type: 'overload', detour: true, life: 24, maxLife: 24 });
+  expect(item.pos.distanceTo(playerPos)).toBeGreaterThan(19);
+  for (let step = 1; step <= 12; step += 1) expect(hitsStaticCollider(playerPos.clone().lerp(item.pos, step / 12), 1.25)).toBe(false);
+  expect(getFieldDetourState([item], playerPos)).toMatchObject({ type: 'overload', distance: 20, remaining: 24 });
+  expect(getRouteDetourPosition(playerPos, { x: 34, z: 12 })).toBeNull();
+  game.activatedShrines.vital = true;
+  expect(createScheduledFieldItem(scheduled, game, playerPos)).toBeNull();
+  game.time = scheduled.time;
+  expect(createScheduledFieldItem(scheduled, game, playerPos).detour).toBeUndefined();
+});
+
+test('detour is optional, expires once and cannot duplicate its scheduled reward', () => {
+  let game = createInitialGame();
+  game.time = 20;
+  game.activatedShrines.armory = true;
+  const playerPos = new THREE.Vector3(34, getPlayerTerrainY(34, 0), 0);
+  const context = {
+    dt: 0.01,
+    currentGame: game,
+    updateGame: update => { game = update(game); },
+    player: { current: { pos: playerPos } },
+    fieldItems: { current: [] },
+    fieldItemTimer: { current: 100 },
+    fieldItemDropLock: { current: 0 },
+    scheduledFieldItems: { current: new Set(EARLY_FIELD_ITEM_SCHEDULE.filter(item => item.id !== 'starter-overload').map(item => item.id)) },
+    spawnWarnings: { current: [] },
+    scratch: { vec: new THREE.Vector3() },
+    hitBursts: { current: [] }, weaponEffects: { current: [] }, cameraShake: { current: 0 }, addDamageNumber: () => {}
+  };
+  updateFieldItemsRuntime(context);
+  expect(context.fieldItems.current).toHaveLength(1);
+  const item = context.fieldItems.current[0];
+  // Walking straight to the seal must not vacuum a reward 8m off the player.
+  playerPos.copy(item.pos).add(new THREE.Vector3(8, 0, 0));
+  const originalPos = item.pos.clone();
+  updateFieldItemsRuntime(context);
+  expect(item.pos.equals(originalPos)).toBe(true);
+  context.dt = 25;
+  updateFieldItemsRuntime(context);
+  expect(getFieldDetourState(context.fieldItems.current, playerPos)).toBeNull();
+  context.currentGame = { ...game, time: 76 };
+  context.dt = 0.01;
+  updateFieldItemsRuntime(context);
+  expect(context.fieldItems.current).toHaveLength(0);
+  expect(game.itemPickups.overload).toBe(0);
+  // A fresh run can take the same reward and receive the actual timed effect.
+  context.scheduledFieldItems.current.delete('starter-overload');
+  context.currentGame = game;
+  playerPos.set(34, getPlayerTerrainY(34, 0), 0);
+  updateFieldItemsRuntime(context);
+  playerPos.copy(context.fieldItems.current[0].pos);
+  updateFieldItemsRuntime(context);
+  expect(game.itemPickups.overload).toBe(1);
+  expect(game.overloadTimer).toBe(8);
+  expect(context.fieldItems.current).toHaveLength(0);
+});
+
+for (const [width, height] of [[320, 568], [768, 1024], [740, 360], [1440, 900]]) {
+  test(`optional detour keeps seal navigation readable at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const guards = await openGuardedPage(page, '/?qa=seal&quality=balanced');
+    const detour = page.getByLabel('선택 우회 보상');
+    await expect(detour).toBeVisible();
+    await expect(detour).toContainText('무기 폭주 8초');
+    await expect(detour).toContainText('건너뛰어도 진행');
+    await expect(page.getByLabel('다음 룬 회로 봉인')).toContainText('생명 봉인');
+    await expect(page.locator('.runeObjective')).toHaveCount(0);
+    const box = await detour.boundingBox();
+    const top = await page.locator('.hudTopBar').boundingBox();
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    expect(box.y).toBeGreaterThanOrEqual(top.y + top.height);
+    expect(box.y + box.height).toBeLessThan(height - (height <= 400 ? 80 : 150));
+    await capture(page, `qa-detour-${width}x${height}`);
+    await page.evaluate(() => window.__RUNE_DRIFT_QA__.reset());
+    await expect(detour).toHaveCount(0);
+    expect((await page.evaluate(() => window.__RUNE_DRIFT_QA__.snapshot())).fieldDetour).toBeNull();
+    await guards.assertClean();
+  });
+}
+
+test('player can follow the detour cue and receive the timed reward', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?qa=seal&quality=balanced');
+  await expect(page.getByLabel('선택 우회 보상')).toBeVisible();
+  const directions = {
+    '↑': ['w'], '↗': ['w', 'd'], '→': ['d'], '↘': ['s', 'd'],
+    '↓': ['s'], '↙': ['s', 'a'], '←': ['a'], '↖': ['w', 'a']
+  };
+  let held = [];
+  let snapshot;
+  try {
+    for (let step = 0; step < 45; step += 1) {
+      snapshot = await page.evaluate(() => window.__RUNE_DRIFT_QA__.snapshot());
+      if (snapshot.itemPickups.overload > 0) break;
+      for (const key of held) await page.keyboard.up(key);
+      held = [];
+      if (snapshot.phase === 'upgrade') {
+        await page.locator('.rewardCard').first().click();
+      } else if (snapshot.fieldDetour) {
+        held = directions[snapshot.fieldDetour.direction.arrow];
+        for (const key of held) await page.keyboard.down(key);
+      }
+      await page.waitForTimeout(180);
+    }
+  } finally {
+    for (const key of held) await page.keyboard.up(key);
+  }
+  expect(snapshot.itemPickups.overload).toBe(1);
+  expect(snapshot.overloadTimer).toBeGreaterThan(6);
+  await expect(page.getByLabel('선택 우회 보상')).toHaveCount(0);
+  await expect(page.locator('.hudAlert-pickup')).toContainText('과부하');
+  await guards.assertClean();
 });
 
 test('replay route replaces forced orb cards after its family is unlocked', () => {
@@ -816,6 +1123,9 @@ test('mobile HUD, touch movement, dash, and pause smoke', async ({ browser }) =>
   const guards = await openGuardedPage(page, '/?quality=low');
   await expect(page.locator('.hudRunPocket')).toBeVisible();
   await expect(page.locator('.hudCoachCard')).toBeVisible();
+  await expect(page.locator('.coachTouchAction')).toBeVisible();
+  await expect(page.locator('.coachKeyboardAction')).toBeHidden();
+  await expect(page.locator('.hudCoachCard p')).toBeVisible();
   await expect(page.locator('.hudActions')).toBeVisible();
   await expect(page.locator('.touchControls')).toBeVisible();
   await expect(page.locator('.touchStick')).not.toHaveAttribute('tabindex');
@@ -850,6 +1160,7 @@ test('mobile HUD, touch movement, dash, and pause smoke', async ({ browser }) =>
   await expect(dashButton).not.toHaveClass(/isPressed/);
 
   await page.evaluate(() => window.__RUNE_DRIFT_QA__.contactAttack());
+  const navigationBeforeHit = await page.locator('.hudRunPocket').boundingBox();
   await page.waitForFunction(
     () => window.__RUNE_DRIFT_QA__.metrics()?.contact?.hits >= 1,
     null,
@@ -861,9 +1172,13 @@ test('mobile HUD, touch movement, dash, and pause smoke', async ({ browser }) =>
   const mobileVitalsBox = await page.locator('.runeVitals').boundingBox();
   expect(mobileHitBox.x).toBeGreaterThanOrEqual(0);
   expect(mobileHitBox.x + mobileHitBox.width).toBeLessThanOrEqual(360);
-  expect(Math.abs(mobileHitBox.x - mobileVitalsBox.x)).toBeLessThanOrEqual(1);
-  expect(Math.abs(mobileHitBox.width - mobileVitalsBox.width)).toBeLessThanOrEqual(1);
-  expect(Math.abs(mobileHitBox.y - (mobileVitalsBox.y + mobileVitalsBox.height))).toBeLessThanOrEqual(2);
+  expect(mobileHitBox.x).toBeGreaterThanOrEqual(mobileVitalsBox.x);
+  expect(mobileHitBox.x + mobileHitBox.width).toBeLessThanOrEqual(mobileVitalsBox.x + mobileVitalsBox.width);
+  expect(mobileHitBox.y).toBeGreaterThanOrEqual(mobileVitalsBox.y);
+  expect(mobileHitBox.y + mobileHitBox.height).toBeLessThanOrEqual(mobileVitalsBox.y + mobileVitalsBox.height);
+  await expect(page.locator('.runeMeter-hp')).toBeVisible();
+  const navigationDuringHit = await page.locator('.hudRunPocket').boundingBox();
+  expect(navigationDuringHit.y).toBe(navigationBeforeHit.y);
   await capture(page, 'qa-smoke-mobile-hit');
 
   await page.getByRole('button', { name: '일시정지' }).click();
@@ -914,7 +1229,15 @@ test('compact 320px HUD keeps timer and controls inside the viewport', async ({ 
     expect(bounds.left).toBeGreaterThanOrEqual(0);
     expect(bounds.right).toBeLessThanOrEqual(layout.viewportWidth);
   }
-  expect(layout.clock.right).toBeLessThanOrEqual(layout.actions.left);
+  expect(layout.clock.top).toBeGreaterThanOrEqual(layout.actions.bottom);
+  await expect(page.locator('.runeCircuitDestination small')).toBeVisible();
+  await expect(page.locator('.runeSealTrack li')).toHaveCount(4);
+  await expect(page.locator('.runeSealTrack [aria-current="step"]')).toHaveAttribute('aria-label', '무기 봉인: 다음 목표');
+  for (const button of await page.locator('.hudActions button').all()) {
+    const bounds = await button.boundingBox();
+    expect(bounds.width).toBeGreaterThanOrEqual(44);
+    expect(bounds.height).toBeGreaterThanOrEqual(44);
+  }
   await capture(page, 'qa-smoke-compact-mobile');
 
   await page.evaluate(() => window.__RUNE_DRIFT_QA__.boss({ enraged: true }));
@@ -940,6 +1263,53 @@ test('compact 320px HUD keeps timer and controls inside the viewport', async ({ 
   guards.assertClean();
   await context.close();
 });
+
+for (const [width, height, inset] of [[568, 320, 10], [667, 375, 44]]) {
+  test(`compact landscape HUD preserves actions and navigation at ${width}x${height}`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true });
+    const page = await context.newPage();
+    const guards = await openGuardedPage(page, '/?qa=circuit&quality=balanced');
+    if (inset > 10) await page.addStyleTag({ content: `.runeHud { padding-left: ${inset}px; padding-right: ${inset}px; } .runeDirective { left: ${inset}px; } .touchControls { padding-left: ${inset}px; padding-right: ${inset}px; }` });
+    for (const element of await page.locator('.hudActions button, .runeVitals, .runeRunClock').all()) {
+      const box = await element.boundingBox();
+      expect(box.x).toBeGreaterThanOrEqual(inset);
+      expect(box.x + box.width).toBeLessThanOrEqual(width - inset);
+    }
+    const coach = await page.locator('.hudCoachCard').boundingBox();
+    const clock = await page.locator('.runeRunClock').boundingBox();
+    const stick = await page.locator('.touchStick').boundingBox();
+    expect(coach.y).toBeGreaterThanOrEqual(clock.y + clock.height);
+    expect(coach.y + coach.height).toBeLessThanOrEqual(stick.y);
+    await expect(page.locator('.runeCircuitDestination small')).toBeVisible();
+    await expect(page.getByRole('img', { name: '동쪽 방향' })).toBeVisible();
+    await capture(page, `qa-compact-landscape-${width}x${height}`);
+    guards.assertClean();
+    await context.close();
+  });
+}
+
+for (const [width, height] of [[320, 568], [568, 320], [1440, 900]]) {
+  test(`low-health feedback preserves the health gauge at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const guards = await openGuardedPage(page, '/?quality=balanced');
+    await page.evaluate(() => window.__RUNE_DRIFT_QA__.contactAttack({ hp: 40 }));
+    await expect(page.locator('.hudAlert-damage')).toContainText('즉시 회피');
+    const bounds = await page.evaluate(() => {
+      const rect = selector => {
+        const box = document.querySelector(selector).getBoundingClientRect();
+        return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+      };
+      return { hit: rect('.hudAlert-damage'), hp: rect('.runeMeter-hp'), vitals: rect('.runeVitals'), snapshot: window.__RUNE_DRIFT_QA__.snapshot() };
+    });
+    expect(bounds.snapshot.hp / bounds.snapshot.maxHp).toBeLessThanOrEqual(0.34);
+    expect(bounds.hit.top).toBeGreaterThanOrEqual(bounds.hp.bottom);
+    expect(bounds.hit.bottom).toBeLessThanOrEqual(bounds.vitals.bottom);
+    expect(bounds.hit.left).toBeGreaterThanOrEqual(bounds.vitals.left);
+    expect(bounds.hit.right).toBeLessThanOrEqual(bounds.vitals.right);
+    await capture(page, `qa-low-health-${width}x${height}`);
+    guards.assertClean();
+  });
+}
 
 test('pause quality selector applies and persists a player choice', async ({ page }) => {
   const guards = await openGuardedPage(page, '/');
@@ -978,6 +1348,86 @@ test('upgrade reward smoke', async ({ page }) => {
   await expect(page.locator('.rewardCard')).toHaveCount(0);
   guards.assertClean();
 });
+
+test('opening draft explains a weapon choice and applies it on keyboard selection', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?qa=starter-upgrade&quality=balanced');
+  await expect(page.locator('.isOpeningDraft')).toBeVisible();
+  await expect(page.locator('.rewardCard.isRecommended')).toHaveCount(1);
+  await expect(page.locator('.rewardCard.isRecommended .rewardCardBadge')).toHaveText('추천');
+  await expect(page.locator('.upgradePauseNote')).toHaveText('전투 일시정지');
+  const card = page.locator('.rewardCard.family-orb');
+  await expect(card).toHaveCount(1);
+  const title = await card.locator('.rewardCardCopy strong').innerText();
+  const choice = upgradePool.find(upgrade => upgrade.title === title);
+  expect(choice).toBeDefined();
+  await expect(card.locator('.openingUpgradeReason')).toBeVisible();
+  const before = await page.evaluate(() => window.__RUNE_DRIFT_QA__.snapshot());
+  await card.focus();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(card).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  const after = await page.evaluate(() => window.__RUNE_DRIFT_QA__.snapshot());
+  expect(after.upgrades).toEqual([...before.upgrades, choice.id]);
+  expect(after.buildFocus.orb).toBe(before.buildFocus.orb + 1);
+  guards.assertClean();
+});
+
+for (const [width, height] of [[320, 568], [360, 740], [768, 1024], [1024, 768], [740, 360]]) {
+  test(`first-seal guidance and choices fit ${width}x${height}`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: width < 800 });
+    const page = await context.newPage();
+    const guards = await openGuardedPage(page, '/?qa=circuit&quality=balanced');
+    await page.waitForFunction(() => window.__RUNE_DRIFT_QA__?.metrics?.()?.frameStats?.samples > 12);
+    const coach = page.locator('.hudCoachCard');
+    await expect(coach).toHaveAttribute('data-step', 'circuit');
+    await expect(coach.locator('.coachKeyboardDetail')).toBeHidden();
+    if (width > 760) await expect(coach.locator('.coachTouchDetail')).toBeVisible();
+    const coachBox = await coach.boundingBox();
+    if (width < height && height <= 640) expect(coachBox.y).toBeGreaterThanOrEqual(height * 0.56);
+    const destination = page.locator('.runeCircuitDestination');
+    await expect(destination.locator('small')).toBeVisible();
+    await expect(destination.locator('strong')).toHaveText('무기 봉인');
+    expect(await destination.locator('small').evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(11);
+    expect(coachBox.x).toBeGreaterThanOrEqual(0);
+    expect(coachBox.x + coachBox.width).toBeLessThanOrEqual(width);
+    expect(coachBox.y).toBeGreaterThanOrEqual(0);
+    expect(coachBox.y + coachBox.height).toBeLessThanOrEqual(height);
+    for (const selector of ['.hudVitalsPocket', '.hudRunPocket', '.hudAlertStack', '.touchStick', '.touchDashButton']) {
+      const element = page.locator(selector);
+      if (!await element.isVisible()) continue;
+      const bounds = await element.boundingBox();
+      const overlap = coachBox.x < bounds.x + bounds.width && coachBox.x + coachBox.width > bounds.x
+        && coachBox.y < bounds.y + bounds.height && coachBox.y + coachBox.height > bounds.y;
+      expect(overlap, `${selector} must not overlap opening guidance`).toBe(false);
+    }
+    await capture(page, `qa-first-seal-${width}x${height}`);
+    guards.assertClean();
+    const draftGuards = await openGuardedPage(page, '/?qa=starter-upgrade&quality=balanced');
+    await expect(page.locator('.isOpeningDraft')).toBeVisible();
+    await expect(page.locator('#upgrade-heading')).toBeInViewport({ ratio: 1 });
+    const cards = page.locator('.rewardCard');
+    await expect(cards).toHaveCount(3);
+    for (const card of await cards.all()) {
+      await card.scrollIntoViewIfNeeded();
+      const bounds = await card.boundingBox();
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      const reason = card.locator('.openingUpgradeReason');
+      await expect(reason).toBeVisible();
+      await expect(reason).not.toBeEmpty();
+      expect(await reason.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12);
+      await expect(card.locator('.rewardCardCopy p')).toBeVisible();
+      expect(await card.locator('.rewardCardCopy p').evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12);
+      await expect(card.locator('.upgradePickCta')).toBeInViewport();
+    }
+    await page.locator('.rewardLayer').evaluate(node => { node.scrollTop = 0; });
+    await capture(page, `qa-opening-draft-${width}x${height}`);
+    draftGuards.assertClean();
+    await context.close();
+  });
+}
 
 test('mobile upgrade cards stack inside the safe viewport', async ({ browser }) => {
   const context = await browser.newContext({
@@ -1060,6 +1510,7 @@ test('result overlay smoke', async ({ page }) => {
   await replayButton.scrollIntoViewIfNeeded();
   await replayButton.click({ timeout: runtimeTimeout(10_000, 40_000) });
   await expect(page.locator('.hudAlert')).toContainText('궤도 칼날 경로 예약');
+  await expect(page.locator('.hudCoachCard')).toHaveCount(0);
   guards.assertClean();
 });
 

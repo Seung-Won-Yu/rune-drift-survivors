@@ -35,7 +35,7 @@ export function MapBaseArena({ visualQuality = 'high' }) {
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.07, 0]}>
         <ringGeometry args={[ARENA_RADIUS - 1.35, ARENA_RADIUS - 1.02, edgeSegments]} />
-        <meshBasicMaterial color="#b58a45" transparent opacity={0.09} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#65736b" transparent opacity={0.065} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 10]} position={[0, getTerrainHeight(0, 0) + 0.09, 0]}>
         <ringGeometry args={[ARENA_RADIUS - 8.8, ARENA_RADIUS - 8.55, edgeSegments]} />

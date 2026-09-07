@@ -6,7 +6,7 @@
   border: 1px solid var(--rune-line-strong);
   background:
     radial-gradient(circle at 18% 0%, rgba(117, 221, 210, 0.07), transparent 28%),
-    linear-gradient(180deg, rgba(17, 42, 36, 0.96), rgba(6, 17, 15, 0.98));
+    linear-gradient(180deg, #142b25, #081510);
   clip-path: var(--rune-frame-lg);
   filter: var(--rune-frame-shadow);
   animation: rune-enter 180ms ease-out;
@@ -35,7 +35,7 @@
   align-items: start;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .upgradeHeader h1 {
@@ -46,8 +46,14 @@
   display: block;
   margin-top: 7px;
   color: var(--rune-muted);
-  font-size: 0.76rem;
+  font-size: 0.875rem;
 }
+
+.upgradeHeaderCopy .eyebrow { display: flex; align-items: center; gap: 12px; }
+.upgradeHeaderCopy .eyebrow span { color: var(--rune-ember); letter-spacing: 0.04em; }
+.upgradeHeaderStatus { display: grid; justify-items: end; gap: 8px; }
+.upgradePauseNote { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--rune-muted); font-size: 0.75rem; }
+.upgradePauseNote .runeUiIcon { width: 14px; height: 14px; }
 
 .upgradeQueue {
   padding: 9px 12px;
@@ -78,12 +84,12 @@
 
 .upgradeSynergyStrip strong {
   color: var(--rune-text);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
 }
 
 .upgradeSynergyStrip small {
   color: var(--rune-muted);
-  font-size: 0.62rem;
+  font-size: 0.6875rem;
 }
 
 .upgradeGrid {
@@ -98,15 +104,15 @@
   display: grid;
   grid-template-columns: 5px 1fr;
   min-width: 0;
-  min-height: 330px;
+  min-height: 400px;
   padding: 0;
   overflow: hidden;
   color: var(--rune-text);
   text-align: left;
   border: 1px solid color-mix(in srgb, var(--tone) 28%, var(--rune-line));
   background:
-    radial-gradient(circle at 28% 12%, color-mix(in srgb, var(--tone) 12%, transparent), transparent 37%),
-    linear-gradient(160deg, rgba(12, 31, 27, 0.98), rgba(5, 17, 15, 0.98));
+    radial-gradient(ellipse at 50% 18%, color-mix(in srgb, var(--tone) 16%, transparent), transparent 55%),
+    #10221d;
   cursor: pointer;
   clip-path: var(--rune-frame-md);
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
@@ -172,7 +178,7 @@
 .runeChoiceBody {
   display: flex;
   min-width: 0;
-  padding: 18px 18px 15px;
+  padding: 18px;
   flex-direction: column;
 }
 
@@ -188,56 +194,50 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .rewardCardBadge,
-.rewardCardFamily,
-.rewardCardRole {
-  font-size: 0.62rem;
+.rewardCardFamily {
+  font-size: 0.75rem;
   font-weight: 800;
-  letter-spacing: 0.07em;
+  letter-spacing: 0;
 }
 
 .rewardCardBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 3px 6px;
   color: color-mix(in srgb, var(--tone) 88%, white);
   border: 1px solid color-mix(in srgb, var(--tone) 42%, transparent);
   background: color-mix(in srgb, var(--tone) 8%, transparent);
 }
 
+.rewardCardBadge .runeUiIcon { width: 12px; height: 12px; }
+.isRecommended .rewardCardBadge { color: var(--rune-bg-0); background: var(--tone); border-color: var(--tone); }
+.rewardCardNumber { color: var(--rune-dim); font-size: 1rem; font-weight: 500; letter-spacing: -0.06em; }
+
 .rewardCardFamily {
   color: var(--rune-muted);
   font-weight: 650;
 }
 
-.rewardCardRole {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--rune-muted);
-  text-align: right;
-}
-
-.rewardCardRole .recommendationRune {
-  width: 11px;
-  height: 11px;
-  color: var(--tone);
-  filter: drop-shadow(0 0 6px var(--tone));
-}
-
 .rewardCardMain {
   display: grid;
-  grid-template-columns: 108px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
   align-items: center;
-  gap: 16px;
-  margin: 14px 0 16px;
+  gap: 8px;
+  margin: 4px 0 20px;
+  text-align: center;
 }
 
 .runeChoiceSigil {
   position: relative;
   display: grid;
-  width: 108px;
-  height: 108px;
+  width: 136px;
+  height: 136px;
   overflow: hidden;
   place-items: center;
   border-radius: 50%;
@@ -271,38 +271,29 @@
   transform: scale(1);
 }
 
-.rewardCardCopy small,
 .rewardCardCopy strong {
   display: block;
-}
-
-.rewardCardCopy small {
-  color: var(--tone);
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
 }
 
 .rewardCardCopy strong {
   margin-top: 4px;
   color: var(--rune-text);
-  font-size: clamp(1.12rem, 1.8vw, 1.38rem);
-  line-height: 1.16;
+  font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+  line-height: 1.3;
 }
 
 .rewardCardCopy p {
   margin: 7px 0 0;
   color: var(--rune-muted);
-  font-size: 0.76rem;
+  font-size: 0.875rem;
   line-height: 1.48;
 }
 
 .rewardCardStats {
   display: grid;
   gap: 4px;
-  padding: 12px 13px;
-  border-left: 2px solid color-mix(in srgb, var(--tone) 78%, transparent);
-  background: color-mix(in srgb, var(--tone) 6%, rgba(255, 255, 255, 0.01));
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--tone) 28%, transparent);
 }
 
 .rewardCardStats small {
@@ -312,13 +303,13 @@
 
 .rewardCardStats b {
   color: color-mix(in srgb, var(--tone) 86%, white);
-  font-size: 0.92rem;
+  font-size: 1rem;
   line-height: 1.25;
 }
 
 .rewardCardStats span {
   color: var(--rune-muted);
-  font-size: 0.66rem;
+  font-size: 0.75rem;
 }
 
 .rewardCardFooter {
@@ -327,37 +318,37 @@
   justify-content: space-between;
   gap: 10px;
   margin-top: auto;
-  padding-top: 13px;
+  padding-top: 12px;
 }
 
-.rewardCardTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+.isOpeningDraft .rewardCardFooter {
+  justify-content: flex-end;
 }
 
-.rewardCardTags span {
-  padding: 4px 6px;
+.isOpeningDraft .openingUpgradeReason {
+  display: block;
   color: var(--rune-muted);
-  font-size: 0.56rem;
-  border: 1px solid var(--rune-line);
-  background: rgba(255, 255, 255, 0.018);
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
 
 .upgradePickCta {
   display: inline-flex;
-  min-height: 32px;
+  width: 100%;
+  min-height: 44px;
   flex: 0 0 auto;
   align-items: center;
   gap: 7px;
-  padding: 5px 8px 5px 6px;
+  padding: 8px 12px;
   color: var(--rune-cyan-soft);
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   border: 1px solid color-mix(in srgb, var(--tone) 25%, var(--rune-line));
   background: color-mix(in srgb, var(--tone) 6%, transparent);
 }
+
+.upgradePickCta > .runeUiIcon { margin-left: auto; }
 
 .upgradePickCta kbd {
   display: grid;

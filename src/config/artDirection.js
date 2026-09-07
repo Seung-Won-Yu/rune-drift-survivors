@@ -17,6 +17,19 @@ export const ART_TOKENS = {
   ashStone: '#51483e'
 };
 
+// Keep combat framing independent of presentation quality. Portrait retains
+// its wider view so approaching enemies remain visible beside the player.
+const CAMERA_FRAMES = {
+  landscape: { height: 32, depth: 53, lookHeight: 0.62 },
+  portrait: { height: 34, depth: 56, lookHeight: 0.82 }
+};
+
+export const GAME_CAMERA_FOV = 47;
+
+export function getCameraFrame(aspect = 16 / 9) {
+  return aspect < 1 ? CAMERA_FRAMES.portrait : CAMERA_FRAMES.landscape;
+}
+
 export const SHRINE_VISUALS = {
   armory: {
     kind: 'armory',

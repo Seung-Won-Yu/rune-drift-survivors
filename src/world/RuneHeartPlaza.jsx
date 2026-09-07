@@ -43,7 +43,7 @@ export function RuneHeartPlaza({ visualQuality = 'balanced' }) {
     <group>
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 8]} position={[0, layout.groundY + 0.098, 0]}>
         <ringGeometry args={[7.15, 7.42, visualQuality === 'low' ? 32 : 64]} />
-        <meshBasicMaterial color={ART_TOKENS.wornGold} transparent opacity={0.2} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color={ART_TOKENS.oldStone} transparent opacity={0.12} depthWrite={false} toneMapped={false} />
       </mesh>
       <RelicBoxInstances transforms={layout.anchors} roughness={0.96} />
       <RelicOctahedronInstances transforms={layout.anchorRunes} opacity={visualQuality === 'low' ? 0.46 : 0.64} />

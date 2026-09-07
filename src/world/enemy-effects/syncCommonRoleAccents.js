@@ -134,6 +134,7 @@ export function syncCommonRoleAccents(meshes, scratch, showDecor, maxAccents) {
     if (showDecor && golemGroundMesh.current) {
       let count = 0;
       for (const enemy of scratch.golemEnemies) {
+        if ((enemy.contactAttackTimer ?? 0) > 0 || (enemy.chargeTimer ?? 0) > 0) continue;
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.045, enemy.pos.z);
         scratch.euler.set(Math.PI / 2, 0, enemy.facingAngle + Math.PI / 4);
         scratch.quat.setFromEuler(scratch.euler);
@@ -148,4 +149,3 @@ export function syncCommonRoleAccents(meshes, scratch, showDecor, maxAccents) {
       syncInstanceMesh(golemGroundMesh.current, count);
     }
 }
-

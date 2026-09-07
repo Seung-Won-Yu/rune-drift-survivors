@@ -111,101 +111,52 @@ export function getOnboardingSteps(game) {
   });
 }
 
-export function getFirstSessionCue(game, onboardingSteps, activeObjectives) {
-  const nextStep = onboardingSteps.find(step => !step.complete);
-  const nextObjective = activeObjectives[0];
-  const fallbackProgress = nextObjective?.progress ?? 0;
+export function getFirstSessionCue(game, onboardingSteps) {
   const circuit = getRuneCircuitState(game);
+  if (circuit.completed > 0 || !circuit.nextSite) return null;
 
-  if (!nextStep && !nextObjective) return null;
-
-  if (!nextStep) {
-    return getObjectiveCue(nextObjective, fallbackProgress);
+  const move = onboardingSteps.find(step => step.id === 'move');
+  const xp = onboardingSteps.find(step => step.id === 'xp');
+  if (move && !move.complete) {
+    return {
+      stepId: 'move',
+      stepNumber: 1,
+      color: move.color,
+      title: '이동하면 자동 공격',
+      action: 'WASD / 방향키로 이동',
+      touchAction: '왼쪽 스틱으로 이동',
+      body: '금빛 무기 봉인 쪽으로 이동하세요',
+      detail: '위험할 때 Space로 대시할 수 있습니다',
+      touchDetail: '위험할 때 오른쪽 대시 버튼을 누르세요',
+      progress: move.progress
+    };
   }
 
-  const base = {
-    stepId: nextStep.id,
-    color: nextStep.color,
-    action: nextStep.label,
-    progress: nextStep.progress
-  };
-
-  switch (nextStep.id) {
-    case 'move':
-      return {
-        ...base,
-        title: '먼저 움직임',
-        body: '적을 끌고 원을 그리며 안전 공간을 만드세요',
-        detail: '멈추면 포위가 빨라집니다',
-        progress: nextStep.progress
-      };
-    case 'dash':
-      return {
-        ...base,
-        title: '위험하면 대시',
-        body: '포위가 좁아질 때 Space로 한 번 빠져나오세요',
-        detail: 'Ready 표시가 켜지면 다시 쓸 수 있습니다',
-        progress: nextStep.progress
-      };
-    case 'xp':
-      return {
-        ...base,
-        title: '푸른 XP 회수',
-        body: '푸른 조각을 지나가 첫 카드 선택까지 성장하세요',
-        detail: 'XP를 놓치면 초반 화력이 늦게 열립니다',
-        progress: nextStep.progress
-      };
-    case 'circuit':
-      return {
-        ...base,
-        title: circuit.ready ? '첫 봉인 점화' : '첫 봉인 추적',
-        body: circuit.ready ? '화살표를 따라 무기 봉인 위에서 회로를 여세요' : '동쪽의 금빛 봉인으로 이동하며 성장하세요',
-        detail: circuit.ready ? '봉인 범위를 잠시 유지하면 빌드 보상이 열립니다' : `${Math.ceil(circuit.unlockIn)}초 뒤 봉인이 활성화됩니다`,
-        action: circuit.ready ? `${circuit.direction?.arrow ?? ''} ${circuit.distance}m · READY` : `${circuit.direction?.arrow ?? ''} ${circuit.distance}m · ${Math.ceil(circuit.unlockIn)}s`,
-        progress: nextStep.progress
-      };
-    default:
-      return getObjectiveCue(nextObjective, fallbackProgress);
+  // Collecting XP and using dash must never block navigation to an open seal.
+  if (xp && !xp.complete && !circuit.ready) {
+    return {
+      stepId: 'xp',
+      stepNumber: 2,
+      color: xp.color,
+      title: 'XP를 모아 첫 룬 선택',
+      action: '푸른 조각을 향해 이동',
+      body: '봉인으로 가는 길에 XP를 모으세요',
+      detail: '레벨이 오르면 전투가 멈추고 룬을 고릅니다',
+      progress: xp.progress
+    };
   }
-}
-
-function getObjectiveCue(objective, progress = 0) {
-  if (!objective) return null;
-
-  const cueMap = {
-    'first-blood': {
-      title: '첫 처치 목표',
-      body: '구체가 닿도록 거리를 유지하며 적을 정리하세요',
-      detail: '무리 안으로 들어가지 말고 가장자리를 깎습니다',
-      action: objective.label
-    },
-    'circuit-one': {
-      title: '첫 봉인 점화',
-      body: '화살표와 금빛 빔을 따라 무기 봉인으로 이동하세요',
-      detail: '범위 안을 유지하면 첫 빌드 보상이 열립니다',
-      action: objective.label
-    },
-    'first-etching': {
-      title: '첫 각인 완성',
-      body: '레벨 3까지 성장하면 빌드 색이 뚜렷해집니다',
-      detail: '추천 카드는 현재 화력 부족을 기준으로 표시됩니다',
-      action: objective.label
-    },
-    'first-surge': {
-      title: '첫 파동 버티기',
-      body: '45초까지 살아남으면 회로 점화 구간이 안정됩니다',
-      detail: '무리 중앙이 아니라 외곽으로 계속 빠지세요',
-      action: objective.label
-    }
-  };
-  const cue = cueMap[objective.id] ?? cueMap['first-blood'];
 
   return {
-    ...cue,
-    stepId: objective.id,
-    color: objective.color,
-    progress
+    stepId: 'circuit',
+    stepNumber: 3,
+    color: '#d4a84c',
+    title: circuit.ready ? '금빛 원 안에서 봉인 열기' : '첫 봉인으로 이동',
+    action: `${circuit.direction?.arrow ?? ''} ${circuit.nextSite.label} · ${circuit.distance}m`,
+    body: circuit.ready
+      ? '잠시 머무르면 무기 강화 보상을 받습니다'
+      : `XP를 모으며 이동 · ${Math.ceil(circuit.unlockIn)}초 뒤 열림`,
+    detail: '위험할 때 Space로 대시하세요',
+    touchDetail: '위험할 때 오른쪽 대시 버튼을 누르세요',
+    progress: 0
   };
 }
-
-

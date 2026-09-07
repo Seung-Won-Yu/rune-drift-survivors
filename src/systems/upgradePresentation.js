@@ -124,7 +124,7 @@ function getUpgradeQuickRead(game, upgrade, context, decisionCopy) {
   const meta = key ? BUILD_FOCUS_META[key] : null;
 
   if (unlocksWeapon && meta) {
-    return { quickLead: '새 무기', quickSummary: `${meta.label}가 전장에 추가됩니다` };
+    return { quickLead: '새 무기', quickSummary: `${meta.label} 공격이 추가됩니다` };
   }
   if (improvesSynergy && primarySynergy) {
     return { quickLead: '공명 상승', quickSummary: `${primarySynergy.title} ${formatFocusLevel(primarySynergy.nextLevel)} 발동` };
@@ -145,10 +145,10 @@ function getUpgradeQuickRead(game, upgrade, context, decisionCopy) {
     return { quickLead: '회피 안정', quickSummary: '포위망에서 빠져나오기 쉬워집니다' };
   }
   if (upgrade.id === 'luck') {
-    return { quickLead: '보상 투자', quickSummary: '다음 선택지의 기대값을 올립니다' };
+    return { quickLead: '성장 투자', quickSummary: 'XP를 더 많이 얻어 레벨업을 앞당깁니다' };
   }
   if (meta && dominant?.key === key && dominant.focus >= 2) {
-    return { quickLead: '주력 강화', quickSummary: `${meta.label} 빌드의 힘을 밀어줍니다` };
+    return { quickLead: '주력 강화', quickSummary: `주력 ${meta.label} 공격을 강화합니다` };
   }
   if (meta && focus === 0) {
     return { quickLead: '빌드 시작', quickSummary: `${meta.label} 방향으로 전환합니다` };

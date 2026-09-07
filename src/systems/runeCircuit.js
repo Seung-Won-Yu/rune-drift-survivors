@@ -23,6 +23,12 @@ export function getNextCircuitSite(activatedShrines = {}) {
   return SHRINE_SITES.find(site => !activatedShrines[site.id]) ?? null;
 }
 
+export function getWorldDirection(player, target) {
+  const angle = Math.atan2(target.x - (player?.x ?? 0), -(target.z - (player?.z ?? 0)));
+  const index = Math.round(angle / (Math.PI / 4));
+  return DIRECTION_STEPS[(index + DIRECTION_STEPS.length) % DIRECTION_STEPS.length];
+}
+
 export function getRuneCircuitState(game) {
   const activatedShrines = game?.activatedShrines ?? {};
   const completed = SHRINE_SITES.filter(site => activatedShrines[site.id]).length;
@@ -45,9 +51,6 @@ export function getRuneCircuitState(game) {
   const player = game?.playerPos ?? { x: 0, z: 0 };
   const dx = target.x - (player.x ?? 0);
   const dz = target.z - (player.z ?? 0);
-  const directionAngle = Math.atan2(dx, -dz);
-  const directionIndex = Math.round(directionAngle / (Math.PI / 4));
-  const normalizedIndex = (directionIndex + DIRECTION_STEPS.length) % DIRECTION_STEPS.length;
   const unlockIn = Math.max(0, nextSite.unlockAt - (game?.time ?? 0));
 
   return {
@@ -56,7 +59,7 @@ export function getRuneCircuitState(game) {
     complete: false,
     nextSite,
     distance: Math.round(Math.hypot(dx, dz)),
-    direction: DIRECTION_STEPS[normalizedIndex],
+    direction: getWorldDirection(player, target),
     unlockIn,
     ready: unlockIn <= 0
   };

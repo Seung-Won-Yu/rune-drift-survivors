@@ -1,5 +1,7 @@
 # Gameplay Reframe Review
 
+These entries record historical slices. The [character and world pass](./CHARACTER_AND_WORLD_PASS.md) supersedes the shader-key/no-mipmap sprite treatment described below; current asset handling is documented in [assets.md](../../assets.md).
+
 ## Slice 01 — Rune Circuit
 
 ### Delivered

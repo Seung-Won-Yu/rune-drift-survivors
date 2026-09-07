@@ -18,7 +18,7 @@ import {
 } from '../systems/enemySprite.js';
 import { getTerrainHeight } from '../systems/terrain.js';
 import { syncInstanceMeshes } from './instancedMeshUtils.js';
-import { NEUTRAL_KEY_ALPHA_TEST, applyNeutralKeyFragment } from './neutralKeyShader.js';
+import { createSpriteAtlasTexture } from './spriteAtlasTexture.js';
 
 const COMMON_SPRITE_META = Object.freeze({
   runner: Object.freeze({ width: 2.5, height: 3.8, lift: 0.2, tint: '#3aa6c2' }),
@@ -36,22 +36,14 @@ const THREAT_SPRITE_META = Object.freeze({
 function useAtlasMaterial(url, atlas, cacheKey) {
   const sourceTexture = useTexture(url);
   const texture = useMemo(() => {
-    const next = sourceTexture.clone();
-    next.colorSpace = THREE.SRGBColorSpace;
-    next.wrapS = THREE.ClampToEdgeWrapping;
-    next.wrapT = THREE.ClampToEdgeWrapping;
-    next.generateMipmaps = false;
-    next.minFilter = THREE.LinearFilter;
-    next.magFilter = THREE.LinearFilter;
-    next.needsUpdate = true;
-    return next;
+    return createSpriteAtlasTexture(sourceTexture);
   }, [sourceTexture]);
   const material = useMemo(() => {
     const next = new THREE.MeshBasicMaterial({
       map: texture,
       color: '#ffffff',
       transparent: true,
-      alphaTest: NEUTRAL_KEY_ALPHA_TEST,
+      alphaTest: 0.04,
       depthWrite: false,
       toneMapped: false,
       side: THREE.DoubleSide
@@ -74,7 +66,12 @@ function useAtlasMaterial(url, atlas, cacheKey) {
         #endif`
       );
       shader.fragmentShader = `varying vec3 vRuneTint;\n${shader.fragmentShader}`;
-      applyNeutralKeyFragment(shader, 'diffuseColor.rgb += vRuneTint * 0.02;');
+      shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `
+        #include <map_fragment>
+        float runeLuma = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+        diffuseColor.rgb = min(vec3(1.0), diffuseColor.rgb * mix(1.0, inversesqrt(max(runeLuma, 0.02)), 0.14));
+        diffuseColor.rgb += vRuneTint * 0.025;
+      `);
     };
     next.customProgramCacheKey = () => cacheKey;
     return next;
@@ -102,12 +99,12 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
   const commonMaterial = useAtlasMaterial(
     SPRITE_URLS.riftbornCommon,
     RIFTBORN_COMMON_ATLAS,
-    'riftborn-common-atlas-v7-clean-edge'
+    'riftborn-common-matted-atlas-v10'
   );
   const threatMaterial = useAtlasMaterial(
     SPRITE_URLS.riftbornThreat,
     RIFTBORN_THREAT_ATLAS,
-    'riftborn-threat-atlas-v2-clean-edge'
+    'riftborn-threat-matted-atlas-v5'
   );
   const local = useMemo(() => ({
     pos: new THREE.Vector3(),
@@ -205,7 +202,7 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
     <group>
       <instancedMesh ref={commonShadowRef} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
         <circleGeometry args={[1, 18]} />
-        <meshBasicMaterial color="#2d3d27" transparent opacity={0.16} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#081710" transparent opacity={0.3} depthWrite={false} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={commonRef} args={[null, null, MAX_ENEMIES]} material={commonMaterial} frustumCulled={false} renderOrder={4}>
         <planeGeometry args={[1, 1]}>
@@ -215,7 +212,7 @@ export function StylizedEnemyInstances({ enemiesRef, visualQuality = 'balanced' 
       </instancedMesh>
       <instancedMesh ref={threatShadowRef} args={[null, null, MAX_ENEMIES]} frustumCulled={false}>
         <circleGeometry args={[1, 22]} />
-        <meshBasicMaterial color="#241c2e" transparent opacity={0.22} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#150e21" transparent opacity={0.34} depthWrite={false} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={threatRef} args={[null, null, MAX_ENEMIES]} material={threatMaterial} frustumCulled={false} renderOrder={5}>
         <planeGeometry args={[1, 1]}>

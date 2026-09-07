@@ -129,6 +129,10 @@ export function getBuildFocus(game, key) {
   return Math.max(0, game?.buildFocus?.[key] ?? 0);
 }
 
+export function getOrbTargetCount(stats, orbFocus = 0) {
+  return Math.min(12, stats.orbCount + Math.floor(orbFocus / 2));
+}
+
 export function getWeaponFamilyRankLimit(key) {
   return WEAPON_FAMILY_RANK_LIMITS[key] ?? Infinity;
 }

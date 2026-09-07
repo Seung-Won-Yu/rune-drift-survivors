@@ -1,4 +1,5 @@
 import { ARENA_RADIUS } from '../config/gameTuning.js';
+import { getCameraFrame } from '../config/artDirection.js';
 
 export function updateFollowCamera({
   camera,
@@ -6,8 +7,6 @@ export function updateFollowCamera({
   cameraTarget,
   cameraShake,
   scratch,
-  compactCamera,
-  visualQuality,
   dt
 }) {
   const framedTarget = scratch.vec.copy(playerPos);
@@ -23,11 +22,10 @@ export function updateFollowCamera({
   const shake = cameraShake.current;
   const shakeX = (Math.random() - 0.5) * shake;
   const shakeZ = (Math.random() - 0.5) * shake;
-  const cameraHeight = compactCamera ? 34 : visualQuality === 'balanced' ? 36 : 38;
-  const cameraDepth = compactCamera ? 56 : visualQuality === 'balanced' ? 60 : 62;
+  const frame = getCameraFrame(camera.aspect);
   camera.position.lerp(
-    scratch.cameraPosition.set(cameraTarget.x + shakeX, cameraHeight + cameraTarget.y * 0.38, cameraTarget.z + cameraDepth + shakeZ),
-    0.08
+    scratch.cameraPosition.set(cameraTarget.x + shakeX, frame.height + cameraTarget.y * 0.38, cameraTarget.z + frame.depth + shakeZ),
+    1 - Math.pow(0.92, dt * 60)
   );
-  camera.lookAt(cameraTarget.x, (compactCamera ? 0.82 : 0.62) + cameraTarget.y * 0.68, cameraTarget.z);
+  camera.lookAt(cameraTarget.x, frame.lookHeight + cameraTarget.y * 0.68, cameraTarget.z);
 }

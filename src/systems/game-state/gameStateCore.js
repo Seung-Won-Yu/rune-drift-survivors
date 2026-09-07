@@ -63,6 +63,7 @@ export function createInitialGame(options = {}) {
     : null;
   return {
     phase: 'playing',
+    fieldDetour: null,
     level: 1,
     xp: 0,
     xpToNext: STARTING_XP_TO_NEXT,
@@ -134,4 +135,3 @@ export function createInitialGame(options = {}) {
     upgrades: []
   };
 }
-

@@ -61,7 +61,15 @@ export function pickArmoryBoost(game, excludedIds = new Set()) {
   const replayRouteChoices = game.replayRouteFamily && getBuildFocus(game, game.replayRouteFamily) === 0
     ? available.filter(upgrade => getUpgradeFocusKey(upgrade) === game.replayRouteFamily)
     : [];
+  // Automatic rewards reinforce the build already in play. Keep manual drafts
+  // free to offer new families; apply caps and exclusions before this preference.
+  const highestAvailableFocus = Math.max(0, ...available.map(upgrade => getBuildFocus(game, getUpgradeFocusKey(upgrade))));
+  const focusedChoices = highestAvailableFocus > 0
+    ? available.filter(upgrade => getBuildFocus(game, getUpgradeFocusKey(upgrade)) === highestAvailableFocus)
+    : [];
+  const replayTieChoices = focusedChoices.filter(upgrade => getUpgradeFocusKey(upgrade) === game.replayRouteFamily);
   return pickWeightedUpgrade(replayRouteChoices, game)
+    ?? pickWeightedUpgrade(replayTieChoices.length > 0 ? replayTieChoices : focusedChoices, game)
     ?? pickWeightedUpgrade(available, game)
     ?? upgradePool.find(upgrade => isUpgradeAvailable(game, upgrade) && isUpgradeDraftable(game, upgrade) && !excludedIds.has(upgrade.id));
 }

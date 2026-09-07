@@ -1,4 +1,8 @@
 @media (hover: none), (pointer: coarse) {
+  .coachKeyboardAction,
+  .coachKeyboardDetail { display: none; }
+  .coachTouchAction,
+  .coachTouchDetail { display: inline; }
   .touchControls {
     display: flex;
   }
@@ -31,25 +35,29 @@
   }
 
   .rewardCardMain {
-    grid-template-columns: 78px minmax(0, 1fr);
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
   }
 
   .runeChoiceSigil {
-    width: 78px;
-    height: 78px;
+    width: 112px;
+    height: 112px;
   }
 
   .rewardCardCopy strong {
-    font-size: 1.02rem;
+    font-size: 1.25rem;
   }
 
   .rewardCardCopy p {
-    font-size: 0.68rem;
+    font-size: 0.8125rem;
   }
 }
 
 @media (max-width: 760px) {
+  .coachKeyboardAction,
+  .coachKeyboardDetail { display: none; }
+  .coachTouchAction,
+  .coachTouchDetail { display: inline; }
   .touchControls {
     display: flex;
   }
@@ -65,46 +73,31 @@
   }
 
   .runeVitals {
-    grid-row: 2;
-    padding: 14px 12px 10px;
-  }
-
-  .runeRunClock {
     grid-column: 1;
     grid-row: 1;
-    width: 190px;
+    width: 100%;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .runeVitalsLabel { display: none; }
+  .hudDamageFeedback { bottom: 6px; left: 8px; right: 8px; }
+
+  .runeRunClock {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
     min-width: 0;
-    justify-self: center;
-    padding: 6px 11px 9px;
+    padding: 10px 12px;
   }
 
   .runeRunClock > strong {
-    font-size: 1.05rem;
-  }
-
-  .runeCircuit {
-    gap: 5px;
-    margin-top: 5px;
-    padding-top: 5px;
-  }
-
-  .runeCircuit span,
-  .runeCircuit small {
-    font-size: 0.54rem;
-  }
-
-  .runeCircuit strong {
-    font-size: 0.58rem;
+    font-size: 1.625rem;
   }
 
   .runeActions {
     grid-column: 2;
     grid-row: 1;
-  }
-
-  .runeVitals {
-    grid-column: 1 / -1;
-    width: min(224px, calc(100vw - 114px));
   }
 
   .runeMeter {
@@ -116,31 +109,16 @@
     margin-bottom: 3px;
   }
 
-  .runeMeterText span,
-  .runeMeterText strong {
-    font-size: 0.66rem;
-  }
+  .runeMeterText { gap: 4px; }
+  .runeMeterText span { font-size: 0.6875rem; }
+  .runeMeterText strong { font-size: 0.75rem; }
 
   .runeHud:not(.hasBoss) .runeAlertStack {
     position: static;
     grid-column: 1 / -1;
     grid-row: 3;
     justify-self: start;
-    margin-top: -8px;
-  }
-
-  .runeHud:not(.hasBoss):has(.hudAlert-damage) .runeAlertStack {
-    width: min(224px, calc(100vw - 114px));
-  }
-
-  .runeHud:not(.hasBoss):has(.hudAlert-damage) .runeVitals {
-    min-width: min(224px, calc(100vw - 114px));
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  .runeHud:not(.hasBoss):has(.hudAlert-damage) .runeAlert {
-    width: 100%;
+    margin-top: 0;
   }
 
   .runeAlert {
@@ -156,22 +134,42 @@
   .runeDirective {
     top: 190px;
     grid-template-columns: 26px 1fr;
-    width: min(215px, calc(100vw - 20px));
+    width: min(260px, calc(100vw - 20px));
     min-height: 60px;
   }
 
   .runeObjective {
-    top: 205px;
-    width: min(232px, calc(100vw - 20px));
+    top: 190px;
+    transform: none;
+    width: min(260px, calc(100vw - 20px));
+    padding: 9px 12px;
   }
+
+  .runeObjectivePhase { grid-template-columns: 1fr auto; padding-bottom: 5px; }
+  .runeObjectiveMark,
+  .runeObjectivePhase > div > span,
+  .runeObjectiveTask > span { display: none; }
+  .runeObjectivePhase strong { margin: 0; font-size: 0.75rem; }
+  .runeObjectivePhase > small { font-size: 0.6875rem; }
+  .runeObjectiveTask { padding-top: 6px; gap: 3px 8px; }
+  .runeObjectiveTask strong { font-size: 0.75rem; }
+  .runeObjectiveTask small { grid-row: 1; font-size: 0.6875rem; }
+  .runeObjectiveProgress { margin-top: 3px; }
 
   .runeDirectiveCopy {
     padding: 10px 11px;
   }
 
-  .runeDirectiveCopy p,
   .runeDirectiveCopy em {
     display: none;
+  }
+
+  .runeDirectiveCopy strong { font-size: 0.82rem; }
+
+  .runeDirectiveCopy p {
+    margin: 5px 0 0;
+    font-size: 0.7rem;
+    line-height: 1.4;
   }
 
   .runeEncounter {
@@ -352,6 +350,12 @@
     font-size: 1.35rem;
   }
 
+  .runeDraftHeader { flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .upgradeHeaderCopy > small { font-size: 0.8125rem; }
+  .upgradeHeaderStatus { display: flex; align-items: center; gap: 12px; }
+  .upgradePauseNote { font-size: 0.6875rem; }
+  .upgradeQueue { padding: 4px 8px; }
+
   .upgradeSynergyStrip {
     margin-bottom: 10px;
   }
@@ -379,6 +383,8 @@
     grid-template-columns: 52px minmax(0, 1fr);
     gap: 10px;
     margin: 8px 0;
+    text-align: left;
+    justify-items: stretch;
   }
 
   .runeChoiceSigil {
@@ -387,27 +393,23 @@
   }
 
   .rewardCardCopy strong {
-    font-size: 0.96rem;
+    font-size: 1.0625rem;
   }
 
   .rewardCardCopy p {
     min-height: 0;
     margin: 5px 0 7px;
-    font-size: 0.65rem;
+    font-size: 0.75rem;
   }
 
   .rewardCardStats {
     gap: 2px;
-    padding: 7px 9px;
+    padding: 8px 0 0;
   }
 
-  .rewardCardStats small,
-  .rewardCardStats span {
-    display: none;
-  }
-
-  .rewardCardTags {
-    display: none;
+  .isOpeningDraft .openingUpgradeReason {
+    display: block;
+    font-size: 0.75rem;
   }
 
   .rewardCardFooter {
@@ -417,7 +419,8 @@
   .upgradePickCta {
     margin-left: auto;
     padding-right: 8px;
-    font-size: 0.58rem;
+    min-height: 36px;
+    font-size: 0.75rem;
   }
 
   .resultVerdict {
@@ -525,22 +528,21 @@
   }
 }
 
+/* Short phones need the middle of the field for the full character silhouette.
+   Place contextual guidance above the sticks while preserving its full copy. */
+@media (max-width: 760px) and (max-height: 640px) and (orientation: portrait) {
+  .runeDirective,
+  .runeObjective {
+    top: auto;
+    bottom: calc(max(22px, env(safe-area-inset-bottom)) + 132px);
+    transform: none;
+  }
+}
+
 @media (max-width: 420px) {
-  .runeRunClock {
-    width: 170px;
-  }
-
-  .runeRunClockMeta {
-    font-size: 0.5rem;
-  }
-
   .runeIconButton {
-    width: 42px;
-    height: 42px;
-  }
-
-  .runeVitals {
-    width: min(205px, calc(100vw - 104px));
+    width: 44px;
+    height: 44px;
   }
 
   .runeTouchStick {
@@ -559,18 +561,6 @@
 }
 
 @media (max-width: 340px) {
-  .runeRunClock {
-    width: 150px;
-  }
-
-  .runeCircuit {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .runeCircuit small {
-    display: none;
-  }
-
   .runeActions {
     gap: 5px;
   }
@@ -594,7 +584,8 @@
 
 @media (max-height: 680px) and (orientation: landscape) {
   .runeHudTop {
-    grid-template-columns: 210px 150px auto;
+    grid-template-columns: minmax(160px, 210px) minmax(270px, 320px) auto;
+    gap: 12px;
   }
 
   .runeVitals {
@@ -614,8 +605,13 @@
 
   .runeDirective,
   .runeObjective {
-    top: 52%;
+    top: 128px;
+    transform: none;
     width: 260px;
+  }
+
+  .runeDirective {
+    top: 128px;
   }
 
   .touchControls {
@@ -665,12 +661,26 @@
   }
 
   .rewardCardCopy p {
-    display: none;
+    display: block;
+    font-size: 0.75rem;
   }
 
   .rewardCardStats {
     width: 100%;
   }
+}
+
+@media (max-width: 700px) and (max-height: 680px) and (orientation: landscape) {
+  .runeHudTop { grid-template-columns: minmax(100px, 1fr) minmax(180px, 240px) auto; gap: 8px; }
+  .runeRunClock { grid-template-columns: 44px minmax(0, 1fr); gap: 4px 6px; padding: 8px; }
+  .runeRunClock > strong { font-size: 1.375rem; }
+  .runeRunClockMeta { font-size: 0.625rem; }
+  .runeCircuit { gap: 6px; padding-left: 8px; }
+  .runeCircuitProgress > span { display: none; }
+  .runeCircuitDestination { gap: 4px; }
+  .runeCircuitDirection { flex-basis: 20px; font-size: 1.375rem; }
+  .runeActions { gap: 4px; }
+  .runeIconButton { width: 44px; height: 44px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

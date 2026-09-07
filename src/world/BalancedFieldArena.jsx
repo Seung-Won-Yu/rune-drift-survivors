@@ -31,7 +31,7 @@ export function BalancedFieldArena({ visualQuality = 'balanced' }) {
       <GroundDecalInstances transforms={arena.flowerFlecks} shape="ring" ringArgs={[0.32, 0.52, 5]} opacity={visualQuality === 'low' ? 0.075 : 0.12} doubleSide />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, getTerrainHeight(0, 0) + 0.078, 0]}>
         <ringGeometry args={[9.2, 9.46, 72]} />
-        <meshBasicMaterial color="#b58a45" transparent opacity={0.16} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#65736b" transparent opacity={0.09} depthWrite={false} toneMapped={false} />
       </mesh>
       <RelicBoxInstances transforms={arena.ruinSlabs} roughness={0.98} />
       <RelicOctahedronInstances transforms={arena.runeCrystals} opacity={visualQuality === 'low' ? 0.42 : 0.58} />

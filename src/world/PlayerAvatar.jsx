@@ -9,16 +9,10 @@ import { MAX_ORBIT_BLADES, PLAYER_SPEED } from '../config/gameTuning.js';
 import { RUNE_WARDEN_ATLAS, getRuneWardenAnimationFrame } from '../systems/playerSprite.js';
 import { getBladeCount, getBladeOrbitRadius, getBladeSize, getBuildFocus, getDominantBuild, getOrbColor, getWeaponStage, isWeaponFamilyUnlocked } from '../systems/progression.js';
 import { syncInstanceMeshes } from './instancedMeshUtils.js';
-import { NEUTRAL_KEY_ALPHA_TEST, applyNeutralKeyFragment } from './neutralKeyShader.js';
+import { createSpriteAtlasTexture } from './spriteAtlasTexture.js';
 
-export function PlayerAvatar({ rootRef, game, player, visualQuality = 'high' }) {
-  const leftStrideMesh = useRef();
-  const rightStrideMesh = useRef();
-  const staffTrailMesh = useRef();
+export function PlayerAvatar({ rootRef, game, player }) {
   const bodyShell = useRef();
-  const castArcMesh = useRef();
-  const hurtGuardMesh = useRef();
-  const hurtShardMesh = useRef();
   const stage = getWeaponStage(game);
   const dominantBuild = getDominantBuild(game);
   const runeColor = dominantBuild?.color ?? getOrbColor(game.stats, stage);
@@ -45,95 +39,22 @@ export function PlayerAvatar({ rootRef, game, player, visualQuality = 'high' }) 
         1 + dashPower * 0.052 + castPulse * 0.038
       );
     }
-    if (leftStrideMesh.current && rightStrideMesh.current) {
-      const leftStep = Math.max(0, Math.sin(stride));
-      const rightStep = Math.max(0, Math.sin(stride + Math.PI));
-      leftStrideMesh.current.visible = moveAmount > 0.08;
-      rightStrideMesh.current.visible = moveAmount > 0.08;
-      leftStrideMesh.current.position.set(-0.24, 0.18 + leftStep * 0.12, 0.12 + leftStep * 0.2);
-      rightStrideMesh.current.position.set(0.24, 0.18 + rightStep * 0.12, 0.12 + rightStep * 0.2);
-      leftStrideMesh.current.rotation.set(0.72, -0.24 + leftStep * 0.18, -0.28);
-      rightStrideMesh.current.rotation.set(0.72, 0.24 - rightStep * 0.18, 0.28);
-      leftStrideMesh.current.scale.set(0.14 + leftStep * 0.05, 0.5 + leftStep * 0.2 + dashPower * 0.12, 0.1);
-      rightStrideMesh.current.scale.set(0.14 + rightStep * 0.05, 0.5 + rightStep * 0.2 + dashPower * 0.12, 0.1);
-    }
-    if (staffTrailMesh.current) {
-      staffTrailMesh.current.visible = moveAmount > 0.06 || dashPower > 0 || castPulse > 0.02;
-      staffTrailMesh.current.position.set(0.38 + Math.sin(stride * 0.5) * 0.04, 1.02 + Math.sin(stride) * 0.045 + castPulse * 0.12, 0.08 + castPulse * 0.18);
-      staffTrailMesh.current.rotation.set(0.35 + castPulse * 0.28, -0.18, -0.52 + Math.sin(stride * 0.72) * 0.14 - castPulse * 0.48);
-      staffTrailMesh.current.scale.set(0.12 + stage * 0.012 + castPulse * 0.05, 0.7 + moveAmount * 0.28 + dashPower * 0.24 + castPulse * 0.72, 0.12);
-      staffTrailMesh.current.material.opacity = 0.38 + Math.min(0.42, castPulse * 1.45) + dashPower * 0.08;
-    }
-    if (castArcMesh.current) {
-      castArcMesh.current.visible = castPulse > 0.018;
-      castArcMesh.current.position.set(0.46, 1.06 + castPulse * 0.24, 0.24 + castPulse * 0.24);
-      castArcMesh.current.rotation.set(0.18, -0.42 + castPulse * 0.42, -0.76 + castPulse * 2.05);
-      castArcMesh.current.scale.setScalar(0.68 + castPulse * 1.75 + stage * 0.05);
-      castArcMesh.current.material.opacity = Math.min(0.78, 0.2 + castPulse * 2.1);
-    }
-    if (hurtGuardMesh.current) {
-      hurtGuardMesh.current.visible = hurtPulse > 0.02;
-      hurtGuardMesh.current.rotation.z += 0.082;
-      hurtGuardMesh.current.scale.setScalar(0.86 + hurtPulse * 1.8);
-      hurtGuardMesh.current.material.opacity = Math.min(0.76, hurtPulse * 1.55);
-    }
-    if (hurtShardMesh.current) {
-      hurtShardMesh.current.visible = hurtPulse > 0.025;
-      hurtShardMesh.current.position.set(0, 1.12 + hurtPulse * 0.22, 0.06);
-      hurtShardMesh.current.rotation.set(0.72 + hurtPulse * 0.38, now * 0.008, Math.PI / 4 + hurtPulse * 1.2);
-      hurtShardMesh.current.scale.set(0.22 + hurtPulse * 0.38, 0.22 + hurtPulse * 0.38, 0.22 + hurtPulse * 0.38);
-      hurtShardMesh.current.material.opacity = Math.min(0.72, hurtPulse * 1.3);
-    }
   });
 
   return (
     <group ref={rootRef}>
       <group ref={bodyShell}>
-        <RuneWardenSprite
-          player={player}
-          visualQuality={visualQuality}
-          runeColor={runeColor}
-        />
+        <RuneWardenSprite player={player} runeColor={runeColor} />
       </group>
-      <mesh ref={leftStrideMesh} visible={false}>
-        <coneGeometry args={[1, 1, 4]} />
-        <meshBasicMaterial color={runeColor} transparent opacity={0.46} depthWrite={false} toneMapped={false} />
-      </mesh>
-      <mesh ref={rightStrideMesh} visible={false}>
-        <coneGeometry args={[1, 1, 4]} />
-        <meshBasicMaterial color={runeColor} transparent opacity={0.46} depthWrite={false} toneMapped={false} />
-      </mesh>
-      <mesh ref={staffTrailMesh} visible={false}>
-        <octahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color={runeColor} transparent opacity={0.54} depthWrite={false} toneMapped={false} />
-      </mesh>
-      <mesh ref={castArcMesh} visible={false}>
-        <torusGeometry args={[0.62, 0.024, 8, 48, Math.PI * 1.18]} />
-        <meshBasicMaterial color={runeColor} transparent opacity={0.46} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
-      </mesh>
-      <mesh ref={hurtGuardMesh} rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[0, 0.78, 0]} visible={false}>
-        <ringGeometry args={[0.62, 0.78, 40]} />
-        <meshBasicMaterial color={ART_TOKENS.dangerRed} transparent opacity={0.0} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
-      </mesh>
-      <mesh ref={hurtShardMesh} position={[0, 1.1, 0.04]} visible={false}>
-        <octahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color={ART_TOKENS.dangerRed} transparent opacity={0.0} depthWrite={false} toneMapped={false} />
-      </mesh>
     </group>
   );
 }
 
-function RuneWardenSprite({ player, visualQuality = 'balanced', runeColor }) {
+function RuneWardenSprite({ player, runeColor }) {
   const spriteRef = useRef();
   const sourceTexture = useTexture(SPRITE_URLS.runeWarden);
   const texture = useMemo(() => {
-    const next = sourceTexture.clone();
-    next.colorSpace = THREE.SRGBColorSpace;
-    next.wrapS = THREE.ClampToEdgeWrapping;
-    next.wrapT = THREE.ClampToEdgeWrapping;
-    next.generateMipmaps = false;
-    next.minFilter = THREE.LinearFilter;
-    next.magFilter = THREE.LinearFilter;
+    const next = createSpriteAtlasTexture(sourceTexture);
     next.repeat.set(1 / RUNE_WARDEN_ATLAS.columns, 1 / RUNE_WARDEN_ATLAS.rows);
     next.offset.set(0, 0);
     next.needsUpdate = true;
@@ -143,14 +64,18 @@ function RuneWardenSprite({ player, visualQuality = 'balanced', runeColor }) {
     const next = new THREE.SpriteMaterial({
       map: texture,
       transparent: true,
-      alphaTest: NEUTRAL_KEY_ALPHA_TEST,
+      alphaTest: 0.04,
       depthWrite: false,
       toneMapped: false
     });
     next.onBeforeCompile = shader => {
-      applyNeutralKeyFragment(shader);
+      shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `
+        #include <map_fragment>
+        float runeLuma = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+        diffuseColor.rgb = min(vec3(1.0), diffuseColor.rgb * mix(1.0, inversesqrt(max(runeLuma, 0.02)), 0.28));
+      `);
     };
-    next.customProgramCacheKey = () => 'rune-warden-clean-edge-v2';
+    next.customProgramCacheKey = () => 'rune-warden-matted-atlas-v5';
     return next;
   }, [texture]);
   const colors = useMemo(() => ({
@@ -182,7 +107,7 @@ function RuneWardenSprite({ player, visualQuality = 'balanced', runeColor }) {
     });
     texture.offset.set(frame.offsetX, frame.offsetY);
 
-    const baseSize = visualQuality === 'low' ? 4.05 : 4.35;
+    const baseSize = 5.5;
     spriteRef.current.scale.set(
       baseSize * (1 + dashPower * 0.16 + castPulse * 0.07),
       baseSize * (1 - dashPower * 0.06 + castPulse * 0.11 - hurtPulse * 0.05),
@@ -196,7 +121,7 @@ function RuneWardenSprite({ player, visualQuality = 'balanced', runeColor }) {
   });
 
   return (
-    <sprite ref={spriteRef} material={material} position={[0, 2.06, 0]} scale={[4.35, 4.35, 1]} renderOrder={6} />
+    <sprite ref={spriteRef} material={material} position={[0, 2.45, 0]} scale={[5.5, 5.5, 1]} renderOrder={6} />
   );
 }
 

@@ -32,6 +32,7 @@ export function syncThreatAccents(meshes, scratch, showDecor, time) {
     if (showDecor && eliteAuraMesh.current) {
       let count = 0;
       for (const enemy of scratch.eliteEnemies) {
+        if ((enemy.contactAttackTimer ?? 0) > 0 || (enemy.chargeTimer ?? 0) > 0) continue;
         scratch.pos.set(enemy.pos.x, enemy.pos.y + 0.07, enemy.pos.z);
         scratch.euler.set(Math.PI / 2, 0, -enemy.wobble * 0.28);
         scratch.quat.setFromEuler(scratch.euler);
@@ -95,4 +96,3 @@ export function syncThreatAccents(meshes, scratch, showDecor, time) {
       syncInstanceMesh(chargeTellMesh.current, count);
     }
 }
-

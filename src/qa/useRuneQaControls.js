@@ -40,6 +40,9 @@ export function getQaGameSnapshot(game) {
     buildFocus: { ...game.buildFocus },
     upgrades: [...game.upgrades],
     replayRouteFamily: game.replayRouteFamily,
+    fieldDetour: game.fieldDetour ? { ...game.fieldDetour, direction: { ...game.fieldDetour.direction } } : null,
+    itemPickups: { ...game.itemPickups },
+    overloadTimer: game.overloadTimer,
     weaponRanges: {
       bladeOrbit: Number(getBladeOrbitRadius(game.stats, weaponStage, bladeFocus).toFixed(2))
     },
@@ -95,12 +98,15 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
           window.setTimeout(() => sceneApi.current?.stress?.(options), delay);
         });
       },
-      contactAttack: () => {
+      contactAttack: (options = {}) => {
         const nextGame = {
           ...createInitialGame(),
           onboardingMovement: 42,
           dashUses: 1
         };
+        if (Number.isFinite(options.hp)) {
+          nextGame.stats = { ...nextGame.stats, hp: Math.max(1, Math.min(nextGame.stats.maxHp, options.hp)) };
+        }
         showQaGame(nextGame);
         window.setTimeout(() => sceneApi.current?.contactAttack?.(), 140);
       },

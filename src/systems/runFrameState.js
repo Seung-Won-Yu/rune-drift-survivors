@@ -2,7 +2,7 @@ import { DASH_COOLDOWN, RUN_DURATION, WAVE_DURATION } from '../config/gameTuning
 import { getRunPhaseTransition } from './progression.js';
 import { getRunCompletionResult } from './runeCircuit.js';
 
-export function applyFrameStateUpdate({ current, elapsed, player, bossStatus, runStats }) {
+export function applyFrameStateUpdate({ current, elapsed, player, bossStatus, runStats, fieldDetour = null }) {
   const nextTime = current.time + elapsed;
   const nextWave = Math.max(1, Math.floor(nextTime / WAVE_DURATION) + 1);
   const runPhaseTransition = getRunPhaseTransition(current.time, nextTime);
@@ -23,6 +23,7 @@ export function applyFrameStateUpdate({ current, elapsed, player, bossStatus, ru
     damageFlash,
     damageMessage: damageFlash > 0 ? current.damageMessage : '',
     bossStatus,
+    fieldDetour,
     runStats,
     overloadTimer: Math.max(0, (current.overloadTimer ?? 0) - elapsed),
     onboardingMovement: Math.min(120, (current.onboardingMovement ?? 0) + movementDelta),

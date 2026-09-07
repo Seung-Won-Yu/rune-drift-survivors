@@ -1,4 +1,6 @@
 import { ConfirmRestartButton } from './ConfirmRestartButton.jsx';
+import { FIELD_ITEM_META, SHRINE_SITES } from '../config/gameData.js';
+import { OVERLOAD_DURATION } from '../config/gameTuning.js';
 import { RuneIcon } from './RuneIcon.jsx';
 
 export function HudMeter({ tone, label, value, pct, isLow = false, isHit = false }) {
@@ -61,38 +63,70 @@ export function HudAlert({ alert }) {
 }
 
 export function HudCircuit({ circuit }) {
-  if (circuit.complete) {
-    return (
-      <div className="runeCircuit isComplete" aria-label="룬 회로 완성">
-        <span>CIRCUIT {circuit.completed}/{circuit.total}</span>
-        <strong>COMPLETE</strong>
-        <small>최종 공명 · 화력 +16%</small>
-      </div>
-    );
-  }
-
-  const status = circuit.ready ? 'READY' : `${Math.ceil(circuit.unlockIn)}s`;
+  const status = circuit.ready ? '개방' : `${Math.ceil(circuit.unlockIn)}초 후 개방`;
   return (
-    <div className={`runeCircuit ${circuit.ready ? 'isReady' : 'isLocked'}`} style={{ '--tone': circuit.nextSite.color }} aria-label="다음 룬 회로 봉인">
-      <span>CIRCUIT {circuit.completed}/{circuit.total}</span>
-      <strong>{circuit.direction?.arrow} {circuit.nextSite.label}</strong>
-      <small>{circuit.nextSite.rewardLabel} · {circuit.distance}m · {status}</small>
+    <div
+      className={`runeCircuit ${circuit.complete ? 'isComplete' : circuit.ready ? 'isReady' : 'isLocked'}`}
+      style={{ '--tone': circuit.nextSite?.color ?? 'var(--rune-mint)' }}
+      aria-label={circuit.complete ? '룬 회로 완성' : '다음 룬 회로 봉인'}
+    >
+      <div className="runeCircuitProgress">
+        <span>CIRCUIT {circuit.completed}/{circuit.total}</span>
+        <ol className="runeSealTrack" aria-label="봉인 연결 상태">
+          {SHRINE_SITES.map((site, index) => {
+            const done = index < circuit.completed;
+            const current = !circuit.complete && site.id === circuit.nextSite.id;
+            return (
+              <li key={site.id} className={done ? 'isConnected' : current ? 'isCurrent' : ''} aria-current={current ? 'step' : undefined} aria-label={`${site.label}: ${done ? '연결 완료' : current ? '다음 목표' : '대기'}`}>
+                <span aria-hidden="true">{done ? '✓' : index + 1}</span>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+      <div className="runeCircuitDestination">
+        <b className="runeCircuitDirection" role="img" aria-label={circuit.complete ? '연결 완료' : `${circuit.direction?.label} 방향`}>{circuit.complete ? '✓' : circuit.direction?.arrow}</b>
+        <div>
+          <strong>{circuit.complete ? '회로 연결 완료' : circuit.nextSite.label}</strong>
+          <small>{circuit.complete ? '최종 공명 · 화력 +16%' : <><span className="runeCircuitReward">{circuit.nextSite.rewardLabel} · </span>{circuit.distance}m · <em>{status}</em></>}</small>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function HudDetour({ detour }) {
+  const meta = FIELD_ITEM_META[detour.type];
+  return (
+    <div className="runeDirective hudCoachCard hudDetourCard" style={{ '--tone': meta.color }} aria-label="선택 우회 보상">
+      <div className="runeDirectiveIndex" aria-hidden="true"><span>OPTIONAL</span></div>
+      <div className="runeDirectiveCopy">
+        <strong>선택 우회 · {meta.name}</strong>
+        <small>{detour.direction.arrow} {detour.direction.label} {detour.distance}m · {detour.remaining}초 후 소멸</small>
+        <p>무기 폭주 {OVERLOAD_DURATION}초 · 건너뛰어도 진행</p>
+      </div>
     </div>
   );
 }
 
 export function HudPrompt({ cue }) {
   return (
-    <div className="runeDirective hudCoachCard" style={{ '--tone': cue.color }} aria-label="초반 안내">
+    <div className="runeDirective hudCoachCard" data-step={cue.stepId} style={{ '--tone': cue.color }} aria-label="초반 안내">
       <div className="runeDirectiveIndex" aria-hidden="true">
-        <span>FIRST RUN</span>
+        <span>{cue.stepNumber} / 3</span>
         <i style={{ height: `${cue.progress * 100}%` }} />
       </div>
       <div className="runeDirectiveCopy">
         <strong>{cue.title}</strong>
-        <small>{cue.action}</small>
+        <small>
+          <span className={cue.touchAction ? 'coachKeyboardAction' : undefined}>{cue.action}</span>
+          {cue.touchAction && <span className="coachTouchAction">{cue.touchAction}</span>}
+        </small>
         <p>{cue.body}</p>
-        <em>{cue.detail}</em>
+        <em>
+          <span className={cue.touchDetail ? 'coachKeyboardDetail' : undefined}>{cue.detail}</span>
+          {cue.touchDetail && <span className="coachTouchDetail">{cue.touchDetail}</span>}
+        </em>
       </div>
     </div>
   );

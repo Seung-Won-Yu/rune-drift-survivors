@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 import { AUDIO_CUE, emitAudioCue } from '../../audio/audioCues.js';
 import { WEAPON_CATALOG as weaponCatalog } from '../../config/gameData.js';
-import { getOrbColor, getWeaponTier } from '../progression.js';
+import { getOrbColor, getOrbTargetCount, getWeaponTier } from '../progression.js';
 
 const UP_AXIS = new THREE.Vector3(0, 1, 0);
 const orbDirection = new THREE.Vector3();
@@ -25,7 +25,7 @@ export function updateOrbWeapon(context, common, orbFocus, orbPierceLevel) {
 
   if (orbTimer.current > 0) return;
 
-  const orbCount = Math.min(12, stats.orbCount + Math.floor(orbFocus / 2));
+  const orbCount = getOrbTargetCount(stats, orbFocus);
   const targets = nearestEnemies(orbCount, 42 + (stats.orbSpeed - 1) * 24 + orbFocus * 4);
   if (targets.length > 0) {
     emitAudioCue(AUDIO_CUE.weaponCast, { variant: 'orb', intensity: Math.min(1, 0.55 + targets.length * 0.05) });

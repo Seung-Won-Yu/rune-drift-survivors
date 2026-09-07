@@ -103,8 +103,6 @@ export function useGameSceneRuntime(visualQuality) {
   const stateSyncElapsed = useRef(0);
   const cameraTarget = useLazyRef(() => new THREE.Vector3());
   const cameraShake = useRef(0);
-  const compactCamera = typeof window !== 'undefined'
-    && (window.matchMedia?.('(pointer: coarse)').matches || window.innerWidth <= 700);
   const runtimeBudget = useLazyRef(() => ({ ...SIMULATION_BUDGET }));
   const framePressure = useRef(0);
   const scratch = useMemo(createRuntimeScratch, []);
@@ -250,7 +248,6 @@ export function useGameSceneRuntime(visualQuality) {
     stateSyncElapsed,
     cameraTarget,
     cameraShake,
-    compactCamera,
     runtimeBudget,
     scratch,
     updateFramePressure,

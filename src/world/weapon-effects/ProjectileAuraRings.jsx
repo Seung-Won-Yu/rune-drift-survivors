@@ -93,7 +93,7 @@ export function ProjectileAuraRings({ projectilesRef, game, visualQuality = 'hig
 
     if (orbCrown.current) {
       let count = 0;
-      if (stage >= 3) {
+      if (stage >= 3 && visualQuality === 'high') {
         for (const projectile of projectilesRef.current) {
           if (projectile.type !== 'orb') continue;
           if (count >= detailLimit * 3) break;

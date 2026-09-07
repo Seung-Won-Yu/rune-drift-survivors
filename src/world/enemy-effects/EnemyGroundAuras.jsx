@@ -29,6 +29,7 @@ export function EnemyGroundAuras({ enemiesRef, visualQuality = 'high' }) {
     let count = 0;
     for (const enemy of enemiesRef.current) {
       if (enemy.kind !== 'boss' && enemy.kind !== 'elite') continue;
+      if ((enemy.contactAttackTimer ?? 0) > 0 || (enemy.chargeTimer ?? 0) > 0) continue;
       if (count >= maxAuras || count >= MAX_ENEMIES) break;
       const pulse = 1 + Math.sin(time + enemy.wobble) * 0.07;
       scratch.euler.set(Math.PI / 2, 0, 0);

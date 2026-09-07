@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { GAME_CAMERA_FOV, getCameraFrame } from '../config/artDirection.js';
 
 import { getRuntimeVisualQuality, isOptionalRenderFeatureEnabled } from './useVisualQuality.js';
 
@@ -13,12 +14,11 @@ export function useCanvasQualitySettings(visualQuality, game) {
   const canvasDpr = useMemo(() => (
     runtimeVisualQuality === 'low' ? [0.82, 0.92] : runtimeVisualQuality === 'balanced' ? [1.0, 1.12] : [1.0, 1.14]
   ), [runtimeVisualQuality]);
-  const canvasCamera = useMemo(() => ({
-    position: runtimeVisualQuality === 'low' ? [0, 34, 56] : runtimeVisualQuality === 'balanced' ? [0, 36, 60] : [0, 38, 62],
-    fov: runtimeVisualQuality === 'low' ? 49 : 47,
-    near: 0.1,
-    far: 420
-  }), [runtimeVisualQuality]);
+  const canvasCamera = useMemo(() => {
+    const aspect = typeof window === 'undefined' ? 16 / 9 : window.innerWidth / window.innerHeight;
+    const frame = getCameraFrame(aspect);
+    return { position: [0, frame.height, frame.depth], fov: GAME_CAMERA_FOV, near: 0.1, far: 420 };
+  }, []);
   const canvasGl = useMemo(() => ({
     antialias: runtimeVisualQuality !== 'low',
     alpha: false,

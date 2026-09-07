@@ -1,182 +1,164 @@
 # Rune Drift Survivors
 
-Rune Drift Survivors is a five-minute 3D browser auto-combat roguelite built with React, Three.js, React Three Fiber, and Vite.
+A five-minute browser survival roguelite built with **React, Three.js, React Three Fiber, and Vite**. Guide a hooded Rune Warden through a ruined forest, build an automatic-attack loadout, and connect four seals before the final rift.
 
-Play the GitHub Pages build: [seung-won-yu.github.io/rune-drift-survivors](https://seung-won-yu.github.io/rune-drift-survivors/)
+**[Play on GitHub Pages](https://seung-won-yu.github.io/rune-drift-survivors/)** · [Development guide](./docs/project-structure.md) · [QA guide](./docs/qa.md)
 
-## Core loop
+![Desktop gameplay with health, four-seal navigation, and the Rune Warden](./docs/images/gameplay-desktop.png)
 
-```txt
-Learn movement → follow the active seal → ignite the four-step Rune Circuit
-→ complete weapon synergies → survive bosses and the final rift
-```
+<details>
+<summary>Mobile portrait gameplay</summary>
 
-Move through a dark rune-ruin battlefield, collect XP, and follow the next seal's direction and timing. Each circuit activation grants a build or survival reward while redirecting the run across the arena. Draft upgrades, build weapon synergies, read enemy attack telegraphs, and survive until the five-minute result screen.
+<img src="./docs/images/gameplay-mobile.png" width="320" alt="Mobile gameplay with the character visible between navigation and contextual guidance, above the touch controls">
 
-## Current build
+</details>
 
-### Combat and progression
+## How to play
 
-- Auto-combat weapons: rune orb, storm brand, orbit blade, chain lightning, and solar nova.
-- Synergy paths: storm + lightning, blade + nova, and orb + pierce.
-- First-run guidance for movement, dash, XP collection, and the first circuit seal.
-- A four-step Rune Circuit with sequential activation, timed unlocks, navigation, and distinct rewards.
-- Each completed seal receives a dedicated circuit signal that states the connected seal and earned reward without stacking another objective panel.
-- Three honest run outcomes: full circuit seal, five-minute survival with an incomplete circuit, and defeat.
-- Circuit-led run phases, wave pacing, surges, field items, elites, bosses, and boss rage patterns.
-- Each five-minute run-phase change receives one restrained central signal and a distinct procedural audio cue.
-- Contact attacks use approach, readable anticipation, impact snap, and recovery states with visible reach/countdown rings.
-- The opening curve reaches its first card sooner and exposes the first three circuit seals by 145 seconds without changing late-run scaling.
-- Guided replay routes continue into the early draft after the first seal, and an available synergy partner receives a protected card slot before unrelated weapon families.
-- Combat signals use distinct shapes: warm open rings for danger, filled pulses for player attacks, and diamond marks for rewards and circuit objectives.
-- Visual-effect budgets retain danger telegraphs before optional attack effects; threat warnings intensify toward impact and contact countdown rings converge on their real reach.
-- Projectile pierce is spent on distinct targets, while orbit-blade collision matches its rendered ground-plane footprint and periodically sweeps nearby targets during objective travel.
-- Storm and chain upgrades retain their crowd-control identity with bounded simultaneous-hit budgets, while runners use a short predictive line and a phase-bounded approach boost to create dodgeable early/mid-run pressure.
-- A quality-independent simulation budget keeps enemy, projectile, and XP rules identical across devices.
-- Adaptive visual budgets protect optional effects, numbers, and render cadence without changing combat difficulty.
+1. Move with the keyboard or touch stick; your weapons attack automatically.
+2. Collect XP and choose upgrades that strengthen your build.
+3. Follow the arrow, distance, and opening time to the next seal. Stay in its activation area to connect it.
+4. Read attack warnings, dash through pressure, and survive for five minutes.
 
-### Presentation and controls
+Connecting all four seals completes the Rune Circuit and strengthens the final fight. The result screen distinguishes a completed circuit, survival with an incomplete circuit, and defeat.
 
-- Dark rune-field HUD with anchored HP/XP, timer, circuit navigation, objective, threat, boss, upgrade, pause, and result states.
-- Player hits receive a restrained edge vignette, an HP-first alert, and a compact mobile layout that temporarily yields lower-priority guidance.
-- The result screen ranks the top three damage sources by share and DPS, then summarizes damage taken, actual healing, and the run's most dangerous phase.
-- A hand-painted 2.5D Rune Warden with 24 authored direction/action cells: two-frame idle and walk cycles plus cast and hurt poses in all four directions.
-- A complete 2.5D animated Riftborn cast: runner, golem, brute, bulwark, charger, summoner, and the Rift Warden boss.
-- Lossless WebP atlases and shared clean-edge sprite compositing reduce character transfer size while removing pale source fringes.
-- Lightweight generated alpha materials give projectiles, runner afterimages, and storm fields soft game-like motion without Blender or downloaded VFX textures.
-- Upgrade cards use a project-authored nine-icon rune atlas, one featured recommendation per draft, and keyboard shortcuts (`1`–`3`) instead of generic geometric placeholders.
-- Pause and result overlays use a shared focus-contained dialog flow, a run-first information hierarchy, and a two-step restart guard that protects an active run from accidental resets.
-- HUD, loading, upgrade, pause, and result states share one cut-corner Rune Circuit frame grammar and restrained surface hierarchy instead of rounded web-dashboard cards.
-- HUD vitals, actions, overlay marks, build routes, and touch dash use one code-built stroke-icon family, while the Rune Circuit loading screen carries the same visual language into the first playable frame.
-- Health, experience, run time, boss health, and loading progress expose real progress semantics for keyboard and assistive-technology users.
-- Objectives, encounter signals, and boss phases use distinct rune markers and information hierarchy; active encounters suppress duplicated guidance and non-actionable combat notices.
-- Procedural Web Audio cues with browser-safe unlock and persisted mute state.
-- Keyboard, mobile joystick, touch dash, portrait, and landscape support.
-- Forest-ruin arena with multi-scale procedural PBR terrain, code-built foliage and ruins, four local biome palettes, coherent lit materials, and contact shadows.
-- Worn curved Rune Circuit paths, sparse rune inlays, and a low-profile central Rune Heart lead to four distinct code-built landmark silhouettes: armory blades, a life tree, a purge brazier, and etching tablets. No Blender or GLB runtime dependency is required.
+## Features
+
+| Area | What is playable |
+| --- | --- |
+| Weapons | Rune orb, storm brand, orbit blade, chain lightning, and solar nova |
+| Builds | Storm + lightning, blade + nova, and orb + pierce synergy paths |
+| Progression | XP drafts, sequential seal rewards, optional field pickups, and guided replay routes |
+| Enemies | Runner, golem, brute, three elite roles, and the Rift Warden boss |
+| Combat feedback | Contact windup, reach/countdown rings, charge warnings, hit reactions, and boss patterns |
+| Controls | Keyboard, touch movement/dash, pause, sound settings, and persisted visual quality |
+| Results | Damage contribution, DPS, damage taken, healing, circuit progress, and replay choices |
+
+## Latest improvements
+
+- **First-session flow:** movement, XP, and the first seal form one clear route. Early upgrade cards explain immediate effects and show concrete numeric changes; keyboard activation works alongside `1`–`3` shortcuts.
+- **Build continuity:** armory rewards follow the active weapon build. A timed, optional reward after the first seal gives a short detour without blocking the next objective or duplicating its scheduled pickup.
+- **HUD and upgrade design:** stable health/XP positions, four distinct seal states, readable direction/distance/opening time, explicit recommendations, larger rune illustrations, and clear selection actions.
+- **Character and world readability:** an 18% larger player, color-preserving sprite treatment, smoother atlas minification, fewer body decorations, a stable player marker, quieter terrain, and action-focused effects.
+- **Mobile layout:** 44px-or-larger HUD actions, compact landscape navigation, readable low-health feedback, and contextual guidance above the sticks on short portrait screens so the character stays visible.
+- **Consistent combat:** rendering quality changes presentation budgets while preserving simulation limits, collision rules, and progression.
+
+The [design records](./docs/design/gameplay-reframe/) document implementation decisions and verification. The screenshots above are captured from the local development build; GitHub Pages updates after the deployment workflow succeeds.
 
 ## Controls
 
-| Action | Input |
-| --- | --- |
-| Move | `WASD`, arrow keys, or mobile joystick |
-| Dash | `Space` or mobile dash button |
-| Pause | `P`, `Esc`, or pause button |
-| Restart | HUD or pause restart button, then press once more to confirm |
-| Sound | HUD sound button |
+| Action | Keyboard / pointer | Touch |
+| --- | --- | --- |
+| Move | `WASD` or arrow keys | Left stick |
+| Dash | `Space` | Dash button |
+| Choose an upgrade | Click, `1`–`3`, or `Tab` then `Enter` / `Space` | Tap a card |
+| Pause / resume | `P`, `Esc`, or pause button | Pause / resume button |
+| Restart | Restart button, then confirm | Restart button, then confirm |
+| Sound | HUD sound button | HUD sound button |
 
-## Quick start
+## Run locally
 
-Requires Node.js 22 or a compatible current LTS release.
+Use **Node.js 22** (the version used by CI) and npm.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-The development server prints the local URL. Production and preview commands are:
+Open the local URL printed by Vite, normally `http://localhost:5173`.
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## QA
+The production build is written to `dist/`. No backend, account, or environment secrets are required.
 
-Run the complete browser smoke suite:
+## Test
 
 ```bash
+# Full browser, gameplay, layout, and stress suite
 npm run qa:smoke
-```
 
-Run the three-route five-minute balance sampler in the background:
-
-```bash
+# Three guided five-minute build routes with a fixed seed
 npm run qa:balance
 ```
 
-The suite covers themed loading and progress semantics, keyboard/touch movement and dash feedback, audio, opening progression and phase transitions, Rune Circuit states and landmark structure, danger-signal budget priority, late-warning intensity, enemy contact timing and ring convergence, HUD/overlays, dialog focus containment, restart confirmation, synergy-aware upgrade selection, boss state, result damage and survival summaries, desktop stress budgets, and 320 × 568 / 360 × 740 mobile HUD separation. The balance sampler also records damage by run phase, damage taken, and actual healing.
+The smoke suite currently contains **84 cases**. It covers movement/dash, all 80 authored character animation cells, opening progression, seal rewards, optional detours, keyboard/dialog behavior, mobile layouts, damage feedback, results, and performance budgets. Viewport checks include 320×568, 360×740, 568×320, 740×360, tablet, and desktop layouts.
 
-Useful deterministic routes include:
+Local tests run headlessly with installed Google Chrome and enforce the real-time stress threshold. CI installs Playwright Chromium and uses software WebGL to check behavior and budgets without imposing the local FPS threshold. See [docs/qa.md](./docs/qa.md) for setup details and shorter balance runs.
 
-```txt
-?qa=circuit&quality=balanced
-?qa=phase&quality=balanced
-?qa=objectives&quality=balanced
-?qa=starter-upgrade&quality=balanced
-?qa=contact&quality=balanced
-?qa=combat&quality=balanced
-?qa=threats&quality=balanced
-?qa=stress&quality=balanced
-?qa=victory&quality=balanced
-?qa=survived&quality=balanced
-```
+Screenshots and measurements are written to `output/playwright/`; failure artifacts go to `test-results/`. These generated directories are ignored by Git. The two README screenshots are curated copies under `docs/images/`.
 
-See [docs/qa.md](./docs/qa.md) for the complete route table, browser expectations, and generated artifact locations.
+Physical-phone touch/audio latency, browser chrome, and low-end cold-load memory still need device testing. Browser QA does not establish those hardware results.
 
-## Render quality
+### Development scenes
 
-The default mode automatically resolves to the balanced web target. Pause the game to switch between Auto, Performance, Balanced, and Quality; the choice persists locally. URL flags remain available for deterministic QA and override the in-game selector.
+Run `npm run dev` and append a scene query to the local URL:
 
-```txt
-?quality=low
-?quality=balanced
-?quality=high
-?quality=high&fx=on
-?quality=cinematic
-```
+| Query | Scene |
+| --- | --- |
+| `?qa=circuit&quality=balanced` | First-seal approach and navigation |
+| `?qa=seal&quality=balanced` | Seal completion feedback |
+| `?qa=starter-upgrade&quality=balanced` | Opening upgrade choices |
+| `?qa=contact&quality=balanced` | Enemy contact windup, hit, and recovery |
+| `?qa=threats&quality=balanced` | Elite/boss silhouettes and attack warnings |
+| `?qa=stress&quality=balanced` | Dense combat and runtime budgets |
+| `?qa=victory&quality=balanced` | Completed-run result |
 
-- `low` prioritizes mobile and reduced-motion stability.
-- `balanced` is the normal gameplay target and keeps the full runtime model-free.
-- `high` keeps the same coherent battlefield composition while enhancing lighting, shadows, atmosphere, and effect detail without adding model downloads.
-- `fx=on`, `env=on`, and `cinematic` lazy-load more expensive presentation layers.
-- Quality changes affect presentation only. Enemy density, projectile limits, and XP reward limits remain the same.
+These fixtures and `window.__RUNE_DRIFT_QA__` are development-only. The [QA guide](./docs/qa.md) lists all scenes and controls.
 
-## Repository structure
+## Visual quality
 
-```txt
+Use the pause menu to select **Auto, Performance, Balanced, or Quality**. The choice persists locally; Auto selects a presentation tier based on device and display conditions.
+
+For a fixed mode, use `?quality=low`, `?quality=balanced`, or `?quality=high`. An explicit URL mode takes precedence over the menu. `?quality=high&fx=on`, `env=on`, and `?quality=cinematic` opt into more expensive presentation layers.
+
+All modes use the same authored 2.5D character cast. Higher quality adds lighting, shadows, and effect detail. Enemy, projectile, and XP simulation limits remain identical.
+
+## Project structure
+
+```text
 src/
-  audio/      semantic audio cues and Web Audio engine
+  audio/      Web Audio cues
   config/     asset manifest, tuning, metadata, upgrades
-  hooks/      React-owned runtime lifecycle
+  hooks/      React runtime lifecycle
   qa/         deterministic development scenes
-  styles/     tokens, shell, screen-scoped HUD/overlay modules, responsive rules
-  systems/    frame-level gameplay logic and feature-scoped runtime modules
-  ui/         DOM HUD, overlays, cards, touch controls
-  world/      React Three Fiber battlefield and effects
-public/sprites/ project-authored RGB character atlases with runtime clean-edge compositing
-public/art/     project-authored transparent UI art atlases
-scripts/        Playwright QA
-docs/           project, QA, asset, and design documentation
+  styles/     tokens, HUD, overlays, responsive layouts
+  systems/    gameplay and frame-level runtime logic
+  ui/         HUD, overlays, cards, touch controls
+  world/      Three.js terrain, characters, effects, and atlas textures
+public/
+  sprites/    project-authored character atlases
+  art/        project-authored upgrade icons
+scripts/      Playwright smoke and balance checks
+docs/         architecture, assets, QA, design records, and screenshots
 ```
 
-All runtime modules under `src/` are connected to the `src/main.jsx` import graph. Generated output, browser artifacts, and raw asset downloads are git-ignored.
-
-Stable facade files such as `gameState.js`, `runProgress.js`, `weaponRuntime.js`, `EnemyEffects.jsx`, `FieldItemsAndShrines.jsx`, `WeaponEffects.jsx`, `CombatFeedback.jsx`, and `GameOverlays.jsx` preserve existing imports. Their implementations live in responsibility-scoped subfolders so future gameplay and presentation changes do not collect in a single file.
-
-See [docs/project-structure.md](./docs/project-structure.md) for ownership boundaries and the full repository map.
+Facade modules such as `gameState.js`, `runProgress.js`, and `weaponRuntime.js` keep their public imports stable while implementation lives in focused modules. See the [repository map and ownership boundaries](./docs/project-structure.md).
 
 ## Assets
 
-Only project-authored atlases under `public/sprites/` and `public/art/` ship as external visual assets. Characters and upgrade icons use 2.5D atlases; terrain, landmarks, foliage, weapons, and effects are assembled in Three.js code.
+Character and upgrade atlases are project-authored images. Terrain, foliage, landmarks, weapons, and effects use code-built geometry and textures; the runtime has no GLB or Blender dependency.
 
-- Active runtime manifest: `src/config/assets.js`
-- Attribution: [ASSET_CREDITS.md](./ASSET_CREDITS.md)
-- Inventory and runtime rules: [docs/assets.md](./docs/assets.md)
+Character atlases use a shared cached RGBA conversion before mipmap filtering. Deterministic frame selection remains separate from rendering. See [asset sources and processing](./docs/assets.md) and [ASSET_CREDITS.md](./ASSET_CREDITS.md).
 
 ## Deployment
 
-`.github/workflows/deploy.yml` builds, runs the headless smoke suite, and deploys `dist/` to GitHub Pages on pushes to `main`.
+Pushes to `main` run [Deploy web game](./.github/workflows/deploy.yml): install dependencies, build, run the smoke suite, and deploy `dist/` to GitHub Pages. A failing build or smoke check prevents deployment.
 
-The production build uses `import.meta.env.BASE_URL`, so sprite atlases load correctly from the `/rune-drift-survivors/` Pages subpath.
+Assets use `import.meta.env.BASE_URL` so the game works under the `/rune-drift-survivors/` Pages subpath. To reproduce that build locally:
 
-## Documentation
+```bash
+GITHUB_PAGES=true npm run build
+```
 
-- [Project structure](./docs/project-structure.md)
-- [QA guide](./docs/qa.md)
-- [Asset pipeline and sources](./docs/assets.md)
-- [Visual reboot design records](./docs/design/rune-visual-reboot/)
-- [Gameplay reframe and Rune Circuit](./docs/design/gameplay-reframe/)
+## Design and engineering notes
+
+- [First-seal experience](./docs/design/gameplay-reframe/FIRST_SEAL_EXPERIENCE.md)
+- [Build continuity and optional detour](./docs/design/gameplay-reframe/BUILD_AND_DETOUR_SLICE.md)
+- [HUD and upgrade readability](./docs/design/gameplay-reframe/UI_READABILITY_PASS.md)
+- [Character and world readability](./docs/design/gameplay-reframe/CHARACTER_AND_WORLD_PASS.md)
 - [Material-first visual foundation](./docs/design/gameplay-reframe/VISUAL_FOUNDATION.md)
-- [Balance pass 02: saturation and pursuit](./docs/design/gameplay-reframe/BALANCE_PASS_02.md)
-- [Balance pass 03: opening pressure and hit feedback](./docs/design/gameplay-reframe/BALANCE_PASS_03.md)
+- [Balance: saturation and pursuit](./docs/design/gameplay-reframe/BALANCE_PASS_02.md)
+- [Balance: opening pressure and hit feedback](./docs/design/gameplay-reframe/BALANCE_PASS_03.md)

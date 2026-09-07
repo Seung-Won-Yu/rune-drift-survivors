@@ -7,6 +7,7 @@ import { getStateSyncInterval } from './hooks/useVisualQuality.js';
 import { createGameSceneActions } from './systems/gameSceneActions.js';
 import { getRunPhase } from './systems/progression.js';
 import { applyFrameStateUpdate } from './systems/runFrameState.js';
+import { getFieldDetourState } from './systems/fieldItemDirector.js';
 import {
   getBossStatusSnapshot,
   getRunStatsSnapshot,
@@ -82,11 +83,13 @@ export function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'h
       stateSyncElapsed.current = 0;
       const bossStatus = getBossStatusSnapshot(enemies);
       const runStatsSnapshot = getRunStatsSnapshot(runStats);
+      const fieldDetour = getFieldDetourState(fieldItems.current, player.current.pos);
       setGame(current => applyFrameStateUpdate({
         current,
         elapsed,
         player: player.current,
         bossStatus,
+        fieldDetour,
         runStats: runStatsSnapshot
       }));
     }

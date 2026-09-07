@@ -103,9 +103,9 @@ export function RuneRelicLandmarks({ visualQuality = 'high' }) {
           <ringGeometry args={[0.74, 0.79, 8]} />
           <meshBasicMaterial color={ART_TOKENS.runeMint} transparent opacity={0.08} depthWrite={false} toneMapped={false} />
         </mesh>
-        <mesh castShadow={visualQuality === 'high'} position={[0, 0.86, 0]} rotation={[0.4, 0.22, 0.16]} scale={[0.66, 1.02, 0.66]}>
+        <mesh position={[0, 0.46, 0]} rotation={[0, Math.PI / 4, 0]} scale={[0.66, 0.045, 0.66]}>
           <octahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial color="#8a7546" emissive={ART_TOKENS.runeMint} emissiveIntensity={0.48} roughness={0.44} toneMapped={false} />
+          <meshStandardMaterial color="#8a7546" emissive={ART_TOKENS.runeMint} emissiveIntensity={0.18} roughness={0.7} toneMapped={false} />
         </mesh>
         {visualQuality === 'high' && <pointLight position={[0, 1.5, 0]} color={ART_TOKENS.wornGold} intensity={0.72} distance={10} />}
       </group>

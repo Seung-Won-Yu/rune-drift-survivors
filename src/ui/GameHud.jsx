@@ -16,6 +16,7 @@ import {
   HudAlert,
   HudBossBar,
   HudCircuit,
+  HudDetour,
   HudEncounter,
   HudMeter,
   HudObjectives,
@@ -42,18 +43,23 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
   const isThreatened = crisis.level >= 3 || bossStatus?.enraged || encounterAlert?.kind === 'boss' || encounterAlert?.kind === 'boss-pattern';
   const onboardingSteps = getOnboardingSteps(game);
   const openingObjectives = getOpeningObjectives(game);
-  const openingActiveObjectives = openingObjectives.filter(objective => !objective.complete).slice(0, 2);
   const phaseObjectives = getRunPhaseObjectives(game, runPhase, openingObjectives);
   const activeObjectives = phaseObjectives.filter(objective => !objective.complete).slice(0, 2);
   const visibleObjectives = activeObjectives.length > 0 ? activeObjectives : phaseObjectives.slice(0, 2);
   const completedPhaseObjectives = phaseObjectives.filter(objective => objective.complete).length;
   const completedOpeningObjectives = openingObjectives.filter(objective => objective.complete).length;
-  const firstSessionCue = getFirstSessionCue(game, onboardingSteps, openingActiveObjectives);
-  const showFirstSessionCoach = !bossStatus && !encounterAlert && game.damageFlash <= 0 && firstSessionCue && game.time < 32;
-  const showRunObjectives = !bossStatus && !encounterAlert && game.damageFlash <= 0 && !showFirstSessionCoach && visibleObjectives.length > 0 && game.time < 286;
+  const firstSessionCue = getFirstSessionCue(game, onboardingSteps);
+  const openingGuidanceActive = firstSessionCue && game.time < 60;
+  // The replay route is confirmed by the initial pickup notice (4.2 seconds).
+  const replayNoticeActive = game.replayRouteFamily && game.time < 4.2 && game.pickupFlash > 0;
+  const showFirstSessionCoach = !bossStatus && !encounterAlert && game.damageFlash <= 0
+    && !activeThreat && crisis.level === 0 && dashReady && !replayNoticeActive && openingGuidanceActive;
+  const showDetour = game.fieldDetour && circuit.completed === 1 && !bossStatus && !encounterAlert
+    && game.damageFlash <= 0 && !activeThreat && crisis.level === 0 && dashReady && game.pickupFlash <= 0;
+  const showRunObjectives = !showDetour && !bossStatus && !encounterAlert && game.damageFlash <= 0 && !openingGuidanceActive && visibleObjectives.length > 0 && game.time < 286;
   const showEncounterBanner = encounterAlert && !bossStatus;
   const showDashTicker = !dashReady;
-  const hudAlerts = getHudAlerts({
+  const allHudAlerts = getHudAlerts({
     game,
     crisis,
     activeThreat,
@@ -65,6 +71,8 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
     dashCooldown,
     showDashTicker
   });
+  const damageAlert = allHudAlerts.find(alert => alert.id === 'damage');
+  const hudAlerts = allHudAlerts.filter(alert => alert.id !== 'damage' && (!showFirstSessionCoach || alert.id !== 'pickup'));
 
   return (
     <section
@@ -72,7 +80,7 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
       aria-label="게임 상태"
     >
       <div className="runeHudTop hudTopBar">
-        <div className="runeVitals hudVitalsPocket" aria-label="체력과 경험치">
+        <div className={`runeVitals hudVitalsPocket${damageAlert ? ' hasDamage' : ''}`} aria-label="체력과 경험치">
           <span className="runeVitalsLabel" aria-hidden="true">WANDERER</span>
           <HudMeter
             tone="hp"
@@ -88,11 +96,14 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
             value={`${Math.floor(game.xp)} / ${game.xpToNext}`}
             pct={xpPct}
           />
+          <div className="hudDamageFeedback" aria-live="polite" aria-atomic="true">
+            {damageAlert && <HudAlert alert={hpRatio <= 0.34 ? { ...damageAlert, value: '즉시 회피' } : damageAlert} />}
+          </div>
         </div>
         <div className="runeRunClock hudRunPocket" aria-label="런 진행도">
           <div className="runeRunClockMeta">
-            <span>{runPhase.label}</span>
-            <small>{game.kills} KOs</small>
+            <span>남은 시간</span>
+            <small>{game.kills} 처치</small>
           </div>
           <strong>{formatTime(timeRemaining)}</strong>
           <div
@@ -126,6 +137,7 @@ export function HUD({ game, onRestart, onPause, audioMuted, onToggleAudio }) {
       {showFirstSessionCoach && (
         <HudPrompt cue={firstSessionCue} />
       )}
+      {showDetour && <HudDetour detour={game.fieldDetour} />}
       {showRunObjectives && (
         <HudObjectives
           runPhase={runPhase}

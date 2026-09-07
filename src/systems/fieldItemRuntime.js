@@ -12,6 +12,7 @@ import {
 } from '../config/gameTuning.js';
 import {
   createFieldItem,
+  createScheduledFieldItem,
   getFieldItemDropPosition,
   pickFieldItemType
 } from './fieldItemDirector.js';
@@ -40,11 +41,9 @@ export function updateFieldItemsRuntime(context) {
   fieldItemDropLock.current = Math.max(0, fieldItemDropLock.current - dt);
 
   for (const scheduled of EARLY_FIELD_ITEM_SCHEDULE) {
-    if (currentGame.time < scheduled.time || scheduledFieldItems.current.has(scheduled.id)) continue;
-    const item = createFieldItem(
-      scheduled.type,
-      getFieldItemDropPosition(player.current.pos, scheduled.distance, scheduled.spread ?? 4)
-    );
+    if (scheduledFieldItems.current.has(scheduled.id)) continue;
+    const item = createScheduledFieldItem(scheduled, currentGame, player.current.pos);
+    if (!item) continue;
     const meta = FIELD_ITEM_META[scheduled.type];
     fieldItems.current.push(item);
     spawnWarnings.current.push({
@@ -83,10 +82,11 @@ export function updateFieldItemsRuntime(context) {
     item.life -= dt;
     if (item.life <= 0) continue;
     const distanceSq = item.pos.distanceToSquared(player.current.pos);
-    if (distanceSq < FIELD_ITEM_ATTRACT_RADIUS * FIELD_ITEM_ATTRACT_RADIUS && distanceSq > 0.000001) {
+    const attractRadius = item.detour ? 4 : FIELD_ITEM_ATTRACT_RADIUS;
+    if (distanceSq < attractRadius * attractRadius && distanceSq > 0.000001) {
       const distance = Math.sqrt(distanceSq);
       const pull = scratch.vec.copy(player.current.pos).sub(item.pos).setY(0).normalize();
-      item.pos.addScaledVector(pull, dt * (6.2 + (FIELD_ITEM_ATTRACT_RADIUS - distance) * 1.35));
+      item.pos.addScaledVector(pull, dt * (6.2 + (attractRadius - distance) * 1.35));
     }
     if (distanceSq <= FIELD_ITEM_PICKUP_RADIUS * FIELD_ITEM_PICKUP_RADIUS) {
       applyFieldItemRuntime(item, currentGame, updateGame, context);

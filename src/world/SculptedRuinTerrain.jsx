@@ -15,8 +15,8 @@ export function SculptedRuinTerrain({ visualQuality = 'high' }) {
     const indices = [];
     const lowColor = new THREE.Color('#213a31');
     const midColor = new THREE.Color('#496456');
-    const highColor = new THREE.Color('#7b8371');
-    const mossColor = new THREE.Color('#477a62');
+    const highColor = new THREE.Color('#65786d');
+    const mossColor = new THREE.Color('#3e6858');
     const edgeColor = new THREE.Color('#132823');
     const warmStone = new THREE.Color('#8c8b74');
     const lowlandMud = new THREE.Color('#35483d');
@@ -48,7 +48,7 @@ export function SculptedRuinTerrain({ visualQuality = 'high' }) {
 
         const color = new THREE.Color().copy(lowColor).lerp(midColor, 0.66 + mossBlend * 0.42);
         color.lerp(lowlandMud, basinBlend * 0.3);
-        color.lerp(highColor, heightBlend * 0.52);
+        color.lerp(highColor, heightBlend * 0.36);
         color.lerp(mossColor, THREE.MathUtils.clamp(mossBlend * 1.18, 0, 0.42));
         color.lerp(dryGrass, dryBlend * 0.18);
         color.lerp(pathDust, spokeWear * 0.43);
@@ -95,7 +95,7 @@ export function SculptedRuinTerrain({ visualQuality = 'high' }) {
         vertexColors
         map={surfaceTextures?.map ?? null}
         normalMap={surfaceTextures?.normalMap ?? null}
-        normalScale={surfaceTextures ? [0.58, 0.58] : [0, 0]}
+        normalScale={surfaceTextures ? [0.32, 0.32] : [0, 0]}
         roughness={surfaceTextures ? 0.92 : 0.99}
         roughnessMap={surfaceTextures?.roughnessMap ?? null}
         metalness={0.01}

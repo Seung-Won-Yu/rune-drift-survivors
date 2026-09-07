@@ -1,5 +1,7 @@
 # Gameplay Reframe Tasks
 
+Historical slice checklist. The current [character and world pass](./CHARACTER_AND_WORLD_PASS.md) replaces the old shader-key/no-mipmap treatment with a prefiltered RGBA atlas.
+
 ## Slice 01 — Purpose and readability
 
 - [x] Audit the current run, mobile HUD, upgrades, boss state, and stress scene.

@@ -132,18 +132,18 @@ export function FieldPickupItems({ itemsRef, visualQuality = 'high' }) {
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
-          scratch.scale.setScalar(ringScale * pulse)
+          scratch.scale.setScalar(ringScale * pulse * (item.detour ? 1.35 : 1))
         );
         ring.setMatrixAt(index, scratch.matrix);
       }
 
       if (beamMesh.current) {
         scratch.quat.identity();
-        scratch.pos.set(item.pos.x, item.pos.y + 1.1, item.pos.z);
+        scratch.pos.set(item.pos.x, item.pos.y + (item.detour ? 2.1 : 1.1), item.pos.z);
         scratch.matrix.compose(
           scratch.pos,
           scratch.quat,
-          scratch.scale.set(0.07 * pulse, 1.9, 0.07 * pulse)
+          scratch.scale.set(0.07 * pulse, item.detour ? 3.9 : 1.9, 0.07 * pulse)
         );
         beamMesh.current.setMatrixAt(beamCount, scratch.matrix);
         scratch.color.set(meta.color);
@@ -220,5 +220,4 @@ export function FieldPickupItems({ itemsRef, visualQuality = 'high' }) {
     </>
   );
 }
-
 
