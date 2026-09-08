@@ -933,10 +933,22 @@ test('detour is optional, expires once and cannot duplicate its scheduled reward
   expect(context.fieldItems.current).toHaveLength(0);
 });
 
+async function waitForSealFeedback(page) {
+  // This fixture starts at 28s and displays the seal announcement for 2.8 game
+  // seconds. Software WebGL can need more than 20 wall seconds to simulate it.
+  // Wait for actual simulation progress; do not bypass the announcement.
+  await page.waitForFunction(
+    () => window.__RUNE_DRIFT_QA__.snapshot().time >= 31,
+    null,
+    { polling: 100, timeout: runtimeTimeout(10_000, 60_000) }
+  );
+}
+
 for (const [width, height] of [[320, 568], [768, 1024], [740, 360], [1440, 900]]) {
   test(`optional detour keeps seal navigation readable at ${width}x${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const guards = await openGuardedPage(page, '/?qa=seal&quality=balanced');
+    await waitForSealFeedback(page);
     const detour = page.getByLabel('선택 우회 보상');
     await expect(detour).toBeVisible();
     await expect(detour).toContainText('무기 폭주 8초');
@@ -959,6 +971,7 @@ for (const [width, height] of [[320, 568], [768, 1024], [740, 360], [1440, 900]]
 
 test('player can follow the detour cue and receive the timed reward', async ({ page }) => {
   const guards = await openGuardedPage(page, '/?qa=seal&quality=balanced');
+  await waitForSealFeedback(page);
   await expect(page.getByLabel('선택 우회 보상')).toBeVisible();
   const directions = {
     '↑': ['w'], '↗': ['w', 'd'], '→': ['d'], '↘': ['s', 'd'],
