@@ -41,6 +41,7 @@ Connecting all four seals completes the Rune Circuit and strengthens the final f
 - **HUD and upgrade design:** stable health/XP positions, four distinct seal states, readable direction/distance/opening time, explicit recommendations, larger rune illustrations, and clear selection actions.
 - **Character and world readability:** an 18% larger player, color-preserving sprite treatment, smoother atlas minification, fewer body decorations, a stable player marker, quieter terrain, and action-focused effects.
 - **Mobile layout:** 44px-or-larger HUD actions, compact landscape navigation, readable low-health feedback, and contextual guidance above the sticks on short portrait screens so the character stays visible.
+- **Mobile results and controls:** circuit progress remains visible in a compact result row, and brighter touch labels keep MOVE readable above the joystick thumb.
 - **Consistent combat:** rendering quality changes presentation budgets while preserving simulation limits, collision rules, and progression.
 
 The [design records](./docs/design/gameplay-reframe/) document implementation decisions and verification. The screenshots above are captured from the local development build; GitHub Pages updates after the deployment workflow succeeds.

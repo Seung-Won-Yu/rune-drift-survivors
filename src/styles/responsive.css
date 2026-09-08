@@ -469,8 +469,29 @@
     display: none;
   }
 
+  /* Keep the circuit payoff visible on narrow screens as a compact completion rail. */
   .resultHighlights span:nth-child(3) {
-    display: none;
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 52px;
+    gap: 8px;
+  }
+
+  .resultHighlights span:nth-child(3) b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .resultHighlights span:nth-child(3) small {
+    display: block;
+    max-width: 42vw;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .resultTelemetry {

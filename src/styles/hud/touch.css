@@ -34,9 +34,14 @@
 }
 
 .runeTouchStick > span {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+  color: var(--rune-muted);
   font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.16em;
+  text-shadow: 0 0 8px rgba(117, 221, 210, 0.16);
 }
 
 .runeTouchStick > i {
@@ -83,7 +88,7 @@
 }
 
 .runeDashButton small {
-  color: var(--rune-dim);
+  color: var(--rune-muted);
   font-size: 0.54rem;
   font-weight: 800;
   letter-spacing: 0.14em;
