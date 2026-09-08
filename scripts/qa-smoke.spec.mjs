@@ -162,6 +162,9 @@ async function openGuardedPage(page, route) {
   const guards = await attachPageGuards(page);
   await page.goto(route, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.loadingLayer')).toBeHidden({ timeout: 20_000 });
+  if (new URL(route, 'http://localhost').searchParams.has('qa')) {
+    await page.waitForFunction(() => window.__RUNE_DRIFT_QA__?.ready?.() === true);
+  }
   return guards;
 }
 
@@ -411,9 +414,46 @@ test('dialogs keep focus contained and restart requires confirmation', async ({ 
   await pauseDialog.getByRole('button', { name: '다시 시작', exact: true }).click();
   await expect(pauseDialog).toBeVisible();
   await expect(pauseDialog.getByRole('button', { name: /다시 시작 확인/ })).toBeVisible();
+  // Confirmation remains available to players who need time to read it.
+  await page.waitForTimeout(2800);
+  await expect(pauseDialog.getByRole('button', { name: /다시 시작 확인/ })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(pauseDialog).toBeVisible();
+  await expect(pauseDialog.getByRole('button', { name: '다시 시작', exact: true })).toBeVisible();
+  await pauseDialog.getByRole('button', { name: '다시 시작', exact: true }).click();
+  await resumeButton.focus();
+  await expect(pauseDialog.getByRole('button', { name: '다시 시작', exact: true })).toBeVisible();
+  await pauseDialog.getByRole('button', { name: '다시 시작', exact: true }).click();
   await pauseDialog.getByRole('button', { name: /다시 시작 확인/ }).click();
   await expect(pauseDialog).toBeHidden();
   guards.assertClean();
+});
+
+test('a newer QA scene supersedes a pending fixture', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?qa=threats&quality=balanced');
+  const applied = await page.evaluate(async () => {
+    const qa = window.__RUNE_DRIFT_QA__;
+    return Promise.all([qa.threats(), qa.reset()]);
+  });
+  expect(applied).toEqual([false, true]);
+  await expect(page.locator('.runeCircuit')).toContainText('CIRCUIT 0/4');
+  expect(await page.evaluate(() => window.__RUNE_DRIFT_QA__.snapshot().phase)).toBe('playing');
+  await guards.assertClean();
+});
+
+test('paused gameplay stops continuous rendering and resumes frames', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?quality=low');
+  await page.getByRole('button', { name: '일시정지', exact: true }).click();
+  const resume = page.getByRole('dialog').getByRole('button', { name: '계속하기', exact: true });
+  await expect(resume).toBeVisible();
+  await page.waitForTimeout(400);
+  const before = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().frameStats.samples);
+  await page.waitForTimeout(500);
+  const after = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().frameStats.samples);
+  expect(after - before).toBeLessThanOrEqual(2);
+  await resume.click();
+  await page.waitForFunction(samples => window.__RUNE_DRIFT_QA__.metrics().frameStats.samples > samples + 5, after);
+  await guards.assertClean();
 });
 
 test('rune circuit encounter pacing smoke', () => {
@@ -1528,6 +1568,12 @@ test('survival result keeps incomplete circuit distinct from victory', async ({ 
 
 test('stress budget smoke', async ({ page }) => {
   const guards = await openGuardedPage(page, `/?qa=stress&quality=${runtimeQuality}`);
+  // Separate shader/upload startup from steady rendering, rather than repeatedly
+  // repopulating the world on timers (which used to discard startup samples).
+  await page.waitForFunction(() => window.__RUNE_DRIFT_QA__.metrics().frameStats.samples >= 10);
+  const startup = await page.evaluate(() => window.__RUNE_DRIFT_QA__.metrics().frameStats);
+  await test.info().attach('stress-startup-frames', { body: JSON.stringify(startup), contentType: 'application/json' });
+  await page.evaluate(() => window.__RUNE_DRIFT_QA__.beginFrameSample());
   const frameSampleTarget = isCi ? 10 : 180;
   await page.waitForFunction(
     target => window.__RUNE_DRIFT_QA__?.metrics?.()?.frameStats?.samples > target,

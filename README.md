@@ -105,7 +105,7 @@ npm run qa:smoke
 npm run qa:balance
 ```
 
-The smoke suite currently contains **84 cases**. It covers movement/dash, all 80 authored character animation cells, opening progression, seal rewards, optional detours, keyboard/dialog behavior, mobile layouts, damage feedback, results, and performance budgets. Viewport checks include 320×568, 360×740, 568×320, 740×360, tablet, and desktop layouts.
+The smoke suite currently contains **86 cases**. It covers movement/dash, all 80 authored character animation cells, opening progression, seal rewards, optional detours, keyboard/dialog behavior, mobile layouts, damage feedback, results, and performance budgets. Viewport checks include 320×568, 360×740, 568×320, 740×360, tablet, and desktop layouts.
 
 Local tests run headlessly with installed Google Chrome and enforce the real-time stress threshold. CI installs Playwright Chromium and uses software WebGL to check behavior and budgets without imposing the local FPS threshold. See [docs/qa.md](./docs/qa.md) for setup details and shorter balance runs.
 
@@ -127,7 +127,7 @@ Run `npm run dev` and append a scene query to the local URL:
 | `?qa=stress&quality=balanced` | Dense combat and runtime budgets |
 | `?qa=victory&quality=balanced` | Completed-run result |
 
-These fixtures and `window.__RUNE_DRIFT_QA__` are development-only. The [QA guide](./docs/qa.md) lists all scenes and controls.
+These fixtures and `window.__RUNE_DRIFT_QA__` are development-only. Scene commands return a promise after React commits and the world is initialized; await the command or check `ready()` before inspecting it. Paused/result screens render on demand, while the stress fixture continuously renders for frame measurements. The [QA guide](./docs/qa.md) lists all scenes and controls.
 
 ## Visual quality
 

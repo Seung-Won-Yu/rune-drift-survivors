@@ -72,31 +72,49 @@ export function getQaGameSnapshot(game) {
 
 export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }) {
   const gameRef = useRef(game);
+  const revisionRef = useRef(0);
   gameRef.current = game;
 
   useEffect(() => {
     if (!import.meta.env.DEV) return undefined;
 
-    const showQaGame = nextGame => {
+    let pending = false;
+    let disposed = false;
+    // Resolve only after the R3F scene receives the requested state. No delayed
+    // replay can overwrite a subsequent reset, upgrade choice or user action.
+    const showQaGame = (input, prepare, choices = []) => {
+      const token = ++revisionRef.current;
+      const nextGame = { ...input, qaRevision: token };
+      pending = true;
       sceneApi.current?.reset();
-      setUpgradeChoices([]);
+      gameRef.current = nextGame;
+      setUpgradeChoices(choices);
       setGame(nextGame);
-      window.setTimeout(() => setGame(nextGame), 80);
+      return new Promise(resolve => {
+        const apply = () => {
+          if (disposed || revisionRef.current !== token) { resolve(false); return; }
+          const api = sceneApi.current;
+          if (api?.state?.()?.qaRevision !== token) { window.requestAnimationFrame(apply); return; }
+          api.reset();
+          prepare?.(api);
+          pending = false;
+          resolve(true);
+        };
+        window.requestAnimationFrame(apply);
+      });
     };
 
     window.__RUNE_DRIFT_QA__ = {
+      ready: () => !pending,
       boss: options => {
-        showQaGame(createQaBossGame(options));
+        return showQaGame(createQaBossGame(options));
       },
       result: result => {
-        showQaGame(createQaResultGame(result));
+        return showQaGame(createQaResultGame(result));
       },
       stress: options => {
-        const nextGame = createQaStressGame();
-        showQaGame(nextGame);
-        [120, 260, 620].forEach(delay => {
-          window.setTimeout(() => sceneApi.current?.stress?.(options), delay);
-        });
+        const nextGame = { ...createQaStressGame(), qaContinuousFrames: true };
+        return showQaGame(nextGame, api => api.stress(options));
       },
       contactAttack: (options = {}) => {
         const nextGame = {
@@ -107,28 +125,21 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
         if (Number.isFinite(options.hp)) {
           nextGame.stats = { ...nextGame.stats, hp: Math.max(1, Math.min(nextGame.stats.maxHp, options.hp)) };
         }
-        showQaGame(nextGame);
-        window.setTimeout(() => sceneApi.current?.contactAttack?.(), 140);
+        return showQaGame(nextGame, api => api.contactAttack());
       },
       combat: () => {
-        showQaGame(createQaCombatGame());
-        [140, 300].forEach(delay => {
-          window.setTimeout(() => sceneApi.current?.combatIdentity?.(), delay);
-        });
+        return showQaGame(createQaCombatGame(), api => api.combatIdentity());
       },
       threats: () => {
-        showQaGame({
+        return showQaGame({
           ...createQaCombatGame(),
           phase: 'qa-preview',
           pickupMessage: '',
           pickupFlash: 0
-        });
-        [140, 300].forEach(delay => {
-          window.setTimeout(() => sceneApi.current?.threatIdentity?.(), delay);
-        });
+        }, api => api.threatIdentity());
       },
       circuit: () => {
-        showQaGame({
+        return showQaGame({
           ...createInitialGame(),
           phase: 'playing',
           time: 20,
@@ -148,7 +159,7 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
           onboardingMovement: 48,
           dashUses: 1
         };
-        showQaGame({
+        return showQaGame({
           ...openingGame,
           shrineActivations: 1,
           activatedShrines: { [shrine.id]: true },
@@ -159,7 +170,7 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
         });
       },
       phase: () => {
-        showQaGame({
+        return showQaGame({
           ...createInitialGame(),
           phase: 'playing',
           time: 46,
@@ -174,7 +185,7 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
         });
       },
       objectives: (options = {}) => {
-        showQaGame({
+        return showQaGame({
           ...createInitialGame(),
           phase: options.phase ?? 'playing',
           time: 182,
@@ -189,6 +200,7 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
         });
       },
       metrics: () => sceneApi.current?.metrics?.(),
+      beginFrameSample: () => sceneApi.current?.beginFrameSample?.(),
       snapshot: () => getQaGameSnapshot(gameRef.current),
       upgrade: () => {
         const nextGame = {
@@ -196,9 +208,7 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
           phase: 'upgrade',
           pendingUpgrades: 1
         };
-        sceneApi.current?.reset();
-        setUpgradeChoices(pickUpgrades(nextGame));
-        setGame(nextGame);
+        return showQaGame(nextGame, undefined, pickUpgrades(nextGame));
       },
       starterUpgrade: () => {
         const nextGame = {
@@ -213,55 +223,53 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
           onboardingMovement: 42,
           dashUses: 1
         };
-        sceneApi.current?.reset();
-        setUpgradeChoices(pickUpgrades(nextGame));
-        setGame(nextGame);
+        return showQaGame(nextGame, undefined, pickUpgrades(nextGame));
       },
       reset: options => {
-        sceneApi.current?.reset();
-        setUpgradeChoices([]);
-        setGame(createInitialGame(options));
+        return showQaGame(createInitialGame(options));
       }
     };
 
     const qaMode = new URLSearchParams(window.location.search).get('qa');
     if (qaMode === 'upgrade') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.upgrade(), 120);
+      window.__RUNE_DRIFT_QA__?.upgrade();
     } else if (qaMode === 'starter-upgrade') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.starterUpgrade(), 120);
+      window.__RUNE_DRIFT_QA__?.starterUpgrade();
     } else if (qaMode === 'stress') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.stress({
+      window.__RUNE_DRIFT_QA__?.stress({
         enemies: MAX_ENEMIES - 6,
         projectiles: MAX_PROJECTILES - 12,
         gems: MAX_XP_GEMS - 24
-      }), 120);
+      });
     } else if (qaMode === 'silhouette') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.stress({
+      window.__RUNE_DRIFT_QA__?.stress({
         enemies: 92,
         projectiles: 0,
         gems: 0,
         hitBursts: 0,
         weaponEffects: 0
-      }), 120);
+      });
     } else if (qaMode === 'contact') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.contactAttack(), 120);
+      window.__RUNE_DRIFT_QA__?.contactAttack();
     } else if (qaMode === 'combat') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.combat(), 120);
+      window.__RUNE_DRIFT_QA__?.combat();
     } else if (qaMode === 'threats') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.threats(), 120);
+      window.__RUNE_DRIFT_QA__?.threats();
     } else if (qaMode === 'circuit') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.circuit(), 120);
+      window.__RUNE_DRIFT_QA__?.circuit();
     } else if (qaMode === 'seal') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.seal(), 120);
+      window.__RUNE_DRIFT_QA__?.seal();
     } else if (qaMode === 'phase') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.phase(), 120);
+      window.__RUNE_DRIFT_QA__?.phase();
     } else if (qaMode === 'objectives') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.objectives({ phase: 'qa-preview' }), 120);
+      window.__RUNE_DRIFT_QA__?.objectives({ phase: 'qa-preview' });
     } else if (qaMode === 'victory' || qaMode === 'survived' || qaMode === 'defeat') {
-      window.setTimeout(() => window.__RUNE_DRIFT_QA__?.result(qaMode), 120);
+      window.__RUNE_DRIFT_QA__?.result(qaMode);
     }
 
     return () => {
+      disposed = true;
+      revisionRef.current++;
       delete window.__RUNE_DRIFT_QA__;
     };
   }, [sceneApi, setGame, setUpgradeChoices]);

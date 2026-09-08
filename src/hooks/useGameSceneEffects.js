@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useThree } from '@react-three/fiber';
 
 import { populateCombatIdentityScene } from '../qa/populateCombatIdentityScene.js';
 import { populateContactAttackScene } from '../qa/populateContactAttackScene.js';
@@ -14,6 +15,8 @@ export function useGameSceneEffects({
   touchControlsRef,
   onLevelUp
 }) {
+  const invalidate = useThree(state => state.invalidate);
+  const sceneGame = useRef(game);
   const {
     keys,
     dashQueued,
@@ -32,6 +35,9 @@ export function useGameSceneEffects({
     resetRuntime,
     getMetrics
   } = runtime;
+
+  // Publishing a ref during React render can expose an uncommitted scene.
+  useLayoutEffect(() => { sceneGame.current = game; }, [game]);
 
   useEffect(() => {
     const down = event => {
@@ -52,7 +58,7 @@ export function useGameSceneEffects({
   }, [dashQueued, game.phase, keys]);
 
   useEffect(() => {
-    refApi.current = {
+    const api = {
       reset: () => resetRuntime(touchControlsRef),
       stress: (options = {}) => {
         populateStressScene({
@@ -109,9 +115,22 @@ export function useGameSceneEffects({
           spawnWarnings
         });
       },
-      metrics: getMetrics
+      metrics: getMetrics,
+      beginFrameSample: () => resetFrameStats(frameStats),
+      state: () => sceneGame.current
     };
+    for (const key of ['reset', 'stress', 'contactAttack', 'combatIdentity', 'threatIdentity']) {
+      const action = api[key];
+      api[key] = (...args) => {
+        const result = action(...args);
+        invalidate();
+        return result;
+      };
+    }
+    refApi.current = api;
+    return () => { if (refApi.current === api) refApi.current = null; };
   }, [
+    invalidate,
     refApi,
     touchControlsRef,
     visualQuality,

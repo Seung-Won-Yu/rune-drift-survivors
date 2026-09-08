@@ -555,7 +555,8 @@
   .runeDirective,
   .runeObjective {
     top: auto;
-    bottom: calc(max(22px, env(safe-area-inset-bottom)) + 132px);
+    /* Include the 10px entrance motion in the clearance above touch controls. */
+    bottom: calc(max(22px, env(safe-area-inset-bottom)) + 144px);
     transform: none;
   }
 }

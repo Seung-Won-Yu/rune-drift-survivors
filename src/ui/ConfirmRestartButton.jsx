@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { RuneIcon } from './RuneIcon.jsx';
 
-const CONFIRM_WINDOW_MS = 2600;
 
 export function ConfirmRestartButton({
   onConfirm,
@@ -10,12 +9,6 @@ export function ConfirmRestartButton({
   label = '새 룬으로 시작'
 }) {
   const [armed, setArmed] = useState(false);
-
-  useEffect(() => {
-    if (!armed) return undefined;
-    const timeout = window.setTimeout(() => setArmed(false), CONFIRM_WINDOW_MS);
-    return () => window.clearTimeout(timeout);
-  }, [armed]);
 
   const handleClick = () => {
     if (!armed) {
@@ -32,6 +25,14 @@ export function ConfirmRestartButton({
       className={`${className} restartButton ${armed ? 'isArmed' : ''}`.trim()}
       type="button"
       onClick={handleClick}
+      onBlur={() => setArmed(false)}
+      onKeyDown={event => {
+        if (event.key === 'Escape' && armed) {
+          event.preventDefault();
+          event.stopPropagation();
+          setArmed(false);
+        }
+      }}
       aria-label={accessibleLabel}
       aria-live="polite"
     >

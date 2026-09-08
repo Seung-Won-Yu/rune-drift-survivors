@@ -124,6 +124,7 @@ function App() {
   return (
     <main className={`shell visual-${runtimeVisualQuality} ${game.damageFlash > 0 ? 'isHurt' : ''} ${game.stats.hp / game.stats.maxHp <= 0.34 ? 'isLowHp' : ''}`}>
       <Canvas
+        frameloop={game.phase === 'playing' || (import.meta.env.DEV && game.qaContinuousFrames) ? 'always' : 'demand'}
         shadows={runtimeVisualQuality !== 'low'}
         camera={canvasCamera}
         dpr={canvasDpr}

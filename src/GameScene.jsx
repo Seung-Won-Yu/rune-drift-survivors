@@ -84,14 +84,18 @@ export function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'h
       const bossStatus = getBossStatusSnapshot(enemies);
       const runStatsSnapshot = getRunStatsSnapshot(runStats);
       const fieldDetour = getFieldDetourState(fieldItems.current, player.current.pos);
-      setGame(current => applyFrameStateUpdate({
-        current,
-        elapsed,
-        player: player.current,
-        bossStatus,
-        fieldDetour,
-        runStats: runStatsSnapshot
-      }));
+      setGame(current => {
+        // A queued sample from the previous QA world must not enter a new run.
+        if (import.meta.env.DEV && current.qaRevision !== game.qaRevision) return current;
+        return applyFrameStateUpdate({
+          current,
+          elapsed,
+          player: player.current,
+          bossStatus,
+          fieldDetour,
+          runStats: runStatsSnapshot
+        });
+      });
     }
 
     updatePlayer(dt, game.stats, setGame);
