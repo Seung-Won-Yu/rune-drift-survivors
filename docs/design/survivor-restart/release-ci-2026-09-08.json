@@ -1,0 +1,174 @@
+{
+  "conclusion": "success",
+  "headSha": "5c998771d5f2265fdf37ecd3d83b751488eb0145",
+  "jobs": [
+    {
+      "completedAt": "2026-09-08T12:42:20Z",
+      "conclusion": "success",
+      "databaseId": 102060078562,
+      "name": "build",
+      "startedAt": "2026-09-08T12:25:23Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-08T12:25:26Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-08T12:25:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:25:27Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-08T12:25:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:25:31Z",
+          "conclusion": "success",
+          "name": "Setup Node",
+          "number": 3,
+          "startedAt": "2026-09-08T12:25:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:25:35Z",
+          "conclusion": "success",
+          "name": "Install dependencies",
+          "number": 4,
+          "startedAt": "2026-09-08T12:25:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:25:42Z",
+          "conclusion": "success",
+          "name": "Build",
+          "number": 5,
+          "startedAt": "2026-09-08T12:25:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:26:11Z",
+          "conclusion": "success",
+          "name": "Install browser for smoke QA",
+          "number": 6,
+          "startedAt": "2026-09-08T12:25:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:28:14Z",
+          "conclusion": "success",
+          "name": "Run survivor QA",
+          "number": 7,
+          "startedAt": "2026-09-08T12:26:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:28:15Z",
+          "conclusion": "success",
+          "name": "Verify survivor Pages build",
+          "number": 8,
+          "startedAt": "2026-09-08T12:28:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:42:14Z",
+          "conclusion": "success",
+          "name": "Run smoke QA",
+          "number": 9,
+          "startedAt": "2026-09-08T12:28:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:42:14Z",
+          "conclusion": "skipped",
+          "name": "Upload failed QA diagnostics",
+          "number": 10,
+          "startedAt": "2026-09-08T12:42:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:42:14Z",
+          "conclusion": "success",
+          "name": "Configure Pages",
+          "number": 11,
+          "startedAt": "2026-09-08T12:42:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:42:17Z",
+          "conclusion": "success",
+          "name": "Upload artifact",
+          "number": 12,
+          "startedAt": "2026-09-08T12:42:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:42:17Z",
+          "conclusion": "success",
+          "name": "Post Setup Node",
+          "number": 23,
+          "startedAt": "2026-09-08T12:42:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:42:17Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 24,
+          "startedAt": "2026-09-08T12:42:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:42:17Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 25,
+          "startedAt": "2026-09-08T12:42:17Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/34225976810/job/102060078562"
+    },
+    {
+      "completedAt": "2026-09-08T12:42:33Z",
+      "conclusion": "success",
+      "databaseId": 102065395765,
+      "name": "deploy",
+      "startedAt": "2026-09-08T12:42:24Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-08T12:42:26Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-08T12:42:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:42:32Z",
+          "conclusion": "success",
+          "name": "Deploy to GitHub Pages",
+          "number": 2,
+          "startedAt": "2026-09-08T12:42:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-08T12:42:32Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 3,
+          "startedAt": "2026-09-08T12:42:32Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/34225976810/job/102065395765"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/34225976810"
+}
