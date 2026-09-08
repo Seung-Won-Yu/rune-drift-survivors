@@ -44,6 +44,12 @@ npx playwright install chromium
 CI=true npm run qa:survivor
 ```
 
+GPU 없이 최대 부하 렌더링을 재현하려면 다음 명령을 사용한다. 게임 시간·개체 상한·프레임 기준을 그대로 검사한다.
+
+```sh
+ASH_QA_SOFTWARE=1 npx playwright test --config scripts/playwright-survivor.config.mjs --grep 'late-game entity caps'
+```
+
 전체 시간 검사에는 개발 서버가 필요하다. 검사 중에는 해당 서버의 소스를 변경하지 않는다. 각 동료를 별도 브라우저에서 실행해 약 5분 걸리며 결과와 프레임 수치를 `output/playwright/survivor/fullrun/`에 저장한다.
 
 ```sh

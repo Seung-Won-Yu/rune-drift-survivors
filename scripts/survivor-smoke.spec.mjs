@@ -316,10 +316,11 @@ test(`late-game entity caps remain stable under a sustained rendered load at ${v
     function sample(now){if(!begin)begin=now;if(last)frames.push(now-last);last=now;if(now-begin<12000){requestAnimationFrame(sample);return;}frames.sort((a,b)=>a-b);resolve({frames:frames.length,elapsed:now-begin,p50:frames[Math.floor(frames.length*.5)],p95:frames[Math.floor(frames.length*.95)],over50:frames.filter(n=>n>50).length});}
     requestAnimationFrame(sample);
   }));
-  const state=await snapshot(page);expect(state.enemies).toBe(160);expect(state.gems).toBeLessThanOrEqual(240);expect(state.shots).toBeLessThanOrEqual(80);expect(state.remnants).toBeLessThanOrEqual(32);
-  expect(state.phase).toBe('playing');expect(state.time).toBeGreaterThan(250);
+  const state=await snapshot(page);
   await testInfo.attach('frame-timing.json',{body:JSON.stringify({timing,state:{time:state.time,enemies:state.enemies,gems:state.gems,shots:state.shots}}),contentType:'application/json'});
   console.log('survivor stress timing',JSON.stringify({viewport,...timing}));
+  expect(state.enemies).toBe(160);expect(state.gems).toBeLessThanOrEqual(240);expect(state.shots).toBeLessThanOrEqual(80);expect(state.remnants).toBeLessThanOrEqual(32);
+  expect(state.phase).toBe('playing');expect(state.time).toBeGreaterThan(250);
   expect(timing.p95).toBeLessThan(50);
   await page.screenshot({path:`output/playwright/survivor/stress-${viewport.width}.png`,animations:'disabled'});
   await page.getByRole('button',{name:'일시정지',exact:true}).click();await expect(page.getByRole('button',{name:'전투 계속하기'})).toBeVisible();

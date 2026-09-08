@@ -9,6 +9,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:5173',
     ...(process.env.CI === 'true' ? {} : { channel: 'chrome' }),
+    ...(process.env.ASH_QA_SOFTWARE === '1' ? {
+      launchOptions: { args: ['--disable-gpu', '--disable-accelerated-2d-canvas'] }
+    } : {}),
     headless: true,
     viewport: { width: 1280, height: 720 },
     screenshot: 'only-on-failure'

@@ -1,0 +1,57 @@
+{
+  "environment": "Local headless Chrome, 1280x720, --disable-gpu --disable-accelerated-2d-canvas; CPU profiler enabled",
+  "scenario": "12 seconds, 160 enemies including boss, 240 gems, 80 projectiles; starts at game time 240",
+  "baseline": {
+    "timing": {
+      "frames": 117,
+      "p50": 50,
+      "p95": 316.59999999999945,
+      "over50": 46
+    },
+    "gameTime": 247.20000000000573
+  },
+  "cached": {
+    "timing": {
+      "frames": 720,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    },
+    "gameTime": 252.0333333333429
+  },
+  "finalViewportChecks": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "frames": 721,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "frames": 721,
+      "elapsed": 12016.1,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "frames": 721,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    }
+  ]
+}

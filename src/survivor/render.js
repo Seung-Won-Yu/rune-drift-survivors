@@ -76,6 +76,19 @@ export function createRenderer(canvas, art) {
     scale = 1;
   const ground = makeGround();
   const pattern = ctx.createPattern(ground, 'repeat');
+  // Canvas filters can force expensive software raster passes per actor. Bake
+  // the identical hit tint once per atlas and keep drawing ordinary sprites.
+  const hitArt = new Map();
+  for (const image of [...Object.values(art.heroes), art.enemies, art.boss]) {
+    const tinted = document.createElement('canvas');
+    tinted.width = image.naturalWidth;
+    tinted.height = image.naturalHeight;
+    const tint = tinted.getContext('2d');
+    tint.filter = 'brightness(1.65)';
+    tint.drawImage(image, 0, 0);
+    hitArt.set(image, tinted);
+  }
+  const vignette = document.createElement('canvas');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   function resize() {
     width = canvas.clientWidth;
@@ -84,6 +97,15 @@ export function createRenderer(canvas, art) {
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
     scale = Math.min(1.2, Math.max(.68, Math.min(width / 800, height / 680)));
+    vignette.width = Math.round(width * dpr);
+    vignette.height = Math.round(height * dpr);
+    const shade = vignette.getContext('2d');
+    shade.scale(dpr, dpr);
+    const gradient = shade.createRadialGradient(width / 2, height * .53, Math.min(width, height) * .22, width / 2, height * .5, Math.max(width, height) * .65);
+    gradient.addColorStop(0, '#08150b00');
+    gradient.addColorStop(1, '#07110eb0');
+    shade.fillStyle = gradient;
+    shade.fillRect(0, 0, width, height);
   }
   function shadow(x, y, rx, ry) {
     ctx.fillStyle = '#06171070';
@@ -104,8 +126,8 @@ export function createRenderer(canvas, art) {
     ctx.scale(flip ? -1 : 1, 1);
     ctx.rotate(pose.tilt || 0);
     ctx.scale(pose.sx || 1, pose.sy || 1);
-    if (flash) ctx.filter = 'brightness(1.65)';
-    ctx.drawImage(image, sx, sy, sw, ch, -size * .48 + (sx - col * cw) * size / cw, -drawHeight * (pose.anchor ?? .89), sw / cw * size, drawHeight);
+    if (flash) ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(flash ? hitArt.get(image) : image, sx, sy, sw, ch, -size * .48 + (sx - col * cw) * size / cw, -drawHeight * (pose.anchor ?? .89), sw / cw * size, drawHeight);
     ctx.restore();
   }
   function render(game, now = 0) {
@@ -697,11 +719,7 @@ export function createRenderer(canvas, art) {
       ctx.globalAlpha = 1;
     }
     ctx.restore();
-    const vignette = ctx.createRadialGradient(width / 2, height * .53, Math.min(width, height) * .22, width / 2, height * .5, Math.max(width, height) * .65);
-    vignette.addColorStop(0, '#08150b00');
-    vignette.addColorStop(1, '#07110eb0');
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(vignette, 0, 0, width, height);
     if (p.hp / p.maxHp < .3 && game.phase === 'playing') {
       ctx.strokeStyle = '#d56e5860';
       ctx.lineWidth = 8;
