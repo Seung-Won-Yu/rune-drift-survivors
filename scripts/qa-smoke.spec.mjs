@@ -947,7 +947,7 @@ async function waitForSealFeedback(page) {
 for (const [width, height] of [[320, 568], [768, 1024], [740, 360], [1440, 900]]) {
   test(`optional detour keeps seal navigation readable at ${width}x${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
-    const guards = await openGuardedPage(page, '/?qa=seal&quality=balanced');
+    const guards = await openGuardedPage(page, `/?qa=seal&quality=${runtimeQuality}`);
     await waitForSealFeedback(page);
     const detour = page.getByLabel('선택 우회 보상');
     await expect(detour).toBeVisible();
@@ -970,7 +970,7 @@ for (const [width, height] of [[320, 568], [768, 1024], [740, 360], [1440, 900]]
 }
 
 test('player can follow the detour cue and receive the timed reward', async ({ page }) => {
-  const guards = await openGuardedPage(page, '/?qa=seal&quality=balanced');
+  const guards = await openGuardedPage(page, `/?qa=seal&quality=${runtimeQuality}`);
   await waitForSealFeedback(page);
   await expect(page.getByLabel('선택 우회 보상')).toBeVisible();
   const directions = {
@@ -1344,7 +1344,7 @@ for (const [width, height, inset] of [[568, 320, 10], [667, 375, 44]]) {
 for (const [width, height] of [[320, 568], [568, 320], [1440, 900]]) {
   test(`low-health feedback preserves the health gauge at ${width}x${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
-    const guards = await openGuardedPage(page, '/?quality=balanced');
+    const guards = await openGuardedPage(page, `/?quality=${runtimeQuality}`);
     await page.evaluate(() => window.__RUNE_DRIFT_QA__.contactAttack({ hp: 40 }));
     await expect(page.locator('.hudAlert-damage')).toContainText('즉시 회피');
     const bounds = await page.evaluate(() => {

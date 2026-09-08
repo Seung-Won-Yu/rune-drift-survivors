@@ -96,3 +96,5 @@ For character-edge review, use `silhouette`, `combat`, and `threats` at the stan
 Await scene commands such as `await window.__RUNE_DRIFT_QA__.reset()` before inspecting the new world. A superseded command resolves `false`; a committed command resolves `true`. URL fixtures expose `ready()` for the same boundary. Restart confirmation stays armed while focused and is cancelled by blur or Escape.
 
 Paused and result screens render on demand. The stress fixture explicitly keeps continuous frames. Its startup frame metrics are attached to the Playwright result before `beginFrameSample()` starts the steady rendering measurement, whose FPS and severe-frame assertions remain unchanged.
+
+CI runtime-dependent detour and low-health checks use the same Performance quality already used for movement/contact tests. Local runs retain Balanced quality. The separate authored-art checks still cover Low, Balanced, and High; no HUD/layout assertion or simulation budget changes with this choice. This avoids forcing GPU-heavy Balanced 3D rendering on a CPU-only runner while waiting for gameplay time.
