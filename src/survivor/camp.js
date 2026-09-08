@@ -1,0 +1,52 @@
+import { CHARACTERS, getCharacter, isUnlocked, unlockProgress } from './characters.js';
+import { UPGRADE_META, EVOLUTIONS, weaponName } from './game.js';
+export const formatTime = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+const outcomeName = {
+  victory: '군주 격파',
+  survived: '생존',
+  defeat: '쓰러짐'
+};
+export function portrait(id, large = false) {
+  const c = getCharacter(id);
+  return `<div class="${large ? 'hero-art' : 'companion-art'}" role="img" aria-label="${c.name}" style="--atlas-height:${id === 'grove' ? 261.25 : 285}%;--portrait-ratio:${313.5 / (id === 'grove' ? 480 : 440)};background-image:url('${import.meta.env.BASE_URL}art/survivor/${c.art}')"></div>`;
+}
+export function nextGoal(profile) {
+  const locked = Object.keys(CHARACTERS).find(id => !isUnlocked(profile, id));
+  if (locked) return `${CHARACTERS[locked].name}와 만나기 · ${unlockProgress(profile, locked)}`;
+  const discovery = Object.keys(EVOLUTIONS).find(id => !profile.discoveries.includes(id));
+  if (discovery) return `${UPGRADE_META[discovery].name} 발견하기 · ${EVOLUTIONS[discovery].requirement}`;
+  return profile.wins ? '다른 동료로 재의 군주에게 도전해 보세요.' : '다음 목표 · 4분에 나타나는 재의 군주 격파';
+}
+export function storageNotice(warning) {
+  return warning ? `<p class="storage-note" role="status">${warning}</p>` : '';
+}
+export function campScreen(game, profile, warning) {
+  const c = getCharacter(game.characterId),
+    record = profile.characters[c.id];
+  return `<div class="start-layout"><div><p class="eyebrow">ASH & AMBER / CHAPTER 01</p><h1 id="panel-title">잿빛의 숲</h1><p class="panel-lead">동료를 고르고, 작은 힘을 키워<br>숲의 군주를 쓰러뜨리세요.</p><div class="start-meta"><span>5분의 도전</span><span>자동 공격</span><span>선택으로 성장</span></div></div>${portrait(c.id, true)}</div>
+  <div class="companion-heading"><h2>숲에 함께할 동료</h2><span>${Object.keys(CHARACTERS).filter(id => isUnlocked(profile, id)).length} / 3</span></div>
+  <div class="companion-grid">${Object.values(CHARACTERS).map(char => {
+    const unlocked = isUnlocked(profile, char.id);
+    return `<button class="companion-card" data-character="${char.id}" aria-pressed="${c.id === char.id}" ${unlocked ? '' : 'disabled'} style="--tone:${char.color}">${portrait(char.id)}<span class="companion-copy"><strong>${char.name}</strong><small>${UPGRADE_META[char.weapon].name} 시작</small><span>${unlocked ? c.id === char.id ? '선택한 동료' : char.title : unlockProgress(profile, char.id)}</span></span></button>`;
+  }).join('')}</div>
+  <div class="companion-detail"><strong>${c.name} <span>${c.trait}</span></strong><p>${c.description}</p></div>
+  <div class="panel-actions"><button id="start-game" class="primary">숲에 들어가기 <span aria-hidden="true">→</span></button></div>
+  <p class="controls-note"><span class="keyboard-copy"><kbd>WASD</kbd> / <kbd>방향키</kbd> 이동 · <kbd>Esc</kbd> 일시정지</span><span class="touch-copy">왼쪽 조이스틱으로 이동 · 공격은 자동으로 실행됩니다</span></p>
+  <details class="camp-records"><summary>여정 기록 <span>${profile.runs}회 도전 · ${profile.wins}회 군주 격파</span></summary><p class="next-goal">${nextGoal(profile)}</p><p class="record-line">${c.name} · 최고 ${record.bestKills} 처치 · 최장 ${formatTime(record.bestTime)}${record.fastestWin === null ? '' : ` · 최단 격파 ${formatTime(record.fastestWin)}`}</p><div class="discoveries">${Object.keys(EVOLUTIONS).map(id => `<span class="${profile.discoveries.includes(id) ? 'found' : ''}">${profile.discoveries.includes(id) ? '발견' : '미발견'} · ${UPGRADE_META[id].name}</span>`).join('')}</div>${profile.history.length ? `<ol class="run-history">${profile.history.map(row => `<li><span>${getCharacter(row.character).name} · ${outcomeName[row.outcome]}</span><span>${formatTime(row.time)} · ${row.kills} 처치</span></li>`).join('')}</ol>` : '<p class="record-line">첫 여정을 시작하면 기록이 남습니다.</p>'}</details>${storageNotice(warning)}`;
+}
+export function resultDetails(game, profile, unlocked, warning) {
+  const total = Object.values(game.damageDealt).reduce((sum, n) => sum + n, 0);
+  const tips = {
+    contact: '적의 무리 한가운데보다 가장자리를 따라 이동해 보세요.',
+    slam: '정예의 원형 예고가 나타나면 원 밖으로 빠져나오세요.',
+    charge: '군주의 돌진선 옆으로 이동하면 공격 뒤 빈틈을 노릴 수 있습니다.',
+    thorns: '가시 사이의 빈 공간으로 조금씩 이동해 보세요.'
+  };
+  const dominant = Object.entries(game.damageTaken).sort((a, b) => b[1] - a[1])[0];
+  const hint = game.outcome === 'defeat' && dominant?.[1] > 0 ? tips[dominant[0]] : nextGoal(profile);
+  return `${unlocked.length ? `<div class="unlock-reward"><strong>새로운 동료가 합류했습니다</strong><span>${unlocked.map(id => CHARACTERS[id].name).join(' · ')}</span><p>동료 선택에서 새로운 시작 무기를 만나보세요.</p></div>` : ''}
+  <details class="battle-record"><summary>무기가 활약한 기록</summary><p class="record-line">받은 피해 ${Math.round(Object.values(game.damageTaken).reduce((a, b) => a + b, 0))} · 회복한 체력 ${Math.round(Object.values(game.healing).reduce((a, b) => a + b, 0))}</p>${['sword', 'ember', 'orbit'].filter(k => game.ranks[k] > 0).map(k => {
+    const percent = total ? Math.round(game.damageDealt[k] / total * 100) : 0;
+    return `<div class="damage-row"><span>${weaponName(game, k)}</span><b>${Math.round(game.damageDealt[k]).toLocaleString('ko-KR')} <small>(${percent}%)</small></b><i style="--share:${percent}%;--tone:${UPGRADE_META[k].color}"></i></div>`;
+  }).join('')}</details><p class="next-goal">${hint}</p>${storageNotice(warning)}`;
+}

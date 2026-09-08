@@ -8,6 +8,9 @@
     "build": "vite build",
     "qa:balance": "playwright test --config scripts/playwright-balance.config.mjs",
     "qa:smoke": "playwright test --config scripts/playwright-smoke.config.mjs",
+    "qa:survivor": "node --test scripts/survivor-unit.test.mjs scripts/survivor-profile.test.mjs scripts/survivor-field.test.mjs && playwright test --config scripts/playwright-survivor.config.mjs",
+    "qa:survivor:production": "node scripts/survivor-production-smoke.mjs",
+    "qa:survivor:fullrun": "node scripts/survivor-fullrun.mjs",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {

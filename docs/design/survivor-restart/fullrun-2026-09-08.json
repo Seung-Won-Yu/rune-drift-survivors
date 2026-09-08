@@ -1,0 +1,134 @@
+[
+  {
+    "character": "ash",
+    "route": "blade",
+    "seed": 42,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "wallSeconds": 294.863,
+    "time": 293.8833333333947,
+    "outcome": "victory",
+    "kills": 954,
+    "level": 20,
+    "eliteKills": 3,
+    "ranks": {
+      "sword": 6,
+      "ember": 0,
+      "orbit": 5,
+      "fleet": 3,
+      "magnet": 2,
+      "vitality": 3,
+      "heal": 0,
+      "dawn": 1,
+      "comet": 0,
+      "lunar": 0
+    },
+    "damage": {
+      "sword": 47556.577716052576,
+      "ember": 0,
+      "orbit": 2402.4586419757625
+    },
+    "healing": {
+      "field": 16,
+      "elite": 0,
+      "upgrade": 60
+    },
+    "timing": {
+      "frames": 17643,
+      "p50": 16.69999999999709,
+      "p95": 16.70000000001164,
+      "over50": 0
+    },
+    "errors": []
+  },
+  {
+    "character": "ember",
+    "route": "comet",
+    "seed": 42,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "wallSeconds": 279.871,
+    "time": 278.88333333340836,
+    "outcome": "victory",
+    "kills": 949,
+    "level": 20,
+    "eliteKills": 3,
+    "ranks": {
+      "sword": 1,
+      "ember": 5,
+      "orbit": 1,
+      "fleet": 4,
+      "magnet": 4,
+      "vitality": 4,
+      "heal": 0,
+      "dawn": 0,
+      "comet": 1,
+      "lunar": 0
+    },
+    "damage": {
+      "sword": 969,
+      "ember": 48049.90345679371,
+      "orbit": 85
+    },
+    "healing": {
+      "field": 25,
+      "elite": 15,
+      "upgrade": 100
+    },
+    "timing": {
+      "frames": 16745,
+      "p50": 16.69999999999709,
+      "p95": 16.70000000001164,
+      "over50": 0
+    },
+    "errors": []
+  },
+  {
+    "character": "grove",
+    "route": "lunar",
+    "seed": 42,
+    "viewport": {
+      "width": 740,
+      "height": 360
+    },
+    "wallSeconds": 300.709,
+    "time": 300,
+    "outcome": "survived",
+    "kills": 959,
+    "level": 20,
+    "eliteKills": 3,
+    "ranks": {
+      "sword": 2,
+      "ember": 0,
+      "orbit": 5,
+      "fleet": 4,
+      "magnet": 4,
+      "vitality": 4,
+      "heal": 0,
+      "dawn": 0,
+      "comet": 0,
+      "lunar": 1
+    },
+    "damage": {
+      "sword": 1982.8740740742403,
+      "ember": 0,
+      "orbit": 49006.69364197892
+    },
+    "healing": {
+      "field": 8.5,
+      "elite": 36.25,
+      "upgrade": 97
+    },
+    "timing": {
+      "frames": 18012,
+      "p50": 16.69999999999709,
+      "p95": 16.70000000001164,
+      "over50": 0
+    },
+    "errors": []
+  }
+]

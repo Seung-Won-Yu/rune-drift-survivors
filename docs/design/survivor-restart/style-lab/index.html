@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>캐릭터 모션 연구 · 도트와 카툰</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;color:#eee9db;background:#111614;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0}main{max-width:1180px;margin:auto;padding:42px 24px 32px}h1{font-size:clamp(26px,4vw,42px);letter-spacing:-.05em;margin:10px 0 14px;font-weight:650}p{line-height:1.65;color:#afbbb4;margin:0}a{color:#e6c38c}button,input,select{font:inherit}button,select{min-height:44px;border:1px solid #46534c;background:#1d2722;color:#e9e8df;border-radius:6px;padding:9px 14px;cursor:pointer}button:hover{border-color:#c4a276}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #e3ba7e;outline-offset:3px}button[aria-pressed="true"]{background:#e2bb81;color:#1a201c;border-color:#e2bb81}.kicker{font-size:12px;letter-spacing:.13em;color:#d5b987;font-weight:650}.lead{max-width:720px}.toolbar{display:flex;align-items:end;flex-wrap:wrap;gap:18px;margin:28px 0 24px;padding:20px 0;border-block:1px solid #303c35}.group{display:grid;gap:8px}.group>span,.group>label{font-size:12px;color:#aebcb3}.buttons{display:flex;gap:6px}.toggle{display:flex;gap:8px;align-items:center;min-height:44px;font-size:14px}.toggle input{width:18px;height:18px;accent-color:#dfbb85}.comparison{display:grid;grid-template-columns:1fr 1fr;gap:20px}.pane{min-width:0;border:1px solid #38433c;border-radius:10px;overflow:hidden;background:#18201b}.pane header{display:flex;justify-content:space-between;align-items:center;padding:19px 20px}.pane h2{font-size:22px;margin:3px 0}.badge{font-size:11px;letter-spacing:.1em;color:#cbb78f}.pill{font-size:12px;border:1px solid #586450;border-radius:30px;padding:5px 9px;color:#d7e2bc}.stage{position:relative;height:300px;background:#262f29;overflow:hidden}.stage canvas{display:block;width:100%;height:100%}.mono canvas{filter:grayscale(1)}.stage-label{position:absolute;left:16px;bottom:12px;color:#d1d5c7;font-size:11px;pointer-events:none}.caption{padding:16px 20px;font-size:14px;min-height:80px}.timeline{margin-top:24px;display:grid;grid-template-columns:100px 1fr 130px;align-items:center;gap:16px}.timeline label,.timeline output{font-size:13px;color:#c6cfc8}input[type=range]{width:100%;accent-color:#e2bb81}.notes{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px;padding-top:24px;border-top:1px solid #303c35}.notes h3{font-size:15px;margin:0 0 8px}.notes p{font-size:13px}.footer{margin-top:26px;font-size:12px;color:#9eaaa2}#error{padding:18px;border:1px solid #d87e70;color:#ffd0c5;margin-bottom:20px}.sheet-link{display:inline-block;margin-top:10px}
+    @media(max-width:680px){main{padding:26px 16px}.comparison,.notes{grid-template-columns:1fr}.stage{height:250px}.toolbar{gap:14px}.timeline{grid-template-columns:65px 1fr}.timeline output{grid-column:2}.pane header{padding:14px 16px}.caption{min-height:0;padding:13px 16px}.notes{gap:18px}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="kicker">SURVIVOR STUDIES / 02 — CHARACTER MOTION</div>
+    <h1>같은 검사, 두 가지 움직임.</h1>
+    <p class="lead">은빛 머리 · 청록 망토 · 황동 검. 같은 캐릭터의 도트와 카툰을 같은 포즈 순서로 비교합니다. 먼저 크게 동작을 보고, 72px로 줄여 전투 중 읽히는 모습을 확인하세요.</p>
+  </header>
+  <div id="error" role="alert" hidden>이미지를 불러오지 못했습니다. 같은 폴더에 swordsman-comparison.png가 있는지 확인하세요.</div>
+  <section class="toolbar" aria-label="비교 설정">
+    <div class="group"><span>동작</span><div class="buttons"><button id="walk" aria-pressed="true">이동</button><button id="attack" aria-pressed="false">공격</button></div></div>
+    <div class="group"><span>재생</span><button id="play">일시정지</button></div>
+    <div class="group"><label for="size">표시 프레임 크기</label><select id="size"><option value="72">72px · 플레이 크기 후보</option><option value="128">128px · 중간</option><option value="224" selected>224px · 동작 확대</option></select></div>
+    <div class="group"><label for="speed">재생 속도</label><select id="speed"><option value="0.5">0.5× · 천천히</option><option value="1" selected>1× · 기본</option><option value="1.5">1.5× · 빠르게</option></select></div>
+    <label class="toggle"><input id="mono" type="checkbox">흑백으로 보기</label>
+  </section>
+  <div class="comparison">
+    <section class="pane"><header><div><div class="badge">A / PIXEL</div><h2>도트</h2></div><span class="pill">선명한 포즈</span></header><div class="stage"><canvas id="pixel" role="img" aria-label="도트 검사 이동과 공격 애니메이션"></canvas><span class="stage-label">4 POSES · SAME TIMING</span></div><p class="caption">픽셀 덩어리와 포즈 전환의 리듬을 봅니다. 작은 크기에서는 머리·검·망토의 구분이 핵심입니다.</p></section>
+    <section class="pane"><header><div><div class="badge">B / CARTOON</div><h2>카툰</h2></div><span class="pill">표정과 윤곽</span></header><div class="stage"><canvas id="cartoon" role="img" aria-label="카툰 검사 이동과 공격 애니메이션"></canvas><span class="stage-label">4 POSES · SAME TIMING</span></div><p class="caption">표정과 팔다리의 자세, 망토의 변화를 봅니다. 이번 시안은 도트와 동일한 4프레임 방식으로 비교합니다.</p></section>
+  </div>
+  <div class="timeline"><label for="frame">포즈 확인</label><input id="frame" type="range" min="0" max="3" step="1" value="0"><output id="frameName" for="frame">1 / 4 · 앞발</output></div>
+  <div class="notes">
+    <section><h3>이 화면에서 고를 것</h3><p>어느 캐릭터가 더 기억에 남는지, 작은 크기에서 검과 몸이 잘 보이는지, 공격 준비와 타격 자세가 구분되는지 비교합니다. 프레임 슬라이더를 움직이면 멈춰서 볼 수 있습니다.</p></section>
+    <section><h3>아직 제작용 완성 자산은 아닙니다</h3><p>AI로 생성한 포즈를 재생하는 미술 시안입니다. 최종 버전에는 발 접지·프레임 정렬·중간 동작 보완이 필요합니다. 관절 애니메이션, 이동 입력, 충돌·대미지·게임 성능을 검증한 화면은 아닙니다.</p></section>
+  </div>
+  <p class="footer">초안 캐릭터명: 잿빛 검사 · 스타일 비교용 동일 디자인 · 기본 재생시간 이동 560ms / 공격 600ms (제안값)<br><a class="sheet-link" href="swordsman-comparison.png">원본 포즈 시트</a> · <a href="PROMPT.md">생성 프롬프트와 제작 기록</a></p>
+</main>
+<script>
+  const atlas = new Image();
+  const canvases = [...document.querySelectorAll('canvas')];
+  const frameInput = document.querySelector('#frame');
+  const frameName = document.querySelector('#frameName');
+  const playButton = document.querySelector('#play');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let motion = 'walk', playing = !reduced.matches, frame = 0, elapsed = 0, last = 0, ready = false;
+  const labels = {walk:['앞발','낮은 통과 자세','반대발','높은 통과 자세'],attack:['준비','타격','후속 동작','복귀']};
+  const timings = {walk:[140,140,140,140],attack:[180,80,140,200]};
+  function playbackLabel(){playButton.textContent = playing ? '일시정지' : '재생';}
+  function frameLabel(){frameInput.value=frame;frameName.textContent=`${frame+1} / 4 · ${labels[motion][frame]}`;}
+  function draw(){
+    if(!ready)return;
+    const size=Number(document.querySelector('#size').value);
+    canvases.forEach((canvas,index)=>{
+      const rect=canvas.getBoundingClientRect(), dpr=Math.min(devicePixelRatio||1,2);
+      const w=rect.width,h=rect.height;
+      if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+      const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.fillStyle='#263129';ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle='#303c32';ctx.lineWidth=1;
+      for(let x=0;x<w;x+=48){for(let y=0;y<h;y+=48){ctx.strokeRect(x+(y%96?24:0),y,48,48);}}
+      ctx.fillStyle='#00000030';ctx.beginPath();ctx.ellipse(w/2,h*.78,size*.23,size*.048,0,0,Math.PI*2);ctx.fill();
+      const cellW=atlas.naturalWidth/4,cellH=atlas.naturalHeight/4;
+      const row=index*2+(motion==='attack'?1:0);
+      ctx.imageSmoothingEnabled=index!==0;
+      // The generated slash reaches beyond its nominal cell. Use observed atlas
+      // boundaries without stretching the character or altering the source PNG.
+      const attackEdges=[0,313,657,984,1254].map(x=>x*atlas.naturalWidth/1254);
+      const sx=motion==='attack'?attackEdges[frame]:frame*cellW;
+      const sw=motion==='attack'?attackEdges[frame+1]-sx:cellW;
+      ctx.drawImage(atlas,sx,row*cellH,sw,cellH,Math.round((w-size)/2+(sx-frame*cellW)*size/cellW),Math.round(h*.78-size*.95),sw*size/cellW,size);
+    });
+  }
+  function tick(now){
+    const dt=last?Math.min(now-last,100):0;last=now;
+    if(playing&&ready){elapsed+=dt*Number(document.querySelector('#speed').value);while(elapsed>=timings[motion][frame]){elapsed-=timings[motion][frame];frame=(frame+1)%4;}frameLabel();draw();}
+    requestAnimationFrame(tick);
+  }
+  for(const name of ['walk','attack'])document.querySelector('#'+name).addEventListener('click',()=>{motion=name;frame=0;elapsed=0;for(const id of ['walk','attack'])document.querySelector('#'+id).setAttribute('aria-pressed',String(id===name));frameLabel();draw();});
+  playButton.addEventListener('click',()=>{playing=!playing;elapsed=0;playbackLabel();});
+  frameInput.addEventListener('input',()=>{playing=false;frame=Number(frameInput.value);elapsed=0;playbackLabel();frameLabel();draw();});
+  document.querySelector('#size').addEventListener('change',draw);
+  document.querySelector('#mono').addEventListener('change',event=>document.querySelector('.comparison').classList.toggle('mono',event.target.checked));
+  reduced.addEventListener('change',event=>{if(event.matches){playing=false;playbackLabel();}});
+  new ResizeObserver(draw).observe(document.querySelector('.comparison'));
+  atlas.onload=()=>{ready=true;draw();};
+  atlas.onerror=()=>{document.querySelector('#error').hidden=false;playing=false;playbackLabel();};
+  atlas.src='swordsman-comparison.png';playbackLabel();frameLabel();requestAnimationFrame(tick);
+</script>
+</body>
+</html>

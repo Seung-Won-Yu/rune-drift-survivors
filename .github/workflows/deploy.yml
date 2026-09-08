@@ -45,6 +45,17 @@ jobs:
           CI: 'true'
           RUNE_QA_HEADLESS: '1'
 
+      - name: Run survivor QA
+        run: npm run qa:survivor
+        env:
+          CI: 'true'
+
+      - name: Verify survivor Pages build
+        run: npm run qa:survivor:production
+        env:
+          CI: 'true'
+          GITHUB_PAGES: 'true'
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
