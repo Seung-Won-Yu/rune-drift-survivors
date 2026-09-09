@@ -1,3 +1,5 @@
+import { updateEncounters, curseActive } from './encounters.js';
+import { SPECIALIZATIONS, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
 import { BOSS, updateBoss, updateThorns } from './boss.js';
 import { getCharacter } from './characters.js';
 import { healPlayer, updateField } from './field.js';
@@ -48,6 +50,7 @@ export const SLAM = {
   damage: 24
 };
 export const UPGRADE_META = {
+  ...Object.fromEntries(Object.entries(SPECIALIZATIONS).map(([key, value]) => [key, { ...value, max: 1, kind: '무기 전문화 · 한 갈래 선택' }])),
   dawn: {
     name: '여명의 검',
     icon: 'sword',
@@ -167,6 +170,12 @@ export function seededRandom(seed = 1) {
 export function createGame(seed = 1, characterId = 'ash') {
   const character = getCharacter(characterId);
   return {
+    encounters: [],
+    relicChoices: [],
+    rewardFrom: null,
+    relics: [],
+    relicClock: 0,
+    dewXp: 0,
     phase: 'ready',
     outcome: null,
     characterId: character.id,
@@ -189,6 +198,7 @@ export function createGame(seed = 1, characterId = 'ash') {
       cast: 0
     },
     ranks: {
+      ...Object.fromEntries(Object.keys(SPECIALIZATIONS).map(key => [key, 0])),
       sword: 0,
       ember: 0,
       orbit: 0,
@@ -217,7 +227,8 @@ export function createGame(seed = 1, characterId = 'ash') {
     healing: {
       field: 0,
       elite: 0,
-      upgrade: 0
+      upgrade: 0,
+      relic: 0
     },
     remnants: [],
     damageTaken: {
@@ -234,6 +245,7 @@ export function createGame(seed = 1, characterId = 'ash') {
     nextElite: 60,
     id: 0,
     damageDealt: {
+      relic: 0,
       sword: 0,
       ember: 0,
       orbit: 0
@@ -242,7 +254,7 @@ export function createGame(seed = 1, characterId = 'ash') {
     spawnRadius: 370
   };
 }
-export const stats = game => ({
+export const stats = game => modifyBuildStats(game, {
   speed: getCharacter(game.characterId).speed * (1 + game.ranks.fleet * .08),
   magnet: 64 + game.ranks.magnet * 28,
   swordDamage: 19 + (game.ranks.sword - 1) * 9 + (game.ranks.dawn ? 20 : 0),
@@ -256,21 +268,22 @@ export const stats = game => ({
   orbitRadius: 53 + game.ranks.orbit * 7 + (game.ranks.lunar ? 12 : 0)
 });
 export function upgradeChange(game, key) {
+  if (SPECIALIZATIONS[key]) return SPECIALIZATIONS[key].change;
   const rank = game.ranks[key],
     s = stats(game);
   switch (key) {
     case 'dawn':
-      return '검 피해 +20 · 범위 +38 · 관통 검기 추가';
+      return `검 피해 +${game.ranks.sweep ? 16 : game.ranks.duelist ? 33 : 20} · 범위 +38 · 관통 검기 추가`;
     case 'comet':
-      return '불씨 피해 +12 · 적중 시 반경 56 폭발';
+      return game.ranks.wildfire ? `직격 피해 +8.4 · 연소 초당 ${game.relics.includes('coal') ? '18 → 33' : '12 → 22'}` : `불씨 피해 +${game.ranks.detonation ? 13.8 : 12} · 적중 시 반경 ${game.ranks.detonation ? 90 : 56} 폭발`;
     case 'lunar':
       return '룬 +1 · 2.8초마다 반경 130 밀어내기';
     case 'sword':
-      return rank === 0 ? '새 무기 · 자동 검격' : `피해 ${s.swordDamage} → ${s.swordDamage + 9} · 범위 +14`;
+      return rank === 0 ? '새 무기 · 자동 검격' : `피해 ${Math.round(s.swordDamage)} → ${Math.round(s.swordDamage + 9 * (game.ranks.sweep ? .8 : game.ranks.duelist ? 1.65 : 1))} · 범위 +14`;
     case 'ember':
-      return rank === 0 ? '새 무기 · 추적 불씨 1발' : `피해 ${s.emberDamage} → ${s.emberDamage + 7}${(rank + 1) % 2 === 0 ? ' · 투사체 +1' : ''}`;
+      return rank === 0 ? '새 무기 · 추적 불씨 1발' : `피해 ${Math.round(s.emberDamage)} → ${Math.round(s.emberDamage + 7 * (game.ranks.wildfire ? .7 : game.ranks.detonation ? 1.15 : 1))}${(rank + 1) % 2 === 0 ? ' · 투사체 +1' : ''}`;
     case 'orbit':
-      return rank === 0 ? '새 무기 · 회전 룬 1개' : `피해 ${s.orbitDamage} → ${s.orbitDamage + 6}${(rank + 1) % 2 === 0 ? ' · 룬 +1' : ' · 회전 반경 +7'}`;
+      return rank === 0 ? '새 무기 · 회전 룬 1개' : `피해 ${Math.round(s.orbitDamage)} → ${Math.round(s.orbitDamage + 6 * (game.ranks.horizon ? 1.35 : 1))}${(rank + 1) % 2 === 0 ? ' · 룬 +1' : game.ranks.bulwark ? ' · 근거리 결계 유지' : ' · 회전 반경 +7'}`;
     case 'fleet':
       return `이동 속도 ${Math.round(s.speed)} → ${Math.round(s.speed + getCharacter(game.characterId).speed * .08)}`;
     case 'magnet':
@@ -282,8 +295,10 @@ export function upgradeChange(game, key) {
   }
 }
 export function draftUpgrades(game) {
-  const available = Object.keys(UPGRADE_META).filter(k => k !== 'heal' && game.ranks[k] < UPGRADE_META[k].max && (!EVOLUTIONS[k] || canEvolve(game, k)));
+  const available = Object.keys(UPGRADE_META).filter(k => !SPECIALIZATIONS[k] && k !== 'heal' && game.ranks[k] < UPGRADE_META[k].max && (!EVOLUTIONS[k] || canEvolve(game, k)));
   const chosen = Object.keys(EVOLUTIONS).filter(k => canEvolve(game, k)).slice(0, 3);
+  const branches = specializationOffers(game);
+  if (branches.length && chosen.length <= 1) return [...chosen, ...branches, ...available.filter(key => !chosen.includes(key))].slice(0, 3);
   // Introduce both alternate weapons early, then leave room to grow the chosen build.
   const unowned = ['sword', 'ember', 'orbit'].filter(key => game.ranks[key] === 0);
   const offers = game.level <= 3 ? unowned : unowned.slice(Math.floor(game.rng() * Math.max(1, unowned.length))).slice(0, 1);
@@ -308,6 +323,7 @@ function checkLevel(game) {
 }
 export function chooseUpgrade(game, key) {
   if (game.phase !== 'upgrade' || !game.choices.includes(key) || game.ranks[key] >= UPGRADE_META[key]?.max) return false;
+  if (SPECIALIZATIONS[key] && (game.ranks[SPECIALIZATIONS[key].weapon] < 3 || specializationFor(game, SPECIALIZATIONS[key].weapon))) return false;
   game.ranks[key]++;
   if (EVOLUTIONS[key]) game.events.push('evolve');
   if (key === 'vitality') {
@@ -425,8 +441,14 @@ function addGem(game, x, y, value) {
     nearest.value += value;
   }
 }
-function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0) {
+function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false) {
   if (enemy.hp <= 0 || enemy.boss && enemy.entrance > 0) return;
+  if (source === 'sword' && game.relics.includes('fang')) damage *= enemy.elite || enemy.boss ? 1.4 : .9;
+  if (!periodic && source === 'ember' && (game.ranks.wildfire || game.relics.includes('coal'))) {
+    const burnDamage = game.ranks.wildfire ? (game.ranks.comet ? 22 : 12) * (game.relics.includes('coal') ? 1.5 : 1) : 8;
+    enemy.burn = { until: game.time + 3, next: enemy.burn?.next ?? game.time + .5, damage: burnDamage };
+  }
+  if (source === 'orbit' && game.relics.includes('bell') && !enemy.boss) enemy.slowUntil = game.time + 1.2;
   const actual = Math.min(enemy.hp, damage);
   enemy.hp -= damage;
   enemy.hit = .13;
@@ -453,6 +475,10 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0) {
       age: 0,
       life: enemy.boss ? .7 : .26
     });
+    if (enemy.burn && enemy.burn.until > game.time && game.ranks.wildfire) {
+      const spread = game.enemies.filter(e => e.hp > 0 && e !== enemy && (!e.burn || e.burn.until <= game.time) && Math.hypot(e.x - enemy.x, e.y - enemy.y) <= 90).sort((a, b) => Math.hypot(a.x - enemy.x, a.y - enemy.y) - Math.hypot(b.x - enemy.x, b.y - enemy.y)).slice(0, 2);
+      for (const next of spread) next.burn = { ...enemy.burn, until: game.time + 3, next: game.time + .5 };
+    }
     game.kills++;
     if (enemy.boss) {
       game.bossDefeated = true;
@@ -555,11 +581,11 @@ function updateWeapons(game, dt, s) {
     if (swing.age > .55) game.swing = null;
   }
   if (game.ranks.ember) {
-    game.emberClock -= dt;
+    game.emberClock -= dt * (game.relics.includes('sail') && p.moving ? 1.35 : 1);
     if (game.emberClock <= 0) {
       const targets = game.enemies.filter(e => e.hp > 0).sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
       if (targets.length) {
-        game.emberClock = .9;
+        game.emberClock = game.ranks.detonation ? 1.25 : .9;
         game.events.push('ember-shot');
         p.cast = .4;
         if (!p.moving) p.facing = targets[0].x < p.x ? -1 : 1;
@@ -574,7 +600,8 @@ function updateWeapons(game, dt, s) {
             targetId: target.id,
             life: 2,
             damage: s.emberDamage,
-            blast: !!game.ranks.comet
+            blast: !game.ranks.wildfire && (!!game.ranks.comet || !!game.ranks.detonation),
+            blastRadius: game.ranks.detonation ? (game.ranks.comet ? 90 : 72) : 56
           });
         }
       }
@@ -599,10 +626,10 @@ function updateWeapons(game, dt, s) {
             kind: 'ember-burst',
             x: shot.x,
             y: shot.y,
-            range: 56,
+            range: shot.blastRadius ?? 56,
             life: .3
           });
-          for (const other of game.enemies) if (Math.hypot(other.x - shot.x, other.y - shot.y) <= 56 + other.radius) hitEnemy(game, other, shot.damage, 'ember');
+          for (const other of game.enemies) if (Math.hypot(other.x - shot.x, other.y - shot.y) <= (shot.blastRadius ?? 56) + other.radius) hitEnemy(game, other, shot.damage, 'ember');
         } else hitEnemy(game, enemy, shot.damage, wave ? 'sword' : 'ember', shot.vx / (wave ? 330 : 290), shot.vy / (wave ? 330 : 290));
         if (wave) {
           shot.hitIds.push(enemy.id);
@@ -620,7 +647,7 @@ function updateWeapons(game, dt, s) {
           dy = enemy.y - p.y,
           d = Math.hypot(dx, dy) || 1;
         enemy.orbAt = game.time;
-        hitEnemy(game, enemy, s.orbitDamage, 'orbit', dx / d * 1.8, dy / d * 1.8);
+        hitEnemy(game, enemy, s.orbitDamage, 'orbit', dx / d * (game.ranks.bulwark ? 3.24 : 1.8), dy / d * (game.ranks.bulwark ? 3.24 : 1.8));
         game.events.push('rune-hit');
         if (game.characterId === 'grove' && p.cast <= 0) p.cast = .4;
       }
@@ -649,13 +676,21 @@ function updateWeapons(game, dt, s) {
       }
     }
   }
+  // Burn deals bounded half-second ticks; spread starts a new timer, never recursive damage.
+  for (const enemy of game.enemies) {
+    if (enemy.hp > 0 && enemy.burn && game.time <= enemy.burn.until && game.time >= enemy.burn.next) {
+      enemy.burn.next += .5;
+      hitEnemy(game, enemy, enemy.burn.damage * .5, 'ember', 0, 0, true);
+    }
+    if (enemy.burn && game.time > enemy.burn.until) enemy.burn = null;
+  }
   game.shots = game.shots.filter(s => s.life > 0);
   game.enemies = game.enemies.filter(e => e.hp > 0);
 }
 function hurtPlayer(game, damage, source = 'contact') {
   const p = game.player;
   if (p.invincible > 0) return;
-  damage *= 1 - getCharacter(game.characterId).armor;
+  damage *= (1 - getCharacter(game.characterId).armor) * (game.ranks.bulwark ? .85 : 1);
   p.hurt = .24;
   game.damageTaken[source] += Math.min(p.hp, damage);
   game.lastHurt = source;
@@ -671,6 +706,14 @@ function hurtPlayer(game, damage, source = 'contact') {
   if (p.hp <= 0) {
     game.phase = 'ended';
     game.outcome = 'defeat';
+  } else if (game.relics.includes('briar') && game.time >= game.relicClock) {
+    game.relicClock = game.time + 6;
+    effect(game, { kind: 'briar-pulse', x: p.x, y: p.y, range: 110, life: .4 });
+    game.events.push('pulse');
+    for (const enemy of game.enemies) {
+      const dx = enemy.x - p.x, dy = enemy.y - p.y, d = Math.hypot(dx, dy);
+      if (d <= 110 + enemy.radius) hitEnemy(game, enemy, 35, 'relic', dx / (d || 1) * 3, dy / (d || 1) * 3);
+    }
   }
 }
 function updateSlam(game, enemy, dt, distance) {
@@ -715,6 +758,7 @@ export function updateGame(game, dt, input = {
   if (game.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   dt = Math.min(dt, 1 / 30);
   game.time = Math.min(RUN_SECONDS, game.time + dt);
+  const danger = curseActive(game) ? 1.25 : 1;
   const p = game.player,
     s = stats(game),
     length = Math.hypot(input.x, input.y) || 1;
@@ -750,6 +794,7 @@ export function updateGame(game, dt, input = {
     buckets.get(k).push(e);
   }
   for (const e of game.enemies) {
+    if (e.hp <= 0) continue;
     const dx = p.x - e.x,
       dy = p.y - e.y,
       d = Math.hypot(dx, dy) || 1;
@@ -777,8 +822,8 @@ export function updateGame(game, dt, input = {
       }
     }
     if (!attacking) {
-      e.x += (dx / d * e.speed + pushX + e.knockX) * dt;
-      e.y += (dy / d * e.speed + pushY + e.knockY) * dt;
+      e.x += (dx / d * e.speed * danger * (e.slowUntil > game.time ? .7 : 1) + pushX + e.knockX) * dt;
+      e.y += (dy / d * e.speed * danger * (e.slowUntil > game.time ? .7 : 1) + pushY + e.knockY) * dt;
     }
     e.knockX *= Math.exp(-12 * dt);
     e.knockY *= Math.exp(-12 * dt);
@@ -790,7 +835,7 @@ export function updateGame(game, dt, input = {
       e.y = p.y + Math.sin(a) * game.spawnRadius;
     }
     if (!attacking && Math.hypot(p.x - e.x, p.y - e.y) < e.radius + 12) {
-      hurtPlayer(game, e.damage);
+      hurtPlayer(game, e.damage * danger);
       if (game.phase === 'ended') return;
     }
   }
@@ -818,6 +863,12 @@ export function updateGame(game, dt, input = {
     }
     if (Math.hypot(p.x - gem.x, p.y - gem.y) < 16) {
       game.xp += gem.value;
+      if (game.relics.includes('dew')) {
+        game.dewXp += gem.value;
+        const charges = Math.floor(game.dewXp / 30);
+        game.dewXp %= 30;
+        if (charges) healPlayer(game, charges * 3, 'relic');
+      }
       gem.collected = true;
       game.events.push('xp');
     }
@@ -830,5 +881,6 @@ export function updateGame(game, dt, input = {
     game.outcome = 'survived';
     return;
   }
-  checkLevel(game);
+  updateEncounters(game, dt);
+  if (game.phase === 'playing') checkLevel(game);
 }

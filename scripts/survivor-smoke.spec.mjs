@@ -310,7 +310,7 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740
 
 for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]){
 test(`late-game entity caps remain stable under a sustained rendered load at ${viewport.width}px`,async({page},testInfo)=>{
-  await page.setViewportSize(viewport);await scenario(page,'stress');
+  await page.setViewportSize(viewport);await scenario(page,'stress-expansion');
   const timing=await page.evaluate(()=>new Promise(resolve=>{
     const frames=[];let begin=0,last=0;
     function sample(now){if(!begin)begin=now;if(last)frames.push(now-last);last=now;if(now-begin<12000){requestAnimationFrame(sample);return;}frames.sort((a,b)=>a-b);resolve({frames:frames.length,elapsed:now-begin,p50:frames[Math.floor(frames.length*.5)],p95:frames[Math.floor(frames.length*.95)],over50:frames.filter(n=>n>50).length});}
@@ -355,10 +355,59 @@ test('a short desktop window can scroll the entire camp without clipping its top
 
 test('dense combat retains hero and telegraph silhouettes with reduced motion and grayscale',async({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:390,height:844});
-  await scenario(page,'stress');await page.waitForTimeout(1500);
+  await scenario(page,'stress-expansion');await page.waitForTimeout(1500);
   await page.screenshot({path:'output/playwright/survivor/readability-color.png',animations:'disabled'});
   await page.locator('#world').evaluate(canvas=>{canvas.style.filter='grayscale(1)';});
   await page.screenshot({path:'output/playwright/survivor/readability-gray.png',animations:'disabled'});
   await page.locator('#world').evaluate(canvas=>{canvas.style.filter='';});
   await expect(page.locator('#boss-hud')).toBeVisible();
 });
+
+for (const [weapon, first, second] of [['sword','sweep','duelist'],['ember','wildfire','detonation'],['orbit','bulwark','horizon']]) {
+  test(`specialization ${weapon} offers a real exclusive choice and records selection in pause`, async ({page})=>{
+    await scenario(page,`branch-${weapon}`);
+    await expect(page.locator(`[data-upgrade="${first}"]`)).toBeVisible();
+    await expect(page.locator(`[data-upgrade="${second}"]`)).toBeVisible();
+    const time=(await snapshot(page)).time;await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(time);
+    await page.screenshot({path:`output/playwright/survivor/branch-${weapon}.png`});
+    await page.locator(`[data-upgrade="${second}"]`).click();
+    expect((await snapshot(page)).ranks[second]).toBe(1);expect((await snapshot(page)).ranks[first]).toBe(0);
+    await page.keyboard.press('Escape');await expect(page.locator('.build-summary')).toContainText('이번 판의 전문화');
+    await expect(page.locator('.build-summary')).not.toContainText('무기 3단계부터');
+  });
+}
+test('altar completes through real time, rewards once, and relic choice resumes input',async({page})=>{
+  await scenario(page,'event-altar');await expect(page.locator('#encounter-hud')).toContainText('봉인 제단');
+  await expect(page.locator('[data-relic]')).toHaveCount(3,{timeout:15000});
+  const before=await snapshot(page);expect(before.encounters[0].state).toBe('completed');await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(before.time);
+  await page.screenshot({path:'output/playwright/survivor/relic-desktop.png'});
+  await page.keyboard.press('1');expect((await snapshot(page)).relics).toHaveLength(1);
+  await page.keyboard.down('d');await expect.poll(async()=>(await snapshot(page)).player.x).toBeGreaterThan(25);await page.keyboard.up('d');
+  await page.keyboard.press('Escape');await expect(page.locator('.build-summary')).toContainText('숲의 유물 1/2');
+});
+test('chest consent can be declined and accepted curse completes in ordinary time',async({page})=>{
+  await scenario(page,'event-chest');await page.getByRole('button',{name:'저주 상자 살펴보기'}).click();
+  await expect(page.getByRole('heading',{name:'저주를 받아들이겠습니까?'})).toBeVisible();
+  const time=(await snapshot(page)).time;await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(time);
+  await page.keyboard.press('Escape');expect((await snapshot(page)).encounters.find(e=>e.kind==='chest').state).toBe('declined');
+  await scenario(page,'event-chest');await page.getByRole('button',{name:'저주 상자 살펴보기'}).click();
+  await page.getByRole('button',{name:'저주를 받아들인다'}).click();await expect(page.locator('#encounter-hud')).toContainText('접촉 피해 +25%');
+  await page.keyboard.press('Escape');const paused=await snapshot(page);await page.waitForTimeout(150);expect((await snapshot(page)).encounters).toEqual(paused.encounters);
+  await page.getByRole('button',{name:'전투 계속하기'}).click();await expect(page.locator('[data-relic]')).toHaveCount(3,{timeout:22000});
+  expect((await snapshot(page)).encounters.find(e=>e.kind==='chest').state).toBe('completed');
+  await page.locator('[data-relic]').nth(2).click();expect((await snapshot(page)).relics).toHaveLength(1);
+});
+for(const viewport of [{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
+  test(`expansion objectives and choice cards fit ${viewport.width}`,async({page})=>{
+    await page.setViewportSize(viewport);await scenario(page,'event-chest');
+    const hud=await page.locator('#encounter-hud').boundingBox(),touch=await page.locator('#touch').boundingBox();
+    expect(hud.x).toBeGreaterThanOrEqual(0);expect(hud.x+hud.width).toBeLessThanOrEqual(viewport.width);
+    if(touch)expect(hud.y+hud.height).toBeLessThan(touch.y);
+    await page.screenshot({path:`output/playwright/survivor/event-${viewport.width}.png`});
+    await page.getByRole('button',{name:'저주 상자 살펴보기'}).click();await page.getByRole('button',{name:'상자를 두고 간다'}).click();
+    await scenario(page,'branch-ember');await page.locator('[data-upgrade="wildfire"]').scrollIntoViewIfNeeded();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.screenshot({path:`output/playwright/survivor/branch-${viewport.width}.png`});
+    await page.locator('[data-upgrade="wildfire"]').click();expect((await snapshot(page)).ranks.wildfire).toBe(1);
+  });
+}

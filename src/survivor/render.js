@@ -1,3 +1,4 @@
+import { ENCOUNTERS } from './encounters.js';
 import { orbitPositions, stats, SLAM } from './game.js';
 import { BOSS } from './boss.js';
 import { nearestRecovery } from './field.js';
@@ -209,6 +210,29 @@ export function createRenderer(canvas, art) {
       ctx.fill();
       ctx.stroke();
     }
+    for (const event of game.encounters) {
+      if (!['available', 'active'].includes(event.state)) continue;
+      const meta = ENCOUNTERS[event.kind];
+      if (Math.abs(event.x-p.x) > viewW/2+120 || Math.abs(event.y-p.y) > viewH/2+120) continue;
+      ctx.save(); ctx.translate(event.x, event.y);
+      ctx.strokeStyle = meta.color; ctx.lineWidth = 2;
+      ctx.fillStyle = event.kind === 'altar' ? '#8bd7b40e' : '#d79cc51a';
+      ctx.setLineDash([6,8]); ctx.beginPath(); ctx.arc(0,0,meta.radius,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+      if (event.state === 'active') { ctx.lineWidth=5; ctx.beginPath(); ctx.arc(0,0,meta.radius,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,event.progress/meta.duration)); ctx.stroke(); }
+      shadow(0,5,35,13);
+      if (event.kind === 'altar') {
+        ctx.fillStyle='#405f52';ctx.strokeStyle='#152a24';ctx.lineWidth=3;
+        ctx.beginPath();ctx.moveTo(-28,4);ctx.lineTo(-19,-27);ctx.lineTo(19,-27);ctx.lineTo(28,4);ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.fillStyle='#b2e1cc';ctx.beginPath();ctx.moveTo(0,-50);ctx.lineTo(11,-35);ctx.lineTo(0,-20);ctx.lineTo(-11,-35);ctx.closePath();ctx.fill();
+        ctx.strokeStyle='#d8f5e5';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-16,-11);ctx.lineTo(16,-11);ctx.stroke();
+      } else {
+        ctx.fillStyle='#65485c';ctx.strokeStyle='#231e2a';ctx.lineWidth=3;ctx.fillRect(-26,-31,52,34);ctx.strokeRect(-26,-31,52,34);
+        ctx.strokeStyle='#d7aed0';ctx.beginPath();ctx.moveTo(-26,-17);ctx.lineTo(26,-17);ctx.stroke();ctx.fillStyle='#edd4a1';ctx.fillRect(-4,-20,8,13);
+      }
+      ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.strokeStyle='#16231d';ctx.lineWidth=4;
+      const label=event.state==='active' ? `${meta.name} · ${Math.ceil(meta.duration-event.progress)}초` : meta.name;
+      ctx.strokeText(label,0,meta.radius+19);ctx.fillStyle=meta.color;ctx.fillText(label,0,meta.radius+19);ctx.restore();
+    }
     for (const supply of game.supplies) {
       shadow(supply.x, supply.y + 3, 17, 6);
       ctx.save();
@@ -383,6 +407,11 @@ export function createRenderer(canvas, art) {
       if (Math.abs(a.x - p.x) > viewW / 2 + 120 || Math.abs(a.y - p.y) > viewH / 2 + 150) continue;
       if (a.actor === 'enemy') {
         shadow(a.x, a.y + 2, a.radius * 1.15, a.radius * .43);
+        if (a.burn && a.burn.until > game.time) {
+          ctx.fillStyle='#ffad62';
+          for(let i=0;i<3;i++){ const lift=reduced.matches?0:Math.sin(game.time*8+i)*3; ctx.beginPath();ctx.moveTo(a.x-12+i*12,a.y-30);ctx.lineTo(a.x-8+i*12,a.y-44-lift);ctx.lineTo(a.x-4+i*12,a.y-30);ctx.fill(); }
+        }
+        if (a.slowUntil > game.time) { ctx.strokeStyle='#afdfff';ctx.lineWidth=2;ctx.setLineDash([3,5]);ctx.beginPath();ctx.ellipse(a.x,a.y+2,a.radius+6,8,0,0,7);ctx.stroke();ctx.setLineDash([]); }
         if (a.boss) {
           const pattern = a.pattern,
             row = pattern ? 1 : 0;
@@ -534,7 +563,7 @@ export function createRenderer(canvas, art) {
       ctx.save();
       ctx.translate(orb.x, orb.y - 12);
       ctx.rotate(game.time * 2);
-      ctx.fillStyle = '#a9eed7';
+      ctx.fillStyle = game.ranks.horizon ? '#badbff' : '#a9eed7';
       ctx.strokeStyle = '#437b6d';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -599,8 +628,8 @@ export function createRenderer(canvas, art) {
           ctx.fillStyle = '#ffc280';
           ctx.fillRect(e.x + Math.cos(a) * progress * e.range, e.y + Math.sin(a) * progress * e.range, 4, 4);
         }
-      } else if (e.kind === 'lunar-pulse') {
-        ctx.strokeStyle = '#b8f6df';
+      } else if (e.kind === 'lunar-pulse' || e.kind === 'briar-pulse') {
+        ctx.strokeStyle = e.kind === 'briar-pulse' ? '#edb7d9' : '#b8f6df';
         ctx.lineWidth = 5 * (1 - progress) + 1;
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.range * (.6 + progress * .4), 0, Math.PI * 2);

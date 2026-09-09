@@ -22,16 +22,18 @@ async function run(character,route,viewport){
       await page.waitForTimeout(1000);
     }
     assert.equal(state.phase,'ended');assert.ok(state.time>=240,'must reach the final encounter through ordinary play');
+    assert.equal(state.relics.length,2,'both optional objectives must be completed in this diagnostic route');
+    assert.ok(state.encounters.every(e=>e.state==='completed'));
     assert.ok(state.level>=10);assert.ok(state.eliteKills>=1);assert.ok(state.kills>100);
     await page.getByRole('button',{name:'다시 숲으로'}).waitFor();
     assert.equal((await page.evaluate(()=>window.__ASH_QA__.snapshot())).profile.runs,1);
     await page.screenshot({path:`${output}/${character}-result.png`});
     const timing=await page.evaluate(()=>{const list=window.__RUN_FRAMES__.sort((a,b)=>a-b);return {frames:list.length,p50:list[Math.floor(list.length*.5)],p95:list[Math.floor(list.length*.95)],over50:list.filter(n=>n>50).length};});
-    const record={character,route,seed:42,viewport,wallSeconds:(Date.now()-started)/1000,time:state.time,outcome:state.outcome,kills:state.kills,level:state.level,eliteKills:state.eliteKills,ranks:state.ranks,damage:state.damageDealt,healing:state.healing,timing,errors};
+    const record={character,route,seed:42,viewport,wallSeconds:(Date.now()-started)/1000,time:state.time,outcome:state.outcome,kills:state.kills,level:state.level,eliteKills:state.eliteKills,ranks:state.ranks,damage:state.damageDealt,healing:state.healing,relics:state.relics,encounters:state.encounters,timing,errors};
     await writeFile(`${output}/${character}.json`,JSON.stringify(record,null,2)+'\n');
     console.log('FULLRUN COMPLETE',JSON.stringify(record));
     await page.getByRole('button',{name:'다시 숲으로'}).click();
-    const restart=await page.evaluate(()=>window.__ASH_QA__.snapshot());assert.equal(restart.phase,'playing');assert.equal(restart.kills,0);assert.equal(restart.characterId,character);
+    const restart=await page.evaluate(()=>window.__ASH_QA__.snapshot());assert.equal(restart.phase,'playing');assert.equal(restart.kills,0);assert.equal(restart.characterId,character);assert.deepEqual(restart.relics,[]);assert.deepEqual(restart.encounters,[]);
     return record;
   }finally{await browser.close();}
 }

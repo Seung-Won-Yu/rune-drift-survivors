@@ -1,3 +1,4 @@
+import { SPECIALIZATIONS, RELICS } from './expansion.js';
 import { CHARACTERS, getCharacter, isUnlocked } from './characters.js';
 export const PROFILE_KEY = 'ash-profile-v1';
 const evolutions = ['dawn', 'comet', 'lunar'];
@@ -19,6 +20,8 @@ export function createProfile() {
     bestTime: 0,
     wins: 0,
     discoveries: [],
+    buildDiscoveries: [],
+    relicDiscoveries: [],
     runIds: [],
     history: [],
     characters: Object.fromEntries(Object.keys(CHARACTERS).map(key => [key, emptyRecord()]))
@@ -30,6 +33,8 @@ export function normalizeProfile(input) {
   for (const key of ['runs', 'totalKills', 'bestKills', 'wins']) profile[key] = integer(input[key]);
   profile.bestTime = integer(input.bestTime, 300);
   profile.discoveries = evolutions.filter(key => Array.isArray(input.discoveries) && input.discoveries.includes(key));
+  profile.buildDiscoveries = Object.keys(SPECIALIZATIONS).filter(key => Array.isArray(input.buildDiscoveries) && input.buildDiscoveries.includes(key));
+  profile.relicDiscoveries = Object.keys(RELICS).filter(key => Array.isArray(input.relicDiscoveries) && input.relicDiscoveries.includes(key));
   profile.runIds = Array.isArray(input.runIds) ? [...new Set(input.runIds.filter(id => typeof id === 'string' && id.length < 100))].slice(-64) : [];
   for (const key of Object.keys(CHARACTERS)) {
     const value = input.characters?.[key];
@@ -46,6 +51,8 @@ export function normalizeProfile(input) {
     time: integer(row.time, 300),
     kills: integer(row.kills),
     level: Math.max(1, integer(row.level, 100)),
+    branches: Object.keys(SPECIALIZATIONS).filter(key => Array.isArray(row.branches) && row.branches.includes(key)),
+    relics: Object.keys(RELICS).filter(key => Array.isArray(row.relics) && row.relics.includes(key)),
     evolutions: evolutions.filter(key => Array.isArray(row.evolutions) && row.evolutions.includes(key))
   }));
   return profile;
@@ -114,7 +121,13 @@ export function recordRun(input, game) {
   if (win) row.fastestWin = row.fastestWin === null ? game.time : Math.min(row.fastestWin, game.time);
   const discovered = evolutions.filter(key => game.ranks[key] > 0);
   profile.discoveries = [...new Set([...profile.discoveries, ...discovered])];
+  const branches = Object.keys(SPECIALIZATIONS).filter(key => game.ranks[key]);
+  const relics = Object.keys(RELICS).filter(key => game.relics?.includes(key));
+  profile.buildDiscoveries = [...new Set([...profile.buildDiscoveries, ...branches])];
+  profile.relicDiscoveries = [...new Set([...profile.relicDiscoveries, ...relics])];
   profile.history.unshift({
+    branches,
+    relics,
     character,
     outcome: game.outcome,
     time,

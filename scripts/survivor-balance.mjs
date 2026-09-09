@@ -1,3 +1,4 @@
+import { chooseRelic } from '../src/survivor/encounters.js';
 // Deterministic diagnostic bot: gather nearby XP and repel from nearby enemies.
 // Useful for pacing regressions; it does not measure human difficulty or fun.
 import assert from 'node:assert/strict';
@@ -16,9 +17,10 @@ for(const [route,priorities] of Object.entries(routes)) for (const seed of [12, 
   let peakEnemies = 0, firstKill = null, firstLevel = null, firstEvolution = null;
   const start = performance.now();
   for (let i = 0; i < 19_000 && game.phase !== 'ended'; i++) {
+    if (game.phase === 'relic') chooseRelic(game,game.relicChoices[0]);
     if (game.phase === 'upgrade') {
       firstLevel ??= game.time;
-      chooseUpgrade(game, priorities.find(key => game.choices.includes(key)));
+      chooseUpgrade(game, priorities.find(key => game.choices.includes(key)) ?? game.choices[0]);
       if(Object.keys(EVOLUTIONS).some(k=>game.ranks[k]))firstEvolution??=game.time;
     }
     let dx = 0, dy = 0;

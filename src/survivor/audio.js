@@ -29,7 +29,7 @@ export function createAudio() {
       gain.disconnect();
     };
   }
-  function play(event) {
+  function play(event, variant) {
     if (context?.state !== 'running') return;
     const now = context.currentTime,
       cooldown = ['xp', 'kill', 'rune-hit'].includes(event) ? .16 : .06;
@@ -37,13 +37,13 @@ export function createAudio() {
     lastVoice = now;
     lastEvent.set(event, now);
     if (event === 'swing') {
-      note(310, 65, 'triangle', now, .09, .032);
+      note(variant === 'duelist' ? 180 : 310, 65, 'triangle', now, variant === 'sweep' ? .14 : .09, .032);
       note(1000, 210, 'sine', now, .045, .012);
     } else if (event === 'ember-shot') {
-      note(240, 720, 'sine', now, .09, .023);
+      note(variant === 'detonation' ? 130 : 240, variant === 'wildfire' ? 420 : 720, 'sine', now, variant === 'detonation' ? .15 : .09, .023);
       note(150, 75, 'triangle', now + .025, .09, .018);
     } else if (event === 'rune-hit' || event === 'pulse') {
-      note(520, 490, 'sine', now, .18, .022);
+      note(variant === 'bulwark' ? 390 : variant === 'horizon' ? 660 : 520, variant === 'horizon' ? 880 : 490, 'sine', now, .18, .022);
       note(780, 735, 'sine', now + .03, .18, .012);
     } else if (event === 'heal' || event === 'level' || event === 'evolve' || event === 'boss-defeated') {
       const base = event === 'heal' ? 440 : event === 'boss-defeated' ? 330 : 550;

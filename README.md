@@ -9,14 +9,16 @@ A complete five-minute **2D cartoon survivor chapter** for the browser. Choose a
 ![Ash & Amber combat with evolved weapons](./docs/design/survivor-restart/images/combat-desktop.png)
 
 - **Three companions:** a swordsman, a fast ember caster and a defensive rune guardian, with distinct starting weapons and dedicated walk/attack/hurt/defeat art. Survive 60 seconds to unlock the caster; earn 200 total kills to unlock the guardian.
-- **Three evolutions:** piercing Dawn Blade, explosive Ash Comet and repelling Moonlit Ring. Pause to inspect recipes; ready evolutions appear at the next level-up.
+- **Six specialization paths:** choose a wide or focused sword, spreading fire or concentrated explosions, and close defense or a distant rune orbit. Each weapon keeps one path for the run, alongside its evolution.
+- **Six relics, two optional objectives:** hold the altar for ten seconds or accept an eighteen-second chest curse to pick a run-long relic. Discoveries persist; combat bonuses reset on retry.
+- **Three evolutions:** piercing Dawn Blade, Ash Comet (explosions or stronger specialized burning) and repelling Moonlit Ring. Pause to inspect recipes; ready evolutions appear at the next level-up.
 - **A final encounter:** the sovereign arrives at four minutes with marked charges and thorn volleys. A boss kill wins; surviving five minutes without a kill is recorded separately.
 - **Reasons to return:** companion unlocks, recent journeys, per-character records, discovered evolutions and a damage breakdown. Records are local to the current browser, with graceful storage failure handling.
 - **Readable feedback:** three optional healing fruits, separate weapon sounds, enemy defeat reactions, keyboard/touch controls, pause, mute and reduced-motion support.
 
 Run `npm ci` and `npm run dev`, then open **[the local game](http://127.0.0.1:5173/survivor/)**. Move with WASD/arrows or the touch stick. Attacks are automatic; use Escape/P to pause and 1–3 or a card to choose an upgrade.
 
-Verification covers three full real-time browser runs, 41 core tests, 32 browser scenarios, capped-load checks and the Pages build path. Generated four-pose artwork, initial image download size and untested physical mobile hardware are documented in the [release record](./docs/design/survivor-restart/09-RELEASE.md). The [design history](./docs/design/survivor-restart/00-RELEASE-PLAN.md) retains the earlier style experiments and implementation decisions.
+Verification covers three full real-time browser runs, 57 core tests, 40 browser scenarios, capped-load checks and the Pages build path. Generated four-pose artwork, initial image download size and untested physical mobile hardware are documented in the [release record](./docs/design/survivor-restart/09-RELEASE.md). The [first expansion record](./docs/design/survivor-restart/10-EXPANSION.md) covers the new choices and their validation. The [design history](./docs/design/survivor-restart/00-RELEASE-PLAN.md) retains the earlier style experiments and implementation decisions.
 
 ## Existing Rune Drift prototype
 

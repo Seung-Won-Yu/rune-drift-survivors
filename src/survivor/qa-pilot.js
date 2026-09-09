@@ -1,15 +1,20 @@
+import { trackedEncounter, encounterDistance } from './encounters.js';
 // Development-only input driver. Uses ordinary upgrades and simulation time; never changes combat stats.
 import { SLAM } from './game.js';
 import { BOSS } from './boss.js';
 export const routes = {
-  blade: ['dawn', 'sword', 'orbit', 'vitality', 'fleet', 'magnet', 'comet', 'lunar', 'ember', 'heal'],
-  comet: ['comet', 'ember', 'fleet', 'magnet', 'vitality', 'orbit', 'sword', 'lunar', 'dawn', 'heal'],
-  lunar: ['lunar', 'orbit', 'vitality', 'magnet', 'fleet', 'sword', 'ember', 'dawn', 'comet', 'heal']
+  blade: ['sweep', 'horizon', 'detonation', 'dawn', 'sword', 'orbit', 'vitality', 'fleet', 'magnet', 'comet', 'lunar', 'ember', 'heal'],
+  comet: ['wildfire', 'duelist', 'horizon', 'comet', 'ember', 'fleet', 'magnet', 'vitality', 'orbit', 'sword', 'lunar', 'dawn', 'heal'],
+  lunar: ['bulwark', 'sweep', 'detonation', 'lunar', 'orbit', 'vitality', 'magnet', 'fleet', 'sword', 'ember', 'dawn', 'comet', 'heal']
 };
 export function createPilot(route) {
-  if (!routes[route]) throw new Error('Unknown diagnostic route');
+  const base = route.replace('-alternate', '');
+  if (!routes[base]) throw new Error('Unknown diagnostic route');
+  const priorities = [...routes[base]];
+  if (route.endsWith('-alternate')) priorities[0] = { blade: 'duelist', comet: 'detonation', lunar: 'horizon' }[base];
   return {
-    choose: game => routes[route].find(key => game.choices.includes(key)),
+    choose: game => priorities.find(key => game.choices.includes(key)) ?? game.choices[0],
+    relic: game => (base === 'comet' ? ['coal','sail','dew','briar','fang','bell'] : base === 'lunar' ? ['bell','briar','dew','coal','fang','sail'] : ['fang','dew','briar','coal','bell','sail']).find(key=>game.relicChoices.includes(key)),
     move(game) {
       let dx = 0,
         dy = 0;
@@ -24,12 +29,19 @@ export function createPilot(route) {
         dx /= distance;
         dy /= distance;
       }
+      const event = trackedEncounter(game);
+      if (event && !(event.kind === 'chest' && event.state === 'active')) {
+        const d = encounterDistance(game,event);
+        // Follow visible objective markers. Keep ordinary evasion when inside the ritual.
+        dx = d > 24 ? (event.x-player.x)/(d||1) : 0;
+        dy = d > 24 ? (event.y-player.y)/(d||1) : 0;
+      }
       for (const enemy of game.enemies) {
         const x = player.x - enemy.x,
           y = player.y - enemy.y,
           distance = Math.hypot(x, y);
         // The short-range rune route must enter its weapon reach rather than kite outside it.
-        const retreatRadius = route === 'lunar' ? 70 : 95;
+        const retreatRadius = base === 'lunar' ? (route.endsWith('-alternate') ? 100 : 58) : 95;
         if (distance < retreatRadius) {
           dx += x / (distance || 1) * (retreatRadius - distance) / 35;
           dy += y / (distance || 1) * (retreatRadius - distance) / 35;

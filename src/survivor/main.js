@@ -1,10 +1,12 @@
+import { specializationFor, RELICS } from './expansion.js';
+import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, chooseCurse, chooseRelic } from './encounters.js';
 import './style.css';
 import { BOSS, bossAttackLabel } from './boss.js';
 import { createGame, startGame, updateGame, chooseUpgrade, pauseGame, resumeGame, spawnEnemy, spawnBoss, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, nextEvolution, RUN_SECONDS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
 import { getCharacter, isUnlocked } from './characters.js';
 import { loadProfile, saveProfile, recordRun } from './profile.js';
-import { campScreen, resultDetails, formatTime } from './camp.js';
+import { campScreen, resultDetails, formatTime, buildSummary } from './camp.js';
 import { createAudio } from './audio.js';
 import { nearestRecovery, RECOVERY } from './field.js';
 const $ = id => document.getElementById(id);
@@ -68,7 +70,8 @@ function initAudio() {
   }
 }
 function tone(event) {
-  if (sound) audio.play(event);
+  const weapon = event === 'swing' ? 'sword' : event === 'ember-shot' ? 'ember' : ['rune-hit', 'pulse'].includes(event) ? 'orbit' : null;
+  if (sound) audio.play(event, weapon ? specializationFor(game, weapon) : null);
 }
 function updateSound() {
   $('sound').innerHTML = icon(sound ? 'sound' : 'mute');
@@ -127,6 +130,10 @@ function resume() {
 }
 function choose(key) {
   initAudio();
+  if (game.phase === 'relic') {
+    if (chooseRelic(game, key)) { resetInput(); notice(`${RELICS[key].name} 획득`); lastPhase = null; syncPhase(); }
+    return;
+  }
   if (chooseUpgrade(game, key)) {
     resetInput();
     notice(EVOLUTIONS[key] ? `${UPGRADE_META[key].name} 진화 · 새로운 공격이 깨어났습니다` : `${['sword', 'ember', 'orbit'].includes(key) ? weaponName(game, key) : UPGRADE_META[key].name} · ${game.ranks[key]}단계`);
@@ -182,11 +189,17 @@ function syncPhase() {
         ...UPGRADE_META[key],
         name: weaponName(game, key)
       } : UPGRADE_META[key];
-      return `<button class="upgrade-card" data-upgrade="${key}" style="--tone:${m.color}"><small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span><span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
+      return `<button class="upgrade-card" data-upgrade="${key}" style="--tone:${m.color}"><small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span><span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
     }).join('')}</div>`);
     for (const button of document.querySelectorAll('[data-upgrade]')) button.onclick = () => choose(button.dataset.upgrade);
+  } else if (game.phase === 'relic') {
+    panel(`<p class="eyebrow">A GIFT FROM THE FOREST</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key]; return `<button class="upgrade-card relic-card" data-relic="${key}" style="--tone:${m.color}"><small>숲의 유물 · 이번 판 유지</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${m.change}</span><span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
+    for (const button of document.querySelectorAll('[data-relic]')) button.onclick = () => choose(button.dataset.relic);
+  } else if (game.phase === 'event') {
+    panel(`<p class="eyebrow">A PRICE FOR POWER</p><h1 id="panel-title">저주를 받아들이겠습니까?</h1><p class="panel-lead">18초 동안 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.</p><div class="curse-contract"><strong>살아남으면 유물 3개 중 하나 선택</strong><p>지금은 시간이 멈춰 있습니다. 도전을 수락한 뒤부터 저주가 시작됩니다.</p></div><div class="panel-actions"><button id="accept-curse" class="primary">저주를 받아들인다</button><button id="decline-curse" class="secondary">상자를 두고 간다</button></div>`, true);
+    for (const [id, accept] of [['accept-curse',true],['decline-curse',false]]) $(id).onclick = () => { if (chooseCurse(game,accept)) { resetInput(); lastPhase=null; syncPhase(); } };
   } else if (game.phase === 'paused') {
-    panel(`<p class="eyebrow">TAKE A BREATH</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">숲도 함께 멈췄습니다.<br>${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p>${buildGuide()}<div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
+    panel(`<p class="eyebrow">TAKE A BREATH</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">숲도 함께 멈췄습니다.<br>${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p>${buildSummary(game)}${buildGuide()}<div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
     $('resume-game').onclick = resume;
   } else if (game.phase === 'ended') {
     const win = game.outcome === 'victory',
@@ -203,6 +216,15 @@ function syncPhase() {
 }
 let beltKey = '';
 function updateHud() {
+  const encounter = trackedEncounter(game);
+  $('encounter-hud').hidden = !encounter || game.phase !== 'playing';
+  if (encounter) {
+    const meta = ENCOUNTERS[encounter.kind], distance = encounterDistance(game, encounter);
+    $('encounter-name').textContent = `${encounterDirection(game, encounter)} ${meta.name}`;
+    $('encounter-hud').classList.toggle('is-cursed', encounter.kind === 'chest' && encounter.state === 'active');
+    $('encounter-copy').textContent = encounter.kind === 'chest' && encounter.state === 'active' ? `저주 ${Math.ceil(meta.duration-encounter.progress)}초 · 일반 적 속도·접촉 피해 +25%` : encounter.kind === 'altar' && encounter.state === 'active' ? `봉인 ${Math.min(10,Math.floor(encounter.progress))}/10초 · ${distance <= meta.radius ? '범위 안에서 버티세요' : '제단으로 돌아가면 계속 진행'}` : encounter.kind === 'altar' ? `${Math.round(distance)} 거리 · 원 안에서 10초 버티면 유물` : `${Math.round(distance)} 거리 · 저주를 견디면 유물`;
+  }
+  $('open-chest').hidden = !nearbyChest(game);
   const boss = game.enemies.find(e => e.boss && e.hp > 0);
   $('boss-hud').hidden = !boss;
   document.body.classList.toggle('has-boss', !!boss);
@@ -244,6 +266,9 @@ function updateHud() {
 }
 function tick(now) {
   if (qaPilot && game.phase === 'upgrade') choose(qaPilot.choose(game));
+  if (qaPilot && game.phase === 'relic') choose(qaPilot.relic(game));
+  if (qaPilot && game.phase === 'playing' && nearbyChest(game)) { openChest(game); chooseCurse(game,true); }
+
   const dt = last ? Math.min(.1, (now - last) / 1000) : 0;
   last = now;
   if (game.phase === 'playing') {
@@ -260,9 +285,9 @@ function tick(now) {
   }
   if (game.events.length) {
     const events = new Set(game.events);
-    if (events.has('recovery-ready')) notice('숲의 열매가 열렸습니다 · 가까이 가면 체력 +25');else if (events.has('boss-arrival')) notice('재의 군주 출현 · 공격 예고를 보고 빈틈을 노리세요');else if (events.has('elite')) notice('정예 나무 거인 출현 · 처치하면 체력 회복');
+    if (events.has('event-ready')) notice('숲의 사건 발견 · 방향 안내를 따라가 보세요');else if (events.has('curse')) notice('저주 시작 · 18초 동안 살아남으세요');else if (events.has('recovery-ready')) notice('숲의 열매가 열렸습니다 · 가까이 가면 체력 +25');else if (events.has('boss-arrival')) notice('재의 군주 출현 · 공격 예고를 보고 빈틈을 노리세요');else if (events.has('elite')) notice('정예 나무 거인 출현 · 처치하면 체력 회복');
     const soundEvent = ['hurt', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'evolve', 'level', 'heal', 'choose', 'slam', 'warning', 'elite', 'pulse', 'ember-shot', 'swing', 'rune-hit', 'xp', 'kill'].find(e => events.has(e));
-    if (soundEvent) tone(soundEvent);
+    if (events.has('relic-ready')) tone('evolve');else if (soundEvent) tone(soundEvent);
     game.events.length = 0;
   }
   syncPhase();
@@ -293,12 +318,12 @@ document.addEventListener('keydown', event => {
   }
   if ((key === 'escape' || key === 'p') && !event.repeat) {
     event.preventDefault();
-    if (game.phase === 'playing') pause();else if (game.phase === 'paused') resume();
+    if (game.phase === 'event') { chooseCurse(game,false); lastPhase=null; syncPhase(); } else if (game.phase === 'playing') pause();else if (game.phase === 'paused') resume();
     return;
   }
-  if (game.phase === 'upgrade' && ['1', '2', '3'].includes(key) && !event.repeat) {
+  if (['upgrade', 'relic'].includes(game.phase) && ['1', '2', '3'].includes(key) && !event.repeat) {
     event.preventDefault();
-    choose(game.choices[Number(key) - 1]);
+    choose((game.phase === 'relic' ? game.relicChoices : game.choices)[Number(key) - 1]);
     return;
   }
   if (game.phase === 'playing' && ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'].includes(key)) {
@@ -318,6 +343,7 @@ document.addEventListener('visibilitychange', () => {
     pause();
   }
 });
+$('open-chest').onclick = () => { if (openChest(game)) { resetInput(); lastPhase=null; syncPhase(); } };
 $('pause').onclick = pause;
 $('pause').innerHTML = icon('pause');
 $('sound').onclick = () => {
@@ -361,6 +387,9 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       syncPhase();
     },
     snapshot: () => ({
+      relics: [...game.relics],
+      relicChoices: [...game.relicChoices],
+      encounters: structuredClone(game.encounters),
       audio: audio.state(),
       supplies: game.supplies.map(s => ({
         ...s
@@ -415,7 +444,14 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name === 'upgrade' || name === 'overflow') {
+      if (name.startsWith('branch-')) {
+        const weapon = name.slice(7); game.level = 4; game.ranks[weapon] = 3;
+        game.gems.push({x:0,y:0,value:9,age:0}); updateGame(game,1/60);
+      } else if (name === 'event-altar' || name === 'event-chest') {
+        const kind = name.slice(6); game.time = kind === 'altar' ? 45 : 135; game.nextElite = 999;
+        game.encounters = [{kind, x:35, y:0, state:'available',progress:0}];
+        if (kind === 'chest') game.encounters.unshift({kind:'altar',x:0,y:0,state:'completed',progress:10});
+      } else if (name === 'upgrade' || name === 'overflow') {
         game.gems.push({
           x: 0,
           y: 0,
@@ -551,7 +587,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
         });
         enemy.hp = enemy.maxHp = 999;
         enemy.speed = 0;
-      } else if (name === 'stress') {
+      } else if (name === 'stress' || name === 'stress-expansion') {
         game.time = 240;
         game.nextElite = 999;
         game.xpNeed = 999999;
@@ -592,6 +628,10 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
           comet: 1,
           lunar: 1
         });
+        if (name === 'stress-expansion') {
+          Object.assign(game.ranks,{sweep:1,wildfire:1,horizon:1});game.relics=['coal','bell'];
+          for (const enemy of game.enemies) { enemy.burn={until:999,next:game.time+.5,damage:33};enemy.slowUntil=999; }
+        }
         const boss = spawnBoss(game);
         boss.hp = boss.maxHp = 100000;
       } else if (name === 'recovery') {

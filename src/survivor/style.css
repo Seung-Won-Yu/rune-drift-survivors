@@ -1528,3 +1528,38 @@ button:focus-visible {
     max-width: 180px;
   }
 }
+
+/* Optional objectives stay away from the movement stick and weapon tray. */
+.encounter-hud {
+  position: fixed;
+  top: 142px;
+  right: max(24px, env(safe-area-inset-right));
+  width: min(280px, calc(100% - 40px));
+  padding: 11px 13px;
+  border: 1px solid #8abb9d70;
+  border-radius: 9px;
+  background: #152b23ed;
+  color: #d7efdb;
+  pointer-events: auto;
+}
+.encounter-hud strong, .encounter-hud span { display: block; }
+.encounter-hud strong { font-size: 13px; }
+.encounter-hud span { margin-top: 5px; font-size: 11px; line-height: 1.5; }
+.encounter-hud button { width: 100%; min-height: 44px; margin-top: 8px; border: 1px solid #d8afc7; border-radius: 5px; color: #ffe4f5; background: #503047; font: inherit; font-size: 12px; cursor: pointer; }
+.encounter-hud.is-cursed { border-color: #d5a1c7; background: #352333ed; }
+.build-summary { margin: 18px 0; padding: 12px 15px; border: 1px solid var(--line); border-radius: 7px; text-align: left; font-size: 12px; line-height: 1.7; color: #c9d3c6; }
+.build-summary p { margin: 4px 0; }
+.build-summary strong { color: #ead4a5; margin-right: 7px; }
+.build-summary small { display: block; margin-top: 5px; }
+.curse-contract { padding: 18px; border: 1px solid #cc9bc16b; border-radius: 8px; background: #5438483b; color: #efc4df; line-height: 1.7; }
+.curse-contract p { font-size: 12px; color: #cebfcb; }
+.relic-card { border-style: double; }
+@media(max-width:680px),(pointer:coarse) {
+  .encounter-hud { top: 130px; left: 20px; right: 20px; width: auto; padding: 8px 11px; }
+  .encounter-hud strong { font-size: 12px; }
+  .encounter-hud span { font-size: 10px; margin-top: 3px; }
+  .has-boss .encounter-hud { top: 218px; }
+}
+@media(max-height:570px) and (orientation:landscape) {
+  .encounter-hud, .has-boss .encounter-hud { top: 110px; left: auto; right: 16px; width: 195px; padding: 7px 10px; }
+}
