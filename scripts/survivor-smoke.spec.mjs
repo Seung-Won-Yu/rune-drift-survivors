@@ -374,6 +374,7 @@ for (const [weapon, first, second] of [['sword','sweep','duelist'],['ember','wil
     expect((await snapshot(page)).ranks[second]).toBe(1);expect((await snapshot(page)).ranks[first]).toBe(0);
     await page.keyboard.press('Escape');await expect(page.locator('.build-summary')).toContainText('이번 판의 전문화');
     await expect(page.locator('.build-summary')).not.toContainText('무기 3단계부터');
+    await expect(page.locator('.build-summary')).toContainText({duelist:'재사용 +0.12초',detonation:'발사 간격 1.25초',horizon:'회전 반경 +48'}[second]);
   });
 }
 test('altar completes through real time, rewards once, and relic choice resumes input',async({page})=>{
