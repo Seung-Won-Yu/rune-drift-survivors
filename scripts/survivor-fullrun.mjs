@@ -35,7 +35,14 @@ async function run(character,route,viewport){
     await page.getByRole('button',{name:'다시 숲으로'}).click();
     const restart=await page.evaluate(()=>window.__ASH_QA__.snapshot());assert.equal(restart.phase,'playing');assert.equal(restart.kills,0);assert.equal(restart.characterId,character);assert.deepEqual(restart.relics,[]);assert.deepEqual(restart.encounters,[]);
     return record;
-  }finally{await browser.close();}
+  }finally{
+    if(browser.isConnected()) {
+      // A local transport can deliver disconnection before its close reply.
+      // Both are terminal browser states; neither skips gameplay assertions.
+      const disconnected=new Promise(resolve=>browser.once('disconnected',resolve));
+      await Promise.race([browser.close(),disconnected]);
+    }
+  }
 }
 const results=await Promise.all([
   run('ash','blade',{width:1280,height:720}),

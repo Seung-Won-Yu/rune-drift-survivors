@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-09-09T08:45:07.750Z",
+  "results": [
+    {
+      "branch": "duelist",
+      "expectedFrequency": 125,
+      "observedFrequencies": [
+        125,
+        1550
+      ]
+    },
+    {
+      "branch": "sweep",
+      "expectedFrequency": 310,
+      "observedFrequencies": [
+        310,
+        1000
+      ]
+    },
+    {
+      "branch": "wildfire",
+      "expectedFrequency": 380,
+      "observedFrequencies": [
+        240,
+        150,
+        380
+      ]
+    },
+    {
+      "branch": "detonation",
+      "expectedFrequency": 95,
+      "observedFrequencies": [
+        130,
+        150,
+        95,
+        240
+      ]
+    },
+    {
+      "branch": "bulwark",
+      "expectedFrequency": 390,
+      "observedFrequencies": [
+        390,
+        780
+      ]
+    },
+    {
+      "branch": "horizon",
+      "expectedFrequency": 660,
+      "observedFrequencies": [
+        660,
+        780
+      ]
+    }
+  ],
+  "mutedState": "suspended"
+}
