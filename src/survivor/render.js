@@ -89,6 +89,19 @@ export function createRenderer(canvas, art) {
     tint.drawImage(image, 0, 0);
     hitArt.set(image, tinted);
   }
+  // Enemy frames are reused hundreds of times. Downsample each normal/hit
+  // frame once at 3x world resolution, above the maximum 2.4x screen scale.
+  const enemyFrames = new Map();
+  for (let row = 0; row < 3; row++) for (const factor of [1, 1.45]) for (let col = 0; col < 4; col++) for (const flash of [false, true]) {
+    const size = [64, 72, 86][row] * factor;
+    const frame = document.createElement('canvas');
+    frame.width = frame.height = Math.ceil(size * 3);
+    const ink = frame.getContext('2d');
+    ink.imageSmoothingQuality = 'high';
+    const cw = art.enemies.naturalWidth / 4, ch = art.enemies.naturalHeight / 3;
+    ink.drawImage(flash ? hitArt.get(art.enemies) : art.enemies, col * cw, row * ch, cw, ch, 0, 0, frame.width, frame.height);
+    enemyFrames.set(`${row}:${col}:${size}:${flash}`, frame);
+  }
   const vignette = document.createElement('canvas');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   function resize() {
@@ -127,8 +140,12 @@ export function createRenderer(canvas, art) {
     ctx.scale(flip ? -1 : 1, 1);
     ctx.rotate(pose.tilt || 0);
     ctx.scale(pose.sx || 1, pose.sy || 1);
-    if (flash) ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(flash ? hitArt.get(image) : image, sx, sy, sw, ch, -size * .48 + (sx - col * cw) * size / cw, -drawHeight * (pose.anchor ?? .89), sw / cw * size, drawHeight);
+    const cached = image === art.enemies && !edges && !pose.rows ? enemyFrames.get(`${row}:${col}:${size}:${flash}`) : null;
+    if (cached) ctx.drawImage(cached, -size * .48, -drawHeight * (pose.anchor ?? .89), size, drawHeight);
+    else {
+      if (flash) ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(flash ? hitArt.get(image) : image, sx, sy, sw, ch, -size * .48 + (sx - col * cw) * size / cw, -drawHeight * (pose.anchor ?? .89), sw / cw * size, drawHeight);
+    }
     ctx.restore();
   }
   function render(game, now = 0) {

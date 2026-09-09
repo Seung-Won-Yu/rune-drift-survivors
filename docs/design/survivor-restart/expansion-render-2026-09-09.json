@@ -1,0 +1,182 @@
+{
+  "diagnostic": "GPU disabled, DevTools CPU throttle 4x; not a physical device benchmark",
+  "before": {
+    "timing": {
+      "frames": 169,
+      "p50": 66.69999999999982,
+      "p95": 100,
+      "over50": 123
+    },
+    "time": 252.25000000000975,
+    "top": [
+      [
+        "(program) :-1",
+        9920.81899999999
+      ],
+      [
+        "updateGame http://127.0.0.1:5173/src/survivor/game.js?t=1788913550565:753",
+        637.5720000000002
+      ],
+      [
+        "updateWeapons http://127.0.0.1:5173/src/survivor/game.js?t=1788913550565:524",
+        509.51599999999985
+      ],
+      [
+        "render http://127.0.0.1:5173/src/survivor/render.js?t=1788913550565:133",
+        227.66900000000004
+      ],
+      [
+        "(garbage collector) :-1",
+        156.51000000000005
+      ],
+      [
+        "tick http://127.0.0.1:5173/src/survivor/main.js?t=1788914388160:266",
+        141.996
+      ],
+      [
+        "fill :-1",
+        79.12
+      ],
+      [
+        "drawImage :-1",
+        70.144
+      ],
+      [
+        "strokeText :-1",
+        40.349999999999994
+      ],
+      [
+        " http://127.0.0.1:5173/src/survivor/game.js?t=1788913550565:610",
+        40.178000000000004
+      ],
+      [
+        "stroke :-1",
+        39.29
+      ],
+      [
+        "save :-1",
+        34.466
+      ],
+      [
+        " http://127.0.0.1:5173/src/survivor/render.js?t=1788913550565:398",
+        28.866
+      ],
+      [
+        "ellipse :-1",
+        28.541000000000007
+      ],
+      [
+        "orbitPositions http://127.0.0.1:5173/src/survivor/game.js?t=1788913550565:511",
+        28.274999999999995
+      ]
+    ]
+  },
+  "cachedEnemyFrames": {
+    "timing": {
+      "frames": 233,
+      "p50": 50,
+      "p95": 66.69999999999982,
+      "over50": 57
+    },
+    "time": 252.2000000000097,
+    "top": [
+      [
+        "(program) :-1",
+        9608.396000000057
+      ],
+      [
+        "updateGame http://127.0.0.1:5173/src/survivor/game.js?t=1788913550565:753",
+        591.8979999999995
+      ],
+      [
+        "updateWeapons http://127.0.0.1:5173/src/survivor/game.js?t=1788913550565:524",
+        568.0649999999995
+      ],
+      [
+        "render http://127.0.0.1:5173/src/survivor/render.js?t=1788915009865:150",
+        283.3640000000001
+      ],
+      [
+        "tick http://127.0.0.1:5173/src/survivor/main.js?t=1788915009865:266",
+        161.237
+      ],
+      [
+        "(garbage collector) :-1",
+        144.10000000000002
+      ],
+      [
+        "fill :-1",
+        127.992
+      ],
+      [
+        "drawImage :-1",
+        95.25899999999997
+      ],
+      [
+        "ellipse :-1",
+        57.67300000000001
+      ],
+      [
+        " http://127.0.0.1:5173/src/survivor/game.js?t=1788913550565:610",
+        53.282
+      ],
+      [
+        "save :-1",
+        51.788
+      ],
+      [
+        " http://127.0.0.1:5173/src/survivor/render.js?t=1788915009865:415",
+        50.11300000000001
+      ],
+      [
+        "sprite http://127.0.0.1:5173/src/survivor/render.js?t=1788915009865:129",
+        48.064
+      ],
+      [
+        "stroke :-1",
+        46.851
+      ],
+      [
+        "strokeText :-1",
+        43.852
+      ]
+    ]
+  },
+  "cachedFrames": 48,
+  "extraRgbaBytes": 14948672,
+  "finalCpuViewports": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "frames": 721,
+      "elapsed": 12016.1,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "frames": 721,
+      "elapsed": 12016.1,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "frames": 721,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    }
+  ]
+}
