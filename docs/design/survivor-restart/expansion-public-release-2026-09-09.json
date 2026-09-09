@@ -1,0 +1,66 @@
+{
+  "url": "https://seung-won-yu.github.io/rune-drift-survivors/survivor/",
+  "checkedAt": "2026-09-09T01:15:16.803Z",
+  "script": "/rune-drift-survivors/assets/survivor-CD04-XuD.js",
+  "scriptHash": "3896cb2e4ef738cc747eeb43c6e3f188ea32961c716840589d6b5bc5bef04b2d",
+  "staticAssets": [
+    {
+      "path": "/rune-drift-survivors/assets/modulepreload-polyfill-B5Qt9EMX.js",
+      "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0"
+    },
+    {
+      "path": "/rune-drift-survivors/assets/survivor-0rfn9XI-.css",
+      "sha256": "2b338b0b6cbed21945fbf03c3880d020ede1600266ffdccdadeccd5a2ef5b710"
+    }
+  ],
+  "assets": [
+    {
+      "name": "hero-ash.png",
+      "sha256": "295796536c55e2fa8ce0237659ba95a36c8cd790673da0554e65ad069b5c732b"
+    },
+    {
+      "name": "hero-ember.png",
+      "sha256": "6f21fba734bc3913d58aba117af96b54836ca27e2e5c3474fde38101f7edc574"
+    },
+    {
+      "name": "hero-grove.png",
+      "sha256": "ce6771f6db0898efa13c4719ac76f91d73e4dc75534f0fdc4bbdd6163d6be5ae"
+    },
+    {
+      "name": "enemies.png",
+      "sha256": "282c1a768205914c4315919f9622cb2febeec1bf56eba32ceabdc92b116eb2e4"
+    },
+    {
+      "name": "ash-sovereign.png",
+      "sha256": "13dd78999bd3107bf148f310709a2541ae6e9f7e2ea3e224def786dc68abbb6b"
+    }
+  ],
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "touch": {
+      "x": 26,
+      "y": 702,
+      "width": 112,
+      "height": 112
+    }
+  },
+  "movement": {
+    "before": {
+      "x": 0,
+      "y": 0
+    },
+    "after": {
+      "x": -30.800000000000004,
+      "y": 0
+    }
+  },
+  "pause": "clock and camera frozen; resumed",
+  "expansionHud": "present",
+  "specializationSummary": "present in pause",
+  "qaGlobal": "absent",
+  "errors": [],
+  "failures": []
+}

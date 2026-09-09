@@ -4,7 +4,7 @@
 
 A complete five-minute **2D cartoon survivor chapter** for the browser. Choose a companion, gather XP, evolve an automatic weapon and face the Ash Sovereign. The new game uses Canvas 2D; its entry does not load React or Three.js.
 
-**[Play Ash & Amber](https://seung-won-yu.github.io/rune-drift-survivors/survivor/)** · [Play / development guide](./docs/survivor.md) · [Release verification](./docs/design/survivor-restart/09-RELEASE.md)
+**[Play Ash & Amber](https://seung-won-yu.github.io/rune-drift-survivors/survivor/)** · [Play / development guide](./docs/survivor.md) · [Release verification](./docs/design/survivor-restart/10-EXPANSION.md)
 
 ![Ash & Amber combat with evolved weapons](./docs/design/survivor-restart/images/combat-desktop.png)
 

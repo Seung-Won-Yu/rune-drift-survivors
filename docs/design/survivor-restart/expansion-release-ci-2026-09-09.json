@@ -1,0 +1,214 @@
+{
+  "conclusion": "success",
+  "headSha": "88a1d38084f402626705b328284c2827ea4d299b",
+  "jobs": [
+    {
+      "completedAt": "2026-09-09T01:13:58Z",
+      "conclusion": "success",
+      "databaseId": 102295868378,
+      "name": "build",
+      "startedAt": "2026-09-09T00:55:48Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-09T00:55:51Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-09T00:55:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T00:55:53Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-09T00:55:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T00:55:56Z",
+          "conclusion": "success",
+          "name": "Setup Node",
+          "number": 3,
+          "startedAt": "2026-09-09T00:55:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T00:56:02Z",
+          "conclusion": "success",
+          "name": "Install dependencies",
+          "number": 4,
+          "startedAt": "2026-09-09T00:55:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T00:56:10Z",
+          "conclusion": "success",
+          "name": "Build",
+          "number": 5,
+          "startedAt": "2026-09-09T00:56:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T00:56:45Z",
+          "conclusion": "success",
+          "name": "Install browser for smoke QA",
+          "number": 6,
+          "startedAt": "2026-09-09T00:56:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T00:59:34Z",
+          "conclusion": "success",
+          "name": "Run survivor QA",
+          "number": 7,
+          "startedAt": "2026-09-09T00:56:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T00:59:36Z",
+          "conclusion": "success",
+          "name": "Verify survivor Pages build",
+          "number": 8,
+          "startedAt": "2026-09-09T00:59:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T01:13:53Z",
+          "conclusion": "success",
+          "name": "Run smoke QA",
+          "number": 9,
+          "startedAt": "2026-09-09T00:59:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T01:13:53Z",
+          "conclusion": "skipped",
+          "name": "Upload failed QA diagnostics",
+          "number": 10,
+          "startedAt": "2026-09-09T01:13:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T01:13:53Z",
+          "conclusion": "success",
+          "name": "Configure Pages",
+          "number": 11,
+          "startedAt": "2026-09-09T01:13:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T01:13:56Z",
+          "conclusion": "success",
+          "name": "Upload artifact",
+          "number": 12,
+          "startedAt": "2026-09-09T01:13:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T01:13:56Z",
+          "conclusion": "success",
+          "name": "Post Setup Node",
+          "number": 23,
+          "startedAt": "2026-09-09T01:13:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T01:13:56Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 24,
+          "startedAt": "2026-09-09T01:13:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T01:13:56Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 25,
+          "startedAt": "2026-09-09T01:13:56Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/34297063334/job/102295868378"
+    },
+    {
+      "completedAt": "2026-09-09T01:14:10Z",
+      "conclusion": "success",
+      "databaseId": 102299747536,
+      "name": "deploy",
+      "startedAt": "2026-09-09T01:14:02Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-09T01:14:03Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-09T01:14:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T01:14:09Z",
+          "conclusion": "success",
+          "name": "Deploy to GitHub Pages",
+          "number": 2,
+          "startedAt": "2026-09-09T01:14:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-09T01:14:09Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 3,
+          "startedAt": "2026-09-09T01:14:09Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/34297063334/job/102299747536"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/34297063334",
+  "verification": {
+    "corePassed": 57,
+    "survivorBrowserPassed": 40,
+    "legacySmokePassed": 86,
+    "stressTiming": [
+      {
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "frames": 514,
+        "elapsed": 12016.1,
+        "p50": 16.700000000000728,
+        "p95": 33.40000000000009,
+        "over50": 1
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "frames": 718,
+        "elapsed": 12016.2,
+        "p50": 16.699999999999818,
+        "p95": 16.799999999999272,
+        "over50": 0
+      },
+      {
+        "viewport": {
+          "width": 740,
+          "height": 360
+        },
+        "frames": 718,
+        "elapsed": 12016.199999999999,
+        "p50": 16.699999999999818,
+        "p95": 16.700000000000728,
+        "over50": 0
+      }
+    ]
+  }
+}
