@@ -36,7 +36,15 @@ export function createAudio() {
     if (now - lastVoice < .045 || now - (lastEvent.get(event) ?? -1) < cooldown) return;
     lastVoice = now;
     lastEvent.set(event, now);
-    if (event === 'swing') {
+    if (event === 'blade-impact') {
+      note(125, 48, 'triangle', now, .12, .03);
+      note(1550, 520, 'sine', now, .045, .014);
+    } else if (event === 'ember-impact') {
+      note(95, 36, 'triangle', now, .2, .035);
+      note(240, 70, 'sine', now, .16, .024);
+    } else if (event === 'fire-spread') {
+      note(380, 790, 'sine', now, .1, .016);
+    } else if (event === 'swing') {
       note(variant === 'duelist' ? 180 : 310, 65, 'triangle', now, variant === 'sweep' ? .14 : .09, .032);
       note(1000, 210, 'sine', now, .045, .012);
     } else if (event === 'ember-shot') {

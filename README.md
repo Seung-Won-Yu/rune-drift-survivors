@@ -13,12 +13,13 @@ A complete five-minute **2D cartoon survivor chapter** for the browser. Choose a
 - **Six relics, two optional objectives:** hold the altar for ten seconds or accept an eighteen-second chest curse to pick a run-long relic. Discoveries persist; combat bonuses reset on retry.
 - **Three evolutions:** piercing Dawn Blade, Ash Comet (explosions or stronger specialized burning) and repelling Moonlit Ring. Pause to inspect recipes; ready evolutions appear at the next level-up.
 - **A final encounter:** the sovereign arrives at four minutes with marked charges and thorn volleys. A boss kill wins; surviving five minutes without a kill is recorded separately.
+- **Three forest challenges:** earn optional starting keepsakes for an altar finish, two recorded specializations and a sovereign victory. Pick one health/movement/collection tradeoff or depart with the original stats.
 - **Reasons to return:** companion unlocks, recent journeys, per-character records, discovered evolutions and a damage breakdown. Records are local to the current browser, with graceful storage failure handling.
 - **Readable feedback:** three optional healing fruits, separate weapon sounds, enemy defeat reactions, keyboard/touch controls, pause, mute and reduced-motion support.
 
 Run `npm ci` and `npm run dev`, then open **[the local game](http://127.0.0.1:5173/survivor/)**. Move with WASD/arrows or the touch stick. Attacks are automatic; use Escape/P to pause and 1–3 or a card to choose an upgrade.
 
-Verification covers three full real-time browser runs, 57 core tests, 40 browser scenarios, capped-load checks and the Pages build path. Generated four-pose artwork, initial image download size and untested physical mobile hardware are documented in the [release record](./docs/design/survivor-restart/09-RELEASE.md). The [first expansion record](./docs/design/survivor-restart/10-EXPANSION.md) covers the new choices and their validation. The [design history](./docs/design/survivor-restart/00-RELEASE-PLAN.md) retains the earlier style experiments and implementation decisions.
+Verification includes the first expansion’s three full real-time browser runs, 62 core tests, 44 browser scenarios, capped-load checks and the Pages build path. Generated four-pose artwork, initial image download size and untested physical mobile hardware are documented in the [release record](./docs/design/survivor-restart/09-RELEASE.md). The [first expansion record](./docs/design/survivor-restart/10-EXPANSION.md) covers the new choices and their validation. The [journey and combat-feel record](./docs/design/survivor-restart/11-JOURNEY-FEEL.md) covers starting keepsakes, challenge rewards and specialization feedback. The [design history](./docs/design/survivor-restart/00-RELEASE-PLAN.md) retains the earlier style experiments and implementation decisions.
 
 ## Existing Rune Drift prototype
 

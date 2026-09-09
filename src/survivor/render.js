@@ -579,15 +579,18 @@ export function createRenderer(canvas, art) {
     for (const orb of orbitPositions(game)) {
       ctx.save();
       ctx.translate(orb.x, orb.y - 12);
-      ctx.rotate(game.time * 2);
+      ctx.rotate(game.ranks.bulwark ? Math.atan2(orb.y-p.y,orb.x-p.x) : game.time * 2);
       ctx.fillStyle = game.ranks.horizon ? '#badbff' : '#a9eed7';
       ctx.strokeStyle = '#437b6d';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(0, -10);
-      ctx.lineTo(6, 0);
-      ctx.lineTo(0, 10);
-      ctx.lineTo(-6, 0);
+      if (game.ranks.bulwark) {
+        ctx.moveTo(7,-11);ctx.lineTo(11,0);ctx.lineTo(7,11);ctx.lineTo(-5,7);ctx.lineTo(-5,-7);
+      } else if (game.ranks.horizon) {
+        for(let i=0;i<8;i++){ const a=i*Math.PI/4, r=i%2?4:12; if(i)ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);else ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r); }
+      } else {
+        ctx.moveTo(0, -10);ctx.lineTo(6, 0);ctx.lineTo(0, 10);ctx.lineTo(-6, 0);
+      }
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
@@ -600,6 +603,14 @@ export function createRenderer(canvas, art) {
         ctx.save();
         ctx.translate(e.x, e.y);
         ctx.rotate(e.angle);
+        if (e.branch === 'duelist') {
+          ctx.fillStyle='#f6b49a';ctx.beginPath();ctx.moveTo(e.range*.2,-4*(1-progress));ctx.lineTo(e.range,0);ctx.lineTo(e.range*.2,4*(1-progress));ctx.closePath();ctx.fill();
+          ctx.strokeStyle='#fff0d9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(e.range*.15,-5);ctx.lineTo(e.range*.95,-5);ctx.stroke();
+        }
+        if (e.branch === 'sweep') {
+          ctx.strokeStyle='#e9bd7370';ctx.lineWidth=3;
+          for(const radius of [.68,.79]) {ctx.beginPath();ctx.arc(0,0,e.range*radius,-e.halfAngle,e.halfAngle);ctx.stroke();}
+        }
         ctx.strokeStyle = e.evolved ? '#fff0bb' : '#ffe0a7';
         ctx.lineWidth = (e.evolved ? 11 : 7) * (1 - progress) + 1;
         ctx.beginPath();
@@ -609,6 +620,19 @@ export function createRenderer(canvas, art) {
         ctx.lineWidth = 18 * (1 - progress);
         ctx.stroke();
         ctx.restore();
+      } else if (e.kind === 'fire-link') {
+        // A fixed connection identifies the actual transfer; no new particles.
+        ctx.strokeStyle='#ffb56f';ctx.lineWidth=3*(1-progress)+1;ctx.beginPath();
+        ctx.moveTo(e.x,e.y);ctx.quadraticCurveTo((e.x+e.toX)/2,(e.y+e.toY)/2-14,e.toX,e.toY);ctx.stroke();
+        ctx.fillStyle='#ffe0a4';ctx.beginPath();ctx.arc(e.toX,e.toY,4,0,Math.PI*2);ctx.fill();
+      } else if (['focused-impact','guard-impact','star-impact'].includes(e.kind)) {
+        ctx.save();ctx.translate(e.x,e.y);ctx.rotate(e.angle);
+        const reach=reduced.matches?18:12+progress*18;
+        ctx.strokeStyle=e.kind==='focused-impact'?'#ffddbd':e.kind==='guard-impact'?'#aee9c4':'#c6e4ff';ctx.lineWidth=3*(1-progress)+1;
+        ctx.beginPath();
+        if(e.kind==='guard-impact') {ctx.arc(-10,0,reach,-1.15,1.15);ctx.moveTo(0,-9);ctx.lineTo(10,0);ctx.lineTo(0,9);}
+        else {for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.moveTo(Math.cos(a)*4,Math.sin(a)*4);ctx.lineTo(Math.cos(a)*reach*(i%2? .65:1),Math.sin(a)*reach*(i%2?.65:1));}}
+        ctx.stroke();ctx.restore();
       } else if (e.kind === 'slam') {
         ctx.fillStyle = '#d5834230';
         ctx.beginPath();
@@ -633,6 +657,10 @@ export function createRenderer(canvas, art) {
         ctx.arc(e.x, e.y, 25 + progress * 40, 0, Math.PI * 2);
         ctx.stroke();
       } else if (e.kind === 'ember-burst') {
+        if(e.concentrated) {
+          ctx.strokeStyle='#f9ce9777';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.range*(reduced.matches?.9:.7+progress*.3),0,Math.PI*2);ctx.stroke();
+          ctx.fillStyle='#ffe6ac';ctx.beginPath();ctx.arc(e.x,e.y,12*(1-progress)+2,0,Math.PI*2);ctx.fill();
+        }
         ctx.fillStyle = '#e9934938';
         ctx.strokeStyle = '#ffdb9a';
         ctx.lineWidth = 4 * (1 - progress) + 1;

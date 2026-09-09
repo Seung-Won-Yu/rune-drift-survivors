@@ -1,3 +1,4 @@
+import { canEquipKeepsake } from './journey.js';
 import { specializationFor, RELICS } from './expansion.js';
 import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, chooseCurse, chooseRelic } from './encounters.js';
 import './style.css';
@@ -33,7 +34,7 @@ let profile = loaded.profile,
 function persist() {
   if (loaded.canSave && !saveProfile(storage, profile)) storageWarning = '기록을 저장하지 못했습니다. 이 창을 닫기 전까지 기록과 해금이 유지됩니다.';
 }
-let game = createGame(Date.now(), profile.selected),
+let game = createGame(Date.now(), profile.selected, profile.keepsake),
   renderer = null,
   lastPhase = null,
   lastHud = 0,
@@ -91,14 +92,14 @@ function start() {
   syncPhase();
 }
 function restart() {
-  game = createGame(++seed, game.characterId);
+  game = createGame(++seed, game.characterId, profile.keepsake);
   start();
   last = 0;
   accumulator = 0;
   lastHud = 0;
 }
 function camp() {
-  game = createGame(++seed, profile.selected);
+  game = createGame(++seed, profile.selected, profile.keepsake);
   lastPhase = null;
   syncPhase();
   last = 0;
@@ -112,6 +113,16 @@ function selectCharacter(id) {
   requestAnimationFrame(() => $('panel').querySelector(`[data-character="${id}"]`)?.focus({
     preventScroll: true
   }));
+}
+function selectKeepsake(id) {
+  if (game.phase !== 'ready' || !canEquipKeepsake(profile, id)) return;
+  const scrollTop = $('overlay').scrollTop;
+  profile.keepsake = id;
+  persist();
+  camp();
+  $('panel').querySelector('.journey-board').open = true;
+  $('overlay').scrollTop = scrollTop;
+  requestAnimationFrame(() => $('panel').querySelector(`[data-keepsake="${id}"]`)?.focus({preventScroll:true}));
 }
 function pause() {
   if (pauseGame(game)) {
@@ -182,6 +193,7 @@ function syncPhase() {
   if (game.phase === 'ready') {
     panel(campScreen(game, profile, storageWarning));
     $('start-game').onclick = start;
+    for (const button of document.querySelectorAll('[data-keepsake]')) button.onclick = () => selectKeepsake(button.dataset.keepsake);
     for (const button of document.querySelectorAll('[data-character]')) button.onclick = () => selectCharacter(button.dataset.character);
   } else if (game.phase === 'upgrade') {
     panel(`<div class="upgrade-top"><div><p class="eyebrow">A LITTLE STRONGER</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div><div class="upgrade-grid">${game.choices.map((key, i) => {
@@ -208,7 +220,7 @@ function syncPhase() {
     const saved = recordRun(profile, game);
     profile = saved.profile;
     if (saved.added) persist();
-    panel(`<div class="result-mark">${icon(win ? 'star' : 'heart')}</div><p class="eyebrow">${win ? 'THE FOREST REMEMBERS' : 'ANOTHER STORY AWAITS'}</p><h1 id="panel-title">${win ? '재의 군주를 쓰러뜨렸습니다' : survived ? '살아 돌아왔습니다' : '잠시 쓰러졌을 뿐'}</h1><p class="panel-lead">${win ? '당신의 선택으로 자라난 힘이 숲의 왕관을 깨뜨렸습니다.' : survived ? '5분을 버텼지만 재의 군주는 남아 있습니다. 다음 도전에서 마무리해 보세요.' : '모은 경험과 선택은 다음 도전의 실마리가 됩니다.'}</p><div class="result-stats"><div><small>생존 시간</small><strong>${formatTime(game.time)}</strong></div><div><small>쓰러뜨린 적</small><strong>${game.kills}</strong></div><div><small>도달 레벨</small><strong>${game.level}</strong></div></div><div class="result-build">${['sword', 'ember', 'orbit'].filter(k => game.ranks[k] > 0).map(k => `<span>${weaponName(game, k)} ${game.ranks[k]}단계</span>`).join('')}</div><p class="result-best">${record ? '새로운 처치 기록! · ' : ''}최고 기록 ${profile.bestKills} 처치</p>${resultDetails(game, profile, saved.unlocked, storageWarning)}<div class="panel-actions"><button id="restart-game" class="primary">다시 숲으로 <span aria-hidden="true">→</span></button><button id="camp-game" class="secondary">동료 선택</button></div>`, true);
+    panel(`<div class="result-mark">${icon(win ? 'star' : 'heart')}</div><p class="eyebrow">${win ? 'THE FOREST REMEMBERS' : 'ANOTHER STORY AWAITS'}</p><h1 id="panel-title">${win ? '재의 군주를 쓰러뜨렸습니다' : survived ? '살아 돌아왔습니다' : '잠시 쓰러졌을 뿐'}</h1><p class="panel-lead">${win ? '당신의 선택으로 자라난 힘이 숲의 왕관을 깨뜨렸습니다.' : survived ? '5분을 버텼지만 재의 군주는 남아 있습니다. 다음 도전에서 마무리해 보세요.' : '모은 경험과 선택은 다음 도전의 실마리가 됩니다.'}</p><div class="result-stats"><div><small>생존 시간</small><strong>${formatTime(game.time)}</strong></div><div><small>쓰러뜨린 적</small><strong>${game.kills}</strong></div><div><small>도달 레벨</small><strong>${game.level}</strong></div></div><div class="result-build">${['sword', 'ember', 'orbit'].filter(k => game.ranks[k] > 0).map(k => `<span>${weaponName(game, k)} ${game.ranks[k]}단계</span>`).join('')}</div><p class="result-best">${record ? '새로운 처치 기록! · ' : ''}최고 기록 ${profile.bestKills} 처치</p>${resultDetails(game, profile, saved.unlocked, storageWarning, saved.challenges)}<div class="panel-actions"><button id="restart-game" class="primary">다시 숲으로 <span aria-hidden="true">→</span></button><button id="camp-game" class="secondary">동료 선택</button></div>`, true);
     $('restart-game').onclick = restart;
     $('camp-game').onclick = camp;
   }
@@ -286,7 +298,7 @@ function tick(now) {
   if (game.events.length) {
     const events = new Set(game.events);
     if (events.has('event-ready')) notice('숲의 사건 발견 · 방향 안내를 따라가 보세요');else if (events.has('curse')) notice('저주 시작 · 18초 동안 살아남으세요');else if (events.has('recovery-ready')) notice('숲의 열매가 열렸습니다 · 가까이 가면 체력 +25');else if (events.has('boss-arrival')) notice('재의 군주 출현 · 공격 예고를 보고 빈틈을 노리세요');else if (events.has('elite')) notice('정예 나무 거인 출현 · 처치하면 체력 회복');
-    const soundEvent = ['hurt', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'evolve', 'level', 'heal', 'choose', 'slam', 'warning', 'elite', 'pulse', 'ember-shot', 'swing', 'rune-hit', 'xp', 'kill'].find(e => events.has(e));
+    const soundEvent = ['hurt', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'evolve', 'level', 'heal', 'choose', 'slam', 'warning', 'elite', 'pulse', 'blade-impact', 'ember-impact', 'fire-spread', 'ember-shot', 'swing', 'rune-hit', 'xp', 'kill'].find(e => events.has(e));
     if (events.has('relic-ready')) tone('evolve');else if (soundEvent) tone(soundEvent);
     game.events.length = 0;
   }
@@ -387,6 +399,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       syncPhase();
     },
     snapshot: () => ({
+      keepsake: game.keepsake,
       relics: [...game.relics],
       relicChoices: [...game.relicChoices],
       encounters: structuredClone(game.encounters),
@@ -444,7 +457,11 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name.startsWith('branch-')) {
+      if (name.startsWith('feel-')) {
+        const branch=name.slice(5); const weapon=['sweep','duelist'].includes(branch)?'sword':['wildfire','detonation'].includes(branch)?'ember':'orbit';
+        game.ranks.sword=0; game.ranks[weapon]=3; game.ranks[branch]=1; game.xpNeed=99999;
+        for(let i=0;i<18;i++){const a=i*Math.PI*2/18;const e=spawnEnemy(game, i%3, false,{x:Math.cos(a)*100,y:Math.sin(a)*100});e.speed=8;e.hp=e.maxHp=branch==='wildfire'?30:500;}
+      } else if (name.startsWith('branch-')) {
         const weapon = name.slice(7); game.level = 4; game.ranks[weapon] = 3;
         game.gems.push({x:0,y:0,value:9,age:0}); updateGame(game,1/60);
       } else if (name === 'event-altar' || name === 'event-chest') {
@@ -559,7 +576,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
           boss.x = 62;
           boss.attackClock = 999;
         } else game.swordClock = 999;
-      } else if (name === 'record-unlock') {
+      } else if (name === 'record-unlock' || name === 'record-journey') {
+        if (name === 'record-journey') { game.encounters = [{kind:'altar',state:'completed',progress:10,x:0,y:0}]; game.ranks.sweep=1; game.ranks.horizon=1; }
         game.runId = crypto.randomUUID();
         game.time = 65;
         game.kills = 200;

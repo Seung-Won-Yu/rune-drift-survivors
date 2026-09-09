@@ -2,6 +2,7 @@ import { updateEncounters, curseActive } from './encounters.js';
 import { SPECIALIZATIONS, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
 import { BOSS, updateBoss, updateThorns } from './boss.js';
 import { getCharacter } from './characters.js';
+import { keepsakeStats, KEEPSAKES } from './journey.js';
 import { healPlayer, updateField } from './field.js';
 export const RUN_SECONDS = 300;
 export const LIMITS = {
@@ -167,9 +168,12 @@ export function seededRandom(seed = 1) {
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-export function createGame(seed = 1, characterId = 'ash') {
+export function createGame(seed = 1, characterId = 'ash', keepsake = 'none') {
   const character = getCharacter(characterId);
+  keepsake = Object.hasOwn(KEEPSAKES, keepsake) ? keepsake : 'none';
   return {
+    keepsake,
+    feedbackAt: {},
     encounters: [],
     relicChoices: [],
     rewardFrom: null,
@@ -188,8 +192,8 @@ export function createGame(seed = 1, characterId = 'ash') {
     player: {
       x: 0,
       y: 0,
-      hp: character.hp,
-      maxHp: character.hp,
+      hp: character.hp + keepsakeStats(keepsake).hp,
+      maxHp: character.hp + keepsakeStats(keepsake).hp,
       invincible: 0,
       facing: 1,
       moving: false,
@@ -255,8 +259,8 @@ export function createGame(seed = 1, characterId = 'ash') {
   };
 }
 export const stats = game => modifyBuildStats(game, {
-  speed: getCharacter(game.characterId).speed * (1 + game.ranks.fleet * .08),
-  magnet: 64 + game.ranks.magnet * 28,
+  speed: getCharacter(game.characterId).speed * (1 + game.ranks.fleet * .08) + keepsakeStats(game.keepsake).speed,
+  magnet: 64 + game.ranks.magnet * 28 + keepsakeStats(game.keepsake).magnet,
   swordDamage: 19 + (game.ranks.sword - 1) * 9 + (game.ranks.dawn ? 20 : 0),
   swordRange: 96 + (game.ranks.sword - 1) * 14 + (game.ranks.dawn ? 38 : 0),
   swordHalfAngle: game.ranks.dawn ? 1.92 : 1.28,
@@ -367,6 +371,11 @@ function effect(game, value) {
     ...value
   });
 }
+function buildFeedback(game, kind, value, cooldown = .09) {
+  if (game.time < (game.feedbackAt[kind] ?? -1) + cooldown) return;
+  game.feedbackAt[kind] = game.time;
+  effect(game, { kind, life: .24, ...value });
+}
 export function spawnEnemy(game, type = 0, elite = false, position) {
   if (game.enemies.length >= LIMITS.enemies) return null;
   const meta = ENEMY[type] ?? ENEMY[0],
@@ -450,6 +459,16 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
   }
   if (source === 'orbit' && game.relics.includes('bell') && !enemy.boss) enemy.slowUntil = game.time + 1.2;
   const actual = Math.min(enemy.hp, damage);
+  if (!periodic && actual > 0) {
+    const angle = Math.atan2(enemy.y - game.player.y, enemy.x - game.player.x);
+    if (source === 'sword' && game.ranks.duelist) {
+      buildFeedback(game, 'focused-impact', {x: enemy.x, y: enemy.y - 12, angle});
+      game.events.push('blade-impact');
+    }
+    if (source === 'orbit' && (game.ranks.bulwark || game.ranks.horizon)) {
+      buildFeedback(game, game.ranks.bulwark ? 'guard-impact' : 'star-impact', {x: enemy.x, y: enemy.y - 10, angle});
+    }
+  }
   enemy.hp -= damage;
   enemy.hit = .13;
   enemy.knockX += nx * 85;
@@ -477,7 +496,11 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
     });
     if (enemy.burn && enemy.burn.until > game.time && game.ranks.wildfire) {
       const spread = game.enemies.filter(e => e.hp > 0 && e !== enemy && (!e.burn || e.burn.until <= game.time) && Math.hypot(e.x - enemy.x, e.y - enemy.y) <= 90).sort((a, b) => Math.hypot(a.x - enemy.x, a.y - enemy.y) - Math.hypot(b.x - enemy.x, b.y - enemy.y)).slice(0, 2);
-      for (const next of spread) next.burn = { ...enemy.burn, until: game.time + 3, next: game.time + .5 };
+      for (const next of spread) {
+        next.burn = { ...enemy.burn, until: game.time + 3, next: game.time + .5 };
+        buildFeedback(game, 'fire-link', {x: enemy.x, y: enemy.y - 18, toX: next.x, toY: next.y - 18, life: .32}, .06);
+      }
+      if (spread.length) game.events.push('fire-spread');
     }
     game.kills++;
     if (enemy.boss) {
@@ -551,6 +574,7 @@ function updateWeapons(game, dt, s) {
         angle: swing.angle,
         range: s.swordRange,
         halfAngle: s.swordHalfAngle,
+        branch: specializationFor(game, 'sword'),
         evolved: !!game.ranks.dawn,
         life: .22
       });
@@ -627,8 +651,10 @@ function updateWeapons(game, dt, s) {
             x: shot.x,
             y: shot.y,
             range: shot.blastRadius ?? 56,
+            concentrated: !!game.ranks.detonation,
             life: .3
           });
+          if (game.ranks.detonation) game.events.push('ember-impact');
           for (const other of game.enemies) if (Math.hypot(other.x - shot.x, other.y - shot.y) <= (shot.blastRadius ?? 56) + other.radius) hitEnemy(game, other, shot.damage, 'ember');
         } else hitEnemy(game, enemy, shot.damage, wave ? 'sword' : 'ember', shot.vx / (wave ? 330 : 290), shot.vy / (wave ? 330 : 290));
         if (wave) {

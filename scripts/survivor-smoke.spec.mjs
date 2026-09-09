@@ -412,3 +412,42 @@ for(const viewport of [{width:390,height:844},{width:320,height:568},{width:740,
     await page.locator('[data-upgrade="wildfire"]').click();expect((await snapshot(page)).ranks.wildfire).toBe(1);
   });
 }
+
+for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+ test(`journey reward selection persists and starts a fresh run at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);
+  await page.locator('.journey-board summary').click();
+  await expect(page.locator('[data-keepsake="seed"]')).toBeDisabled();
+  await scenario(page,'record-journey');
+  await expect(page.locator('.challenge-reward')).toContainText('제단의 씨앗');
+  await expect(page.locator('.challenge-reward')).toContainText('갈림길의 리본');
+  await page.getByRole('button',{name:'동료 선택',exact:true}).click();
+  await page.locator('.journey-board summary').click();
+  await expect(page.locator('[data-challenge="altar"]')).toContainText('완료');
+  await page.locator('[data-keepsake="seed"]').click();
+  await expect(page.locator('[data-keepsake="seed"]')).toBeFocused();
+  await expect(page.locator('[data-keepsake="seed"]')).toBeInViewport();
+  await expect(page.locator('[data-keepsake="seed"]')).toHaveAttribute('aria-pressed','true');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:`output/playwright/survivor/journey-${viewport.width}.png`,animations:'disabled'});
+  await page.reload();await expect(page.locator('.journey-preview')).toContainText('제단의 씨앗');
+  expect((await snapshot(page)).profile.runs).toBe(1);
+  await page.getByRole('button',{name:'숲에 들어가기'}).click();
+  expect((await snapshot(page)).keepsake).toBe('seed');expect((await snapshot(page)).player.maxHp).toBe(90);
+  await page.getByRole('button',{name:'일시정지',exact:true}).click();await expect(page.locator('.build-summary')).toContainText('수집 거리 +28');
+  await page.getByRole('button',{name:'전투 계속하기'}).click();
+  await scenario(page,'defeat');await page.getByRole('button',{name:'다시 숲으로'}).click();
+  expect((await snapshot(page)).player.maxHp).toBe(90);expect((await snapshot(page)).relics).toEqual([]);
+ });
+}
+
+test('legacy earned rewards and storage failure keep optional loadout usable',async({page})=>{
+ await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,wins:1,buildDiscoveries:['duelist','wildfire']})));
+ await page.reload();await page.locator('.journey-board summary').click();
+ await expect(page.locator('[data-keepsake="crown"]')).toBeEnabled();
+ await expect(page.locator('[data-keepsake="seed"]')).toBeDisabled();
+ await page.evaluate(()=>{Storage.prototype.setItem=()=>{throw new DOMException('Quota','QuotaExceededError');};});
+ await page.locator('[data-keepsake="crown"]').click();
+ await expect(page.locator('.storage-note')).toBeVisible();
+ await page.getByRole('button',{name:'숲에 들어가기'}).click();expect((await snapshot(page)).player.maxHp).toBe(115);
+});

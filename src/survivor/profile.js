@@ -1,4 +1,5 @@
 import { SPECIALIZATIONS, RELICS } from './expansion.js';
+import { canEquipKeepsake, completedChallenges, KEEPSAKES } from './journey.js';
 import { CHARACTERS, getCharacter, isUnlocked } from './characters.js';
 export const PROFILE_KEY = 'ash-profile-v1';
 const evolutions = ['dawn', 'comet', 'lunar'];
@@ -14,6 +15,8 @@ export function createProfile() {
   return {
     version: 1,
     selected: 'ash',
+    keepsake: 'none',
+    altarRuns: 0,
     runs: 0,
     totalKills: 0,
     bestKills: 0,
@@ -30,11 +33,12 @@ export function createProfile() {
 export function normalizeProfile(input) {
   const profile = createProfile();
   if (!input || typeof input !== 'object' || input.version !== 1) return profile;
-  for (const key of ['runs', 'totalKills', 'bestKills', 'wins']) profile[key] = integer(input[key]);
+  for (const key of ['runs', 'totalKills', 'bestKills', 'wins', 'altarRuns']) profile[key] = integer(input[key]);
   profile.bestTime = integer(input.bestTime, 300);
   profile.discoveries = evolutions.filter(key => Array.isArray(input.discoveries) && input.discoveries.includes(key));
   profile.buildDiscoveries = Object.keys(SPECIALIZATIONS).filter(key => Array.isArray(input.buildDiscoveries) && input.buildDiscoveries.includes(key));
   profile.relicDiscoveries = Object.keys(RELICS).filter(key => Array.isArray(input.relicDiscoveries) && input.relicDiscoveries.includes(key));
+  profile.keepsake = canEquipKeepsake(profile, input.keepsake) ? input.keepsake : 'none';
   profile.runIds = Array.isArray(input.runIds) ? [...new Set(input.runIds.filter(id => typeof id === 'string' && id.length < 100))].slice(-64) : [];
   for (const key of Object.keys(CHARACTERS)) {
     const value = input.characters?.[key];
@@ -51,6 +55,7 @@ export function normalizeProfile(input) {
     time: integer(row.time, 300),
     kills: integer(row.kills),
     level: Math.max(1, integer(row.level, 100)),
+    keepsake: Object.hasOwn(KEEPSAKES, row.keepsake) ? row.keepsake : 'none',
     branches: Object.keys(SPECIALIZATIONS).filter(key => Array.isArray(row.branches) && row.branches.includes(key)),
     relics: Object.keys(RELICS).filter(key => Array.isArray(row.relics) && row.relics.includes(key)),
     evolutions: evolutions.filter(key => Array.isArray(row.evolutions) && row.evolutions.includes(key))
@@ -101,9 +106,11 @@ export function recordRun(input, game) {
   if (game.phase !== 'ended' || !['victory', 'survived', 'defeat'].includes(game.outcome) || typeof game.runId !== 'string' || !game.runId || profile.runIds.includes(game.runId)) return {
     profile,
     added: false,
-    unlocked: []
+    unlocked: [],
+    challenges: []
   };
   const before = Object.keys(CHARACTERS).filter(id => isUnlocked(profile, id));
+  const previousChallenges = completedChallenges(profile).map(c => c.id);
   const character = getCharacter(game.characterId).id,
     kills = integer(game.kills),
     time = integer(game.time, 300),
@@ -113,6 +120,7 @@ export function recordRun(input, game) {
   profile.bestKills = Math.max(profile.bestKills, kills);
   profile.bestTime = Math.max(profile.bestTime, time);
   profile.wins += Number(win);
+  if (game.encounters?.some(e => e.kind === 'altar' && e.state === 'completed')) profile.altarRuns++;
   const row = profile.characters[character];
   row.runs++;
   row.wins += Number(win);
@@ -126,6 +134,7 @@ export function recordRun(input, game) {
   profile.buildDiscoveries = [...new Set([...profile.buildDiscoveries, ...branches])];
   profile.relicDiscoveries = [...new Set([...profile.relicDiscoveries, ...relics])];
   profile.history.unshift({
+    keepsake: Object.hasOwn(KEEPSAKES, game.keepsake) ? game.keepsake : 'none',
     branches,
     relics,
     character,
@@ -141,6 +150,7 @@ export function recordRun(input, game) {
   return {
     profile,
     added: true,
+    challenges: completedChallenges(profile).filter(c => !previousChallenges.includes(c.id)).map(c => c.id),
     unlocked: Object.keys(CHARACTERS).filter(id => !before.includes(id) && isUnlocked(profile, id))
   };
 }
