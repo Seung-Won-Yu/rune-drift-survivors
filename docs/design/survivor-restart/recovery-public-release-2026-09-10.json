@@ -1,0 +1,69 @@
+{
+  "url": "https://seung-won-yu.github.io/rune-drift-survivors/survivor/",
+  "checkedAt": "2026-09-10T08:36:33.456Z",
+  "script": "/rune-drift-survivors/assets/survivor-Bh3b3pGj.js",
+  "scriptHash": "61af68766c390c2bd482d29603c0b1b1ece7b17bfd7db5947f8a0b1c64e76400",
+  "staticAssets": [
+    {
+      "path": "/rune-drift-survivors/assets/modulepreload-polyfill-B5Qt9EMX.js",
+      "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0"
+    },
+    {
+      "path": "/rune-drift-survivors/assets/survivor-DadNd7iW.css",
+      "sha256": "0f99d45459234085f572738f712144e45f4921ccdd622b86976de8a26cd0a33b"
+    }
+  ],
+  "assets": [
+    {
+      "name": "hero-ash.png",
+      "sha256": "295796536c55e2fa8ce0237659ba95a36c8cd790673da0554e65ad069b5c732b"
+    },
+    {
+      "name": "hero-ember.png",
+      "sha256": "6f21fba734bc3913d58aba117af96b54836ca27e2e5c3474fde38101f7edc574"
+    },
+    {
+      "name": "hero-grove.png",
+      "sha256": "ce6771f6db0898efa13c4719ac76f91d73e4dc75534f0fdc4bbdd6163d6be5ae"
+    },
+    {
+      "name": "enemies.png",
+      "sha256": "282c1a768205914c4315919f9622cb2febeec1bf56eba32ceabdc92b116eb2e4"
+    },
+    {
+      "name": "ash-sovereign.png",
+      "sha256": "13dd78999bd3107bf148f310709a2541ae6e9f7e2ea3e224def786dc68abbb6b"
+    }
+  ],
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "touch": {
+      "x": 26,
+      "y": 702,
+      "width": 112,
+      "height": 112
+    }
+  },
+  "movement": {
+    "before": {
+      "x": 0,
+      "y": 0
+    },
+    "after": {
+      "x": -30.800000000000004,
+      "y": 0
+    }
+  },
+  "pause": "clock and camera frozen; resumed",
+  "recoveryChoice": "current health shown during an ordinary level-up; selection resumed play",
+  "enemyPhase": "숲의 가장자리",
+  "expansionHud": "present",
+  "specializationSummary": "present in pause",
+  "journey": "3 challenges and 3 locked rewards plus default loadout",
+  "qaGlobal": "absent",
+  "errors": [],
+  "failures": []
+}
