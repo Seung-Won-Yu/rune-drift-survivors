@@ -1,3 +1,4 @@
+import { GIANT, waveAt } from './enemies.js';
 import { canEquipKeepsake } from './journey.js';
 import { specializationFor, RELICS } from './expansion.js';
 import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, chooseCurse, chooseRelic } from './encounters.js';
@@ -264,7 +265,7 @@ function updateHud() {
   $('xp-text').textContent = `${game.xp} / ${game.xpNeed}`;
   $('xp-bar').firstElementChild.style.width = `${Math.min(100, game.xp / game.xpNeed * 100)}%`;
   $('xp-bar').setAttribute('aria-valuenow', String(Math.round(Math.min(100, game.xp / game.xpNeed * 100))));
-  $('phase-label').textContent = boss ? '최후의 대결' : game.time < 30 ? '숲의 가장자리' : game.time < 100 ? '발소리가 가까워진다' : game.time < 180 ? '깊어지는 숲' : game.time < 240 ? '무리의 습격' : '마지막 빛';
+  $('phase-label').textContent = boss ? '최후의 대결' : waveAt(game.time).name;
   $('coach').style.opacity = game.time < 14 ? '1' : '0';
   const evolution = nextEvolution(game),
     path = evolution ? EVOLUTIONS[evolution] : null;
@@ -298,6 +299,9 @@ function tick(now) {
   if (game.events.length) {
     const events = new Set(game.events);
     if (events.has('event-ready')) notice('숲의 사건 발견 · 방향 안내를 따라가 보세요');else if (events.has('curse')) notice('저주 시작 · 18초 동안 살아남으세요');else if (events.has('recovery-ready')) notice('숲의 열매가 열렸습니다 · 가까이 가면 체력 +25');else if (events.has('boss-arrival')) notice('재의 군주 출현 · 공격 예고를 보고 빈틈을 노리세요');else if (events.has('elite')) notice('정예 나무 거인 출현 · 처치하면 체력 회복');
+    if (events.has('learn-spore')) notice('버섯의 포자 · 점선 원이 차오르면 밖으로 이동하세요');
+    else if (events.has('learn-hound')) notice('사냥개 돌진 · 표시된 길 옆으로 피하세요');
+    else if (events.has('learn-giant')) notice('거인의 내려찍기 · 고정된 원 밖으로 이동하세요');
     const soundEvent = ['hurt', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'evolve', 'level', 'heal', 'choose', 'slam', 'warning', 'elite', 'pulse', 'blade-impact', 'ember-impact', 'fire-spread', 'ember-shot', 'swing', 'rune-hit', 'xp', 'kill'].find(e => events.has(e));
     if (events.has('relic-ready')) tone('evolve');else if (soundEvent) tone(soundEvent);
     game.events.length = 0;
@@ -399,6 +403,10 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       syncPhase();
     },
     snapshot: () => ({
+      spores: structuredClone(game.spores),
+      hunts: game.enemies.filter(e=>e.hunt).map(e=>({...e.hunt, enemyX:e.x, enemyY:e.y})),
+      enemyLessons: [...game.enemyLessons],
+      damageTaken: {...game.damageTaken},
       keepsake: game.keepsake,
       relics: [...game.relics],
       relicChoices: [...game.relicChoices],
@@ -457,7 +465,19 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name.startsWith('feel-')) {
+      if (name === 'enemy-spores') {
+        game.time=20;game.player.invincible=0;game.ranks.sword=0;
+        game.spores=[{x:0,y:0,age:0}];
+      } else if (name === 'enemy-hound' || name === 'enemy-giant') {
+        game.ranks.sword=0;game.player.invincible=0;
+        const e=spawnEnemy(game,name==='enemy-hound'?1:2,false,{x:-110,y:0});e.huntClock=e.attackClock=0;e.hp=e.maxHp=999;
+      } else if (name === 'enemy-warnings') {
+        game.time=100;game.ranks.sword=0;game.nextElite=999;
+        game.spores=[{x:0,y:100,age:.35}];
+        const h=spawnEnemy(game,1,false,{x:-160,y:0});h.hunt={x:-160,y:0,angle:0,age:.4,hit:false};
+        const g=spawnEnemy(game,2,false,{x:120,y:50});g.slam={x:80,y:-40,age:.6,hit:false,radius:GIANT.radius,windup:GIANT.windup};
+        game.phase='paused';
+      } else if (name.startsWith('feel-')) {
         const branch=name.slice(5); const weapon=['sweep','duelist'].includes(branch)?'sword':['wildfire','detonation'].includes(branch)?'ember':'orbit';
         game.ranks.sword=0; game.ranks[weapon]=3; game.ranks[branch]=1; game.xpNeed=99999;
         for(let i=0;i<18;i++){const a=i*Math.PI*2/18;const e=spawnEnemy(game, i%3, false,{x:Math.cos(a)*100,y:Math.sin(a)*100});e.speed=8;e.hp=e.maxHp=branch==='wildfire'?30:500;}

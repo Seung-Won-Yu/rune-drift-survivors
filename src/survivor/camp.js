@@ -57,8 +57,10 @@ export function buildSummary(game) {
 export function resultDetails(game, profile, unlocked, warning, challenges = []) {
   const total = Object.values(game.damageDealt).reduce((sum, n) => sum + n, 0);
   const tips = {
+    hunt: '사냥개가 몸을 낮추면 표시된 직선 옆으로 피하세요.',
+    spore: '버섯이 남긴 포자 원은 잠시 기다렸다 지나가세요.',
     contact: '적의 무리 한가운데보다 가장자리를 따라 이동해 보세요.',
-    slam: '정예의 원형 예고가 나타나면 원 밖으로 빠져나오세요.',
+    slam: '내려찍기의 원형 예고가 나타나면 원 밖으로 빠져나오세요.',
     charge: '군주의 돌진선 옆으로 이동하면 공격 뒤 빈틈을 노릴 수 있습니다.',
     thorns: '가시 사이의 빈 공간으로 조금씩 이동해 보세요.'
   };

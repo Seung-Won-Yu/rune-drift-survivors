@@ -1,3 +1,5 @@
+import { GIANT, HOUND } from './enemies.js';
+import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
 import { ENCOUNTERS } from './encounters.js';
 import { orbitPositions, stats, SLAM } from './game.js';
 import { BOSS } from './boss.js';
@@ -211,6 +213,7 @@ export function createRenderer(canvas, art) {
     ctx.beginPath();
     ctx.arc(0, 0, 104, 0, 7);
     ctx.stroke();
+    drawEnemyGround(ctx, game);
     for (const gem of game.gems) {
       const size = gem.value >= 8 ? 7 : 4;
       const bob = reduced.matches ? 0 : Math.sin(gem.age * 3) * 1.5;
@@ -363,18 +366,19 @@ export function createRenderer(canvas, art) {
     for (const enemy of game.enemies) {
       if (!enemy.slam || enemy.slam.hit) continue;
       const slam = enemy.slam,
-        progress = Math.min(1, slam.age / SLAM.windup);
+        rule = enemy.elite ? SLAM : GIANT,
+        progress = Math.min(1, slam.age / rule.windup);
       ctx.fillStyle = '#d8684430';
       ctx.strokeStyle = '#ffc39b';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(slam.x, slam.y, SLAM.radius, 0, Math.PI * 2);
+      ctx.arc(slam.x, slam.y, rule.radius, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
       ctx.strokeStyle = '#ff9869';
       ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.arc(slam.x, slam.y, SLAM.radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+      ctx.arc(slam.x, slam.y, rule.radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([5, 5]);
       ctx.strokeStyle = '#eebda280';
@@ -388,9 +392,9 @@ export function createRenderer(canvas, art) {
       ctx.textAlign = 'center';
       ctx.strokeStyle = '#281c18';
       ctx.lineWidth = 4;
-      ctx.strokeText('내려찍기', slam.x, slam.y - SLAM.radius - 12);
+      ctx.strokeText('내려찍기', slam.x, slam.y - rule.radius - 12);
       ctx.fillStyle = '#ffe0c0';
-      ctx.fillText('내려찍기', slam.x, slam.y - SLAM.radius - 12);
+      ctx.fillText('내려찍기', slam.x, slam.y - rule.radius - 12);
       ctx.beginPath();
       ctx.moveTo(slam.x - 6, slam.y - 6);
       ctx.lineTo(slam.x + 6, slam.y + 6);
@@ -456,15 +460,23 @@ export function createRenderer(canvas, art) {
           ctx.stroke();
           ctx.setLineDash([]);
         }
-        const frame = a.slam ? a.slam.hit ? 2 : 0 : game.phase === 'ready' ? 0 : Math.floor(game.time * (a.type === 1 ? 9 : 5) + a.id) % 4;
-        const slamPose = a.slam && !reduced.matches ? a.slam.hit ? {
+        const frame = a.hunt ? (a.hunt.age < HOUND.windup ? 0 : a.hunt.age < HOUND.windup + HOUND.duration ? 2 : 3) : a.slam ? a.slam.hit ? 2 : 0 : game.phase === 'ready' ? 0 : Math.floor(game.time * (a.type === 1 ? 9 : 5) + a.id) % 4;
+        const slamPose = a.hunt && !reduced.matches ? (a.hunt.age < HOUND.windup ? {sx:1.12,sy:.82,tilt:-.06} : a.hunt.age < HOUND.windup+HOUND.duration ? {sx:1.2,sy:.86} : {sy:.94}) : a.slam && !reduced.matches ? a.slam.hit ? {
           sx: 1.1,
           sy: .9
         } : {
           sy: 1.07,
           tilt: -.08
         } : {};
-        sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.x > p.x, a.hit > 0, false, slamPose);
+        sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.hunt ? Math.cos(a.hunt.angle) < 0 : a.x > p.x, a.hit > 0, false, slamPose);
+        if (a.type === 2 && a.slam && !a.slam.hit) {
+          const lift = reduced.matches ? 1 : Math.min(1,a.slam.age/(a.slam.windup ?? SLAM.windup));
+          ctx.lineCap='round';
+          for (const side of [-1,1]) {
+            ctx.beginPath();ctx.moveTo(a.x+side*15,a.y-26);ctx.lineTo(a.x+side*27,a.y-32-lift*16);ctx.lineTo(a.x+side*23,a.y-40-lift*22);
+            ctx.strokeStyle='#172c22';ctx.lineWidth=9;ctx.stroke();ctx.strokeStyle='#7d8150';ctx.lineWidth=5;ctx.stroke();
+          }
+        }
         if (a.elite || a.hp < a.maxHp * .9) {
           const bar = a.elite ? 46 : 25;
           ctx.fillStyle = '#16221bdd';
@@ -709,6 +721,7 @@ export function createRenderer(canvas, art) {
       }
     }
     ctx.globalAlpha = 1;
+    drawEnemyWarnings(ctx, game, reduced.matches);
     // Enemy projectiles stay above decorative player effects and have an arrowhead silhouette.
     for (const thorn of game.thorns) {
       ctx.save();

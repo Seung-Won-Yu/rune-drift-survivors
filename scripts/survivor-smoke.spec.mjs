@@ -451,3 +451,37 @@ test('legacy earned rewards and storage failure keep optional loadout usable',as
  await expect(page.locator('.storage-note')).toBeVisible();
  await page.getByRole('button',{name:'숲에 들어가기'}).click();expect((await snapshot(page)).player.maxHp).toBe(115);
 });
+
+test('spores warn before damage, freeze on pause and disappear after expiry',async({page})=>{
+ await scenario(page,'enemy-spores');expect((await snapshot(page)).player.hp).toBe(100);
+ await page.getByRole('button',{name:'일시정지',exact:true}).click();const paused=await snapshot(page);
+ await page.waitForTimeout(250);expect((await snapshot(page)).spores).toEqual(paused.spores);
+ await page.getByRole('button',{name:'전투 계속하기'}).click();
+ await expect.poll(async()=> (await snapshot(page)).damageTaken.spore).toBeGreaterThan(0);
+ await page.keyboard.down('d');await expect.poll(async()=> (await snapshot(page)).player.x).toBeGreaterThan(80);await page.keyboard.up('d');
+ const hp=(await snapshot(page)).player.hp;await expect.poll(async()=> (await snapshot(page)).spores.length).toBe(0);
+ expect((await snapshot(page)).player.hp).toBe(hp);
+});
+test('hound warning stays fixed while lateral movement dodges the dash',async({page})=>{
+ await scenario(page,'enemy-hound');await expect.poll(async()=> (await snapshot(page)).hunts.length).toBe(1);
+ const angle=(await snapshot(page)).hunts[0].angle;
+ await page.keyboard.down('s');await expect.poll(async()=> (await snapshot(page)).player.y).toBeGreaterThan(100);await page.keyboard.up('s');
+ expect((await snapshot(page)).hunts[0].angle).toBe(angle);
+ await expect.poll(async()=> (await snapshot(page)).hunts.length).toBe(0);
+ expect((await snapshot(page)).damageTaken.hunt).toBe(0);
+});
+test('ordinary giant warns then deals its distinct slam damage',async({page})=>{
+ await scenario(page,'enemy-giant');await expect.poll(async()=> (await snapshot(page)).slams.length).toBe(1);
+ expect((await snapshot(page)).slams[0].radius).toBe(62);
+ await expect.poll(async()=> (await snapshot(page)).damageTaken.slam).toBe(18);
+});
+for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]) {
+ test(`new enemy warnings render with reduced motion at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await page.emulateMedia({reducedMotion:'reduce'});await scenario(page,'enemy-warnings');
+  await page.getByRole('button',{name:'전투 계속하기'}).click();await page.getByRole('button',{name:'일시정지',exact:true}).click();
+  const state=await snapshot(page);expect(state.spores.length).toBe(1);expect(state.hunts.length).toBe(1);expect(state.slams.length).toBe(1);
+  const pixels=await page.locator('#world').evaluate(c=>c.toDataURL());
+  await test.info().attach('enemy-warnings.png',{body:Buffer.from(pixels.split(',')[1],'base64'),contentType:'image/png'});
+  const {writeFile}=await import('node:fs/promises');await writeFile(`output/playwright/survivor/enemy-warnings-${viewport.width}.png`,Buffer.from(pixels.split(',')[1],'base64'));
+ });
+}

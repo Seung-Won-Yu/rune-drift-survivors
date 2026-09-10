@@ -44,6 +44,7 @@ for (const route of ['blade', 'blade-alternate', 'comet', 'comet-alternate', 'lu
         progress: e.progress
       })),
       damage: g.damageDealt,
+      damageTaken: g.damageTaken,
       healing: g.healing,
       peak
     }));

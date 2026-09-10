@@ -4,7 +4,7 @@
 
 A complete five-minute **2D cartoon survivor chapter** for the browser. Choose a companion, gather XP, evolve an automatic weapon and face the Ash Sovereign. The new game uses Canvas 2D; its entry does not load React or Three.js.
 
-**[Play Ash & Amber](https://seung-won-yu.github.io/rune-drift-survivors/survivor/)** · [Play / development guide](./docs/survivor.md) · [Release verification](./docs/design/survivor-restart/11-JOURNEY-FEEL.md)
+**[Play Ash & Amber](https://seung-won-yu.github.io/rune-drift-survivors/survivor/)** · [Play / development guide](./docs/survivor.md) · [Enemy design and verification](./docs/design/survivor-restart/12-ENEMY-ROLES.md)
 
 ![Ash & Amber combat with evolved weapons](./docs/design/survivor-restart/images/combat-desktop.png)
 
@@ -13,13 +13,14 @@ A complete five-minute **2D cartoon survivor chapter** for the browser. Choose a
 - **Six relics, two optional objectives:** hold the altar for ten seconds or accept an eighteen-second chest curse to pick a run-long relic. Discoveries persist; combat bonuses reset on retry.
 - **Three evolutions:** piercing Dawn Blade, Ash Comet (explosions or stronger specialized burning) and repelling Moonlit Ring. Pause to inspect recipes; ready evolutions appear at the next level-up.
 - **A final encounter:** the sovereign arrives at four minutes with marked charges and thorn volleys. A boss kill wins; surviving five minutes without a kill is recorded separately.
+- **Three enemy roles:** mushrooms leave brief, warned spore zones; hounds commit to a marked dash lane; tree giants wind up a fixed-area slam. Enemy composition changes over the five-minute journey, with bounded simultaneous threats.
 - **Three forest challenges:** earn optional starting keepsakes for an altar finish, two recorded specializations and a sovereign victory. Pick one health/movement/collection tradeoff or depart with the original stats.
 - **Reasons to return:** companion unlocks, recent journeys, per-character records, discovered evolutions and a damage breakdown. Records are local to the current browser, with graceful storage failure handling.
 - **Readable feedback:** three optional healing fruits, separate weapon sounds, enemy defeat reactions, keyboard/touch controls, pause, mute and reduced-motion support.
 
 Run `npm ci` and `npm run dev`, then open **[the local game](http://127.0.0.1:5173/survivor/)**. Move with WASD/arrows or the touch stick. Attacks are automatic; use Escape/P to pause and 1–3 or a card to choose an upgrade.
 
-Verification includes three full real-time browser runs with challenge rewards, 62 core tests, 44 browser scenarios, capped-load checks and the Pages build path. Generated four-pose artwork, initial image download size and untested physical mobile hardware are documented in the [release record](./docs/design/survivor-restart/09-RELEASE.md). The [first expansion record](./docs/design/survivor-restart/10-EXPANSION.md) covers the new choices and their validation. The [journey and combat-feel record](./docs/design/survivor-restart/11-JOURNEY-FEEL.md) covers starting keepsakes, challenge rewards and specialization feedback. The [design history](./docs/design/survivor-restart/00-RELEASE-PLAN.md) retains the earlier style experiments and implementation decisions.
+Verification covers 70 core tests, 50 browser scenarios, capped-load checks, normal-rule route diagnostics, full real-time browser runs and the Pages build path. Generated four-pose artwork, initial image download size and untested physical mobile hardware are documented in the [release record](./docs/design/survivor-restart/09-RELEASE.md). The [first expansion record](./docs/design/survivor-restart/10-EXPANSION.md) covers the new choices and their validation. The [journey and combat-feel record](./docs/design/survivor-restart/11-JOURNEY-FEEL.md) covers starting keepsakes, challenge rewards and specialization feedback. The [enemy-role record](./docs/design/survivor-restart/12-ENEMY-ROLES.md) records warning timings, spawn composition and diagnostic limits. The [design history](./docs/design/survivor-restart/00-RELEASE-PLAN.md) retains the earlier style experiments and implementation decisions.
 
 ## Existing Rune Drift prototype
 

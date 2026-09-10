@@ -1,3 +1,4 @@
+import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy } from './enemies.js';
 import { updateEncounters, curseActive } from './encounters.js';
 import { SPECIALIZATIONS, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
 import { BOSS, updateBoss, updateThorns } from './boss.js';
@@ -174,6 +175,9 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none') {
   return {
     keepsake,
     feedbackAt: {},
+    spores: [],
+    nextSpore: 0,
+    enemyLessons: [],
     encounters: [],
     relicChoices: [],
     rewardFrom: null,
@@ -237,6 +241,8 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none') {
     remnants: [],
     damageTaken: {
       contact: 0,
+      hunt: 0,
+      spore: 0,
       slam: 0,
       charge: 0,
       thorns: 0
@@ -401,6 +407,8 @@ export function spawnEnemy(game, type = 0, elite = false, position) {
     knockX: 0,
     knockY: 0,
     slam: null,
+    hunt: null,
+    huntClock: 1.5 + (game.id % 4) * .3,
     attackClock: 2.2
   };
   game.enemies.push(enemy);
@@ -483,6 +491,7 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
     life: .55
   });
   if (enemy.hp <= 0) {
+    leaveSpores(game, enemy);
     if (game.remnants.length >= LIMITS.remnants) game.remnants.shift();
     game.remnants.push({
       x: enemy.x,
@@ -743,9 +752,11 @@ function hurtPlayer(game, damage, source = 'contact') {
   }
 }
 function updateSlam(game, enemy, dt, distance) {
-  if (!enemy.elite) return false;
+  if (!enemy.elite && enemy.type !== 2) return false;
+  const rule = enemy.elite ? SLAM : GIANT;
   enemy.attackClock -= dt;
-  if (!enemy.slam && enemy.attackClock <= 0 && distance < 220) {
+  if (!enemy.slam && enemy.attackClock <= 0 && distance < (enemy.elite ? 220 : 150) && (enemy.elite || activeThreats(game) < 3 && !game.enemies.some(e=>e.hp>0 && !e.elite && e.slam))) {
+    if (!enemy.elite) teachEnemy(game, 'giant');
     enemy.slam = {
       x: game.player.x,
       y: game.player.y,
@@ -754,26 +765,27 @@ function updateSlam(game, enemy, dt, distance) {
     };
     enemy.knockX = 0;
     enemy.knockY = 0;
+    Object.assign(enemy.slam, { radius: rule.radius, windup: rule.windup });
     game.events.push('warning');
   }
   if (!enemy.slam) return false;
   const slam = enemy.slam;
   slam.age += dt;
-  if (slam.age >= SLAM.windup && !slam.hit) {
+  if (slam.age >= rule.windup && !slam.hit) {
     slam.hit = true;
     game.events.push('slam');
     effect(game, {
       kind: 'slam',
       x: slam.x,
       y: slam.y,
-      range: SLAM.radius,
+      range: rule.radius,
       life: .38
     });
-    if (Math.hypot(game.player.x - slam.x, game.player.y - slam.y) <= SLAM.radius + 12) hurtPlayer(game, SLAM.damage, 'slam');
+    if (Math.hypot(game.player.x - slam.x, game.player.y - slam.y) <= rule.radius + 12) hurtPlayer(game, rule.damage, 'slam');
   }
-  if (slam.age >= SLAM.windup + SLAM.recovery) {
+  if (slam.age >= rule.windup + rule.recovery) {
     enemy.slam = null;
-    enemy.attackClock = SLAM.cooldown;
+    enemy.attackClock = rule.cooldown;
   }
   return true;
 }
@@ -805,7 +817,7 @@ export function updateGame(game, dt, input = {
     const count = game.bossSpawned ? 1 : game.time > 180 ? 3 : game.time > 70 ? 2 : 1;
     for (let i = 0; i < count; i++) {
       const roll = game.rng();
-      spawnEnemy(game, game.time > 100 && roll > .83 ? 2 : game.time > 28 && roll > .63 ? 1 : 0);
+      spawnEnemy(game, enemyTypeAt(game.time, roll));
     }
   }
   if (game.time >= game.nextElite && !game.bossSpawned) {
@@ -832,7 +844,7 @@ export function updateGame(game, dt, input = {
       if (game.phase === 'ended') return;
       continue;
     }
-    const attacking = updateSlam(game, e, dt, d);
+    const attacking = updateHound(game, e, dt, hurtPlayer) || updateSlam(game, e, dt, d);
     if (game.phase === 'ended') return;
     const gx = Math.floor(e.x / 56),
       gy = Math.floor(e.y / 56);
@@ -859,12 +871,15 @@ export function updateGame(game, dt, input = {
       const a = game.rng() * Math.PI * 2;
       e.x = p.x + Math.cos(a) * game.spawnRadius;
       e.y = p.y + Math.sin(a) * game.spawnRadius;
+      e.hunt = null; e.slam = null; e.huntClock = 2; e.attackClock = 2.2;
     }
     if (!attacking && Math.hypot(p.x - e.x, p.y - e.y) < e.radius + 12) {
       hurtPlayer(game, e.damage * danger);
       if (game.phase === 'ended') return;
     }
   }
+  updateSpores(game, dt, hurtPlayer);
+  if (game.phase === 'ended') return;
   updateThorns(game, dt, hurtPlayer);
   if (game.phase === 'ended') return;
   updateWeapons(game, dt, s);
@@ -872,6 +887,7 @@ export function updateGame(game, dt, input = {
     game.phase = 'ended';
     game.outcome = 'victory';
     game.thorns = [];
+    game.spores = [];
     return;
   }
   updateField(game, dt);

@@ -1,3 +1,4 @@
+import { SPORE, HOUND, GIANT } from './enemies.js';
 import { trackedEncounter, encounterDistance } from './encounters.js';
 // Development-only input driver. Uses ordinary upgrades and simulation time; never changes combat stats.
 import { SLAM } from './game.js';
@@ -47,11 +48,16 @@ export function createPilot(route) {
           dy += y / (distance || 1) * (retreatRadius - distance) / 35;
         }
       }
+      for (const cloud of game.spores) {
+        const x=player.x-cloud.x,y=player.y-cloud.y,d=Math.hypot(x,y);
+        // Keep crowd avoidance while stepping away from a visible cloud.
+        if(cloud.age>=.2 && d<SPORE.radius+40) {const force=3*(SPORE.radius+40-d)/(SPORE.radius+40);dx+=(x||1)/(d||1)*force;dy+=y/(d||1)*force;}
+      }
       // Use only visible warnings, with a 200ms reaction. Never change HP or damage rules.
       // This makes the close-range route comparison include the evasion its role requires.
       for (const enemy of game.enemies) {
         const slam = enemy.slam;
-        if (slam && !slam.hit && slam.age >= .2 && Math.hypot(player.x - slam.x, player.y - slam.y) < SLAM.radius + 26) {
+        if (slam && !slam.hit && slam.age >= .2 && Math.hypot(player.x - slam.x, player.y - slam.y) < (enemy.elite ? SLAM.radius : GIANT.radius) + 26) {
           let x = player.x - slam.x,
             y = player.y - slam.y;
           if (Math.hypot(x, y) < 1) {
@@ -62,6 +68,12 @@ export function createPilot(route) {
           dx = x / distance;
           dy = y / distance;
           break;
+        }
+        const hunt=enemy.hunt;
+        if(hunt && hunt.age>=.2 && hunt.age<HOUND.windup+HOUND.duration) {
+          const x=player.x-hunt.x,y=player.y-hunt.y,c=Math.cos(hunt.angle),s=Math.sin(hunt.angle);
+          const along=x*c+y*s,across=-x*s+y*c;
+          if(along>-30 && along<HOUND.length+30 && Math.abs(across)<HOUND.width/2+26) {const side=across<0?-1:1;dx=-s*side;dy=c*side;break;}
         }
         const pattern = enemy.pattern;
         if (enemy.boss && pattern?.kind === 'charge' && pattern.age >= .2 && pattern.age < BOSS.windup + BOSS.chargeDuration) {
