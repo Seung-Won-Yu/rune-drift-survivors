@@ -485,3 +485,22 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:74
   const {writeFile}=await import('node:fs/promises');await writeFile(`output/playwright/survivor/enemy-warnings-${viewport.width}.png`,Buffer.from(pixels.split(',')[1],'base64'));
  });
 }
+
+for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+ test(`recovery choices show current and resulting health without forcing a selection at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'recovery-choice');
+  await expect(page.locator('.upgrade-health')).toContainText('27 / 100');
+  await expect(page.locator('.upgrade-health')).toContainText('회복 선택 가능');
+  await expect(page.locator('.upgrade-card')).toHaveCount(3);await expect(page.locator('.is-recovery')).toHaveCount(2);
+  await expect(page.locator('[data-upgrade="sword"]')).toBeFocused();
+  await expect(page.locator('[data-upgrade="vitality"] .upgrade-change')).toHaveText('최대 체력 100 → 120 · 현재 체력 27 → 57');
+  await expect(page.locator('[data-upgrade="heal"] .upgrade-change')).toHaveText('체력 27 → 67 / 100');
+  const before=await snapshot(page);await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(before.time);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:`output/playwright/survivor/recovery-choice-${viewport.width}.png`,animations:'disabled'});
+  await page.locator('[data-upgrade="vitality"]').click();const result=await snapshot(page);expect(result.player.hp).toBe(57);expect(result.player.maxHp).toBe(120);expect(result.phase).toBe('playing');
+  await scenario(page,'recovery-choice');await page.keyboard.press('3');expect((await snapshot(page)).player.hp).toBe(67);
+  await scenario(page,'recovery-choice-full');await expect(page.locator('.upgrade-health')).toContainText('100 / 100');
+  await expect(page.locator('.is-recovery')).toHaveCount(0);await expect(page.locator('[data-upgrade="heal"] .upgrade-change')).toHaveText('체력 100 → 100 / 100');
+ });
+}

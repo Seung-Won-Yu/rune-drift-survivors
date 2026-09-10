@@ -1,7 +1,8 @@
 import test from 'node:test';
+import { createPilot } from '../src/survivor/qa-pilot.js';
 import { BOSS } from '../src/survivor/boss.js';
 import assert from 'node:assert/strict';
-import { createGame, startGame, updateGame, spawnEnemy, chooseUpgrade, draftUpgrades, pauseGame, resumeGame, stats, RUN_SECONDS, LIMITS, canEvolve, SLAM, spawnBoss, EVOLUTIONS } from '../src/survivor/game.js';
+import { createGame, startGame, updateGame, spawnEnemy, chooseUpgrade, draftUpgrades, pauseGame, resumeGame, stats, RUN_SECONDS, LIMITS, canEvolve, SLAM, spawnBoss, EVOLUTIONS, upgradeChange } from '../src/survivor/game.js';
 
 const playing=()=>{const g=createGame(42);startGame(g);g.spawnClock=999;return g;};
 const frames=(g,n,input)=>{for(let i=0;i<n;i++)updateGame(g,1/60,input);};
@@ -105,4 +106,25 @@ test('lunar pulse repels close enemies and does not hit beyond its boundary',()=
 test('ordinary orbit hits create space before an approaching enemy can make contact',()=>{
   const g=playing();g.ranks.orbit=1;g.swordClock=999;const e=spawnEnemy(g,2,false,{x:60,y:0});e.speed=0;frames(g,1);
   assert.ok(e.knockX>100);assert.equal(g.player.hp,100);const x=e.x;frames(g,1);assert.ok(e.x>x);
+});
+
+test('diagnostic choices respond to visible low health without changing offered upgrades',()=>{
+  const g=playing(),pilot=createPilot('comet');g.player.hp=27;g.player.maxHp=85;g.choices=['sword','vitality','magnet'];
+  assert.equal(pilot.choose(g),'vitality');
+  g.player.hp=80;assert.equal(pilot.choose(g),'magnet');
+  const guard=createPilot('lunar');g.player.hp=44;g.player.maxHp=205;g.choices=['sword','heal'];assert.equal(guard.choose(g),'heal');
+  g.choices=['sword','fleet'];assert.ok(g.choices.includes(guard.choose(g)));
+});
+
+test('recovery previews match capped healing and the new vitality maximum',()=>{
+ for(const [key,hp,text,after,max] of [
+  ['heal',95,'체력 95 → 100 / 100',100,100],
+  ['heal',100,'체력 100 → 100 / 100',100,100],
+  ['vitality',95,'최대 체력 100 → 120 · 현재 체력 95 → 120',120,120],
+  ['vitality',27,'최대 체력 100 → 120 · 현재 체력 27 → 57',57,120]
+ ]) {
+  const g=playing();g.player.hp=hp;g.phase='upgrade';g.choices=[key];
+  assert.equal(upgradeChange(g,key),text);assert.ok(chooseUpgrade(g,key));
+  assert.equal(g.player.hp,after);assert.equal(g.player.maxHp,max);
+ }
 });

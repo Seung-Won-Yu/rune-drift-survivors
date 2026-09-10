@@ -299,9 +299,9 @@ export function upgradeChange(game, key) {
     case 'magnet':
       return `수집 거리 ${s.magnet} → ${s.magnet + 28}`;
     case 'vitality':
-      return `최대 체력 ${game.player.maxHp} → ${game.player.maxHp + 20} · 30 회복`;
+      return `최대 체력 ${game.player.maxHp} → ${game.player.maxHp + 20} · 현재 체력 ${Math.ceil(game.player.hp)} → ${Math.ceil(Math.min(game.player.maxHp + 20, game.player.hp + 30))}`;
     default:
-      return '체력 40 회복';
+      return `체력 ${Math.ceil(game.player.hp)} → ${Math.ceil(Math.min(game.player.maxHp, game.player.hp + 40))} / ${game.player.maxHp}`;
   }
 }
 export function draftUpgrades(game) {

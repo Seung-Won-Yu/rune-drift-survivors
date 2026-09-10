@@ -84,7 +84,7 @@ npm run qa:survivor:production
 
 `npm run qa:smoke`는 기존 3D 게임의 86개 검사다. main 배포 workflow는 두 게임의 검사와 새 게임의 production 검사를 실행한 뒤 Pages에 배포한다.
 
-현재 코어 검사는 70개, 브라우저 검사는 50개다. 확장 경로 진단은 6개 경로 × 3개 시드의 18판을 실행한다.
+현재 코어 검사는 72개, 브라우저 검사는 53개다. 확장 경로 진단은 6개 경로 × 3개 시드의 18판을 실행한다.
 
 구조와 실제 검증 범위는 [통합 기록](./design/survivor-restart/09-RELEASE.md), 자산 출처와 포즈 한계는 [그림 문서](../public/art/survivor/README.md)를 참고한다.
 
@@ -106,3 +106,9 @@ npm run qa:survivor:production
 처음 30초는 버섯만, 이후 사냥개, 90초부터 일반 거인이 합류한다. 군주전에서는 일반 거인 비중이 줄어든다. 첫 만남에 대응 안내가 나타나며, 상단에 현재 숲의 국면을 표시한다. 색상뿐 아니라 점선·원·직선과 자세로 예고를 구분하고 움직임 감소 설정에서도 유지한다. [설계와 검증 기록](./design/survivor-restart/12-ENEMY-ROLES.md).
 
 개발 전용 장면: `window.__ASH_QA__.scenario('enemy-spores')`, `'enemy-hound'`, `'enemy-giant'`, `'enemy-warnings'`. `/survivor/?qa`에서만 사용하며 배포 빌드에는 QA 전역이 없다.
+
+## 성장과 회복을 고르기
+
+성장 화면에서 현재 체력을 확인할 수 있다. 체력이 40% 이하이고 회복 선택지가 있으면 해당 카드의 테두리와 ‘회복 선택 가능’ 안내가 표시된다. 카드 순서와 키보드 선택은 그대로이며, 공격 성장과 회복 중 하나를 직접 고른다.
+
+‘숲의 심장’은 최대 체력 증가와 회복 후 체력을 함께 표시하고, ‘생명의 숨결’은 현재 체력 → 회복 후 체력을 표시한다. 예를 들어 95/100에서 생명의 숨결을 고르면 100/100이 된다. [진단과 개선 기록](./design/survivor-restart/13-RECOVERY-CHOICES.md).

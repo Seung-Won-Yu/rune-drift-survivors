@@ -197,12 +197,14 @@ function syncPhase() {
     for (const button of document.querySelectorAll('[data-keepsake]')) button.onclick = () => selectKeepsake(button.dataset.keepsake);
     for (const button of document.querySelectorAll('[data-character]')) button.onclick = () => selectCharacter(button.dataset.character);
   } else if (game.phase === 'upgrade') {
-    panel(`<div class="upgrade-top"><div><p class="eyebrow">A LITTLE STRONGER</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div><div class="upgrade-grid">${game.choices.map((key, i) => {
+    const lowHealth = game.player.hp <= game.player.maxHp * .4;
+    const recoveryOffered = game.choices.some(key => key === 'heal' || key === 'vitality');
+    panel(`<div class="upgrade-top"><div><p class="eyebrow">A LITTLE STRONGER</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div><div class="upgrade-grid">${game.choices.map((key, i) => {
       const m = ['sword', 'ember', 'orbit'].includes(key) ? {
         ...UPGRADE_META[key],
         name: weaponName(game, key)
       } : UPGRADE_META[key];
-      return `<button class="upgrade-card" data-upgrade="${key}" style="--tone:${m.color}"><small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span><span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
+      return `<button class="upgrade-card${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" style="--tone:${m.color}"><small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span><span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
     }).join('')}</div>`);
     for (const button of document.querySelectorAll('[data-upgrade]')) button.onclick = () => choose(button.dataset.upgrade);
   } else if (game.phase === 'relic') {
@@ -465,7 +467,10 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name === 'enemy-spores') {
+      if (name === 'recovery-choice' || name === 'recovery-choice-full') {
+        game.level=12;game.player.hp=name.endsWith('-full')?100:27;game.ranks.vitality=0;
+        game.phase='upgrade';game.choices=['sword','vitality','heal'];
+      } else if (name === 'enemy-spores') {
         game.time=20;game.player.invincible=0;game.ranks.sword=0;
         game.spores=[{x:0,y:0,age:0}];
       } else if (name === 'enemy-hound' || name === 'enemy-giant') {

@@ -1,0 +1,240 @@
+{
+  "method": "Identical normal combat rules, seeds and movement. Only offered-choice priority at <=40% health changes. Choice health values rounded for this trace.",
+  "routes": [
+    {
+      "route": "comet",
+      "seed": 12,
+      "before": {
+        "outcome": "defeat",
+        "time": 192.23333333337845,
+        "lowHealthChoices": [
+          {
+            "time": 157,
+            "hp": 27,
+            "max": 85,
+            "key": "magnet",
+            "choices": [
+              "sword",
+              "vitality",
+              "magnet"
+            ]
+          },
+          {
+            "time": 169,
+            "hp": 27,
+            "max": 85,
+            "key": "magnet",
+            "choices": [
+              "sword",
+              "magnet",
+              "vitality"
+            ]
+          },
+          {
+            "time": 183,
+            "hp": 24,
+            "max": 85,
+            "key": "magnet",
+            "choices": [
+              "sword",
+              "magnet",
+              "vitality"
+            ]
+          }
+        ]
+      },
+      "after": {
+        "outcome": "victory",
+        "time": 293.73333333339485,
+        "lowHealthChoices": [
+          {
+            "time": 157,
+            "hp": 27,
+            "max": 85,
+            "key": "vitality",
+            "choices": [
+              "sword",
+              "vitality",
+              "magnet"
+            ]
+          },
+          {
+            "time": 186,
+            "hp": 29,
+            "max": 105,
+            "key": "vitality",
+            "choices": [
+              "orbit",
+              "vitality",
+              "magnet"
+            ]
+          },
+          {
+            "time": 228,
+            "hp": 32,
+            "max": 125,
+            "key": "vitality",
+            "choices": [
+              "sword",
+              "vitality",
+              "heal"
+            ]
+          },
+          {
+            "time": 242,
+            "hp": 12,
+            "max": 145,
+            "key": "vitality",
+            "choices": [
+              "sword",
+              "vitality",
+              "heal"
+            ]
+          },
+          {
+            "time": 260,
+            "hp": 10,
+            "max": 165,
+            "key": "heal",
+            "choices": [
+              "sword",
+              "heal"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "route": "comet",
+      "seed": 42,
+      "before": {
+        "outcome": "defeat",
+        "time": 260.21666666675867,
+        "lowHealthChoices": [
+          {
+            "time": 212,
+            "hp": 41,
+            "max": 105,
+            "key": "vitality",
+            "choices": [
+              "orbit",
+              "vitality",
+              "heal"
+            ]
+          },
+          {
+            "time": 224,
+            "hp": 37,
+            "max": 125,
+            "key": "vitality",
+            "choices": [
+              "orbit",
+              "vitality",
+              "heal"
+            ]
+          },
+          {
+            "time": 239,
+            "hp": 15,
+            "max": 145,
+            "key": "vitality",
+            "choices": [
+              "sword",
+              "vitality",
+              "heal"
+            ]
+          }
+        ]
+      },
+      "after": {
+        "outcome": "defeat",
+        "time": 260.21666666675867,
+        "lowHealthChoices": [
+          {
+            "time": 212,
+            "hp": 41,
+            "max": 105,
+            "key": "vitality",
+            "choices": [
+              "orbit",
+              "vitality",
+              "heal"
+            ]
+          },
+          {
+            "time": 224,
+            "hp": 37,
+            "max": 125,
+            "key": "vitality",
+            "choices": [
+              "orbit",
+              "vitality",
+              "heal"
+            ]
+          },
+          {
+            "time": 239,
+            "hp": 15,
+            "max": 145,
+            "key": "vitality",
+            "choices": [
+              "sword",
+              "vitality",
+              "heal"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "route": "lunar",
+      "seed": 99,
+      "before": {
+        "outcome": "defeat",
+        "time": 277.800000000076,
+        "lowHealthChoices": [
+          {
+            "time": 244,
+            "hp": 44,
+            "max": 205,
+            "key": "sword",
+            "choices": [
+              "sword",
+              "heal"
+            ]
+          }
+        ]
+      },
+      "after": {
+        "outcome": "defeat",
+        "time": 298.0833333333909,
+        "lowHealthChoices": [
+          {
+            "time": 244,
+            "hp": 44,
+            "max": 205,
+            "key": "heal",
+            "choices": [
+              "sword",
+              "heal"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "route": "lunar",
+      "seed": 42,
+      "before": {
+        "outcome": "survived",
+        "time": 300,
+        "lowHealthChoices": []
+      },
+      "after": {
+        "outcome": "survived",
+        "time": 300,
+        "lowHealthChoices": []
+      }
+    }
+  ]
+}

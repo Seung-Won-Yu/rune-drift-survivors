@@ -14,7 +14,14 @@ export function createPilot(route) {
   const priorities = [...routes[base]];
   if (route.endsWith('-alternate')) priorities[0] = { blade: 'duelist', comet: 'detonation', lunar: 'horizon' }[base];
   return {
-    choose: game => priorities.find(key => game.choices.includes(key)) ?? game.choices[0],
+    choose(game) {
+      // Respond to the health shown on the choice screen; only choose real offers.
+      if (game.player.hp <= game.player.maxHp * .4) {
+        const recovery = ['vitality', 'heal'].find(key => game.choices.includes(key));
+        if (recovery) return recovery;
+      }
+      return priorities.find(key => game.choices.includes(key)) ?? game.choices[0];
+    },
     relic: game => (base === 'comet' ? ['coal','sail','dew','briar','fang','bell'] : base === 'lunar' ? ['bell','briar','dew','coal','fang','sail'] : ['fang','dew','briar','coal','bell','sail']).find(key=>game.relicChoices.includes(key)),
     move(game) {
       let dx = 0,
