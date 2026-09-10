@@ -1,0 +1,218 @@
+[
+  {
+    "character": "ash",
+    "route": "blade",
+    "seed": 42,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "wallSeconds": 292.356,
+    "time": 291.1833333333972,
+    "outcome": "victory",
+    "kills": 953,
+    "level": 20,
+    "eliteKills": 3,
+    "ranks": {
+      "sweep": 1,
+      "duelist": 0,
+      "wildfire": 0,
+      "detonation": 0,
+      "bulwark": 0,
+      "horizon": 1,
+      "sword": 6,
+      "ember": 0,
+      "orbit": 5,
+      "fleet": 1,
+      "magnet": 2,
+      "vitality": 3,
+      "heal": 0,
+      "dawn": 1,
+      "comet": 0,
+      "lunar": 0
+    },
+    "damage": {
+      "relic": 0,
+      "sword": 47175.534506176606,
+      "ember": 0,
+      "orbit": 3018.075555555937
+    },
+    "healing": {
+      "field": 0,
+      "elite": 6,
+      "upgrade": 63,
+      "relic": 67
+    },
+    "relics": [
+      "dew",
+      "fang"
+    ],
+    "encounters": [
+      {
+        "kind": "altar",
+        "x": 199.86860827251766,
+        "y": -235.64289574802314,
+        "state": "completed",
+        "progress": 10.000000000000076
+      },
+      {
+        "kind": "chest",
+        "x": 177.18909417588225,
+        "y": -438.6316313152277,
+        "state": "completed",
+        "progress": 18.00000000000026
+      }
+    ],
+    "timing": {
+      "frames": 17484,
+      "p50": 16.69999999999709,
+      "p95": 16.79999999998836,
+      "over50": 0
+    },
+    "errors": []
+  },
+  {
+    "character": "ember",
+    "route": "comet",
+    "seed": 42,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "wallSeconds": 261.205,
+    "time": 260.21666666675867,
+    "outcome": "defeat",
+    "kills": 932,
+    "level": 19,
+    "eliteKills": 3,
+    "ranks": {
+      "sweep": 0,
+      "duelist": 0,
+      "wildfire": 1,
+      "detonation": 0,
+      "bulwark": 0,
+      "horizon": 0,
+      "sword": 0,
+      "ember": 5,
+      "orbit": 0,
+      "fleet": 4,
+      "magnet": 4,
+      "vitality": 4,
+      "heal": 0,
+      "dawn": 0,
+      "comet": 1,
+      "lunar": 0
+    },
+    "damage": {
+      "relic": 0,
+      "sword": 0,
+      "ember": 44838.083580250786,
+      "orbit": 0
+    },
+    "healing": {
+      "field": 7,
+      "elite": 15,
+      "upgrade": 120,
+      "relic": 171
+    },
+    "relics": [
+      "sail",
+      "dew"
+    ],
+    "encounters": [
+      {
+        "kind": "altar",
+        "x": -178.94584905641284,
+        "y": -906.3889353400508,
+        "state": "completed",
+        "progress": 10.000000000000076
+      },
+      {
+        "kind": "chest",
+        "x": -543.6900191421621,
+        "y": -512.7869804605282,
+        "state": "completed",
+        "progress": 18.00000000000026
+      }
+    ],
+    "timing": {
+      "frames": 15626,
+      "p50": 16.69999999999709,
+      "p95": 16.70000000001164,
+      "over50": 0
+    },
+    "errors": []
+  },
+  {
+    "character": "grove",
+    "route": "lunar",
+    "seed": 42,
+    "viewport": {
+      "width": 740,
+      "height": 360
+    },
+    "wallSeconds": 300.36,
+    "time": 300,
+    "outcome": "survived",
+    "kills": 959,
+    "level": 20,
+    "eliteKills": 3,
+    "ranks": {
+      "sweep": 0,
+      "duelist": 0,
+      "wildfire": 0,
+      "detonation": 0,
+      "bulwark": 1,
+      "horizon": 0,
+      "sword": 0,
+      "ember": 1,
+      "orbit": 5,
+      "fleet": 4,
+      "magnet": 4,
+      "vitality": 4,
+      "heal": 0,
+      "dawn": 0,
+      "comet": 0,
+      "lunar": 1
+    },
+    "damage": {
+      "relic": 0,
+      "sword": 0,
+      "ember": 1180.7622839507897,
+      "orbit": 49770.35543210264
+    },
+    "healing": {
+      "field": 5.780000000000001,
+      "elite": 22.224999999999994,
+      "upgrade": 100,
+      "relic": 180.21125000000018
+    },
+    "relics": [
+      "bell",
+      "dew"
+    ],
+    "encounters": [
+      {
+        "kind": "altar",
+        "x": 199.74512277586254,
+        "y": -25.797212092034677,
+        "state": "completed",
+        "progress": 10.000000000000076
+      },
+      {
+        "kind": "chest",
+        "x": -349.3376396696178,
+        "y": 258.20502553972784,
+        "state": "completed",
+        "progress": 18.00000000000026
+      }
+    ],
+    "timing": {
+      "frames": 18014,
+      "p50": 16.69999999999709,
+      "p95": 16.70000000001164,
+      "over50": 0
+    },
+    "errors": []
+  }
+]

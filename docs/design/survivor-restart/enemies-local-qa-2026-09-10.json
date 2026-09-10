@@ -1,0 +1,55 @@
+{
+  "checkedAt": "2026-09-10T00:12:36.910219+00:00",
+  "core": 70,
+  "browser": 50,
+  "stress": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "frames": 721,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    }
+  ],
+  "production": {
+    "base": "/rune-drift-survivors/",
+    "loadedAssets": [
+      "hero-ash.png",
+      "hero-ember.png",
+      "hero-grove.png",
+      "enemies.png",
+      "ash-sovereign.png"
+    ],
+    "qaGlobal": "absent",
+    "startAndPause": "passed",
+    "failures": [],
+    "errors": []
+  },
+  "review": "Independent review: ordinary giant defeat guidance corrected; no other actionable findings."
+}
