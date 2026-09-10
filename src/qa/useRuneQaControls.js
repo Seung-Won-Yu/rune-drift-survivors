@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import { SHRINE_SITES } from '../config/gameData.js';
 import { MAX_ENEMIES, MAX_PROJECTILES, MAX_XP_GEMS } from '../config/gameTuning.js';
@@ -73,7 +73,8 @@ export function getQaGameSnapshot(game) {
 export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }) {
   const gameRef = useRef(game);
   const revisionRef = useRef(0);
-  gameRef.current = game;
+  // A concurrent render may be discarded. Publish only the committed HUD state.
+  useLayoutEffect(() => { gameRef.current = game; }, [game]);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return undefined;

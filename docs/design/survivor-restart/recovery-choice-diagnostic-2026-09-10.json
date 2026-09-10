@@ -1,5 +1,5 @@
 {
-  "method": "Identical normal combat rules, seeds and movement. Only offered-choice priority at <=40% health changes. Choice health values rounded for this trace.",
+  "method": "Identical normal combat rules, seeds and movement algorithm. Only offered-choice priority at <=40% health changes. Choice health values rounded for this trace.",
   "routes": [
     {
       "route": "comet",

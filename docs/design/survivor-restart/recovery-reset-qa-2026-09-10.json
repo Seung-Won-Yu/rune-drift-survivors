@@ -1,0 +1,21 @@
+{
+  "initialRun": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/34452525445",
+  "failure": "After reset, detour UI was absent but the QA snapshot still held the previous fieldDetour.",
+  "before": {
+    "command": "CI=true npx playwright test --config scripts/playwright-smoke.config.mjs --grep 'optional detour keeps seal navigation readable at 740x360' --repeat-each=3",
+    "passed": 2,
+    "failed": 1
+  },
+  "fix": "Publish the game ref in useLayoutEffect instead of during concurrent rendering. Assertions are unchanged.",
+  "after": {
+    "sameCommand": true,
+    "passed": 3,
+    "failed": 0
+  },
+  "related": {
+    "command": "CI=true npx playwright test --config scripts/playwright-smoke.config.mjs --grep 'optional detour keeps seal navigation readable|a newer QA scene supersedes|dialogs keep focus contained'",
+    "passed": 6,
+    "failed": 0
+  },
+  "build": "GITHUB_PAGES=true npm run build passed"
+}
