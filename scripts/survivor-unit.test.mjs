@@ -128,3 +128,57 @@ test('recovery previews match capped healing and the new vitality maximum',()=>{
   assert.equal(g.player.hp,after);assert.equal(g.player.maxHp,max);
  }
 });
+
+test('basic sword contact adds impact only on a real hit and preserves damage and death rewards',()=>{
+  const g=playing(); const e=spawnEnemy(g,0,false,{x:65,y:0});e.speed=0;
+  g.swordClock=0; frames(g,8);
+  assert.equal(e.hp,15);assert.equal(e.impact,undefined);assert.ok(!g.events.includes('blade-impact'));
+  frames(g,4);
+  assert.equal(e.hp,15-stats(g).swordDamage);assert.equal(g.damageDealt.sword,15);
+  assert.equal(g.kills,1);assert.equal(g.gems[0].value,2);
+  assert.equal(e.impact.source,'sword');assert.equal(e.impact.angle,0);
+  assert.ok(g.effects.some(e=>e.kind==='sword-contact'&&e.finishing));
+  assert.ok(g.effects.find(e=>e.kind==='damage').y < g.effects.find(e=>e.kind==='sword-contact').y - 20);
+  assert.ok(g.events.includes('blade-impact'));assert.equal(g.remnants[0].angle,0);
+  const miss=playing();miss.swordClock=0;frames(miss,20);
+  assert.ok(!miss.events.includes('blade-impact'));assert.ok(!miss.effects.some(e=>e.kind==='sword-contact'));
+});
+
+test('direct ember and rune hits react but periodic burns do not restart contact feedback',()=>{
+  for(const weapon of ['ember','orbit']){
+    const g=playing();g.ranks.sword=0;g.ranks[weapon]=1;
+    const e=spawnEnemy(g,0,false,{x:weapon==='ember'?145:65,y:0});e.speed=0;e.hp=e.maxHp=999;
+    for(let i=0;i<120&&!e.impact;i++)frames(g,1);
+    assert.equal(e.impact?.source,weapon);assert.ok(g.effects.some(e=>e.kind===`${weapon}-contact`));
+  }
+  const g=playing();g.ranks.sword=0;
+  const e=spawnEnemy(g,0,false,{x:150,y:0});e.speed=0;e.hp=100;
+  e.burn={until:3,next:0,damage:12};frames(g,1);
+  assert.equal(e.hp,94);assert.equal(e.impact,undefined);
+  assert.ok(!g.events.includes('ember-impact'));assert.ok(!g.effects.some(e=>e.kind==='ember-contact'));
+});
+
+test('contact presentation is bounded, freezes with combat, and expires',async()=>{
+  const {impactPose}=await import('../src/survivor/impact.js');
+  const g=playing();g.swordClock=0;
+  for(let i=0;i<10;i++){const e=spawnEnemy(g,0,false,{x:60+i,y:i-5});e.speed=0;e.hp=999;}
+  frames(g,12);
+  const e=g.enemies.find(e=>e.impact);assert.ok(e);
+  assert.equal(g.effects.filter(e=>e.kind==='sword-contact').length,1);
+  assert.ok(impactPose(e,g.time).sx>1);
+  const before=structuredClone(g.effects),pose=impactPose(e,g.time);
+  pauseGame(g);frames(g,60);assert.deepEqual(g.effects,before);assert.deepEqual(impactPose(e,g.time),pose);
+  assert.deepEqual(impactPose(e,g.time,true),{});
+  assert.deepEqual(impactPose({...e,slam:{}},g.time),{});
+  resumeGame(g);g.swordClock=999;frames(g,30);
+  assert.deepEqual(impactPose(e,g.time),{});assert.ok(!g.effects.some(e=>e.kind==='sword-contact'));
+  assert.ok(g.effects.length<=LIMITS.effects);
+});
+
+test('audio retains a contact beside a foreground cue and collapses a crowd into one impact',async()=>{
+  const {selectAudioEvents}=await import('../src/survivor/audio.js');
+  assert.deepEqual(selectAudioEvents(new Set(['swing','blade-impact','kill','xp'])),['blade-impact']);
+  assert.deepEqual(selectAudioEvents(new Set(['hurt','blade-impact','ember-impact','rune-hit'])),['hurt','blade-impact']);
+  assert.deepEqual(selectAudioEvents(new Set(['xp','kill'])),['xp']);
+  assert.deepEqual(selectAudioEvents(new Set()),[]);
+});

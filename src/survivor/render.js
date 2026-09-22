@@ -1,3 +1,4 @@
+import { impactPose } from './impact.js';
 import { GIANT, HOUND } from './enemies.js';
 import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
 import { ENCOUNTERS } from './encounters.js';
@@ -297,6 +298,8 @@ export function createRenderer(canvas, art) {
       ctx.globalAlpha = (1 - progress) * .72;
       sprite(remnant.boss ? art.boss : art.enemies, 2, remnant.boss ? 0 : remnant.type, remnant.boss ? 2 : 3, remnant.x, remnant.y, remnant.size, remnant.flip, false, false, {
         anchor: remnant.boss ? .95 : .89,
+        x: reduced.matches || remnant.boss || remnant.angle === undefined ? 0 : Math.cos(remnant.angle) * 22 * (1 - (1 - progress) ** 2),
+        y: reduced.matches || remnant.boss || remnant.angle === undefined ? 0 : Math.sin(remnant.angle) * 12 * progress - Math.sin(progress * Math.PI) * 9,
         sy: reduced.matches ? 1 : 1 - progress * .45,
         sx: reduced.matches ? 1 : 1 + progress * .13,
         tilt: reduced.matches ? 0 : progress * .14
@@ -468,7 +471,7 @@ export function createRenderer(canvas, art) {
           sy: 1.07,
           tilt: -.08
         } : {};
-        sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.hunt ? Math.cos(a.hunt.angle) < 0 : a.x > p.x, a.hit > 0, false, slamPose);
+        sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.hunt ? Math.cos(a.hunt.angle) < 0 : a.x > p.x, a.hit > 0, false, { ...slamPose, ...impactPose(a, game.time, reduced.matches) });
         if (a.type === 2 && a.slam && !a.slam.hit) {
           const lift = reduced.matches ? 1 : Math.min(1,a.slam.age/(a.slam.windup ?? SLAM.windup));
           ctx.lineCap='round';
@@ -611,7 +614,45 @@ export function createRenderer(canvas, art) {
     for (const e of game.effects) {
       const progress = e.age / e.life;
       ctx.globalAlpha = 1 - progress;
-      if (e.kind === 'slash') {
+      if (['sword-contact', 'ember-contact', 'orbit-contact'].includes(e.kind)) {
+        const reach = (e.finishing ? 34 : 25) * (reduced.matches ? .75 : .65 + progress * .7);
+        const tone = e.kind === 'sword-contact' ? '#ffd897' : e.kind === 'ember-contact' ? '#ff9b59' : '#98e9d0';
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        ctx.rotate(e.angle);
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = tone;
+        ctx.lineWidth = 3 * (1 - progress) + 1;
+        if (e.kind === 'sword-contact') {
+          // A sharp contact star at the victim, separate from the attack arc.
+          ctx.fillStyle = tone;
+          ctx.beginPath();
+          ctx.moveTo(-reach, -reach * .65); ctx.lineTo(0, -3);
+          ctx.lineTo(reach, reach * .65); ctx.lineTo(3, 1);
+          ctx.lineTo(reach * .55, -reach); ctx.lineTo(0, -2);
+          ctx.lineTo(-reach * .55, reach); ctx.lineTo(-3, 1);
+          ctx.closePath(); ctx.fill();
+        } else {
+          ctx.beginPath();
+          if (e.kind === 'ember-contact') ctx.arc(0, 0, reach * .6, 0, Math.PI * 2);
+          else { ctx.moveTo(-reach, 0); ctx.lineTo(0, -reach * .65); ctx.lineTo(reach, 0); ctx.lineTo(0, reach * .65); ctx.closePath(); }
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#fff4d8';
+        ctx.beginPath(); ctx.arc(0, 0, Math.max(1, (e.finishing ? 6 : 4) * (1 - progress)), 0, Math.PI * 2); ctx.fill();
+        if (!reduced.matches) {
+          for (let i = 0; i < 4; i++) {
+            const a = (i - 1.5) * .65;
+            ctx.strokeStyle = i % 2 ? tone : '#fff0c9';
+            ctx.lineWidth = 2 * (1 - progress);
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * reach, Math.sin(a) * reach);
+            ctx.lineTo(Math.cos(a) * (reach + 8 * (1 - progress)), Math.sin(a) * (reach + 8 * (1 - progress)));
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      } else if (e.kind === 'slash') {
         ctx.save();
         ctx.translate(e.x, e.y);
         ctx.rotate(e.angle);

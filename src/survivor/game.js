@@ -1,3 +1,4 @@
+import { IMPACT_LIFE } from './impact.js';
 import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy } from './enemies.js';
 import { updateEncounters, curseActive } from './encounters.js';
 import { SPECIALIZATIONS, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
@@ -468,10 +469,15 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
   if (source === 'orbit' && game.relics.includes('bell') && !enemy.boss) enemy.slowUntil = game.time + 1.2;
   const actual = Math.min(enemy.hp, damage);
   if (!periodic && actual > 0) {
-    const angle = Math.atan2(enemy.y - game.player.y, enemy.x - game.player.x);
+    const angle = nx || ny ? Math.atan2(ny, nx) : Math.atan2(enemy.y - game.player.y, enemy.x - game.player.x);
+    if (['sword', 'ember', 'orbit'].includes(source)) {
+      enemy.impact = { at: game.time, angle, source };
+      buildFeedback(game, `${source}-contact`, { x: enemy.x, y: enemy.y - enemy.size * .45, angle, life: IMPACT_LIFE, finishing: damage >= enemy.hp }, .035);
+      if (source === 'sword') game.events.push('blade-impact');
+      if (source === 'ember') game.events.push('ember-impact');
+    }
     if (source === 'sword' && game.ranks.duelist) {
       buildFeedback(game, 'focused-impact', {x: enemy.x, y: enemy.y - 12, angle});
-      game.events.push('blade-impact');
     }
     if (source === 'orbit' && (game.ranks.bulwark || game.ranks.horizon)) {
       buildFeedback(game, game.ranks.bulwark ? 'guard-impact' : 'star-impact', {x: enemy.x, y: enemy.y - 10, angle});
@@ -485,7 +491,7 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
   effect(game, {
     kind: 'damage',
     x: enemy.x,
-    y: enemy.y - 24,
+    y: enemy.y - enemy.size * .9 - 8,
     text: Math.round(damage),
     tone: source === 'orbit' ? '#8ee6d4' : '#ffe0a0',
     life: .55
@@ -501,6 +507,7 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
       size: enemy.size,
       flip: enemy.x > game.player.x,
       age: 0,
+      angle: !periodic && enemy.impact?.at === game.time && enemy.impact.source === source ? enemy.impact.angle : undefined,
       life: enemy.boss ? .7 : .26
     });
     if (enemy.burn && enemy.burn.until > game.time && game.ranks.wildfire) {

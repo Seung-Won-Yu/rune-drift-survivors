@@ -504,3 +504,38 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
   await expect(page.locator('.is-recovery')).toHaveCount(0);await expect(page.locator('[data-upgrade="heal"] .upgrade-change')).toHaveText('체력 100 → 100 / 100');
  });
 }
+
+for (const weapon of ['sword','ember','orbit']) test(`basic ${weapon} contact renders and freezes with pause`,async({page})=>{
+  await page.getByRole('button',{name:'숲에 들어가기'}).click();
+  // Observe actual Web Audio nodes, including the contact transient, after a gesture.
+  await page.evaluate(()=>{
+    window.__contactAudio=[];
+    const proto=AudioBufferSourceNode.prototype, original=proto.start;
+    proto.start=function(...args){window.__contactAudio.push(this.context.currentTime);return original.apply(this,args);};
+  });
+  await scenario(page,`impact-${weapon}`);
+  await page.waitForFunction(kind=>window.__ASH_QA__.snapshot().effects.includes(kind),`${weapon}-contact`,{polling:'raf'});
+  expect((await snapshot(page)).damageDealt[weapon]).toBeGreaterThan(0);
+  // Pause within an actual contact so its presentation must use simulation time.
+  await page.evaluate(kind=>new Promise(resolve=>{
+    const check=()=>{
+      if(window.__ASH_QA__.snapshot().effects.includes(kind)){
+        document.querySelector('#pause').click();resolve();
+      }else requestAnimationFrame(check);
+    };check();
+  }),`${weapon}-contact`);
+  const paused=await snapshot(page);
+  expect(paused.phase).toBe('paused');expect(paused.impacts.length).toBeGreaterThan(0);
+  await page.waitForTimeout(220);expect((await snapshot(page)).impacts).toEqual(paused.impacts);
+  // Hide only the pause dialog for the visual fixture; simulation stays paused.
+  await page.locator('#overlay').evaluate(el=>{el.style.visibility='hidden';});
+  await page.screenshot({path:`output/playwright/survivor/impact-${weapon}.png`});
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:`output/playwright/survivor/impact-${weapon}-reduced-mobile.png`});
+  expect((await snapshot(page)).time).toBe(paused.time);
+  await page.locator('#overlay').evaluate(el=>{el.style.visibility='';});
+  if(weapon!=='orbit') expect(await page.evaluate(()=>window.__contactAudio.length)).toBeGreaterThan(0);
+  await page.getByRole('button',{name:'계속하기'}).click();
+  await expect.poll(async()=>(await snapshot(page)).time).toBeGreaterThan(paused.time);
+});

@@ -9,7 +9,7 @@ import { loadArt, createRenderer } from './render.js';
 import { getCharacter, isUnlocked } from './characters.js';
 import { loadProfile, saveProfile, recordRun } from './profile.js';
 import { campScreen, resultDetails, formatTime, buildSummary } from './camp.js';
-import { createAudio } from './audio.js';
+import { createAudio, selectAudioEvents } from './audio.js';
 import { nearestRecovery, RECOVERY } from './field.js';
 const $ = id => document.getElementById(id);
 const paths = {
@@ -304,8 +304,8 @@ function tick(now) {
     if (events.has('learn-spore')) notice('버섯의 포자 · 점선 원이 차오르면 밖으로 이동하세요');
     else if (events.has('learn-hound')) notice('사냥개 돌진 · 표시된 길 옆으로 피하세요');
     else if (events.has('learn-giant')) notice('거인의 내려찍기 · 고정된 원 밖으로 이동하세요');
-    const soundEvent = ['hurt', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'evolve', 'level', 'heal', 'choose', 'slam', 'warning', 'elite', 'pulse', 'blade-impact', 'ember-impact', 'fire-spread', 'ember-shot', 'swing', 'rune-hit', 'xp', 'kill'].find(e => events.has(e));
-    if (events.has('relic-ready')) tone('evolve');else if (soundEvent) tone(soundEvent);
+    if (events.has('relic-ready')) events.add('evolve');
+    for (const event of selectAudioEvents(events)) tone(event);
     game.events.length = 0;
   }
   syncPhase();
@@ -445,6 +445,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       })),
       crescents: game.shots.filter(s => s.kind === 'crescent').length,
       effects: game.effects.map(e => e.kind),
+      impacts: game.enemies.filter(e => e.impact && game.time - e.impact.at < .18).map(e => ({ id: e.id, ...e.impact })),
       level: game.level,
       xp: game.xp,
       choices: [...game.choices],
@@ -467,7 +468,12 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name === 'recovery-choice' || name === 'recovery-choice-full') {
+      if (name === 'impact-sword' || name === 'impact-ember' || name === 'impact-orbit') {
+        const weapon = name.slice(7);
+        game.ranks.sword = 0; game.ranks[weapon] = 1; game.xpNeed = 99999;
+        const e = spawnEnemy(game, 0, false, {x: weapon === 'ember' ? 145 : 65, y: 0});
+        e.speed = 0; e.hp = e.maxHp = 999;
+      } else if (name === 'recovery-choice' || name === 'recovery-choice-full') {
         game.level=12;game.player.hp=name.endsWith('-full')?100:27;game.ranks.vitality=0;
         game.phase='upgrade';game.choices=['sword','vitality','heal'];
       } else if (name === 'enemy-spores') {
