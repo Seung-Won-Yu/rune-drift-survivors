@@ -1,0 +1,61 @@
+{
+  "runId": 35681087690,
+  "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/35681087690",
+  "headSha": "df830c8f94c29e9102105e27828561af40475d50",
+  "conclusion": "success",
+  "tests": {
+    "core": 76,
+    "survivorBrowser": 56,
+    "legacyBrowser": 86,
+    "total": 218
+  },
+  "stress": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "frames": 719,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "frames": 721,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    }
+  ],
+  "jobs": [
+    {
+      "name": "build",
+      "conclusion": "success",
+      "startedAt": "2026-09-22T02:52:54Z",
+      "completedAt": "2026-09-22T03:04:49Z"
+    },
+    {
+      "name": "deploy",
+      "conclusion": "success",
+      "startedAt": "2026-09-22T03:04:54Z",
+      "completedAt": "2026-09-22T03:05:06Z"
+    }
+  ]
+}

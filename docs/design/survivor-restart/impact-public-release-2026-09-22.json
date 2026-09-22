@@ -1,0 +1,25 @@
+{
+  "url": "https://seung-won-yu.github.io/rune-drift-survivors/survivor/",
+  "checkedAt": "2026-09-22T03:07:04.462Z",
+  "assets": [
+    {
+      "file": "survivor-B_xHkk2z.js",
+      "sha256": "302a5513d00ae28c939e00750ea67d0f893a8f54a2ceb7fae676508ae1ab0702"
+    },
+    {
+      "file": "survivor-DadNd7iW.css",
+      "sha256": "0f99d45459234085f572738f712144e45f4921ccdd622b86976de8a26cd0a33b"
+    }
+  ],
+  "ordinaryContactAudioSources": 1,
+  "pause": "no new sources",
+  "mute": "no new sources",
+  "mobile": {
+    "width": 390,
+    "height": 844,
+    "horizontalOverflow": false
+  },
+  "qaGlobal": "absent",
+  "errors": [],
+  "failures": []
+}
