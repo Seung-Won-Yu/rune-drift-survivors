@@ -539,3 +539,60 @@ for (const weapon of ['sword','ember','orbit']) test(`basic ${weapon} contact re
   await page.getByRole('button',{name:'계속하기'}).click();
   await expect.poll(async()=>(await snapshot(page)).time).toBeGreaterThan(paused.time);
 });
+
+test('sword animation reads as windup, strike and recovery while pause and reduced motion stay stable',async({page})=>{
+  const poses={};
+  for(const stage of ['windup','strike','recovery']){
+    await scenario(page,`attack-pose-${stage}`);
+    const state=await snapshot(page);expect(state.phase).toBe('paused');poses[stage]=state.attackPose;
+    await page.locator('#overlay').evaluate(el=>{el.style.visibility='hidden';});
+    await page.screenshot({path:`output/playwright/survivor/weight-${stage}.png`});
+    await page.waitForTimeout(100);expect((await snapshot(page)).attackPose).toEqual(state.attackPose);
+    await page.locator('#overlay').evaluate(el=>{el.style.visibility='';});
+  }
+  expect(poses.windup.x).toBeLessThan(0);expect(poses.strike.x).toBeGreaterThan(10);
+  expect(poses.recovery.x).toBeLessThan(poses.strike.x*.1);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  expect((await snapshot(page)).attackPose).toEqual({});
+});
+
+for(const [weapon,hz] of [['sword',2200],['ember',65],['orbit',1040]]) test(`evolved ${weapon} adds its contact ornament and sound layer`,async({page})=>{
+  await page.getByRole('button',{name:'숲에 들어가기'}).click();
+  await page.evaluate(()=>{
+    window.__weightNotes=[];const original=AudioParam.prototype.setValueAtTime;
+    AudioParam.prototype.setValueAtTime=function(value,...args){window.__weightNotes.push(value);return original.call(this,value,...args);};
+  });
+  await scenario(page,`impact-evolved-${weapon}`);
+  await page.waitForFunction(hz=>window.__weightNotes.includes(hz),hz);
+  await page.evaluate(()=>new Promise(resolve=>{
+    const check=()=>{
+      if(window.__ASH_QA__.snapshot().impacts.some(e=>e.evolved)){document.querySelector('#pause').click();resolve();}
+      else requestAnimationFrame(check);
+    };check();
+  }));
+  expect((await snapshot(page)).impacts.some(e=>e.evolved)).toBe(true);
+  await page.locator('#overlay').evaluate(el=>{el.style.visibility='hidden';});
+  await page.screenshot({path:`output/playwright/survivor/weight-evolved-${weapon}.png`});
+  await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:`output/playwright/survivor/weight-evolved-${weapon}-mobile.png`});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+for(const viewport of [{width:1280,height:720},{width:390,height:844}]) test(`elite finish is visible, pause-safe and expires at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'elite-finish');
+  await page.evaluate(()=>new Promise(resolve=>{
+    const check=()=>{
+      if(window.__ASH_QA__.snapshot().eliteFinish){document.querySelector('#pause').click();resolve();}
+      else requestAnimationFrame(check);
+    };check();
+  }));
+  const paused=await snapshot(page);expect(paused.phase).toBe('paused');expect(paused.eliteKills).toBe(1);expect(paused.player.hp).toBe(75);
+  await page.waitForTimeout(150);expect((await snapshot(page)).eliteFinish).toEqual(paused.eliteFinish);
+  await page.locator('#overlay').evaluate(el=>{el.style.visibility='hidden';});
+  await page.screenshot({path:`output/playwright/survivor/weight-elite-${viewport.width}.png`});
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.screenshot({path:`output/playwright/survivor/weight-elite-${viewport.width}-reduced.png`});
+  await page.locator('#overlay').evaluate(el=>{el.style.visibility='';});
+  await page.getByRole('button',{name:'계속하기'}).click();
+  await expect.poll(async()=>(await snapshot(page)).eliteFinish).toBe(null);
+});

@@ -84,7 +84,7 @@ npm run qa:survivor:production
 
 `npm run qa:smoke`는 기존 3D 게임의 86개 검사다. main 배포 workflow는 두 게임의 검사와 새 게임의 production 검사를 실행한 뒤 Pages에 배포한다.
 
-현재 코어 검사는 76개, 브라우저 검사는 56개다. 확장 경로 진단은 6개 경로 × 3개 시드의 18판을 실행한다.
+현재 코어 검사는 80개, 브라우저 검사는 62개다. 확장 경로 진단은 6개 경로 × 3개 시드의 18판을 실행한다.
 
 구조와 실제 검증 범위는 [통합 기록](./design/survivor-restart/09-RELEASE.md), 자산 출처와 포즈 한계는 [그림 문서](../public/art/survivor/README.md)를 참고한다.
 
@@ -120,3 +120,5 @@ npm run qa:survivor:production
 검의 접촉음·불의 폭발음·룬의 낮은 충격음을 구분한다. 중요한 알림과 타격이 겹치면 둘을 함께 재생하되, 군중의 모든 적중음을 중첩하지 않는다. 움직임 감소 설정에서는 움찔·처치 이동·파편을 줄이고 적중 표시는 유지한다. [설계와 검증](./design/survivor-restart/14-IMPACT-FEEL.md).
 
 개발 장면은 `/survivor/?qa`의 `window.__ASH_QA__.scenario('impact-sword')`, `'impact-ember'`, `'impact-orbit'`다. 정상 적중으로 체력을 깎는 장면이며 배포에서는 QA 기능이 제거된다.
+
+검은 준비·타격·회수의 속도가 다르게 표현되고, 불씨술사와 수호자는 시전 반동을 보인다. 진화한 무기는 추가 접촉 문양과 음색으로 구분한다. 정예를 쓰러뜨리면 짧은 ‘정예 격파’ 표시와 마무리음이 나오며, 기존 회복·경험치 보상은 유지된다. [공격 동작과 처치 연출 기록](./design/survivor-restart/15-ATTACK-WEIGHT.md).

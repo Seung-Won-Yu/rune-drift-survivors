@@ -1,4 +1,4 @@
-import { IMPACT_LIFE } from './impact.js';
+import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon } from './impact.js';
 import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy } from './enemies.js';
 import { updateEncounters, curseActive } from './encounters.js';
 import { SPECIALIZATIONS, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
@@ -233,6 +233,7 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none') {
     supplies: [],
     nextRecovery: 0,
     recoveryFlash: null,
+    eliteFinish: null,
     healing: {
       field: 0,
       elite: 0,
@@ -471,8 +472,9 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
   if (!periodic && actual > 0) {
     const angle = nx || ny ? Math.atan2(ny, nx) : Math.atan2(enemy.y - game.player.y, enemy.x - game.player.x);
     if (['sword', 'ember', 'orbit'].includes(source)) {
-      enemy.impact = { at: game.time, angle, source };
-      buildFeedback(game, `${source}-contact`, { x: enemy.x, y: enemy.y - enemy.size * .45, angle, life: IMPACT_LIFE, finishing: damage >= enemy.hp }, .035);
+      const evolved = isEvolvedWeapon(game, source);
+      enemy.impact = { at: game.time, angle, source, evolved };
+      buildFeedback(game, `${source}-contact`, { x: enemy.x, y: enemy.y - enemy.size * .45, angle, life: IMPACT_LIFE, finishing: damage >= enemy.hp, evolved }, .035);
       if (source === 'sword') game.events.push('blade-impact');
       if (source === 'ember') game.events.push('ember-impact');
     }
@@ -523,7 +525,12 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
       game.bossDefeated = true;
       game.events.push('boss-defeated');
     }
-    if (enemy.elite) game.eliteKills++;
+    if (enemy.elite) {
+      game.eliteKills++;
+      // A single slot stays visible even when the decorative effect budget is full.
+      game.eliteFinish = { x: enemy.x, y: enemy.y - enemy.size * .45, labelY: enemy.y + 28, at: game.time, life: ELITE_FINISH_LIFE };
+      game.events.push('elite-break');
+    }
     addGem(game, enemy.x, enemy.y, enemy.xp);
     effect(game, {
       kind: 'pop',
@@ -803,6 +810,7 @@ export function updateGame(game, dt, input = {
   if (game.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   dt = Math.min(dt, 1 / 30);
   game.time = Math.min(RUN_SECONDS, game.time + dt);
+  if (game.eliteFinish && game.time - game.eliteFinish.at >= game.eliteFinish.life) game.eliteFinish = null;
   const danger = curseActive(game) ? 1.25 : 1;
   const p = game.player,
     s = stats(game),

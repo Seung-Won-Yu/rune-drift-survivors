@@ -1,4 +1,4 @@
-const IMPORTANT = ['hurt', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'evolve', 'level', 'heal', 'choose', 'slam', 'warning', 'elite'];
+const IMPORTANT = ['hurt', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'elite-break', 'evolve', 'level', 'heal', 'choose', 'slam', 'warning', 'elite'];
 const IMPACTS = ['blade-impact', 'ember-impact', 'rune-hit', 'pulse'];
 
 export function selectAudioEvents(events) {
@@ -6,6 +6,7 @@ export function selectAudioEvents(events) {
   const important = IMPORTANT.find(has);
   const impact = IMPACTS.find(has);
   // One foreground cue plus one contact, never one voice per enemy.
+  if (important === 'elite-break') return [important];
   if (important) return impact ? [important, impact] : [important];
   if (impact) return [impact];
   const other = ['fire-spread', 'ember-shot', 'swing', 'xp', 'kill'].find(has);
@@ -59,7 +60,7 @@ export function createAudio() {
     voice.start(time); voice.stop(time + duration);
     voice.onended = () => { voice.disconnect(); filter.disconnect(); gain.disconnect(); };
   }
-  function play(event, variant) {
+  function play(event, variant, evolved = false) {
     if (context?.state !== 'running') return;
     const now = context.currentTime;
     const lane = IMPACTS.includes(event) ? 'impact' : IMPORTANT.includes(event) ? 'important' : 'background';
@@ -67,14 +68,20 @@ export function createAudio() {
     if (now - (lastLane.get(lane) ?? -1) < (lane === 'impact' ? .085 : .045) || now - (lastEvent.get(event) ?? -1) < cooldown) return;
     lastLane.set(lane, now);
     lastEvent.set(event, now);
-    if (event === 'blade-impact') {
+    if (event === 'elite-break') {
+      note(110, 38, 'triangle', now, .18, .045);
+      transient(now, .07, .06, 1100);
+      note(660, 990, 'sine', now + .045, .2, .018);
+    } else if (event === 'blade-impact') {
       note(150, 48, 'triangle', now, .12, .045);
       note(1650, 520, 'sine', now, .045, .016);
       transient(now, .055, .075, 2100);
+      if (evolved) note(2200, 1100, 'sine', now, .08, .012);
     } else if (event === 'ember-impact') {
       note(95, 36, 'triangle', now, .2, .035);
       note(240, 70, 'sine', now, .16, .024);
       transient(now, .11, .065, 650);
+      if (evolved) note(65, 32, 'triangle', now, .2, .018);
     } else if (event === 'fire-spread') {
       note(380, 790, 'sine', now, .1, .016);
     } else if (event === 'swing') {
@@ -87,6 +94,7 @@ export function createAudio() {
       note(variant === 'bulwark' ? 390 : variant === 'horizon' ? 660 : 520, variant === 'horizon' ? 880 : 490, 'sine', now, .18, .022);
       note(780, 735, 'sine', now + .03, .18, .012);
       note(120, 60, 'triangle', now, .065, .026);
+      if (evolved) note(1040, 880, 'sine', now, .2, .012);
     } else if (event === 'heal' || event === 'level' || event === 'evolve' || event === 'boss-defeated') {
       const base = event === 'heal' ? 440 : event === 'boss-defeated' ? 330 : 550;
       [1, 1.25, 1.5].forEach((ratio, i) => note(base * ratio, base * ratio, 'sine', now + i * .07, .2, .023));

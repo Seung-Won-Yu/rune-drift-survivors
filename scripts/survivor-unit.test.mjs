@@ -182,3 +182,51 @@ test('audio retains a contact beside a foreground cue and collapses a crowd into
   assert.deepEqual(selectAudioEvents(new Set(['xp','kill'])),['xp']);
   assert.deepEqual(selectAudioEvents(new Set()),[]);
 });
+
+test('attack poses separate windup, release and recovery without mutating combat state',async()=>{
+  const {attackPose}=await import('../src/survivor/impact.js');
+  const g=playing();g.swing={age:.15,angle:0,hit:false};
+  const saved=structuredClone({...g,rng:undefined});
+  assert.ok(attackPose(g).x<0);assert.ok(attackPose(g).sy<1);
+  assert.deepEqual({...g,rng:undefined},saved);
+  g.swing.age=.2;const strike=attackPose(g);assert.ok(strike.x>10);assert.ok(strike.sy>1);
+  g.swing.age=.48;assert.ok(attackPose(g).x<strike.x*.1);
+  g.swing.age=.2;g.swing.angle=Math.PI;assert.ok(attackPose(g).x<0);
+  assert.deepEqual(attackPose(g,true),{});
+  g.player.hurt=.1;assert.deepEqual(attackPose(g),{});g.player.hurt=0;
+  g.outcome='defeat';assert.deepEqual(attackPose(g),{});g.outcome=null;
+  g.swing=null;g.player.cast=.4;g.characterId='ember';assert.ok(attackPose(g).y<0);
+  g.characterId='grove';assert.ok(attackPose(g).y>0);assert.ok(attackPose(g).sx>1);
+});
+
+test('evolved contacts identify each actual weapon evolution without enabling other evolutions',async()=>{
+  const {isEvolvedWeapon}=await import('../src/survivor/impact.js');
+  for(const [weapon,evolution] of [['sword','dawn'],['ember','comet'],['orbit','lunar']]){
+    const g=playing();g.ranks.sword=0;g.ranks[weapon]=1;g.ranks[evolution]=1;
+    const e=spawnEnemy(g,0,false,{x:weapon==='ember'?145:65,y:0});e.speed=0;e.hp=999;
+    for(let i=0;i<120&&!e.impact;i++)frames(g,1);
+    assert.equal(e.impact?.evolved,true);assert.ok(g.effects.some(e=>e.kind===`${weapon}-contact`&&e.evolved));
+    for(const other of ['sword','ember','orbit'])assert.equal(isEvolvedWeapon(g,other),other===weapon);
+  }
+});
+
+test('elite defeat feedback survives a full effect budget, pauses, expires and preserves rewards',()=>{
+  const g=playing();g.swordClock=0;g.xpNeed=99999;g.player.hp=60;
+  g.effects=Array.from({length:LIMITS.effects},()=>({kind:'pop',x:0,y:0,age:0,life:5}));
+  const e=spawnEnemy(g,2,true,{x:65,y:0});e.speed=0;e.hp=1;e.attackClock=999;
+  frames(g,8);assert.equal(g.eliteFinish,null);frames(g,4);
+  assert.ok(g.eliteFinish);assert.ok(g.events.includes('elite-break'));assert.equal(g.eliteKills,1);
+  assert.ok(g.eliteFinish.labelY>e.y,'finish label sits below the body, clear of floating damage');
+  assert.equal(g.player.hp,75);assert.equal(g.healing.elite,15);assert.equal(g.gems[0].value,e.xp);
+  assert.equal(g.effects.length,LIMITS.effects);
+  const before={...g.eliteFinish};pauseGame(g);frames(g,60);assert.deepEqual(g.eliteFinish,before);
+  resumeGame(g);frames(g,35);assert.equal(g.eliteFinish,null);
+  const fresh=playing();fresh.swordClock=0;const small=spawnEnemy(fresh,0,false,{x:65,y:0});small.speed=0;
+  frames(fresh,12);assert.equal(fresh.kills,1);assert.equal(fresh.eliteFinish,null);assert.ok(!fresh.events.includes('elite-break'));
+});
+
+test('elite finish audio replaces its ordinary hit but retains player danger priority',async()=>{
+  const {selectAudioEvents}=await import('../src/survivor/audio.js');
+  assert.deepEqual(selectAudioEvents(new Set(['elite-break','blade-impact','heal','kill'])),['elite-break']);
+  assert.deepEqual(selectAudioEvents(new Set(['elite-break','hurt','blade-impact'])),['hurt','blade-impact']);
+});

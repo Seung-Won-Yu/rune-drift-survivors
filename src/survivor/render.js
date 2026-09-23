@@ -1,4 +1,4 @@
-import { impactPose } from './impact.js';
+import { impactPose, attackPose } from './impact.js';
 import { GIANT, HOUND } from './enemies.js';
 import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
 import { ENCOUNTERS } from './encounters.js';
@@ -511,26 +511,7 @@ export function createRenderer(canvas, art) {
           const age = game.swing.age;
           frame = age < .18 ? 0 : age < .26 ? 1 : age < .4 ? 2 : 3;
         }
-        let pose = {};
-        if (game.swing && !reduced.matches) {
-          const age = game.swing.age;
-          if (age < .18) {
-            const t = age / .18;
-            pose = {
-              x: -p.facing * 3 * t,
-              tilt: -.09 * t,
-              sx: 1 + .03 * t,
-              sy: 1 - .03 * t
-            };
-          } else {
-            const t = Math.max(0, 1 - (age - .18) / .37);
-            pose = {
-              x: Math.cos(game.swing.angle) * 7 * t,
-              y: Math.sin(game.swing.angle) * 5 * t,
-              tilt: .1 * t
-            };
-          }
-        }
+        let pose = attackPose(game, reduced.matches);
         if (p.hurt > 0) {
           row = 2;
           frame = p.hurt > .12 ? 1 : 0;
@@ -615,7 +596,7 @@ export function createRenderer(canvas, art) {
       const progress = e.age / e.life;
       ctx.globalAlpha = 1 - progress;
       if (['sword-contact', 'ember-contact', 'orbit-contact'].includes(e.kind)) {
-        const reach = (e.finishing ? 34 : 25) * (reduced.matches ? .75 : .65 + progress * .7);
+        const reach = (e.finishing ? 34 : 25) * (e.evolved ? 1.2 : 1) * (reduced.matches ? .75 : .65 + progress * .7);
         const tone = e.kind === 'sword-contact' ? '#ffd897' : e.kind === 'ember-contact' ? '#ff9b59' : '#98e9d0';
         ctx.save();
         ctx.translate(e.x, e.y);
@@ -636,6 +617,23 @@ export function createRenderer(canvas, art) {
           ctx.beginPath();
           if (e.kind === 'ember-contact') ctx.arc(0, 0, reach * .6, 0, Math.PI * 2);
           else { ctx.moveTo(-reach, 0); ctx.lineTo(0, -reach * .65); ctx.lineTo(reach, 0); ctx.lineTo(0, reach * .65); ctx.closePath(); }
+          ctx.stroke();
+        }
+        if (e.evolved) {
+          ctx.strokeStyle = '#fff7da';
+          ctx.lineWidth = 2 * (1 - progress) + 1;
+          ctx.beginPath();
+          if (e.kind === 'sword-contact') {
+            for (const side of [-1, 1]) { ctx.moveTo(-reach * .7, side * 7); ctx.lineTo(reach * 1.1, side * 7); }
+          } else if (e.kind === 'ember-contact') {
+            for (let i = 0; i < 3; i++) {
+              const angle = i * Math.PI * 2 / 3;
+              ctx.moveTo(Math.cos(angle) * reach, Math.sin(angle) * reach);
+              ctx.arc(0, 0, reach, angle, angle + 1.1);
+            }
+          } else {
+            ctx.moveTo(-reach * .6, 0); ctx.lineTo(0, -reach * .35); ctx.lineTo(reach * .6, 0); ctx.lineTo(0, reach * .35); ctx.closePath();
+          }
           ctx.stroke();
         }
         ctx.fillStyle = '#fff4d8';
@@ -762,6 +760,24 @@ export function createRenderer(canvas, art) {
       }
     }
     ctx.globalAlpha = 1;
+    if (game.eliteFinish) {
+      const finish = game.eliteFinish;
+      const progress = Math.min(1, (game.time - finish.at) / finish.life);
+      const reach = reduced.matches ? 34 : 24 + 32 * (1 - (1 - progress) ** 3);
+      ctx.save(); ctx.translate(finish.x, finish.y);
+      ctx.globalAlpha = 1 - progress;
+      ctx.fillStyle = '#f9ce83';
+      // Broken rays read as a defeated shield, not another circular danger zone.
+      for (let i = 0; i < 4; i++) {
+        ctx.save(); ctx.rotate(Math.PI / 4 + i * Math.PI / 2);
+        ctx.beginPath(); ctx.moveTo(reach * .5, -4); ctx.lineTo(reach, 0); ctx.lineTo(reach * .5, 4); ctx.closePath(); ctx.fill(); ctx.restore();
+      }
+      ctx.font = 'bold 15px system-ui'; ctx.textAlign = 'center';
+      ctx.strokeStyle = '#17251c'; ctx.lineWidth = 4;
+      ctx.strokeText('정예 격파', 0, finish.labelY - finish.y);
+      ctx.fillStyle = '#ffe6b5'; ctx.fillText('정예 격파', 0, finish.labelY - finish.y);
+      ctx.restore();
+    }
     drawEnemyWarnings(ctx, game, reduced.matches);
     // Enemy projectiles stay above decorative player effects and have an arrowhead silhouette.
     for (const thorn of game.thorns) {

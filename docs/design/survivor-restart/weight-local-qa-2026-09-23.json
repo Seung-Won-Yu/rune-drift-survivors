@@ -1,0 +1,66 @@
+{
+  "date": "2026-09-23",
+  "coreTests": 80,
+  "browserScenarios": 62,
+  "finalEliteRecheck": 2,
+  "combatParityCases": 18,
+  "stress": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "frames": 721,
+      "elapsed": 12016.3,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    }
+  ],
+  "inAppFlow": [
+    "normal start",
+    "basic sword kills",
+    "first upgrade",
+    "sword upgrade selected"
+  ],
+  "limitations": [
+    "Audio frequency observation is not subjective listening",
+    "No physical phone test"
+  ],
+  "production": {
+    "base": "/rune-drift-survivors/",
+    "loadedAssets": [
+      "hero-ash.png",
+      "hero-ember.png",
+      "hero-grove.png",
+      "enemies.png",
+      "ash-sovereign.png"
+    ],
+    "qaGlobal": "absent",
+    "startAndPause": "passed",
+    "failures": [],
+    "errors": []
+  }
+}

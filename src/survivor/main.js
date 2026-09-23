@@ -1,3 +1,4 @@
+import { attackPose, isEvolvedWeapon } from './impact.js';
 import { GIANT, waveAt } from './enemies.js';
 import { canEquipKeepsake } from './journey.js';
 import { specializationFor, RELICS } from './expansion.js';
@@ -72,8 +73,8 @@ function initAudio() {
   }
 }
 function tone(event) {
-  const weapon = event === 'swing' ? 'sword' : event === 'ember-shot' ? 'ember' : ['rune-hit', 'pulse'].includes(event) ? 'orbit' : null;
-  if (sound) audio.play(event, weapon ? specializationFor(game, weapon) : null);
+  const weapon = ['swing', 'blade-impact'].includes(event) ? 'sword' : ['ember-shot', 'ember-impact'].includes(event) ? 'ember' : ['rune-hit', 'pulse'].includes(event) ? 'orbit' : null;
+  if (sound) audio.play(event, weapon ? specializationFor(game, weapon) : null, isEvolvedWeapon(game, weapon));
 }
 function updateSound() {
   $('sound').innerHTML = icon(sound ? 'sound' : 'mute');
@@ -445,6 +446,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       })),
       crescents: game.shots.filter(s => s.kind === 'crescent').length,
       effects: game.effects.map(e => e.kind),
+      eliteFinish: game.eliteFinish ? { ...game.eliteFinish } : null,
+      attackPose: attackPose(game, matchMedia('(prefers-reduced-motion: reduce)').matches),
       impacts: game.enemies.filter(e => e.impact && game.time - e.impact.at < .18).map(e => ({ id: e.id, ...e.impact })),
       level: game.level,
       xp: game.xp,
@@ -468,8 +471,18 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name === 'impact-sword' || name === 'impact-ember' || name === 'impact-orbit') {
-        const weapon = name.slice(7);
+      if (name.startsWith('attack-pose-')) {
+        const stage = name.slice(12);
+        game.swordClock = 0; game.player.invincible = 0;
+        const e = spawnEnemy(game, 0, false, {x:65, y:0});e.speed=0;e.hp=999;
+        for (let i=0; i<({windup:8,strike:14,recovery:28}[stage] ?? 8); i++) updateGame(game,1/60);
+        game.phase = 'paused';
+      } else if (name === 'elite-finish') {
+        game.swordClock=0;game.player.invincible=0;game.player.hp=60;game.xpNeed=99999;
+        const e=spawnEnemy(game,2,true,{x:65,y:0});e.speed=0;e.hp=1;e.attackClock=999;
+      } else if (['impact-sword', 'impact-ember', 'impact-orbit', 'impact-evolved-sword', 'impact-evolved-ember', 'impact-evolved-orbit'].includes(name)) {
+        const weapon = name.split('-').at(-1);
+        if (name.includes('-evolved-')) game.ranks[{sword:'dawn',ember:'comet',orbit:'lunar'}[weapon]]=1;
         game.ranks.sword = 0; game.ranks[weapon] = 1; game.xpNeed = 99999;
         const e = spawnEnemy(game, 0, false, {x: weapon === 'ember' ? 145 : 65, y: 0});
         e.speed = 0; e.hp = e.maxHp = 999;
