@@ -30,7 +30,7 @@ export function updateSpores(game, dt, hurt) {
   for (const s of game.spores) {
     s.age += dt;
     if (s.age >= SPORE.windup && s.age < SPORE.windup + SPORE.active && Math.hypot(game.player.x-s.x,game.player.y-s.y) <= SPORE.radius + 12) {
-      hurt(game, SPORE.damage, 'spore');
+      hurt(game, SPORE.damage, 'spore', s);
       if (game.phase === 'ended') return;
     }
   }
@@ -63,7 +63,7 @@ export function updateHound(game, enemy, dt, hurt) {
     const along=x*c+y*s, across=-x*s+y*c;
     const nearest=Math.max(from,Math.min(to,along));
     if (Math.hypot(along-nearest,across) <= HOUND.width/2+12) {
-      hunt.hit=true; hurt(game,HOUND.damage,'hunt');
+      hunt.hit=true; hurt(game,HOUND.damage,'hunt',hunt);
     }
   }
   if (hunt.age >= HOUND.windup + HOUND.duration + HOUND.recovery) {

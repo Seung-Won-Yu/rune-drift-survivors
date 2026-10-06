@@ -6,7 +6,7 @@ export function selectAudioEvents(events) {
   const important = IMPORTANT.find(has);
   const impact = IMPACTS.find(has);
   // One foreground cue plus one contact, never one voice per enemy.
-  if (important === 'elite-break') return [important];
+  if (important === 'hurt' || important === 'elite-break') return [important];
   if (important) return impact ? [important, impact] : [important];
   if (impact) return [impact];
   const other = ['fire-spread', 'ember-shot', 'swing', 'xp', 'kill'].find(has);
@@ -18,6 +18,7 @@ export function createAudio() {
   let context = null, noiseBuffer = null;
   const lastLane = new Map();
   const lastEvent = new Map();
+  let dangerUntil = 0;
   function unlock() {
     try {
       context ??= new (window.AudioContext || window.webkitAudioContext)();
@@ -64,11 +65,18 @@ export function createAudio() {
     if (context?.state !== 'running') return;
     const now = context.currentTime;
     const lane = IMPACTS.includes(event) ? 'impact' : IMPORTANT.includes(event) ? 'important' : 'background';
+    // A short foreground window separates being hit from dealing damage in a crowd.
+    if (event !== 'hurt' && lane !== 'important' && now < dangerUntil) return;
     const cooldown = lane === 'impact' ? .085 : ['xp', 'kill'].includes(event) ? .16 : .06;
-    if (now - (lastLane.get(lane) ?? -1) < (lane === 'impact' ? .085 : .045) || now - (lastEvent.get(event) ?? -1) < cooldown) return;
+    if ((event !== 'hurt' && now - (lastLane.get(lane) ?? -1) < (lane === 'impact' ? .085 : .045)) || now - (lastEvent.get(event) ?? -1) < cooldown) return;
     lastLane.set(lane, now);
     lastEvent.set(event, now);
-    if (event === 'elite-break') {
+    if (event === 'hurt') {
+      dangerUntil = now + .18;
+      transient(now, .075, .08, 950);
+      note(145, 42, 'triangle', now, .2, .06);
+      note(72, 38, 'sine', now + .015, .22, .035);
+    } else if (event === 'elite-break') {
       note(110, 38, 'triangle', now, .18, .045);
       transient(now, .07, .06, 1100);
       note(660, 990, 'sine', now + .045, .2, .018);

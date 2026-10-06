@@ -178,7 +178,7 @@ test('contact presentation is bounded, freezes with combat, and expires',async()
 test('audio retains a contact beside a foreground cue and collapses a crowd into one impact',async()=>{
   const {selectAudioEvents}=await import('../src/survivor/audio.js');
   assert.deepEqual(selectAudioEvents(new Set(['swing','blade-impact','kill','xp'])),['blade-impact']);
-  assert.deepEqual(selectAudioEvents(new Set(['hurt','blade-impact','ember-impact','rune-hit'])),['hurt','blade-impact']);
+  assert.deepEqual(selectAudioEvents(new Set(['hurt','blade-impact','ember-impact','rune-hit'])),['hurt']);
   assert.deepEqual(selectAudioEvents(new Set(['xp','kill'])),['xp']);
   assert.deepEqual(selectAudioEvents(new Set()),[]);
 });
@@ -228,5 +228,42 @@ test('elite defeat feedback survives a full effect budget, pauses, expires and p
 test('elite finish audio replaces its ordinary hit but retains player danger priority',async()=>{
   const {selectAudioEvents}=await import('../src/survivor/audio.js');
   assert.deepEqual(selectAudioEvents(new Set(['elite-break','blade-impact','heal','kill'])),['elite-break']);
-  assert.deepEqual(selectAudioEvents(new Set(['elite-break','hurt','blade-impact'])),['hurt','blade-impact']);
+  assert.deepEqual(selectAudioEvents(new Set(['elite-break','hurt','blade-impact'])),['hurt']);
+});
+
+test('player damage feedback records real loss, incoming direction and every damage source',()=>{
+  const cases={
+    contact:g=>{const e=spawnEnemy(g,0,false,{x:-20,y:0});e.speed=0;},
+    spore:g=>{g.time=20;g.spores=[{x:-10,y:0,age:.7}];},
+    thorns:g=>{g.thorns=[{x:-10,y:0,vx:30,vy:0,age:0,life:1}];},
+    slam:g=>{const e=spawnEnemy(g,2,true,{x:-80,y:0});e.slam={x:-10,y:0,age:SLAM.windup-.01,hit:false};},
+    hunt:g=>{const e=spawnEnemy(g,1,false,{x:-25,y:0});e.hunt={x:-100,y:0,angle:0,age:1,hit:false};},
+    charge:g=>{const b=spawnBoss(g);b.entrance=0;b.pattern={x:-10,y:0,angle:0,age:BOSS.windup,kind:'charge',fired:false};}
+  };
+  for(const [source,prepare] of Object.entries(cases)){
+    const g=playing();g.ranks.sword=0;prepare(g);frames(g,1);
+    const hit=g.player.impact;
+    assert.ok(hit,source);assert.equal(hit.source,source);
+    assert.equal(hit.amount,100-g.player.hp);assert.equal(hit.beforeHp,100);
+    assert.ok(Math.abs(Math.abs(hit.angle)-Math.PI)<.01,source);
+    const saved=structuredClone(hit);frames(g,1);assert.deepEqual(g.player.impact,saved,'invulnerability does not re-trigger');
+  }
+});
+
+test('player feedback is bounded, pause-safe, recoverable, reduced-motion aware and does not displace collisions',async()=>{
+  const {hurtFeedback}=await import('../src/survivor/impact.js');
+  const g=playing();g.ranks.sword=0;
+  for(let i=0;i<LIMITS.effects;i++)g.effects.push({kind:'pop',age:0,life:10});
+  const e=spawnEnemy(g,0,false,{x:-20,y:0});e.speed=0;frames(g,1);g.enemies=[];
+  const hit=hurtFeedback(g),before=JSON.stringify(g);
+  assert.equal(hit.amount,8);assert.ok(hit.pose.x>0);assert.equal(hit.trailHp,100);
+  assert.deepEqual(hurtFeedback(g,true).pose,{});assert.equal(hurtFeedback(g,true).trailHp,92);
+  assert.equal(JSON.stringify(g),before);assert.equal(g.player.x,0);
+  pauseGame(g);frames(g,60);assert.deepEqual(hurtFeedback(g),hit);
+  resumeGame(g);frames(g,12,{x:1,y:0});assert.ok(Math.abs(g.player.x-33.6)<.001);
+  g.player.hp=100;assert.equal(hurtFeedback(g).trailHp,100,'healing never leaves a false loss trail');
+  frames(g,60);assert.equal(hurtFeedback(g),null);assert.equal(createGame().player.impact,null);
+  const lethal=playing();lethal.player.hp=3;lethal.ranks.sword=0;spawnEnemy(lethal,0,false,{x:0,y:0});frames(lethal,1);
+  assert.equal(lethal.player.impact.amount,3);assert.equal(lethal.player.impact.angle,null);
+  assert.equal(lethal.outcome,'defeat');assert.deepEqual(hurtFeedback(lethal).pose,{});
 });

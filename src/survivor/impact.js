@@ -1,6 +1,34 @@
 // Presentation only: never move collision bodies or delay simulation clocks.
 export const IMPACT_LIFE = .18;
 export const ELITE_FINISH_LIFE = .48;
+export const HURT_FEEDBACK_LIFE = .95;
+export const HURT_LABELS = { contact: '접촉', hunt: '사냥개 돌진', spore: '포자', slam: '내려찍기', charge: '군주 돌진', thorns: '가시' };
+
+// Only actual HP loss creates this record. No collision, timing or RNG changes.
+export function recordPlayerImpact(game, beforeHp, source, origin) {
+  const p = game.player;
+  const dx = origin ? origin.x - p.x : 0, dy = origin ? origin.y - p.y : 0;
+  return { at: game.time, beforeHp, amount: beforeHp - p.hp, source,
+    angle: Math.hypot(dx, dy) > .01 ? Math.atan2(dy, dx) : null };
+}
+
+export function hurtFeedback(game, reduced = false) {
+  const p = game.player, hit = p.impact;
+  const age = hit ? game.time - hit.at : HURT_FEEDBACK_LIFE;
+  if (!hit || age < 0 || age >= HURT_FEEDBACK_LIFE) return null;
+  const recoil = reduced || game.outcome === 'defeat' ? 0 : Math.max(0, 1 - age / .24) ** 3;
+  const strength = Math.min(10, 4 + hit.amount / 4);
+  const fade = Math.max(0, 1 - age / .42);
+  const loss = Math.max(0, 1 - Math.max(0, age - .2) / .55);
+  return {
+    ...hit, age, fade,
+    label: HURT_LABELS[hit.source] ?? '피격',
+    trailHp: reduced ? p.hp : Math.max(p.hp, Math.min(p.maxHp, p.hp + Math.max(0, hit.beforeHp - p.hp) * loss)),
+    pose: recoil ? { x: hit.angle === null ? 0 : -Math.cos(hit.angle) * strength * recoil,
+      y: hit.angle === null ? 0 : -Math.sin(hit.angle) * strength * .6 * recoil,
+      sx: 1 + .1 * recoil, sy: 1 - .12 * recoil } : {}
+  };
+}
 
 export function isEvolvedWeapon(game, weapon) {
   return !!game.ranks[{ sword: 'dawn', ember: 'comet', orbit: 'lunar' }[weapon]];

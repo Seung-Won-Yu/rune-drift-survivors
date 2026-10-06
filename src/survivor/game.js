@@ -1,4 +1,4 @@
-import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon } from './impact.js';
+import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact } from './impact.js';
 import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy } from './enemies.js';
 import { updateEncounters, curseActive } from './encounters.js';
 import { SPECIALIZATIONS, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
@@ -204,6 +204,7 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none') {
       moving: false,
       walk: 0,
       hurt: 0,
+      impact: null,
       cast: 0
     },
     ranks: {
@@ -736,22 +737,18 @@ function updateWeapons(game, dt, s) {
   game.shots = game.shots.filter(s => s.life > 0);
   game.enemies = game.enemies.filter(e => e.hp > 0);
 }
-function hurtPlayer(game, damage, source = 'contact') {
+function hurtPlayer(game, damage, source = 'contact', origin) {
   const p = game.player;
   if (p.invincible > 0) return;
   damage *= (1 - getCharacter(game.characterId).armor) * (game.ranks.bulwark ? .85 : 1);
+  const beforeHp = p.hp;
   p.hurt = .24;
   game.damageTaken[source] += Math.min(p.hp, damage);
   game.lastHurt = source;
   p.hp = Math.max(0, p.hp - damage);
+  p.impact = recordPlayerImpact(game, beforeHp, source, origin);
   p.invincible = .85;
   game.events.push('hurt');
-  effect(game, {
-    kind: 'hurt',
-    x: p.x,
-    y: p.y,
-    life: .24
-  });
   if (p.hp <= 0) {
     game.phase = 'ended';
     game.outcome = 'defeat';
@@ -795,7 +792,7 @@ function updateSlam(game, enemy, dt, distance) {
       range: rule.radius,
       life: .38
     });
-    if (Math.hypot(game.player.x - slam.x, game.player.y - slam.y) <= rule.radius + 12) hurtPlayer(game, rule.damage, 'slam');
+    if (Math.hypot(game.player.x - slam.x, game.player.y - slam.y) <= rule.radius + 12) hurtPlayer(game, rule.damage, 'slam', slam);
   }
   if (slam.age >= rule.windup + rule.recovery) {
     enemy.slam = null;
@@ -889,7 +886,7 @@ export function updateGame(game, dt, input = {
       e.hunt = null; e.slam = null; e.huntClock = 2; e.attackClock = 2.2;
     }
     if (!attacking && Math.hypot(p.x - e.x, p.y - e.y) < e.radius + 12) {
-      hurtPlayer(game, e.damage * danger);
+      hurtPlayer(game, e.damage * danger, 'contact', e);
       if (game.phase === 'ended') return;
     }
   }

@@ -62,7 +62,7 @@ export function updateBoss(game, boss, dt, hurt, effect) {
     const progress = Math.min(1, (pattern.age - BOSS.windup) / BOSS.chargeDuration);
     boss.x = pattern.x + Math.cos(pattern.angle) * BOSS.chargeLength * progress;
     boss.y = pattern.y + Math.sin(pattern.angle) * BOSS.chargeLength * progress;
-    if (previousAge < BOSS.windup + BOSS.chargeDuration && Math.hypot(p.x - boss.x, p.y - boss.y) < BOSS.chargeWidth / 2 + 12) hurt(game, BOSS.chargeDamage, 'charge');
+    if (previousAge < BOSS.windup + BOSS.chargeDuration && Math.hypot(p.x - boss.x, p.y - boss.y) < BOSS.chargeWidth / 2 + 12) hurt(game, BOSS.chargeDamage, 'charge', pattern);
     if (!pattern.fired) {
       pattern.fired = true;
       game.events.push('boss-charge');
@@ -102,7 +102,7 @@ export function updateThorns(game, dt, hurt) {
     thorn.x += thorn.vx * dt;
     thorn.y += thorn.vy * dt;
     if (thorn.life > 0 && Math.hypot(thorn.x - game.player.x, thorn.y - game.player.y) < BOSS.thornRadius + 12) {
-      hurt(game, BOSS.thornDamage, 'thorns');
+      hurt(game, BOSS.thornDamage, 'thorns', {x: game.player.x - thorn.vx, y: game.player.y - thorn.vy});
       thorn.life = 0;
       if (game.phase === 'ended') return;
     }

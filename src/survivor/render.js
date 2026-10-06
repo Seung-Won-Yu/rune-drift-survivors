@@ -1,4 +1,4 @@
-import { impactPose, attackPose } from './impact.js';
+import { impactPose, attackPose, hurtFeedback } from './impact.js';
 import { GIANT, HOUND } from './enemies.js';
 import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
 import { ENCOUNTERS } from './encounters.js';
@@ -154,6 +154,7 @@ export function createRenderer(canvas, art) {
   function render(game, now = 0) {
     if (width !== canvas.clientWidth || height !== canvas.clientHeight) resize();
     const p = game.player;
+    const hurt = hurtFeedback(game, reduced.matches);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = '#26382e';
     ctx.fillRect(0, 0, width, height);
@@ -515,7 +516,7 @@ export function createRenderer(canvas, art) {
         if (p.hurt > 0) {
           row = 2;
           frame = p.hurt > .12 ? 1 : 0;
-          pose = {};
+          pose = hurt?.pose ?? {};
         }
         if (game.outcome === 'defeat') {
           row = 2;
@@ -534,8 +535,11 @@ export function createRenderer(canvas, art) {
           rows: [0, 480, 860, 1254],
           anchor: row === 0 ? .94 : row === 1 ? .93 : .88
         };
-        const blink = !reduced.matches && game.phase !== 'ended' && p.invincible > 0 && Math.floor(game.time * 16) % 2 === 0;
-        ctx.globalAlpha = blink ? .5 : 1;
+        // Keep the player visible during escape; protection is a steady foot marker.
+        if (p.invincible > 0 && game.phase !== 'ended') {
+          ctx.strokeStyle = '#ffe5bd'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, 23, 10, 0, 0, Math.PI * 2); ctx.stroke();
+        }
         sprite(art.heroes[game.characterId], frame, row, 3, p.x, p.y, 88, p.facing < 0, p.hurt > 0, false, {
           ...pose,
           ...atlas,
@@ -751,12 +755,6 @@ export function createRenderer(canvas, art) {
           ctx.fillStyle = e.tone;
           ctx.fillRect(e.x + Math.cos(a) * progress * 25, e.y - 10 + Math.sin(a) * progress * 25, 3 * (1 - progress) + 1, 3 * (1 - progress) + 1);
         }
-      } else if (e.kind === 'hurt') {
-        ctx.strokeStyle = '#f39077';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(e.x, e.y - 12, 24 + progress * 25, 0, 7);
-        ctx.stroke();
       }
     }
     ctx.globalAlpha = 1;
@@ -776,6 +774,21 @@ export function createRenderer(canvas, art) {
       ctx.strokeStyle = '#17251c'; ctx.lineWidth = 4;
       ctx.strokeText('정예 격파', 0, finish.labelY - finish.y);
       ctx.fillStyle = '#ffe6b5'; ctx.fillText('정예 격파', 0, finish.labelY - finish.y);
+      ctx.restore();
+    }
+    if (hurt?.fade > 0) {
+      // Broken contact marks point toward the actual source, never a new hazard circle.
+      ctx.save(); ctx.translate(p.x, p.y - 27);
+      ctx.globalAlpha = hurt.fade;
+      ctx.strokeStyle = '#ffd4bb'; ctx.lineWidth = 3;
+      ctx.fillStyle = '#ed795f';
+      const angles = hurt.angle === null ? [-Math.PI / 2, 0, Math.PI / 2, Math.PI] : [hurt.angle - .3, hurt.angle, hurt.angle + .3];
+      const reach = reduced.matches ? 36 : 31 + 12 * (1 - hurt.fade);
+      for (const angle of angles) {
+        ctx.save(); ctx.rotate(angle); ctx.beginPath();
+        ctx.moveTo(reach - 8, 0); ctx.lineTo(reach + 6, -4); ctx.lineTo(reach + 4, 4); ctx.closePath();
+        ctx.stroke(); ctx.fill(); ctx.restore();
+      }
       ctx.restore();
     }
     drawEnemyWarnings(ctx, game, reduced.matches);

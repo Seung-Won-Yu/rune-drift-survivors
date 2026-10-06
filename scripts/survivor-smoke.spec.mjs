@@ -596,3 +596,66 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844}]) test(`el
   await page.getByRole('button',{name:'계속하기'}).click();
   await expect.poll(async()=>(await snapshot(page)).eliteFinish).toBe(null);
 });
+
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568}]) test(`player damage direction, loss trail and recovery remain readable at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);
+  await scenario(page,'player-hurt');
+  await expect(page.locator('#hero-name')).toHaveText('−8 · 접촉');
+  expect((await snapshot(page)).hurtFeedback.pose.x).toBeGreaterThan(0);
+  expect((await snapshot(page)).player.hp).toBe(92);
+  await expect(page.locator('#hp-loss')).toHaveAttribute('style',/100%/);
+  await page.locator('#overlay').evaluate(el=>{el.style.visibility='hidden';});
+  await page.screenshot({path:`output/playwright/survivor/hurt-${viewport.width}.png`});
+  const state=await snapshot(page);await page.waitForTimeout(150);
+  expect((await snapshot(page)).hurtFeedback).toEqual(state.hurtFeedback);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  expect((await snapshot(page)).hurtFeedback.pose).toEqual({});
+  await expect(page.locator('#hp-loss')).toHaveAttribute('style',/92%/);
+  await page.screenshot({path:`output/playwright/survivor/hurt-reduced-${viewport.width}.png`});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.locator('#overlay').evaluate(el=>{el.style.visibility='';});
+  await page.getByRole('button',{name:'전투 계속하기'}).click();
+  await page.keyboard.down('d');
+  await expect.poll(async()=>(await snapshot(page)).player.x).toBeGreaterThan(35);
+  await page.keyboard.up('d');
+  await expect.poll(async()=>(await snapshot(page)).hurtFeedback).toBeNull();
+  await expect(page.locator('#hero-name')).toHaveText('잿빛 검사');
+  await scenario(page,'combat');expect((await snapshot(page)).player.impact).toBeNull();
+});
+
+test('hurt sound cuts through foreground cooldown and briefly reserves contact audio',async({page})=>{
+  await page.getByRole('button',{name:'숲에 들어가기'}).click();
+  await page.getByRole('button',{name:'일시정지',exact:true}).click();
+  const record=await page.evaluate(async()=>{
+    const {createAudio}=await import('/src/survivor/audio.js');
+    const notes=[];const original=AudioParam.prototype.setValueAtTime;
+    AudioParam.prototype.setValueAtTime=function(value,...args){notes.push(value);return original.call(this,value,...args);};
+    const audio=createAudio();audio.unlock();
+    for(let i=0;i<20&&audio.state()!=='running';i++)await new Promise(r=>setTimeout(r,20));
+    audio.play('level');audio.play('hurt');audio.play('blade-impact');
+    const immediate=[...notes];
+    await new Promise(r=>setTimeout(r,220));audio.play('blade-impact');
+    const resumed=[...notes];audio.suspend();
+    AudioParam.prototype.setValueAtTime=original;
+    return {immediate,resumed};
+  });
+  expect(record.immediate).toContain(145);expect(record.immediate).toContain(72);
+  expect(record.immediate).not.toContain(150);expect(record.resumed).toContain(150);
+});
+
+test('long player damage labels fit the narrow HUD',async({page})=>{
+  await page.setViewportSize({width:320,height:568});
+  await scenario(page,'enemy-hound');
+  await page.waitForFunction(()=>window.__ASH_QA__.snapshot().hurtFeedback?.source==='hunt');
+  await page.getByRole('button',{name:'일시정지',exact:true}).click();
+  await expect(page.locator('#hero-name')).toHaveText('−12 · 사냥개 돌진');
+  const fits=await page.evaluate(()=>{
+    const text=document.querySelector('#hero-name').getBoundingClientRect();
+    const level=document.querySelector('#level-badge').getBoundingClientRect();
+    const pocket=document.querySelector('.health-pocket').getBoundingClientRect();
+    return text.right<=level.left&&level.right<=pocket.right;
+  });
+  expect(fits).toBe(true);
+  await page.locator('#overlay').evaluate(el=>{el.style.visibility='hidden';});
+  await page.screenshot({path:'output/playwright/survivor/hurt-hound-320.png'});
+});

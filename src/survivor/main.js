@@ -1,4 +1,4 @@
-import { attackPose, isEvolvedWeapon } from './impact.js';
+import { attackPose, isEvolvedWeapon, hurtFeedback } from './impact.js';
 import { GIANT, waveAt } from './enemies.js';
 import { canEquipKeepsake } from './journey.js';
 import { specializationFor, RELICS } from './expansion.js';
@@ -256,9 +256,13 @@ function updateHud() {
   $('recovery-hint').hidden = !needsRecovery || game.phase !== 'playing';
   $('recovery-hint').textContent = recovery ? `회복 열매 +${RECOVERY.amount} · ${recovery.direction}으로 이동` : '체력 위험 · 무리의 가장자리로 빠져나오세요';
   const p = game.player;
-  $('hero-name').textContent = getCharacter(game.characterId).name;
+  const hurt = hurtFeedback(game, matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const damage = hurt ? Math.round(hurt.amount * 10) / 10 : 0;
+  $('hero-name').textContent = hurt ? `−${damage} · ${hurt.label}` : getCharacter(game.characterId).name;
+  $('hero-name').classList.toggle('is-hurt', !!hurt);
   $('hp-text').textContent = `${Math.ceil(p.hp)} / ${p.maxHp}`;
   $('hp-bar').firstElementChild.style.width = `${p.hp / p.maxHp * 100}%`;
+  $('hp-loss').style.width = `${(hurt?.trailHp ?? p.hp) / p.maxHp * 100}%`;
   $('hp-bar').classList.toggle('is-low', p.hp / p.maxHp < .3);
   $('hp-bar').setAttribute('aria-valuenow', String(Math.round(p.hp / p.maxHp * 100)));
   $('hp-bar').setAttribute('aria-valuetext', `${Math.ceil(p.hp)} / ${p.maxHp}`);
@@ -448,6 +452,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       effects: game.effects.map(e => e.kind),
       eliteFinish: game.eliteFinish ? { ...game.eliteFinish } : null,
       attackPose: attackPose(game, matchMedia('(prefers-reduced-motion: reduce)').matches),
+      hurtFeedback: hurtFeedback(game, matchMedia('(prefers-reduced-motion: reduce)').matches),
       impacts: game.enemies.filter(e => e.impact && game.time - e.impact.at < .18).map(e => ({ id: e.id, ...e.impact })),
       level: game.level,
       xp: game.xp,
@@ -471,7 +476,14 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name.startsWith('attack-pose-')) {
+      if (name === 'player-hurt' || name === 'player-hurt-lethal') {
+        game.ranks.sword = 0; game.player.invincible = 0;
+        if (name.endsWith('-lethal')) game.player.hp = 3;
+        const e = spawnEnemy(game, 0, false, {x:-20,y:0}); e.speed = 0;
+        updateGame(game, 1/60);
+        game.enemies = [];
+        if (game.phase !== 'ended') game.phase = 'paused';
+      } else if (name.startsWith('attack-pose-')) {
         const stage = name.slice(12);
         game.swordClock = 0; game.player.invincible = 0;
         const e = spawnEnemy(game, 0, false, {x:65, y:0});e.speed=0;e.hp=999;

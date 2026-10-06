@@ -98,6 +98,21 @@ button:focus-visible {
 .health i {
   width: 100%;
   background: #df977f;
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 1;
+  transition: none;
+}
+.health {
+  position: relative;
+}
+.health #hp-loss {
+  z-index: 0;
+  background: #ffe2b4;
+}
+.health-meta small.is-hurt {
+  color: #ffd0b9;
+  font-weight: 700;
 }
 .health.is-low i {
   background: #fb7965;

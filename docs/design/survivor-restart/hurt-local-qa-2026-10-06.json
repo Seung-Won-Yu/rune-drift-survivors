@@ -1,0 +1,46 @@
+{
+  "core": 82,
+  "browserFull": 66,
+  "additionalLongLabel": 1,
+  "production": "passed",
+  "combatParity": {
+    "baseline": "f142c74",
+    "cases": 18,
+    "equal": true
+  },
+  "stress": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "frames": 721,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "frames": 721,
+      "elapsed": 12016.3,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    }
+  ]
+}
