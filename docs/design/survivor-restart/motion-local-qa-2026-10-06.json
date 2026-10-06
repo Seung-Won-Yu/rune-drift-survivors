@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-06",
+  "core": {
+    "tests": 101,
+    "passed": 101,
+    "exitCode": 0
+  },
+  "browser": {
+    "tests": 86,
+    "passed": 86,
+    "exitCode": 0
+  },
+  "newChecks": {
+    "core": 3,
+    "browser": 5
+  },
+  "regressionWitness": {
+    "baselineCommit": "ee45b6f979497921e19bf8bd2bc0ec870a4b7215",
+    "tests": 5,
+    "baselineFailures": 5,
+    "currentPassed": 5
+  },
+  "stress": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "frames": 721,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    }
+  ],
+  "normalRouteParity": {
+    "records": 18,
+    "baseline": "choices-balance-2026-10-06.jsonl",
+    "identical": true,
+    "sha256": "cf3f6dd39bb53039c3f64157642a63e0e7a74766f150bc985c269c224683791c"
+  },
+  "production": {
+    "base": "/rune-drift-survivors/",
+    "loadedAssets": [
+      "hero-ember.png",
+      "hero-ash.png",
+      "hero-grove.png",
+      "enemies.png",
+      "ash-sovereign.png"
+    ],
+    "qaGlobal": "absent",
+    "startAndPause": "passed",
+    "failures": [],
+    "errors": []
+  },
+  "limits": "Automated routes and viewport emulation do not establish human fun, replay intent, iOS Safari or physical mobile performance.",
+  "originalArtSha256": {
+    "hero-ash.png": "295796536c55e2fa8ce0237659ba95a36c8cd790673da0554e65ad069b5c732b",
+    "hero-ember.png": "6f21fba734bc3913d58aba117af96b54836ca27e2e5c3474fde38101f7edc574",
+    "hero-grove.png": "ce6771f6db0898efa13c4719ac76f91d73e4dc75534f0fdc4bbdd6163d6be5ae",
+    "enemies.png": "282c1a768205914c4315919f9622cb2febeec1bf56eba32ceabdc92b116eb2e4",
+    "ash-sovereign.png": "13dd78999bd3107bf148f310709a2541ae6e9f7e2ea3e224def786dc68abbb6b"
+  },
+  "fullRun": {
+    "browser": "Playwright Chromium",
+    "tests": 3,
+    "passed": 3,
+    "exitCode": 0,
+    "record": "motion-fullrun-2026-10-06.json",
+    "normalExit": true
+  }
+}

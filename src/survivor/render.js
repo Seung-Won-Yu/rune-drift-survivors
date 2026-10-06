@@ -1,5 +1,6 @@
 import { impactPose, attackPose, hurtFeedback } from './impact.js';
-import { GIANT, HOUND } from './enemies.js';
+import { HOUND, GIANT } from './enemies.js';
+import { heroGait, enemyMotion } from './motion.js';
 import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
 import { ENCOUNTERS } from './encounters.js';
 import { orbitPositions, stats, SLAM } from './game.js';
@@ -130,6 +131,34 @@ export function createRenderer(canvas, art) {
     ctx.ellipse(x, y, rx, ry, 0, 0, 7);
     ctx.fill();
   }
+  const heroFrames = new Map(Object.values(art.heroes).map(image => [image, new Map()]));
+  function heroFrame(image, col, row, sx, sy, sw, ch, cw, size) {
+    const frames = heroFrames.get(image), key = `${row}:${col}`;
+    if (frames.has(key)) return frames.get(key);
+    const frame = document.createElement('canvas');
+    frame.width = Math.ceil(sw / cw * size * 3); frame.height = Math.ceil(ch / cw * size * 3);
+    const ink = frame.getContext('2d', { willReadFrequently: true });
+    ink.imageSmoothingQuality = 'high'; ink.drawImage(image, sx, sy, sw, ch, 0, 0, frame.width, frame.height);
+    // Align the last solid row to the world foot point; ignore isolated alpha fringes.
+    const pixels = ink.getImageData(0, 0, frame.width, frame.height).data;
+    let foot = frame.height - 1;
+    for (; foot > 0; foot--) {
+      let solid = 0;
+      for (let x = 0; x < frame.width; x++) if (pixels[(foot * frame.width + x) * 4 + 3] >= 128) solid++;
+      if (solid >= 3) break;
+    }
+    const outline = document.createElement('canvas');
+    outline.width = frame.width + 18; outline.height = frame.height + 18;
+    const border = outline.getContext('2d');
+    for (const [radius, color] of [[9, '#10251f'], [4, '#f2dcb0']]) {
+      const mask = document.createElement('canvas'); mask.width = outline.width; mask.height = outline.height;
+      const edge = mask.getContext('2d');
+      for (let i = 0; i < 8; i++) edge.drawImage(frame, 9 + Math.cos(i * Math.PI / 4) * radius, 9 + Math.sin(i * Math.PI / 4) * radius);
+      edge.globalCompositeOperation = 'source-in'; edge.fillStyle = color; edge.fillRect(0, 0, mask.width, mask.height);
+      border.drawImage(mask, 0, 0);
+    }
+    const cached = { frame, outline, foot }; frames.set(key, cached); return cached;
+  }
   function sprite(image, col, row, rows, x, y, size, flip = false, flash = false, attack = false, pose = {}) {
     const cw = image.naturalWidth / 4,
       sy = pose.rows ? pose.rows[row] : row * image.naturalHeight / rows,
@@ -138,18 +167,75 @@ export function createRenderer(canvas, art) {
     const sx = edges ? edges[col] : col * cw,
       sw = edges ? edges[col + 1] - sx : cw,
       drawHeight = pose.proportional ? size * ch / cw : size;
+    const hero = heroFrames.has(image) ? heroFrame(image, col, row, sx, sy, sw, ch, cw, size) : null;
     ctx.save();
     ctx.translate(x + (pose.x || 0), y + (pose.y || 0));
     ctx.scale(flip ? -1 : 1, 1);
     ctx.rotate(pose.tilt || 0);
     ctx.scale(pose.sx || 1, pose.sy || 1);
     const cached = image === art.enemies && !edges && !pose.rows ? enemyFrames.get(`${row}:${col}:${size}:${flash}`) : null;
-    if (cached) ctx.drawImage(cached, -size * .48, -drawHeight * (pose.anchor ?? .89), size, drawHeight);
+    if (hero) {
+      const drawX = -size * .48 + (sx - col * cw) * size / cw, drawY = -hero.foot / 3;
+      ctx.drawImage(hero.outline, drawX - 3, drawY - 3, hero.outline.width / 3, hero.outline.height / 3);
+      if (flash) ctx.drawImage(hitArt.get(image), sx, sy, sw, ch, drawX, drawY, hero.frame.width / 3, hero.frame.height / 3);
+      else ctx.drawImage(hero.frame, drawX, drawY, hero.frame.width / 3, hero.frame.height / 3);
+    } else if (cached) ctx.drawImage(cached, -size * .48, -drawHeight * (pose.anchor ?? .89), size, drawHeight);
     else {
       if (flash) ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(flash ? hitArt.get(image) : image, sx, sy, sw, ch, -size * .48 + (sx - col * cw) * size / cw, -drawHeight * (pose.anchor ?? .89), sw / cw * size, drawHeight);
     }
     ctx.restore();
+  }
+  function drawPlayer(game, hurt) {
+    const p = game.player;
+    shadow(p.x, p.y, 20, 7);
+    ctx.strokeStyle = '#b7e5c887';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y + 1, 19, 8, 0, 0, 7);
+    ctx.stroke();
+    let row = 0,
+      frame = p.moving ? Math.floor(p.walk * 7) % 4 : 0;
+    if (p.cast > 0) {
+      row = 1;
+      frame = p.cast > .3 ? 0 : p.cast > .2 ? 1 : p.cast > .1 ? 2 : 3;
+    }
+    if (game.swing) {
+      row = 1;
+      const age = game.swing.age;
+      frame = age < .18 ? 0 : age < .26 ? 1 : age < .4 ? 2 : 3;
+    }
+    let pose = row === 0 ? heroGait(game, reduced.matches) : attackPose(game, reduced.matches);
+    if (p.hurt > 0) {
+      row = 2;
+      frame = p.hurt > .12 ? 1 : 0;
+      pose = hurt?.pose ?? {};
+    }
+    if (game.outcome === 'defeat') {
+      row = 2;
+      frame = (p.deathAge ?? 0) < .3 ? 2 : 3;
+      pose = {};
+    }
+    const atlas = game.characterId === 'ash' ? {
+      rows: [0, 440, 835, 1254],
+      edges: row === 1 ? [0, 307, 634, 962, 1254] : undefined,
+    } : game.characterId === 'ember' ? {
+      rows: [0, 440, 835, 1254],
+      edges: row === 1 ? [0, 313, 627, 964, 1254] : undefined,
+    } : {
+      rows: [0, 480, 860, 1254],
+    };
+    // Keep the player visible during escape; protection is a steady foot marker.
+    if (p.invincible > 0 && game.phase !== 'ended') {
+      ctx.strokeStyle = '#ffe5bd'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, 23, 10, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    sprite(art.heroes[game.characterId], frame, row, 3, p.x, p.y, 88, p.facing < 0, p.hurt > 0, false, {
+      ...pose,
+      ...atlas,
+      proportional: true
+    });
+    ctx.globalAlpha = 1;
   }
   function render(game, now = 0) {
     if (width !== canvas.clientWidth || height !== canvas.clientHeight) resize();
@@ -166,6 +252,10 @@ export function createRenderer(canvas, art) {
       viewH = height / scale,
       left = p.x - viewW / 2,
       top = p.y - viewH * .53;
+    const crowded = game.enemies.filter(e => (e.x - p.x) ** 2 + (e.y - p.y) ** 2 < 240 ** 2).length >= 12;
+    // Keep every hit and warning; only floating number clutter is limited in a crowd.
+    const damageLabels = crowded ? new Set(game.effects.filter(e => e.kind === 'damage')
+      .sort((a, b) => (a.x - p.x) ** 2 + (a.y - p.y) ** 2 - ((b.x - p.x) ** 2 + (b.y - p.y) ** 2)).slice(0, 8)) : null;
     ctx.fillStyle = pattern;
     ctx.fillRect(left - 50, top - 50, viewW + 100, viewH + 100);
     // Low-contrast stepping stones and flower clusters repeat in world coordinates.
@@ -307,107 +397,6 @@ export function createRenderer(canvas, art) {
       });
       ctx.globalAlpha = 1;
     }
-    for (const boss of game.enemies.filter(e => e.boss)) {
-      const pattern = boss.pattern;
-      if (boss.entrance > 0) {
-        ctx.strokeStyle = '#e9bd78';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(boss.x, boss.y, 55 + boss.entrance / BOSS.entrance * 22, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      if (!pattern || pattern.age >= BOSS.windup) continue;
-      const progress = pattern.age / BOSS.windup;
-      ctx.save();
-      ctx.translate(pattern.x, pattern.y);
-      ctx.rotate(pattern.angle);
-      if (pattern.kind === 'charge') {
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#cf70443b';
-        ctx.lineWidth = BOSS.chargeWidth;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(BOSS.chargeLength, 0);
-        ctx.stroke();
-        ctx.strokeStyle = '#f4c59aaa';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, -BOSS.chargeWidth / 2);
-        ctx.lineTo(BOSS.chargeLength, -BOSS.chargeWidth / 2);
-        ctx.moveTo(0, BOSS.chargeWidth / 2);
-        ctx.lineTo(BOSS.chargeLength, BOSS.chargeWidth / 2);
-        ctx.stroke();
-        ctx.setLineDash([8, 9]);
-        ctx.strokeStyle = '#ffb57a';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(BOSS.chargeLength * progress, 0);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#ffe4bc';
-        ctx.beginPath();
-        ctx.moveTo(BOSS.chargeLength + 10, 0);
-        ctx.lineTo(BOSS.chargeLength - 8, -9);
-        ctx.lineTo(BOSS.chargeLength - 8, 9);
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        const count = boss.enraged ? 11 : 7;
-        ctx.strokeStyle = '#eaa38980';
-        ctx.lineWidth = 2;
-        for (let i = 0; i < count; i++) {
-          const angle = (i - (count - 1) / 2) * .24;
-          ctx.beginPath();
-          ctx.moveTo(Math.cos(angle) * 45, Math.sin(angle) * 45);
-          ctx.lineTo(Math.cos(angle) * (80 + progress * 70), Math.sin(angle) * (80 + progress * 70));
-          ctx.stroke();
-        }
-      }
-      ctx.restore();
-    }
-    // The target stays fixed after the windup begins. This circle shares the damage radius.
-    for (const enemy of game.enemies) {
-      if (!enemy.slam || enemy.slam.hit) continue;
-      const slam = enemy.slam,
-        rule = enemy.elite ? SLAM : GIANT,
-        progress = Math.min(1, slam.age / rule.windup);
-      ctx.fillStyle = '#d8684430';
-      ctx.strokeStyle = '#ffc39b';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(slam.x, slam.y, rule.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.strokeStyle = '#ff9869';
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.arc(slam.x, slam.y, rule.radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([5, 5]);
-      ctx.strokeStyle = '#eebda280';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(enemy.x, enemy.y);
-      ctx.lineTo(slam.x, slam.y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.font = `bold ${scale < 1 ? 17 : 12}px system-ui`;
-      ctx.textAlign = 'center';
-      ctx.strokeStyle = '#281c18';
-      ctx.lineWidth = 4;
-      ctx.strokeText('내려찍기', slam.x, slam.y - rule.radius - 12);
-      ctx.fillStyle = '#ffe0c0';
-      ctx.fillText('내려찍기', slam.x, slam.y - rule.radius - 12);
-      ctx.beginPath();
-      ctx.moveTo(slam.x - 6, slam.y - 6);
-      ctx.lineTo(slam.x + 6, slam.y + 6);
-      ctx.moveTo(slam.x + 6, slam.y - 6);
-      ctx.lineTo(slam.x - 6, slam.y + 6);
-      ctx.strokeStyle = '#ffd5ab';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
     if (game.swing && !game.swing.hit) {
       const s = stats(game),
         progress = game.swing.age / .18;
@@ -421,131 +410,66 @@ export function createRenderer(canvas, art) {
       ctx.stroke();
       ctx.restore();
     }
-    const actors = [...game.enemies.map(e => ({
-      ...e,
-      actor: 'enemy'
-    })), {
-      ...p,
-      actor: 'player'
-    }].sort((a, b) => a.y - b.y);
+    const actors = [...game.enemies].sort((a, b) => a.y - b.y);
     for (const a of actors) {
       if (Math.abs(a.x - p.x) > viewW / 2 + 120 || Math.abs(a.y - p.y) > viewH / 2 + 150) continue;
-      if (a.actor === 'enemy') {
-        shadow(a.x, a.y + 2, a.radius * 1.15, a.radius * .43);
-        if (a.burn && a.burn.until > game.time) {
-          ctx.fillStyle='#ffad62';
-          for(let i=0;i<3;i++){ const lift=reduced.matches?0:Math.sin(game.time*8+i)*3; ctx.beginPath();ctx.moveTo(a.x-12+i*12,a.y-30);ctx.lineTo(a.x-8+i*12,a.y-44-lift);ctx.lineTo(a.x-4+i*12,a.y-30);ctx.fill(); }
-        }
-        if (a.slowUntil > game.time) { ctx.strokeStyle='#afdfff';ctx.lineWidth=2;ctx.setLineDash([3,5]);ctx.beginPath();ctx.ellipse(a.x,a.y+2,a.radius+6,8,0,0,7);ctx.stroke();ctx.setLineDash([]); }
-        if (a.boss) {
-          const pattern = a.pattern,
-            row = pattern ? 1 : 0;
-          const frame = pattern ? pattern.age < BOSS.windup * .5 ? 0 : pattern.age < BOSS.windup ? 1 : pattern.age < BOSS.windup + .45 ? 2 : 3 : Math.floor(game.time * 4) % 4;
-          ctx.strokeStyle = a.enraged ? '#ed8979' : '#e9bd78aa';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.ellipse(a.x, a.y, a.radius + 9, 19, 0, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.globalAlpha = a.entrance > 0 ? .45 + .55 * (1 - a.entrance / BOSS.entrance) : 1;
-          sprite(art.boss, frame, row, 2, a.x, a.y, a.size, pattern ? Math.cos(pattern.angle) < 0 : a.x > p.x, a.hit > 0, false, {
-            anchor: row ? .94 : .95,
-            edges: row ? [0, 443.5, 887, 1364, 1774] : undefined
-          });
-          ctx.globalAlpha = 1;
-          continue;
-        }
-        const near = Math.hypot(a.x - p.x, a.y - p.y) < a.radius + 53;
-        if (a.elite || near) {
-          ctx.strokeStyle = a.elite ? '#f3b66eaa' : '#ec987888';
-          ctx.lineWidth = a.elite ? 2 : 1.5;
-          ctx.setLineDash(a.elite ? [] : [4, 5]);
-          ctx.beginPath();
-          ctx.ellipse(a.x, a.y + 1, a.radius + 5, (a.radius + 5) * .6, 0, 0, 7);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-        const frame = a.hunt ? (a.hunt.age < HOUND.windup ? 0 : a.hunt.age < HOUND.windup + HOUND.duration ? 2 : 3) : a.slam ? a.slam.hit ? 2 : 0 : game.phase === 'ready' ? 0 : Math.floor(game.time * (a.type === 1 ? 9 : 5) + a.id) % 4;
-        const slamPose = a.hunt && !reduced.matches ? (a.hunt.age < HOUND.windup ? {sx:1.12,sy:.82,tilt:-.06} : a.hunt.age < HOUND.windup+HOUND.duration ? {sx:1.2,sy:.86} : {sy:.94}) : a.slam && !reduced.matches ? a.slam.hit ? {
-          sx: 1.1,
-          sy: .9
-        } : {
-          sy: 1.07,
-          tilt: -.08
-        } : {};
-        sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.hunt ? Math.cos(a.hunt.angle) < 0 : a.x > p.x, a.hit > 0, false, { ...slamPose, ...impactPose(a, game.time, reduced.matches) });
-        if (a.type === 2 && a.slam && !a.slam.hit) {
-          const lift = reduced.matches ? 1 : Math.min(1,a.slam.age/(a.slam.windup ?? SLAM.windup));
-          ctx.lineCap='round';
-          for (const side of [-1,1]) {
-            ctx.beginPath();ctx.moveTo(a.x+side*15,a.y-26);ctx.lineTo(a.x+side*27,a.y-32-lift*16);ctx.lineTo(a.x+side*23,a.y-40-lift*22);
-            ctx.strokeStyle='#172c22';ctx.lineWidth=9;ctx.stroke();ctx.strokeStyle='#7d8150';ctx.lineWidth=5;ctx.stroke();
-          }
-        }
-        if (a.elite || a.hp < a.maxHp * .9) {
-          const bar = a.elite ? 46 : 25;
-          ctx.fillStyle = '#16221bdd';
-          ctx.fillRect(a.x - bar / 2, a.y - a.size * .69, bar, 3);
-          ctx.fillStyle = a.elite ? '#e3ac61' : '#d9a487';
-          ctx.fillRect(a.x - bar / 2, a.y - a.size * .69, bar * Math.max(0, a.hp / a.maxHp), 3);
-        }
-        if (a.elite) {
-          ctx.font = 'bold 9px system-ui';
-          ctx.textAlign = 'center';
-          ctx.fillStyle = '#ffd994';
-          ctx.fillText('정예', a.x, a.y - a.size * .69 - 7);
-        }
-      } else {
-        shadow(p.x, p.y, 20, 7);
-        ctx.strokeStyle = '#b7e5c887';
-        ctx.lineWidth = 1.5;
+      const distanceSq = (a.x - p.x) ** 2 + (a.y - p.y) ** 2;
+      shadow(a.x, a.y + 2, a.radius * 1.15, a.radius * .43);
+      if (a.burn && a.burn.until > game.time) {
+        ctx.fillStyle='#ffad62';
+        for(const side of crowded && distanceSq > 160 ** 2 ? [0] : [-1,0,1]){ const lift=reduced.matches?0:Math.sin(game.time*8+side)*3; ctx.beginPath();ctx.moveTo(a.x-4+side*12,a.y-30);ctx.lineTo(a.x+side*12,a.y-44-lift);ctx.lineTo(a.x+4+side*12,a.y-30);ctx.fill(); }
+      }
+      if (a.slowUntil > game.time) { ctx.strokeStyle='#afdfff';ctx.lineWidth=2;ctx.setLineDash([3,5]);ctx.beginPath();ctx.ellipse(a.x,a.y+2,a.radius+6,8,0,0,7);ctx.stroke();ctx.setLineDash([]); }
+      if (a.boss) {
+        const pattern = a.pattern,
+          row = pattern ? 1 : 0;
+        const frame = pattern ? pattern.age < BOSS.windup * .5 ? 0 : pattern.age < BOSS.windup ? 1 : pattern.age < BOSS.windup + .45 ? 2 : 3 : Math.floor(game.time * 4) % 4;
+        ctx.strokeStyle = a.enraged ? '#ed8979' : '#e9bd78aa';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.ellipse(p.x, p.y + 1, 19, 8, 0, 0, 7);
+        ctx.ellipse(a.x, a.y, a.radius + 9, 19, 0, 0, Math.PI * 2);
         ctx.stroke();
-        let row = 0,
-          frame = p.moving ? Math.floor(p.walk * 7) % 4 : 0;
-        if (p.cast > 0) {
-          row = 1;
-          frame = p.cast > .3 ? 0 : p.cast > .2 ? 1 : p.cast > .1 ? 2 : 3;
-        }
-        if (game.swing) {
-          row = 1;
-          const age = game.swing.age;
-          frame = age < .18 ? 0 : age < .26 ? 1 : age < .4 ? 2 : 3;
-        }
-        let pose = attackPose(game, reduced.matches);
-        if (p.hurt > 0) {
-          row = 2;
-          frame = p.hurt > .12 ? 1 : 0;
-          pose = hurt?.pose ?? {};
-        }
-        if (game.outcome === 'defeat') {
-          row = 2;
-          frame = (p.deathAge ?? 0) < .3 ? 2 : 3;
-          pose = {};
-        }
-        const atlas = game.characterId === 'ash' ? {
-          rows: [0, 440, 835, 1254],
-          edges: row === 1 ? [0, 307, 634, 962, 1254] : undefined,
-          anchor: row === 0 ? .968 : row === 1 ? .912 : .81
-        } : game.characterId === 'ember' ? {
-          rows: [0, 440, 835, 1254],
-          edges: row === 1 ? [0, 313, 627, 964, 1254] : undefined,
-          anchor: row === 0 ? .95 : row === 1 ? .93 : .88
-        } : {
-          rows: [0, 480, 860, 1254],
-          anchor: row === 0 ? .94 : row === 1 ? .93 : .88
-        };
-        // Keep the player visible during escape; protection is a steady foot marker.
-        if (p.invincible > 0 && game.phase !== 'ended') {
-          ctx.strokeStyle = '#ffe5bd'; ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, 23, 10, 0, 0, Math.PI * 2); ctx.stroke();
-        }
-        sprite(art.heroes[game.characterId], frame, row, 3, p.x, p.y, 88, p.facing < 0, p.hurt > 0, false, {
-          ...pose,
-          ...atlas,
-          proportional: true
+        ctx.globalAlpha = a.entrance > 0 ? .45 + .55 * (1 - a.entrance / BOSS.entrance) : 1;
+        sprite(art.boss, frame, row, 2, a.x, a.y, a.size, pattern ? Math.cos(pattern.angle) < 0 : a.x > p.x, a.hit > 0, false, {
+          anchor: row ? .94 : .95,
+          edges: row ? [0, 443.5, 887, 1364, 1774] : undefined
         });
         ctx.globalAlpha = 1;
+        continue;
+      }
+      const near = distanceSq < (a.radius + 53) ** 2;
+      if (a.elite || near) {
+        ctx.strokeStyle = a.elite ? '#f3b66eaa' : '#ec987888';
+        ctx.lineWidth = a.elite ? 2 : 1.5;
+        ctx.setLineDash(a.elite ? [] : [4, 5]);
+        ctx.beginPath();
+        ctx.ellipse(a.x, a.y + 1, a.radius + 5, (a.radius + 5) * .6, 0, 0, 7);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      const frame = a.hunt ? (a.hunt.age < HOUND.windup ? 0 : a.hunt.age < HOUND.windup + HOUND.duration ? 2 : 3) : a.slam ? a.slam.hit ? 2 : 0 : game.phase === 'ready' ? 0 : Math.floor(game.time * (a.type === 1 ? 9 : 5) + a.id) % 4;
+      const slamPose = enemyMotion(a, game.time, reduced.matches);
+      sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.hunt ? Math.cos(a.hunt.angle) < 0 : a.x > p.x, a.hit > 0, false, { ...slamPose, ...impactPose(a, game.time, reduced.matches) });
+      if (a.type === 2 && a.slam && !a.slam.hit) {
+        const lift = reduced.matches ? 1 : Math.min(1,a.slam.age/(a.elite ? SLAM.windup : GIANT.windup));
+        ctx.lineCap='round';
+        for (const side of [-1,1]) {
+          ctx.beginPath();ctx.moveTo(a.x+side*15,a.y-26);ctx.lineTo(a.x+side*27,a.y-32-lift*16);ctx.lineTo(a.x+side*23,a.y-40-lift*22);
+          ctx.strokeStyle='#172c22';ctx.lineWidth=9;ctx.stroke();ctx.strokeStyle='#7d8150';ctx.lineWidth=5;ctx.stroke();
+        }
+      }
+      if (a.elite || a.hp < a.maxHp * .9) {
+        const bar = a.elite ? 46 : 25;
+        ctx.fillStyle = '#16221bdd';
+        ctx.fillRect(a.x - bar / 2, a.y - a.size * .69, bar, 3);
+        ctx.fillStyle = a.elite ? '#e3ac61' : '#d9a487';
+        ctx.fillRect(a.x - bar / 2, a.y - a.size * .69, bar * Math.max(0, a.hp / a.maxHp), 3);
+      }
+      if (a.elite) {
+        ctx.font = 'bold 9px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ffd994';
+        ctx.fillText('정예', a.x, a.y - a.size * .69 - 7);
       }
     }
     for (const shot of game.shots) {
@@ -597,6 +521,7 @@ export function createRenderer(canvas, art) {
       ctx.restore();
     }
     for (const e of game.effects) {
+      if (e.kind === 'damage' && damageLabels && !damageLabels.has(e)) continue;
       const progress = e.age / e.life;
       ctx.globalAlpha = 1 - progress;
       if (['sword-contact', 'ember-contact', 'orbit-contact'].includes(e.kind)) {
@@ -776,6 +701,8 @@ export function createRenderer(canvas, art) {
       ctx.fillStyle = '#ffe6b5'; ctx.fillText('정예 격파', 0, finish.labelY - finish.y);
       ctx.restore();
     }
+    // The companion is drawn once, above friendly effects and front-row enemies.
+    drawPlayer(game, hurt);
     if (hurt?.fade > 0) {
       // Broken contact marks point toward the actual source, never a new hazard circle.
       ctx.save(); ctx.translate(p.x, p.y - 27);
@@ -791,7 +718,7 @@ export function createRenderer(canvas, art) {
       }
       ctx.restore();
     }
-    drawEnemyWarnings(ctx, game, reduced.matches);
+    drawEnemyWarnings(ctx, game, reduced.matches, scale);
     // Enemy projectiles stay above decorative player effects and have an arrowhead silhouette.
     for (const thorn of game.thorns) {
       ctx.save();

@@ -6,6 +6,78 @@ test.afterEach(async({page})=>{expect(pageErrors.get(page)??[], 'browser runtime
 const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
+test.describe('rendered combat priorities',()=>{
+  test.use({deviceScaleFactor:2});
+  for(const viewport of [{width:1280,height:720},{width:320,height:740}]){
+    test(`player body survives front-row enemies and friendly effects at ${viewport.width}px`,async({page})=>{
+      await page.setViewportSize(viewport);
+      const result=await page.evaluate(async()=>{
+        const {createRenderer,loadArt}=await import('/src/survivor/render.js');
+        const {createGame,spawnEnemy}=await import('/src/survivor/game.js');
+        const canvas=document.createElement('canvas');canvas.style.cssText=`width:${innerWidth}px;height:${innerHeight}px;position:absolute;left:0;top:0`;
+        document.body.append(canvas);const renderer=createRenderer(canvas,await loadArt('/'));
+        const g=createGame(42);g.phase='paused';g.player.invincible=0;
+        const capture=()=>{const {scale}=renderer.render(g);const dpr=canvas.width/innerWidth;
+          return [...canvas.getContext('2d').getImageData(Math.round(canvas.width/2),Math.round(canvas.height*.53-65*scale*dpr),4,4).data];};
+        const clear=capture();const e=spawnEnemy(g,2,false,{x:0,y:12});e.speed=0;
+        g.effects.push({kind:'ember-burst',x:0,y:-65,range:90,age:.1,life:.4});
+        const before=JSON.stringify(g),overlap=capture();canvas.remove();
+        return {clear,overlap,unchanged:before===JSON.stringify(g)};
+      });
+      expect(result.overlap).toEqual(result.clear);expect(result.unchanged).toBe(true);
+    });
+    test(`all danger edges remain above occluding actors and effects at ${viewport.width}px`,async({page})=>{
+      await page.setViewportSize(viewport);
+      const checks=await page.evaluate(async()=>{
+        const {createRenderer,loadArt}=await import('/src/survivor/render.js');
+        const {createGame,spawnEnemy,spawnBoss,SLAM}=await import('/src/survivor/game.js');
+        const {GIANT,HOUND,SPORE}=await import('/src/survivor/enemies.js');const {BOSS}=await import('/src/survivor/boss.js');
+        const canvas=document.createElement('canvas');canvas.style.cssText=`width:${innerWidth}px;height:${innerHeight}px;position:absolute;left:0;top:0`;
+        document.body.append(canvas);const renderer=createRenderer(canvas,await loadArt('/')),ctx=canvas.getContext('2d'),checks=[];
+        for(const kind of ['giant','elite','spore','hound','charge','thorns']){
+          const g=createGame(42);g.phase='paused';g.player.invincible=0;let point;
+          if(kind==='giant'||kind==='elite'){
+            const rule=kind==='elite'?SLAM:GIANT,e=spawnEnemy(g,2,kind==='elite',{x:-140,y:-90});
+            e.slam={x:0,y:0,age:rule.windup*.65,hit:false};point={x:rule.radius,y:0};
+          }else if(kind==='spore'){g.spores=[{x:90,y:0,age:SPORE.windup*.65}];point={x:90+SPORE.radius,y:0};}
+          else if(kind==='hound'){
+            const e=spawnEnemy(g,1,false,{x:-140,y:-90});e.hunt={x:0,y:0,angle:0,age:HOUND.windup+.1};point={x:100,y:HOUND.width/2};
+          }else{
+            const boss=spawnBoss(g);Object.assign(boss,{x:-200,y:-150,entrance:0,pattern:{kind,x:0,y:0,angle:0,age:BOSS.windup*.65}});
+            point={x:100,y:kind==='charge'?BOSS.chargeWidth/2:0};
+          }
+          const patch=()=>{const {scale}=renderer.render(g),dpr=canvas.width/innerWidth;
+            return [...ctx.getImageData(Math.round(canvas.width/2+point.x*scale*dpr)-4,Math.round(canvas.height*.53+point.y*scale*dpr)-4,9,9).data];};
+          const clear=patch();let brightest=0;
+          for(let i=0;i<clear.length;i+=4)if(clear[i]+clear[i+1]+clear[i+2]>clear[brightest]+clear[brightest+1]+clear[brightest+2])brightest=i;
+          const e=spawnEnemy(g,2,false,{x:point.x,y:point.y+20});e.speed=0;
+          g.effects.push({kind:'ember-burst',...point,range:90,age:.1,life:.4});
+          const before=JSON.stringify(g),overlap=patch();
+          checks.push({kind,error:Math.max(...[0,1,2].map(c=>Math.abs(clear[brightest+c]-overlap[brightest+c]))),unchanged:before===JSON.stringify(g)});
+        }
+        canvas.remove();return checks;
+      });
+      for(const check of checks){expect(check.error,check.kind).toBeLessThanOrEqual(3);expect(check.unchanged,check.kind).toBe(true);}
+    });
+  }
+  test('crowd number budget preserves real effects and resumes the full readout in sparse combat',async({page})=>{
+    const result=await page.evaluate(async()=>{
+      const {createRenderer,loadArt}=await import('/src/survivor/render.js');const {createGame,spawnEnemy}=await import('/src/survivor/game.js');
+      const canvas=document.createElement('canvas');canvas.style.cssText='width:800px;height:680px;position:absolute;left:0;top:0';document.body.append(canvas);
+      const renderer=createRenderer(canvas,await loadArt('/')),ctx=canvas.getContext('2d'),draw=ctx.fillText.bind(ctx);let numbers=[];
+      ctx.fillText=(text,...args)=>{if(/^\d+$/.test(String(text)))numbers.push(Number(text));return draw(text,...args);};
+      const g=createGame(42);g.phase='paused';
+      for(let i=0;i<20;i++)g.effects.push({kind:'damage',x:i*4,y:0,text:i+1,tone:'#ffe0a0',age:.1,life:.55});
+      renderer.render(g);const sparse=[...numbers];numbers=[];
+      for(let i=0;i<12;i++)spawnEnemy(g,0,false,{x:i*3,y:80});
+      const before=JSON.stringify(g);renderer.render(g);const crowded=[...numbers],unchanged=before===JSON.stringify(g);
+      g.enemies=[];numbers=[];renderer.render(g);const restored=[...numbers];canvas.remove();return {sparse,crowded,restored,unchanged};
+    });
+    expect(result.sparse).toHaveLength(20);expect(result.crowded).toEqual([1,2,3,4,5,6,7,8]);
+    expect(result.restored).toEqual(result.sparse);expect(result.unchanged).toBe(true);
+  });
+});
+
 test.beforeEach(async ({ page }) => {
   const errors=[];pageErrors.set(page,errors);page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/survivor/?qa');

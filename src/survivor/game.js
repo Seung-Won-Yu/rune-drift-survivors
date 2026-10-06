@@ -826,7 +826,8 @@ export function updateGame(game, dt, input = {
   p.x += ix * s.speed * dt;
   p.y += iy * s.speed * dt;
   p.moving = Math.hypot(ix, iy) > .05;
-  if (p.moving) p.walk += dt;
+  // Animation follows travelled distance, including partial touch-stick input.
+  if (p.moving) p.walk += Math.hypot(ix, iy) * s.speed * dt / 168;
   if (Math.abs(ix) > .05 && !game.swing) p.facing = ix > 0 ? 1 : -1;
   p.invincible = Math.max(0, p.invincible - dt);
   p.hurt = Math.max(0, p.hurt - dt);

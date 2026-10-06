@@ -6,6 +6,43 @@ import { createGame, startGame, updateGame, spawnEnemy, chooseUpgrade, draftUpgr
 
 const playing=()=>{const g=createGame(42);startGame(g);g.spawnClock=999;return g;};
 const frames=(g,n,input)=>{for(let i=0;i<n;i++)updateGame(g,1/60,input);};
+test('walk animation follows real travel for analog input and companion speed without advancing while stopped',()=>{
+  for(const id of ['ash','ember','grove']){
+    const g=createGame(42,id);startGame(g);g.spawnClock=999;
+    frames(g,60,{x:.25,y:0});
+    assert.ok(Math.abs(g.player.x-stats(g).speed*.25)<.01);
+    assert.ok(Math.abs(g.player.walk-g.player.x/168)<1e-10);
+    const clock=g.player.walk;frames(g,30);assert.equal(g.player.walk,clock);
+    pauseGame(g);const before=JSON.stringify(g);frames(g,30,{x:1,y:1});assert.equal(JSON.stringify(g),before);
+  }
+});
+test('companion gait is bounded, presentation-only and yields to attacks, damage and reduced motion',async()=>{
+  const {heroGait}=await import('../src/survivor/motion.js');
+  const g=playing();g.player.moving=true;g.player.walk=1/7;
+  const before=JSON.stringify(g),pose=heroGait(g);assert.ok(pose.y<0 && pose.y>=-5);
+  assert.equal(JSON.stringify(g),before);assert.deepEqual(heroGait(g),pose);
+  g.characterId='grove';assert.ok(Math.abs(heroGait(g).y)<Math.abs(pose.y));
+  g.characterId='ember';assert.ok(Math.abs(heroGait(g).y)>Math.abs(pose.y));
+  assert.deepEqual(heroGait(g,true),{});
+  for(const state of [{moving:false},{hurt:.2},{cast:.3}]){Object.assign(g.player,{moving:true,hurt:0,cast:0},state);assert.deepEqual(heroGait(g),{});}
+  Object.assign(g.player,{moving:true,hurt:0,cast:0});g.swing={age:.1,angle:0};assert.deepEqual(heroGait(g),{});
+  g.swing=null;g.outcome='defeat';assert.deepEqual(heroGait(g),{});
+});
+test('enemy anticipation builds gradually, settles after attacks and never mutates a threat',async()=>{
+  const {enemyMotion}=await import('../src/survivor/motion.js');
+  const {HOUND,GIANT}=await import('../src/survivor/enemies.js');
+  for(const [kind,rule,elite] of [['hunt',HOUND,false],['slam',GIANT,false],['slam',SLAM,true]]){
+    const e={id:1,type:kind==='hunt'?1:2,speed:50,elite,[kind]:{age:rule.windup*.1,hit:false}};
+    const early=enemyMotion(e,0);e[kind].age=rule.windup*.9;
+    const before=JSON.stringify(e),late=enemyMotion(e,0);
+    assert.ok(Math.abs(late.sy-1)>Math.abs(early.sy-1));assert.equal(JSON.stringify(e),before);
+    assert.deepEqual(enemyMotion(e,0,true),{});
+    e[kind]={age:rule.windup+(rule.duration??0)+rule.recovery,hit:true};
+    assert.equal(enemyMotion(e,0).sy,1);
+  }
+  assert.deepEqual(enemyMotion({id:1,type:0,speed:0},12),{});
+  assert.deepEqual(enemyMotion({boss:true},12),{});
+});
 test('movement is diagonal-normalized and freezes on pause',()=>{const g=playing();frames(g,60,{x:1,y:1});assert.ok(Math.abs(Math.hypot(g.player.x,g.player.y)-168)<.01);pauseGame(g);const t=g.time;frames(g,60,{x:1,y:0});assert.equal(g.time,t);resumeGame(g);frames(g,1,{x:1,y:0});assert.ok(g.time>t);});
 test('sword anticipation precedes damage and kill produces collectable XP',()=>{const g=playing();const e=spawnEnemy(g,0,false,{x:65,y:0});e.speed=0;frames(g,15);assert.equal(g.kills,0);frames(g,14);assert.equal(g.kills,1);assert.equal(g.damageDealt.sword,15);assert.ok(g.gems.length||g.xp>0);frames(g,35,{x:1,y:0});assert.equal(g.xp,2);});
 test('contact invulnerability prevents overlapping enemies draining HP in one step',()=>{const g=playing();for(let i=0;i<6;i++)spawnEnemy(g,0,false,{x:0,y:0});frames(g,1);assert.equal(g.player.hp,92);frames(g,20);assert.equal(g.player.hp,92);});
