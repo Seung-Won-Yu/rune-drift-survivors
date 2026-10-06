@@ -926,7 +926,8 @@ export function updateGame(game, dt, input = {
       gem.y += dy / (d || 1) * step;
     }
     if (Math.hypot(p.x - gem.x, p.y - gem.y) < 16) {
-      game.xp += gem.value * keepsakeXpMultiplier(game);
+      // The 20% keepsake uses tenths; round accumulation so exact level thresholds stay exact.
+      game.xp = Math.round((game.xp + gem.value * keepsakeXpMultiplier(game)) * 10) / 10;
       if (game.relics.includes('dew')) {
         game.dewXp += gem.value;
         const charges = Math.floor(game.dewXp / 30);

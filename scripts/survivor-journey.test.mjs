@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createProfile, normalizeProfile, recordRun, loadProfile, saveProfile} from '../src/survivor/profile.js';
-import {createGame, stats, startGame, updateGame} from '../src/survivor/game.js';
+import {createGame, stats, startGame, updateGame, chooseUpgrade} from '../src/survivor/game.js';
 import {completedChallenges, canEquipKeepsake} from '../src/survivor/journey.js';
 const ended = id => Object.assign(createGame(42), {phase:'ended', outcome:'defeat', runId:id});
 test('old records retain earned branch/win rewards without inventing altar completion', () => {
@@ -58,6 +58,18 @@ test('early growth boosts real collected XP before 60 seconds, ends at the bound
  const fresh=createGame(44,'ash','bookmark');assert.equal(fresh.xp,0);assert.equal(fresh.time,0);assert.equal(fresh.player.hp,100);
  const paused=collect('bookmark',59.9);paused.phase='paused';const before={time:paused.time,xp:paused.xp};
  updateGame(paused,1);assert.equal(paused.time,before.time);assert.equal(paused.xp,before.xp);
+});
+test('growth reaches exact level thresholds for every order of the same collected XP', () => {
+ // 35 base XP becomes 42 XP: precisely enough for levels 2, 3 and 4 (8 + 15 + 19).
+ for(let i=0;i<17;i++) {
+  const values=Array(16).fill(2);values.splice(i,0,3);
+  const g=createGame(42,'ash','bookmark');startGame(g);g.spawnClock=999;g.nextElite=999;
+  for(const value of values) {
+   g.gems.push({x:0,y:0,value,age:0});updateGame(g,1/60);
+   if(g.phase==='upgrade')assert.ok(chooseUpgrade(g,g.choices[0]));
+  }
+  assert.equal(g.level,4,`three-point gem at position ${i}`);assert.equal(g.xp,0);
+ }
 });
 test('all starting tradeoffs affect real movement, health or XP attraction and never stack on restart', () => {
  for(const id of ['none','seed','ribbon','crown']) {
