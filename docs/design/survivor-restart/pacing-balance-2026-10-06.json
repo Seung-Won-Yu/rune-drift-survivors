@@ -1,0 +1,4687 @@
+{
+  "method": "Same six automated routes × seeds 12,42,99; normal rules, fixed 1/60 step. These are diagnostics, not human win rates.",
+  "before": [
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 10,
+          "kills": 28,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 9,
+          "kills": 70,
+          "level": 6,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 11,
+          "kills": 142,
+          "level": 9,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 24,
+          "kills": 228,
+          "level": 11,
+          "hp": 120,
+          "damage": 0
+        },
+        {
+          "time": 150,
+          "enemies": 17,
+          "kills": 343,
+          "level": 13,
+          "hp": 120,
+          "damage": 12
+        },
+        {
+          "time": 180,
+          "enemies": 20,
+          "kills": 461,
+          "level": 14,
+          "hp": 120,
+          "damage": 12
+        },
+        {
+          "time": 210,
+          "enemies": 37,
+          "kills": 648,
+          "level": 17,
+          "hp": 134,
+          "damage": 24
+        },
+        {
+          "time": 240,
+          "enemies": 59,
+          "kills": 867,
+          "level": 19,
+          "hp": 122,
+          "damage": 54
+        },
+        {
+          "time": 270,
+          "enemies": 4,
+          "kills": 941,
+          "level": 20,
+          "hp": 116,
+          "damage": 60
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 82.34999999999661
+        }
+      ],
+      "route": "blade",
+      "seed": 12,
+      "time": 298.30000000005737,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 961,
+      "hp": 100,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "coal"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 45539.30469136151,
+        "ember": 0,
+        "orbit": 3794.631851852356
+      },
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 60,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "healing": {
+        "field": 24,
+        "elite": 12,
+        "upgrade": 40,
+        "relic": 0
+      },
+      "peak": 68
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 9,
+          "kills": 29,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 6,
+          "kills": 73,
+          "level": 6,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 18,
+          "kills": 135,
+          "level": 9,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 22,
+          "kills": 230,
+          "level": 11,
+          "hp": 120,
+          "damage": 0
+        },
+        {
+          "time": 150,
+          "enemies": 22,
+          "kills": 338,
+          "level": 13,
+          "hp": 140,
+          "damage": 6
+        },
+        {
+          "time": 180,
+          "enemies": 23,
+          "kills": 458,
+          "level": 15,
+          "hp": 140,
+          "damage": 6
+        },
+        {
+          "time": 210,
+          "enemies": 41,
+          "kills": 644,
+          "level": 17,
+          "hp": 140,
+          "damage": 18
+        },
+        {
+          "time": 240,
+          "enemies": 49,
+          "kills": 877,
+          "level": 19,
+          "hp": 157,
+          "damage": 54
+        },
+        {
+          "time": 270,
+          "enemies": 8,
+          "kills": 937,
+          "level": 20,
+          "hp": 160,
+          "damage": 76
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 80.88333333333003
+        }
+      ],
+      "route": "blade",
+      "seed": 42,
+      "time": 291.1833333333972,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 953,
+      "hp": 160,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "dew",
+        "fang"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 47175.534506176606,
+        "ember": 0,
+        "orbit": 3018.075555555937
+      },
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 60,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "healing": {
+        "field": 0,
+        "elite": 6,
+        "upgrade": 63,
+        "relic": 67
+      },
+      "peak": 81
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 10,
+          "kills": 28,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 7,
+          "kills": 72,
+          "level": 6,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 13,
+          "kills": 140,
+          "level": 9,
+          "hp": 100,
+          "damage": 6
+        },
+        {
+          "time": 120,
+          "enemies": 32,
+          "kills": 220,
+          "level": 11,
+          "hp": 140,
+          "damage": 6
+        },
+        {
+          "time": 150,
+          "enemies": 21,
+          "kills": 339,
+          "level": 13,
+          "hp": 160,
+          "damage": 12
+        },
+        {
+          "time": 180,
+          "enemies": 24,
+          "kills": 457,
+          "level": 15,
+          "hp": 180,
+          "damage": 12
+        },
+        {
+          "time": 210,
+          "enemies": 55,
+          "kills": 630,
+          "level": 16,
+          "hp": 174,
+          "damage": 24
+        },
+        {
+          "time": 240,
+          "enemies": 71,
+          "kills": 855,
+          "level": 18,
+          "hp": 162,
+          "damage": 36
+        },
+        {
+          "time": 270,
+          "enemies": 6,
+          "kills": 939,
+          "level": 19,
+          "hp": 144,
+          "damage": 54
+        },
+        {
+          "time": 300,
+          "enemies": 5,
+          "kills": 958,
+          "level": 20,
+          "hp": 144,
+          "damage": 54
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 78.53333333333016
+        }
+      ],
+      "route": "blade",
+      "seed": 99,
+      "time": 300,
+      "outcome": "survived",
+      "level": 20,
+      "kills": 958,
+      "hp": 144,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "coal"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 46684.30092592977,
+        "ember": 0,
+        "orbit": 1763.8523456792393
+      },
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 54,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 0,
+        "elite": 12,
+        "upgrade": 86,
+        "relic": 0
+      },
+      "peak": 72
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 10,
+          "kills": 28,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 10,
+          "kills": 69,
+          "level": 6,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 22,
+          "kills": 131,
+          "level": 9,
+          "hp": 88,
+          "damage": 12
+        },
+        {
+          "time": 120,
+          "enemies": 18,
+          "kills": 234,
+          "level": 11,
+          "hp": 130,
+          "damage": 30
+        },
+        {
+          "time": 150,
+          "enemies": 20,
+          "kills": 340,
+          "level": 13,
+          "hp": 102,
+          "damage": 73
+        },
+        {
+          "time": 180,
+          "enemies": 22,
+          "kills": 459,
+          "level": 15,
+          "hp": 96.5,
+          "damage": 105.5
+        },
+        {
+          "time": 210,
+          "enemies": 33,
+          "kills": 652,
+          "level": 17,
+          "hp": 134,
+          "damage": 135.5
+        },
+        {
+          "time": 240,
+          "enemies": 63,
+          "kills": 863,
+          "level": 19,
+          "hp": 160,
+          "damage": 197.5
+        },
+        {
+          "time": 270,
+          "enemies": 6,
+          "kills": 939,
+          "level": 20,
+          "hp": 180,
+          "damage": 227.5
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 81.9166666666633
+        }
+      ],
+      "route": "blade-alternate",
+      "seed": 12,
+      "time": 276.65000000007706,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 944,
+      "hp": 180,
+      "branches": [
+        "duelist",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 39170.11518518826,
+        "ember": 0,
+        "orbit": 9677.824506173525
+      },
+      "damageTaken": {
+        "contact": 83.5,
+        "hunt": 24,
+        "spore": 120,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 0,
+        "elite": 30,
+        "upgrade": 107,
+        "relic": 170.5
+      },
+      "peak": 63
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 9,
+          "kills": 29,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 8,
+          "kills": 71,
+          "level": 6,
+          "hp": 94,
+          "damage": 6
+        },
+        {
+          "time": 90,
+          "enemies": 15,
+          "kills": 138,
+          "level": 9,
+          "hp": 100,
+          "damage": 6
+        },
+        {
+          "time": 120,
+          "enemies": 21,
+          "kills": 231,
+          "level": 11,
+          "hp": 102,
+          "damage": 24
+        },
+        {
+          "time": 150,
+          "enemies": 21,
+          "kills": 339,
+          "level": 13,
+          "hp": 160,
+          "damage": 30
+        },
+        {
+          "time": 180,
+          "enemies": 32,
+          "kills": 449,
+          "level": 15,
+          "hp": 164,
+          "damage": 46
+        },
+        {
+          "time": 210,
+          "enemies": 37,
+          "kills": 648,
+          "level": 17,
+          "hp": 119,
+          "damage": 106
+        },
+        {
+          "time": 240,
+          "enemies": 56,
+          "kills": 870,
+          "level": 19,
+          "hp": 37,
+          "damage": 188
+        },
+        {
+          "time": 270,
+          "enemies": 4,
+          "kills": 941,
+          "level": 20,
+          "hp": 3,
+          "damage": 222
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 80.18333333333007
+        }
+      ],
+      "route": "blade-alternate",
+      "seed": 42,
+      "time": 278.900000000075,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 946,
+      "hp": 28,
+      "branches": [
+        "duelist",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 739.799629629739,
+        "sword": 44064.32166667013,
+        "ember": 0,
+        "orbit": 5891.555617284375
+      },
+      "damageTaken": {
+        "contact": 98,
+        "hunt": 0,
+        "spore": 96,
+        "slam": 0,
+        "charge": 28,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 31,
+        "elite": 29,
+        "upgrade": 90,
+        "relic": 0
+      },
+      "peak": 61
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 11,
+          "kills": 27,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 8,
+          "kills": 71,
+          "level": 6,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 18,
+          "kills": 135,
+          "level": 9,
+          "hp": 88,
+          "damage": 18
+        },
+        {
+          "time": 120,
+          "enemies": 19,
+          "kills": 233,
+          "level": 11,
+          "hp": 52,
+          "damage": 54
+        },
+        {
+          "time": 150,
+          "enemies": 18,
+          "kills": 342,
+          "level": 13,
+          "hp": 80,
+          "damage": 66
+        },
+        {
+          "time": 180,
+          "enemies": 22,
+          "kills": 459,
+          "level": 15,
+          "hp": 56,
+          "damage": 110
+        },
+        {
+          "time": 210,
+          "enemies": 38,
+          "kills": 647,
+          "level": 17,
+          "hp": 65,
+          "damage": 146
+        },
+        {
+          "time": 240,
+          "enemies": 49,
+          "kills": 877,
+          "level": 19,
+          "hp": 56,
+          "damage": 180
+        },
+        {
+          "time": 270,
+          "enemies": 6,
+          "kills": 939,
+          "level": 20,
+          "hp": 38,
+          "damage": 198
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 78.96666666666347
+        }
+      ],
+      "route": "blade-alternate",
+      "seed": 99,
+      "time": 294.11666666672784,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 956,
+      "hp": 38,
+      "branches": [
+        "duelist",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "coal"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 37979.57061728663,
+        "ember": 0,
+        "orbit": 12585.287654322361
+      },
+      "damageTaken": {
+        "contact": 60,
+        "hunt": 0,
+        "spore": 138,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 70,
+        "elite": 36,
+        "upgrade": 30,
+        "relic": 0
+      },
+      "peak": 59
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 4,
+          "kills": 34,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 3,
+          "kills": 76,
+          "level": 6,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 5,
+          "kills": 148,
+          "level": 8,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 18,
+          "kills": 234,
+          "level": 10,
+          "hp": 73,
+          "damage": 12
+        },
+        {
+          "time": 150,
+          "enemies": 21,
+          "kills": 339,
+          "level": 12,
+          "hp": 58,
+          "damage": 42
+        },
+        {
+          "time": 180,
+          "enemies": 28,
+          "kills": 453,
+          "level": 14,
+          "hp": 39.75,
+          "damage": 117.25
+        },
+        {
+          "time": 210,
+          "enemies": 55,
+          "kills": 630,
+          "level": 16,
+          "hp": 36.75,
+          "damage": 198.25
+        },
+        {
+          "time": 240,
+          "enemies": 67,
+          "kills": 859,
+          "level": 18,
+          "hp": 8.75,
+          "damage": 352.25
+        },
+        {
+          "time": 270,
+          "enemies": 2,
+          "kills": 943,
+          "level": 20,
+          "hp": 61.75,
+          "damage": 423.25
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 85.86666666666308
+        }
+      ],
+      "route": "comet",
+      "seed": 12,
+      "time": 293.73333333339485,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 959,
+      "hp": 73.75,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "coal",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 48205.59771605323,
+        "orbit": 0
+      },
+      "damageTaken": {
+        "contact": 317.25,
+        "hunt": 12,
+        "spore": 78,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "healing": {
+        "field": 0,
+        "elite": 30,
+        "upgrade": 160,
+        "relic": 222
+      },
+      "peak": 70
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 3,
+          "kills": 35,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 3,
+          "kills": 76,
+          "level": 6,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 6,
+          "kills": 147,
+          "level": 8,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 15,
+          "kills": 237,
+          "level": 10,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 150,
+          "enemies": 21,
+          "kills": 339,
+          "level": 12,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 180,
+          "enemies": 27,
+          "kills": 454,
+          "level": 14,
+          "hp": 85,
+          "damage": 10
+        },
+        {
+          "time": 210,
+          "enemies": 55,
+          "kills": 630,
+          "level": 16,
+          "hp": 36,
+          "damage": 140
+        },
+        {
+          "time": 240,
+          "enemies": 86,
+          "kills": 840,
+          "level": 19,
+          "hp": 47.5,
+          "damage": 311.5
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 85.14999999999645
+        }
+      ],
+      "route": "comet",
+      "seed": 42,
+      "time": 260.21666666675867,
+      "outcome": "defeat",
+      "level": 19,
+      "kills": 932,
+      "hp": 0,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "sail",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 44838.083580250786,
+        "orbit": 0
+      },
+      "damageTaken": {
+        "contact": 280.5,
+        "hunt": 0,
+        "spore": 60,
+        "slam": 0,
+        "charge": 28,
+        "thorns": 29.5
+      },
+      "healing": {
+        "field": 7,
+        "elite": 15,
+        "upgrade": 120,
+        "relic": 171
+      },
+      "peak": 87
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 2,
+          "kills": 36,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 3,
+          "kills": 76,
+          "level": 5,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 12,
+          "kills": 141,
+          "level": 9,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 23,
+          "kills": 229,
+          "level": 11,
+          "hp": 85,
+          "damage": 6
+        },
+        {
+          "time": 150,
+          "enemies": 34,
+          "kills": 326,
+          "level": 13,
+          "hp": 82,
+          "damage": 28
+        },
+        {
+          "time": 180,
+          "enemies": 29,
+          "kills": 452,
+          "level": 15,
+          "hp": 85,
+          "damage": 72
+        },
+        {
+          "time": 210,
+          "enemies": 50,
+          "kills": 635,
+          "level": 17,
+          "hp": 58.5,
+          "damage": 193.5
+        },
+        {
+          "time": 240,
+          "enemies": 67,
+          "kills": 859,
+          "level": 19,
+          "hp": 60,
+          "damage": 348
+        },
+        {
+          "time": 270,
+          "enemies": 2,
+          "kills": 943,
+          "level": 20,
+          "hp": 78,
+          "damage": 372
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 74.88333333333037
+        }
+      ],
+      "route": "comet",
+      "seed": 99,
+      "time": 284.6000000000698,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 953,
+      "hp": 65,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "dew",
+        "coal"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 385.60370370373624,
+        "ember": 49792.178703707796,
+        "orbit": 0
+      },
+      "damageTaken": {
+        "contact": 308,
+        "hunt": 0,
+        "spore": 48,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "healing": {
+        "field": 14,
+        "elite": 15,
+        "upgrade": 110,
+        "relic": 229
+      },
+      "peak": 76
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 4,
+          "kills": 34,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 3,
+          "kills": 76,
+          "level": 5,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 5,
+          "kills": 148,
+          "level": 9,
+          "hp": 85,
+          "damage": 6
+        },
+        {
+          "time": 120,
+          "enemies": 25,
+          "kills": 227,
+          "level": 11,
+          "hp": 85,
+          "damage": 6
+        },
+        {
+          "time": 150,
+          "enemies": 20,
+          "kills": 340,
+          "level": 13,
+          "hp": 50.875,
+          "damage": 85.125
+        },
+        {
+          "time": 180,
+          "enemies": 30,
+          "kills": 451,
+          "level": 14,
+          "hp": 62.875,
+          "damage": 103.125
+        },
+        {
+          "time": 210,
+          "enemies": 33,
+          "kills": 652,
+          "level": 17,
+          "hp": 76.375,
+          "damage": 134.625
+        },
+        {
+          "time": 240,
+          "enemies": 65,
+          "kills": 861,
+          "level": 19,
+          "hp": 99.375,
+          "damage": 166.625
+        },
+        {
+          "time": 270,
+          "enemies": 2,
+          "kills": 943,
+          "level": 20,
+          "hp": 93.375,
+          "damage": 172.625
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 77.06666666666358
+        }
+      ],
+      "route": "comet-alternate",
+      "seed": 12,
+      "time": 288.0500000000667,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 955,
+      "hp": 77.375,
+      "branches": [
+        "detonation"
+      ],
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 48921.95493827572,
+        "orbit": 17
+      },
+      "damageTaken": {
+        "contact": 112.625,
+        "hunt": 0,
+        "spore": 60,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "healing": {
+        "field": 25,
+        "elite": 36,
+        "upgrade": 120,
+        "relic": 0
+      },
+      "peak": 66
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 4,
+          "kills": 34,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 3,
+          "kills": 76,
+          "level": 6,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 6,
+          "kills": 147,
+          "level": 9,
+          "hp": 85,
+          "damage": 6
+        },
+        {
+          "time": 120,
+          "enemies": 18,
+          "kills": 234,
+          "level": 11,
+          "hp": 85,
+          "damage": 6
+        },
+        {
+          "time": 150,
+          "enemies": 13,
+          "kills": 347,
+          "level": 13,
+          "hp": 79,
+          "damage": 12
+        },
+        {
+          "time": 180,
+          "enemies": 27,
+          "kills": 454,
+          "level": 15,
+          "hp": 79,
+          "damage": 12
+        },
+        {
+          "time": 210,
+          "enemies": 39,
+          "kills": 646,
+          "level": 17,
+          "hp": 119,
+          "damage": 39
+        },
+        {
+          "time": 240,
+          "enemies": 57,
+          "kills": 869,
+          "level": 19,
+          "hp": 145,
+          "damage": 69
+        },
+        {
+          "time": 270,
+          "enemies": 3,
+          "kills": 942,
+          "level": 20,
+          "hp": 145,
+          "damage": 69
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 70.63333333333061
+        }
+      ],
+      "route": "comet-alternate",
+      "seed": 42,
+      "time": 280.9000000000732,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 950,
+      "hp": 129,
+      "branches": [
+        "detonation"
+      ],
+      "relics": [
+        "sail",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 744.2790123458648,
+        "sword": 0,
+        "ember": 49932.728950621495,
+        "orbit": 136
+      },
+      "damageTaken": {
+        "contact": 33,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "healing": {
+        "field": 10,
+        "elite": 21,
+        "upgrade": 98,
+        "relic": 0
+      },
+      "peak": 78
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 3,
+          "kills": 35,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 4,
+          "kills": 75,
+          "level": 6,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 12,
+          "kills": 141,
+          "level": 8,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 24,
+          "kills": 228,
+          "level": 11,
+          "hp": 85,
+          "damage": 6
+        },
+        {
+          "time": 150,
+          "enemies": 21,
+          "kills": 339,
+          "level": 13,
+          "hp": 82,
+          "damage": 30.5
+        },
+        {
+          "time": 180,
+          "enemies": 25,
+          "kills": 456,
+          "level": 15,
+          "hp": 82,
+          "damage": 54.5
+        },
+        {
+          "time": 210,
+          "enemies": 42,
+          "kills": 643,
+          "level": 17,
+          "hp": 125,
+          "damage": 127.5
+        },
+        {
+          "time": 240,
+          "enemies": 63,
+          "kills": 863,
+          "level": 19,
+          "hp": 165,
+          "damage": 195.5
+        },
+        {
+          "time": 270,
+          "enemies": 2,
+          "kills": 943,
+          "level": 20,
+          "hp": 165,
+          "damage": 207.5
+        },
+        {
+          "time": 300,
+          "enemies": 3,
+          "kills": 960,
+          "level": 20,
+          "hp": 165,
+          "damage": 207.5
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 86.5833333333297
+        }
+      ],
+      "route": "comet-alternate",
+      "seed": 99,
+      "time": 300,
+      "outcome": "survived",
+      "level": 20,
+      "kills": 960,
+      "hp": 165,
+      "branches": [
+        "detonation"
+      ],
+      "relics": [
+        "dew",
+        "coal"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 48625.248580251,
+        "orbit": 136
+      },
+      "damageTaken": {
+        "contact": 123.5,
+        "hunt": 0,
+        "spore": 84,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 3,
+        "elite": 20.5,
+        "upgrade": 114,
+        "relic": 150
+      },
+      "peak": 68
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 11,
+          "kills": 27,
+          "level": 4,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 11,
+          "kills": 68,
+          "level": 7,
+          "hp": 145,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 15,
+          "kills": 138,
+          "level": 9,
+          "hp": 140.665,
+          "damage": 13.004999999999997
+        },
+        {
+          "time": 120,
+          "enemies": 24,
+          "kills": 228,
+          "level": 11,
+          "hp": 165,
+          "damage": 13.004999999999997
+        },
+        {
+          "time": 150,
+          "enemies": 24,
+          "kills": 336,
+          "level": 14,
+          "hp": 173.15249999999995,
+          "damage": 49.8525
+        },
+        {
+          "time": 180,
+          "enemies": 37,
+          "kills": 444,
+          "level": 15,
+          "hp": 197.1625,
+          "damage": 69.36
+        },
+        {
+          "time": 210,
+          "enemies": 75,
+          "kills": 610,
+          "level": 17,
+          "hp": 203.20999999999998,
+          "damage": 109.82
+        },
+        {
+          "time": 240,
+          "enemies": 70,
+          "kills": 856,
+          "level": 19,
+          "hp": 184.48749999999998,
+          "damage": 221.44624999999996
+        },
+        {
+          "time": 270,
+          "enemies": 8,
+          "kills": 937,
+          "level": 20,
+          "hp": 174.85999999999996,
+          "damage": 264.07374999999996
+        },
+        {
+          "time": 300,
+          "enemies": 9,
+          "kills": 954,
+          "level": 20,
+          "hp": 157.73999999999995,
+          "damage": 287.19374999999997
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 84.96666666666313
+        }
+      ],
+      "route": "lunar",
+      "seed": 12,
+      "time": 300,
+      "outcome": "survived",
+      "level": 20,
+      "kills": 954,
+      "hp": 157.73999999999995,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "briar",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 3608.551296296657,
+        "sword": 1068.5524691358908,
+        "ember": 0,
+        "orbit": 42662.89944444775
+      },
+      "damageTaken": {
+        "contact": 136.91375000000002,
+        "hunt": 0,
+        "spore": 104.03999999999995,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 46.239999999999995
+      },
+      "healing": {
+        "field": 24.805000000000064,
+        "elite": 36.15625000000003,
+        "upgrade": 94.33500000000001,
+        "relic": 164.63750000000007
+      },
+      "peak": 81
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 13,
+          "kills": 25,
+          "level": 4,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 12,
+          "kills": 67,
+          "level": 7,
+          "hp": 145,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 23,
+          "kills": 130,
+          "level": 9,
+          "hp": 137.775,
+          "damage": 13.004999999999999
+        },
+        {
+          "time": 120,
+          "enemies": 27,
+          "kills": 225,
+          "level": 11,
+          "hp": 136.32999999999998,
+          "damage": 21.674999999999997
+        },
+        {
+          "time": 150,
+          "enemies": 27,
+          "kills": 333,
+          "level": 13,
+          "hp": 153.32499999999996,
+          "damage": 34.67999999999999
+        },
+        {
+          "time": 180,
+          "enemies": 41,
+          "kills": 440,
+          "level": 15,
+          "hp": 205,
+          "damage": 39.015
+        },
+        {
+          "time": 210,
+          "enemies": 76,
+          "kills": 609,
+          "level": 17,
+          "hp": 196.44,
+          "damage": 70.0825
+        },
+        {
+          "time": 240,
+          "enemies": 101,
+          "kills": 825,
+          "level": 19,
+          "hp": 196.98999999999998,
+          "damage": 157.505
+        },
+        {
+          "time": 270,
+          "enemies": 12,
+          "kills": 933,
+          "level": 20,
+          "hp": 156.01249999999993,
+          "damage": 243.48250000000002
+        },
+        {
+          "time": 300,
+          "enemies": 3,
+          "kills": 960,
+          "level": 20,
+          "hp": 130.33249999999992,
+          "damage": 278.1625
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 97.51666666666242
+        }
+      ],
+      "route": "lunar",
+      "seed": 42,
+      "time": 300,
+      "outcome": "survived",
+      "level": 20,
+      "kills": 960,
+      "hp": 130.33249999999992,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 949.3013580248304,
+        "orbit": 48370.115000003905
+      },
+      "damageTaken": {
+        "contact": 146.66750000000002,
+        "hunt": 0,
+        "spore": 60.690000000000005,
+        "slam": 13.004999999999999,
+        "charge": 0,
+        "thorns": 57.8
+      },
+      "healing": {
+        "field": 5.780000000000001,
+        "elite": 22.224999999999994,
+        "upgrade": 101.33500000000001,
+        "relic": 154.1550000000001
+      },
+      "peak": 101
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 12,
+          "kills": 26,
+          "level": 4,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 12,
+          "kills": 67,
+          "level": 7,
+          "hp": 145,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 20,
+          "kills": 133,
+          "level": 9,
+          "hp": 165,
+          "damage": 15.894999999999998
+        },
+        {
+          "time": 120,
+          "enemies": 22,
+          "kills": 230,
+          "level": 11,
+          "hp": 201.99499999999998,
+          "damage": 28.9
+        },
+        {
+          "time": 150,
+          "enemies": 23,
+          "kills": 337,
+          "level": 14,
+          "hp": 168.49718749999994,
+          "damage": 77.3978125
+        },
+        {
+          "time": 180,
+          "enemies": 29,
+          "kills": 452,
+          "level": 15,
+          "hp": 169.6546874999999,
+          "damage": 101.2403125
+        },
+        {
+          "time": 210,
+          "enemies": 53,
+          "kills": 632,
+          "level": 17,
+          "hp": 130.4671874999999,
+          "damage": 155.4278125
+        },
+        {
+          "time": 240,
+          "enemies": 92,
+          "kills": 834,
+          "level": 19,
+          "hp": 64.71968749999994,
+          "damage": 221.17531249999996
+        },
+        {
+          "time": 270,
+          "enemies": 6,
+          "kills": 939,
+          "level": 20,
+          "hp": 44.752187499999934,
+          "damage": 281.14281249999993
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 83.73333333332987
+        }
+      ],
+      "route": "lunar",
+      "seed": 99,
+      "time": 298.0833333333909,
+      "outcome": "defeat",
+      "level": 20,
+      "kills": 956,
+      "hp": 0,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 3945.3079012350504,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 44490.28111111452
+      },
+      "damageTaken": {
+        "contact": 148.15999999999994,
+        "hunt": 0,
+        "spore": 108.37499999999994,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 69.36
+      },
+      "healing": {
+        "field": 25,
+        "elite": 35.89500000000001,
+        "upgrade": 140,
+        "relic": 0
+      },
+      "peak": 94
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 35,
+          "kills": 3,
+          "level": 1,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 11,
+          "kills": 68,
+          "level": 5,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 17,
+          "kills": 136,
+          "level": 8,
+          "hp": 137.9,
+          "damage": 27.2
+        },
+        {
+          "time": 120,
+          "enemies": 25,
+          "kills": 227,
+          "level": 11,
+          "hp": 157.70000000000002,
+          "damage": 37.4
+        },
+        {
+          "time": 150,
+          "enemies": 20,
+          "kills": 340,
+          "level": 13,
+          "hp": 188.50000000000003,
+          "damage": 81.6
+        },
+        {
+          "time": 180,
+          "enemies": 27,
+          "kills": 454,
+          "level": 15,
+          "hp": 188.50000000000003,
+          "damage": 81.6
+        },
+        {
+          "time": 210,
+          "enemies": 40,
+          "kills": 645,
+          "level": 17,
+          "hp": 128.15000000000003,
+          "damage": 141.95
+        },
+        {
+          "time": 240,
+          "enemies": 76,
+          "kills": 850,
+          "level": 19,
+          "hp": 142.65000000000006,
+          "damage": 167.45
+        },
+        {
+          "time": 270,
+          "enemies": 4,
+          "kills": 941,
+          "level": 20,
+          "hp": 102.70000000000007,
+          "damage": 207.39999999999998
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 88.19999999999628
+        }
+      ],
+      "route": "lunar-alternate",
+      "seed": 12,
+      "time": 274.6000000000789,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 945,
+      "hp": 102.70000000000007,
+      "branches": [
+        "horizon"
+      ],
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 807.3698148148878,
+        "sword": 0,
+        "ember": 630.0800000000082,
+        "orbit": 46353.121049385896
+      },
+      "damageTaken": {
+        "contact": 113.89999999999999,
+        "hunt": 0,
+        "spore": 66.30000000000001,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 27.2
+      },
+      "healing": {
+        "field": 25,
+        "elite": 45,
+        "upgrade": 115.1,
+        "relic": 0
+      },
+      "peak": 76
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 12,
+          "kills": 26,
+          "level": 4,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 6,
+          "kills": 73,
+          "level": 6,
+          "hp": 113.10000000000001,
+          "damage": 11.899999999999999
+        },
+        {
+          "time": 90,
+          "enemies": 17,
+          "kills": 136,
+          "level": 8,
+          "hp": 145,
+          "damage": 18.7
+        },
+        {
+          "time": 120,
+          "enemies": 25,
+          "kills": 227,
+          "level": 11,
+          "hp": 165,
+          "damage": 18.7
+        },
+        {
+          "time": 150,
+          "enemies": 28,
+          "kills": 332,
+          "level": 14,
+          "hp": 205,
+          "damage": 18.7
+        },
+        {
+          "time": 180,
+          "enemies": 28,
+          "kills": 453,
+          "level": 15,
+          "hp": 188.275,
+          "damage": 68.425
+        },
+        {
+          "time": 210,
+          "enemies": 44,
+          "kills": 641,
+          "level": 17,
+          "hp": 205,
+          "damage": 102.42499999999998
+        },
+        {
+          "time": 240,
+          "enemies": 72,
+          "kills": 854,
+          "level": 19,
+          "hp": 201.2,
+          "damage": 127.92500000000001
+        },
+        {
+          "time": 270,
+          "enemies": 5,
+          "kills": 940,
+          "level": 20,
+          "hp": 170.20000000000002,
+          "damage": 168.72500000000002
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 92.58333333332936
+        }
+      ],
+      "route": "lunar-alternate",
+      "seed": 42,
+      "time": 271.66666666674826,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 943,
+      "hp": 170.20000000000002,
+      "branches": [
+        "horizon"
+      ],
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 603.4598765433378,
+        "orbit": 49676.65728395405
+      },
+      "damageTaken": {
+        "contact": 76.925,
+        "hunt": 10.2,
+        "spore": 40.800000000000004,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 40.8
+      },
+      "healing": {
+        "field": 5.099999999999994,
+        "elite": 8.699999999999989,
+        "upgrade": 90,
+        "relic": 110.125
+      },
+      "peak": 97
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 10,
+          "kills": 28,
+          "level": 4,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 9,
+          "kills": 70,
+          "level": 6,
+          "hp": 114.80000000000001,
+          "damage": 10.2
+        },
+        {
+          "time": 90,
+          "enemies": 14,
+          "kills": 139,
+          "level": 9,
+          "hp": 144.2,
+          "damage": 22.099999999999998
+        },
+        {
+          "time": 120,
+          "enemies": 26,
+          "kills": 226,
+          "level": 11,
+          "hp": 145,
+          "damage": 27.2
+        },
+        {
+          "time": 150,
+          "enemies": 33,
+          "kills": 327,
+          "level": 13,
+          "hp": 165,
+          "damage": 42.5
+        },
+        {
+          "time": 180,
+          "enemies": 31,
+          "kills": 450,
+          "level": 15,
+          "hp": 199.9,
+          "damage": 85.85000000000001
+        },
+        {
+          "time": 210,
+          "enemies": 41,
+          "kills": 644,
+          "level": 17,
+          "hp": 205,
+          "damage": 111.35000000000001
+        },
+        {
+          "time": 240,
+          "enemies": 60,
+          "kills": 866,
+          "level": 19,
+          "hp": 200,
+          "damage": 171.70000000000002
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 89.94999999999618
+        }
+      ],
+      "route": "lunar-alternate",
+      "seed": 99,
+      "time": 269.1500000000839,
+      "outcome": "victory",
+      "level": 20,
+      "kills": 940,
+      "hp": 167.20000000000002,
+      "branches": [
+        "horizon"
+      ],
+      "relics": [
+        "dew",
+        "bell"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 588.3104938272461,
+        "orbit": 47392.394629632734
+      },
+      "damageTaken": {
+        "contact": 110.5,
+        "hunt": 0,
+        "spore": 71.4,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 40.8
+      },
+      "healing": {
+        "field": 3.1999999999999886,
+        "elite": 17.900000000000006,
+        "upgrade": 92.44999999999996,
+        "relic": 151.34999999999997
+      },
+      "peak": 60
+    }
+  ],
+  "after": [
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 10,
+          "kills": 28,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 11,
+          "kills": 73,
+          "level": 6,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 9,
+          "kills": 132,
+          "level": 9,
+          "hp": 100,
+          "damage": 12
+        },
+        {
+          "time": 120,
+          "enemies": 17,
+          "kills": 219,
+          "level": 11,
+          "hp": 120,
+          "damage": 12
+        },
+        {
+          "time": 150,
+          "enemies": 12,
+          "kills": 310,
+          "level": 13,
+          "hp": 120,
+          "damage": 18
+        },
+        {
+          "time": 180,
+          "enemies": 22,
+          "kills": 421,
+          "level": 14,
+          "hp": 140,
+          "damage": 18
+        },
+        {
+          "time": 210,
+          "enemies": 29,
+          "kills": 576,
+          "level": 16,
+          "hp": 157,
+          "damage": 30
+        },
+        {
+          "time": 240,
+          "enemies": 24,
+          "kills": 774,
+          "level": 18,
+          "hp": 160,
+          "damage": 60
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 80.43333333333005
+        }
+      ],
+      "route": "blade",
+      "seed": 12,
+      "time": 263.48333333342237,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 811,
+      "hp": 160,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "dew",
+        "fang"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 40847.238333336325,
+        "ember": 0,
+        "orbit": 1952.5664814815887
+      },
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 72,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 3,
+        "elite": 15,
+        "upgrade": 60,
+        "relic": 54
+      },
+      "peak": 48
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 9,
+          "kills": 29,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 10,
+          "kills": 74,
+          "level": 7,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 15,
+          "kills": 128,
+          "level": 9,
+          "hp": 91,
+          "damage": 12
+        },
+        {
+          "time": 120,
+          "enemies": 28,
+          "kills": 196,
+          "level": 11,
+          "hp": 100,
+          "damage": 18
+        },
+        {
+          "time": 150,
+          "enemies": 14,
+          "kills": 296,
+          "level": 13,
+          "hp": 120,
+          "damage": 30
+        },
+        {
+          "time": 180,
+          "enemies": 22,
+          "kills": 411,
+          "level": 14,
+          "hp": 140,
+          "damage": 30
+        },
+        {
+          "time": 210,
+          "enemies": 25,
+          "kills": 564,
+          "level": 16,
+          "hp": 140,
+          "damage": 48
+        },
+        {
+          "time": 240,
+          "enemies": 25,
+          "kills": 760,
+          "level": 18,
+          "hp": 157,
+          "damage": 72
+        },
+        {
+          "time": 270,
+          "enemies": 9,
+          "kills": 795,
+          "level": 19,
+          "hp": 156,
+          "damage": 88
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 95.01666666666256
+        }
+      ],
+      "route": "blade",
+      "seed": 42,
+      "time": 289.88333333339835,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 813,
+      "hp": 159,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "dew",
+        "coal"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 41114.72111111413,
+        "ember": 0,
+        "orbit": 1645.889197530968
+      },
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 72,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "healing": {
+        "field": 0,
+        "elite": 9,
+        "upgrade": 60,
+        "relic": 78
+      },
+      "peak": 74
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 10,
+          "kills": 28,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 7,
+          "kills": 77,
+          "level": 7,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 8,
+          "kills": 135,
+          "level": 9,
+          "hp": 100,
+          "damage": 6
+        },
+        {
+          "time": 120,
+          "enemies": 38,
+          "kills": 186,
+          "level": 10,
+          "hp": 100,
+          "damage": 6
+        },
+        {
+          "time": 150,
+          "enemies": 13,
+          "kills": 297,
+          "level": 12,
+          "hp": 120,
+          "damage": 24
+        },
+        {
+          "time": 180,
+          "enemies": 32,
+          "kills": 401,
+          "level": 14,
+          "hp": 134,
+          "damage": 30
+        },
+        {
+          "time": 210,
+          "enemies": 43,
+          "kills": 546,
+          "level": 16,
+          "hp": 140,
+          "damage": 30
+        },
+        {
+          "time": 240,
+          "enemies": 47,
+          "kills": 738,
+          "level": 18,
+          "hp": 160,
+          "damage": 51
+        },
+        {
+          "time": 270,
+          "enemies": 11,
+          "kills": 793,
+          "level": 19,
+          "hp": 160,
+          "damage": 63
+        },
+        {
+          "time": 300,
+          "enemies": 6,
+          "kills": 816,
+          "level": 19,
+          "hp": 160,
+          "damage": 63
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 92.49999999999604
+        }
+      ],
+      "route": "blade",
+      "seed": 99,
+      "time": 300,
+      "outcome": "survived",
+      "level": 19,
+      "kills": 816,
+      "hp": 160,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "dew",
+        "fang"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 40590.49179012648,
+        "ember": 0,
+        "orbit": 1644.2549382717739
+      },
+      "damageTaken": {
+        "contact": 15,
+        "hunt": 0,
+        "spore": 48,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 0,
+        "elite": 12,
+        "upgrade": 60,
+        "relic": 51
+      },
+      "peak": 56
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 10,
+          "kills": 28,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 12,
+          "kills": 72,
+          "level": 7,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 10,
+          "kills": 133,
+          "level": 9,
+          "hp": 100,
+          "damage": 6
+        },
+        {
+          "time": 120,
+          "enemies": 20,
+          "kills": 204,
+          "level": 11,
+          "hp": 91,
+          "damage": 24
+        },
+        {
+          "time": 150,
+          "enemies": 13,
+          "kills": 297,
+          "level": 13,
+          "hp": 100,
+          "damage": 30
+        },
+        {
+          "time": 180,
+          "enemies": 26,
+          "kills": 407,
+          "level": 14,
+          "hp": 100,
+          "damage": 36
+        },
+        {
+          "time": 210,
+          "enemies": 26,
+          "kills": 563,
+          "level": 17,
+          "hp": 140,
+          "damage": 64
+        },
+        {
+          "time": 240,
+          "enemies": 27,
+          "kills": 758,
+          "level": 18,
+          "hp": 137,
+          "damage": 82
+        },
+        {
+          "time": 270,
+          "enemies": 5,
+          "kills": 799,
+          "level": 19,
+          "hp": 160,
+          "damage": 82
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 95.29999999999588
+        }
+      ],
+      "route": "blade-alternate",
+      "seed": 12,
+      "time": 280.383333333407,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 805,
+      "hp": 160,
+      "branches": [
+        "duelist",
+        "horizon"
+      ],
+      "relics": [
+        "dew",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 263.3228395062436,
+        "sword": 32536.629074076256,
+        "ember": 0,
+        "orbit": 9421.940555556255
+      },
+      "damageTaken": {
+        "contact": 16,
+        "hunt": 0,
+        "spore": 66,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 0,
+        "elite": 9,
+        "upgrade": 60,
+        "relic": 73
+      },
+      "peak": 56
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 9,
+          "kills": 29,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 12,
+          "kills": 72,
+          "level": 7,
+          "hp": 94,
+          "damage": 6
+        },
+        {
+          "time": 90,
+          "enemies": 6,
+          "kills": 133,
+          "level": 9,
+          "hp": 64,
+          "damage": 51
+        },
+        {
+          "time": 120,
+          "enemies": 25,
+          "kills": 209,
+          "level": 11,
+          "hp": 71,
+          "damage": 69
+        },
+        {
+          "time": 150,
+          "enemies": 13,
+          "kills": 307,
+          "level": 13,
+          "hp": 70,
+          "damage": 85
+        },
+        {
+          "time": 180,
+          "enemies": 20,
+          "kills": 423,
+          "level": 14,
+          "hp": 94,
+          "damage": 85
+        },
+        {
+          "time": 210,
+          "enemies": 33,
+          "kills": 566,
+          "level": 16,
+          "hp": 120,
+          "damage": 103
+        },
+        {
+          "time": 240,
+          "enemies": 31,
+          "kills": 764,
+          "level": 18,
+          "hp": 120,
+          "damage": 121
+        },
+        {
+          "time": 270,
+          "enemies": 5,
+          "kills": 809,
+          "level": 19,
+          "hp": 120,
+          "damage": 127
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 76.8166666666636
+        }
+      ],
+      "route": "blade-alternate",
+      "seed": 42,
+      "time": 277.2833333334098,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 813,
+      "hp": 120,
+      "branches": [
+        "duelist",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 31967.796172841845,
+        "ember": 0,
+        "orbit": 9307.585000000769
+      },
+      "damageTaken": {
+        "contact": 49,
+        "hunt": 0,
+        "spore": 78,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 25,
+        "elite": 36,
+        "upgrade": 20,
+        "relic": 66
+      },
+      "peak": 59
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 11,
+          "kills": 27,
+          "level": 4,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 11,
+          "kills": 73,
+          "level": 7,
+          "hp": 100,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 4,
+          "kills": 135,
+          "level": 9,
+          "hp": 100,
+          "damage": 12
+        },
+        {
+          "time": 120,
+          "enemies": 31,
+          "kills": 203,
+          "level": 11,
+          "hp": 112,
+          "damage": 38
+        },
+        {
+          "time": 150,
+          "enemies": 14,
+          "kills": 306,
+          "level": 13,
+          "hp": 120,
+          "damage": 44
+        },
+        {
+          "time": 180,
+          "enemies": 28,
+          "kills": 415,
+          "level": 14,
+          "hp": 96,
+          "damage": 80
+        },
+        {
+          "time": 210,
+          "enemies": 29,
+          "kills": 570,
+          "level": 16,
+          "hp": 117,
+          "damage": 110
+        },
+        {
+          "time": 240,
+          "enemies": 28,
+          "kills": 767,
+          "level": 18,
+          "hp": 120,
+          "damage": 138
+        },
+        {
+          "time": 270,
+          "enemies": 6,
+          "kills": 808,
+          "level": 19,
+          "hp": 117,
+          "damage": 150
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "dawn",
+          "time": 76.79999999999693
+        }
+      ],
+      "route": "blade-alternate",
+      "seed": 99,
+      "time": 270.73333333341577,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 810,
+      "hp": 117,
+      "branches": [
+        "duelist",
+        "horizon"
+      ],
+      "relics": [
+        "dew",
+        "fang"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 36435.39604938555,
+        "ember": 0,
+        "orbit": 6136.986172839916
+      },
+      "damageTaken": {
+        "contact": 36,
+        "hunt": 0,
+        "spore": 114,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 0,
+        "elite": 15,
+        "upgrade": 29,
+        "relic": 123
+      },
+      "peak": 62
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 4,
+          "kills": 34,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 3,
+          "kills": 81,
+          "level": 6,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 3,
+          "kills": 132,
+          "level": 8,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 19,
+          "kills": 211,
+          "level": 10,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 150,
+          "enemies": 12,
+          "kills": 304,
+          "level": 13,
+          "hp": 69,
+          "damage": 16
+        },
+        {
+          "time": 180,
+          "enemies": 33,
+          "kills": 404,
+          "level": 14,
+          "hp": 73,
+          "damage": 31
+        },
+        {
+          "time": 210,
+          "enemies": 36,
+          "kills": 563,
+          "level": 16,
+          "hp": 92.5,
+          "damage": 113.5
+        },
+        {
+          "time": 240,
+          "enemies": 31,
+          "kills": 761,
+          "level": 18,
+          "hp": 129,
+          "damage": 218.5
+        },
+        {
+          "time": 270,
+          "enemies": 2,
+          "kills": 809,
+          "level": 19,
+          "hp": 165,
+          "damage": 224.5
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 74.34999999999707
+        }
+      ],
+      "route": "comet",
+      "seed": 12,
+      "time": 283.41666666673757,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 818,
+      "hp": 165,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "coal",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 41922.36981481801,
+        "orbit": 0
+      },
+      "damageTaken": {
+        "contact": 194.5,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 41,
+        "elite": 15,
+        "upgrade": 116.5,
+        "relic": 132
+      },
+      "peak": 72
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 3,
+          "kills": 35,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 3,
+          "kills": 81,
+          "level": 6,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 2,
+          "kills": 139,
+          "level": 9,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 21,
+          "kills": 215,
+          "level": 10,
+          "hp": 79,
+          "damage": 6
+        },
+        {
+          "time": 150,
+          "enemies": 11,
+          "kills": 311,
+          "level": 12,
+          "hp": 79,
+          "damage": 12
+        },
+        {
+          "time": 180,
+          "enemies": 25,
+          "kills": 418,
+          "level": 14,
+          "hp": 85,
+          "damage": 18
+        },
+        {
+          "time": 210,
+          "enemies": 48,
+          "kills": 554,
+          "level": 16,
+          "hp": 105,
+          "damage": 66.5
+        },
+        {
+          "time": 240,
+          "enemies": 38,
+          "kills": 757,
+          "level": 18,
+          "hp": 103,
+          "damage": 182.5
+        },
+        {
+          "time": 270,
+          "enemies": 2,
+          "kills": 812,
+          "level": 19,
+          "hp": 135,
+          "damage": 219.5
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 82.41666666666328
+        }
+      ],
+      "route": "comet",
+      "seed": 42,
+      "time": 288.75000000006605,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 824,
+      "hp": 163,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "sail",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 42733.40351852196,
+        "orbit": 0
+      },
+      "damageTaken": {
+        "contact": 155.5,
+        "hunt": 0,
+        "spore": 48,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "healing": {
+        "field": 25,
+        "elite": 8.5,
+        "upgrade": 120,
+        "relic": 144
+      },
+      "peak": 74
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 2,
+          "kills": 36,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 3,
+          "kills": 81,
+          "level": 5,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 2,
+          "kills": 139,
+          "level": 8,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 23,
+          "kills": 213,
+          "level": 10,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 150,
+          "enemies": 13,
+          "kills": 309,
+          "level": 13,
+          "hp": 60,
+          "damage": 40
+        },
+        {
+          "time": 180,
+          "enemies": 24,
+          "kills": 419,
+          "level": 14,
+          "hp": 73,
+          "damage": 52
+        },
+        {
+          "time": 210,
+          "enemies": 40,
+          "kills": 562,
+          "level": 16,
+          "hp": 53,
+          "damage": 117
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 82.38333333332994
+        }
+      ],
+      "route": "comet",
+      "seed": 99,
+      "time": 230.03333333340854,
+      "outcome": "defeat",
+      "level": 18,
+      "kills": 701,
+      "hp": 0,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 31769.14444444639,
+        "orbit": 0
+      },
+      "damageTaken": {
+        "contact": 146,
+        "hunt": 12,
+        "spore": 72,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 25,
+        "elite": 30,
+        "upgrade": 90,
+        "relic": 0
+      },
+      "peak": 68
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 4,
+          "kills": 34,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 4,
+          "kills": 80,
+          "level": 6,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 2,
+          "kills": 139,
+          "level": 8,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 17,
+          "kills": 219,
+          "level": 10,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 150,
+          "enemies": 13,
+          "kills": 309,
+          "level": 13,
+          "hp": 76,
+          "damage": 24
+        },
+        {
+          "time": 180,
+          "enemies": 18,
+          "kills": 425,
+          "level": 15,
+          "hp": 76,
+          "damage": 24
+        },
+        {
+          "time": 210,
+          "enemies": 26,
+          "kills": 576,
+          "level": 17,
+          "hp": 115,
+          "damage": 60
+        },
+        {
+          "time": 240,
+          "enemies": 31,
+          "kills": 764,
+          "level": 18,
+          "hp": 125,
+          "damage": 80
+        },
+        {
+          "time": 270,
+          "enemies": 2,
+          "kills": 812,
+          "level": 19,
+          "hp": 155,
+          "damage": 80
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 83.69999999999654
+        }
+      ],
+      "route": "comet-alternate",
+      "seed": 12,
+      "time": 280.71666666674,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 819,
+      "hp": 155,
+      "branches": [
+        "detonation"
+      ],
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 41611.55654321289,
+        "orbit": 0
+      },
+      "damageTaken": {
+        "contact": 8,
+        "hunt": 0,
+        "spore": 72,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 0,
+        "elite": 30,
+        "upgrade": 120,
+        "relic": 0
+      },
+      "peak": 66
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 4,
+          "kills": 34,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 3,
+          "kills": 81,
+          "level": 6,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 4,
+          "kills": 133,
+          "level": 9,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 17,
+          "kills": 215,
+          "level": 10,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 150,
+          "enemies": 12,
+          "kills": 306,
+          "level": 12,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 180,
+          "enemies": 24,
+          "kills": 415,
+          "level": 14,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 210,
+          "enemies": 30,
+          "kills": 571,
+          "level": 16,
+          "hp": 105,
+          "damage": 0
+        },
+        {
+          "time": 240,
+          "enemies": 21,
+          "kills": 773,
+          "level": 18,
+          "hp": 122,
+          "damage": 64
+        },
+        {
+          "time": 270,
+          "enemies": 2,
+          "kills": 811,
+          "level": 19,
+          "hp": 152,
+          "damage": 64
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 74.59999999999705
+        }
+      ],
+      "route": "comet-alternate",
+      "seed": 42,
+      "time": 285.28333333340254,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 821,
+      "hp": 152,
+      "branches": [
+        "detonation"
+      ],
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 41819.57833333655,
+        "orbit": 0
+      },
+      "damageTaken": {
+        "contact": 10,
+        "hunt": 12,
+        "spore": 42,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "healing": {
+        "field": 25,
+        "elite": 0,
+        "upgrade": 106,
+        "relic": 0
+      },
+      "peak": 57
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 3,
+          "kills": 35,
+          "level": 4,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 4,
+          "kills": 80,
+          "level": 5,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 2,
+          "kills": 139,
+          "level": 9,
+          "hp": 85,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 24,
+          "kills": 212,
+          "level": 11,
+          "hp": 79,
+          "damage": 6
+        },
+        {
+          "time": 150,
+          "enemies": 15,
+          "kills": 307,
+          "level": 13,
+          "hp": 76,
+          "damage": 24
+        },
+        {
+          "time": 180,
+          "enemies": 29,
+          "kills": 414,
+          "level": 14,
+          "hp": 70,
+          "damage": 39
+        },
+        {
+          "time": 210,
+          "enemies": 28,
+          "kills": 574,
+          "level": 17,
+          "hp": 118,
+          "damage": 85
+        },
+        {
+          "time": 240,
+          "enemies": 30,
+          "kills": 765,
+          "level": 19,
+          "hp": 98,
+          "damage": 165
+        },
+        {
+          "time": 270,
+          "enemies": 4,
+          "kills": 810,
+          "level": 19,
+          "hp": 91,
+          "damage": 197
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "comet",
+          "time": 81.18333333333001
+        }
+      ],
+      "route": "comet-alternate",
+      "seed": 99,
+      "time": 278.43333333340877,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 818,
+      "hp": 75,
+      "branches": [
+        "detonation"
+      ],
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 1149.2212962964634,
+        "sword": 0,
+        "ember": 41102.062160496884,
+        "orbit": 0
+      },
+      "damageTaken": {
+        "contact": 81,
+        "hunt": 12,
+        "spore": 72,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 48
+      },
+      "healing": {
+        "field": 55,
+        "elite": 30,
+        "upgrade": 118,
+        "relic": 0
+      },
+      "peak": 60
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 11,
+          "kills": 27,
+          "level": 4,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 12,
+          "kills": 72,
+          "level": 7,
+          "hp": 145,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 9,
+          "kills": 132,
+          "level": 9,
+          "hp": 165,
+          "damage": 0
+        },
+        {
+          "time": 120,
+          "enemies": 25,
+          "kills": 211,
+          "level": 11,
+          "hp": 158.32499999999996,
+          "damage": 26.009999999999998
+        },
+        {
+          "time": 150,
+          "enemies": 21,
+          "kills": 301,
+          "level": 13,
+          "hp": 185,
+          "damage": 49.8525
+        },
+        {
+          "time": 180,
+          "enemies": 36,
+          "kills": 407,
+          "level": 15,
+          "hp": 205,
+          "damage": 62.8575
+        },
+        {
+          "time": 210,
+          "enemies": 50,
+          "kills": 555,
+          "level": 16,
+          "hp": 199.76999999999998,
+          "damage": 104.76249999999997
+        },
+        {
+          "time": 240,
+          "enemies": 54,
+          "kills": 744,
+          "level": 18,
+          "hp": 196.98999999999998,
+          "damage": 163.28499999999997
+        },
+        {
+          "time": 270,
+          "enemies": 10,
+          "kills": 807,
+          "level": 19,
+          "hp": 155.80749999999998,
+          "damage": 245.64999999999998
+        },
+        {
+          "time": 300,
+          "enemies": 9,
+          "kills": 826,
+          "level": 19,
+          "hp": 124.12749999999997,
+          "damage": 280.33
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 79.66666666666343
+        }
+      ],
+      "route": "lunar",
+      "seed": 12,
+      "time": 300,
+      "outcome": "survived",
+      "level": 19,
+      "kills": 826,
+      "hp": 124.12749999999997,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "dew",
+        "bell"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 40941.290679015336
+      },
+      "damageTaken": {
+        "contact": 106.93,
+        "hunt": 0,
+        "spore": 104.03999999999995,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 69.36
+      },
+      "healing": {
+        "field": 0,
+        "elite": 14.182500000000033,
+        "upgrade": 87.85250000000008,
+        "relic": 177.4225000000001
+      },
+      "peak": 111
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 13,
+          "kills": 25,
+          "level": 4,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 11,
+          "kills": 73,
+          "level": 7,
+          "hp": 145,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 15,
+          "kills": 128,
+          "level": 9,
+          "hp": 185,
+          "damage": 8.669999999999998
+        },
+        {
+          "time": 120,
+          "enemies": 31,
+          "kills": 193,
+          "level": 11,
+          "hp": 176.32999999999998,
+          "damage": 21.674999999999997
+        },
+        {
+          "time": 150,
+          "enemies": 20,
+          "kills": 290,
+          "level": 13,
+          "hp": 167.41343749999996,
+          "damage": 75.5915625
+        },
+        {
+          "time": 180,
+          "enemies": 26,
+          "kills": 407,
+          "level": 15,
+          "hp": 181.40843749999993,
+          "damage": 88.5965625
+        },
+        {
+          "time": 210,
+          "enemies": 41,
+          "kills": 548,
+          "level": 16,
+          "hp": 173.05343749999992,
+          "damage": 144.95156250000002
+        },
+        {
+          "time": 240,
+          "enemies": 33,
+          "kills": 752,
+          "level": 18,
+          "hp": 189.65499999999997,
+          "damage": 209.9765625
+        },
+        {
+          "time": 270,
+          "enemies": 8,
+          "kills": 796,
+          "level": 19,
+          "hp": 177.30999999999997,
+          "damage": 240.32156250000003
+        },
+        {
+          "time": 300,
+          "enemies": 4,
+          "kills": 818,
+          "level": 19,
+          "hp": 144.29499999999996,
+          "damage": 279.3365625
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 96.89999999999579
+        }
+      ],
+      "route": "lunar",
+      "seed": 42,
+      "time": 300,
+      "outcome": "survived",
+      "level": 19,
+      "kills": 818,
+      "hp": 144.29499999999996,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 38585.023209879466
+      },
+      "damageTaken": {
+        "contact": 139.17156250000002,
+        "hunt": 8.669999999999998,
+        "spore": 73.695,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 57.8
+      },
+      "healing": {
+        "field": 4.335000000000008,
+        "elite": 34.33500000000001,
+        "upgrade": 94.33500000000001,
+        "relic": 165.62656250000012
+      },
+      "peak": 70
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 12,
+          "kills": 26,
+          "level": 4,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 12,
+          "kills": 72,
+          "level": 7,
+          "hp": 145,
+          "damage": 0
+        },
+        {
+          "time": 90,
+          "enemies": 13,
+          "kills": 130,
+          "level": 9,
+          "hp": 165,
+          "damage": 18.784999999999997
+        },
+        {
+          "time": 120,
+          "enemies": 23,
+          "kills": 201,
+          "level": 11,
+          "hp": 185,
+          "damage": 23.119999999999997
+        },
+        {
+          "time": 150,
+          "enemies": 19,
+          "kills": 291,
+          "level": 13,
+          "hp": 183.54156249999997,
+          "damage": 77.57843749999999
+        },
+        {
+          "time": 180,
+          "enemies": 32,
+          "kills": 401,
+          "level": 14,
+          "hp": 199.20156249999994,
+          "damage": 94.9184375
+        },
+        {
+          "time": 210,
+          "enemies": 35,
+          "kills": 554,
+          "level": 16,
+          "hp": 186.26031249999988,
+          "damage": 158.8596875
+        },
+        {
+          "time": 240,
+          "enemies": 41,
+          "kills": 744,
+          "level": 18,
+          "hp": 192.8275,
+          "damage": 218.1046875
+        },
+        {
+          "time": 270,
+          "enemies": 6,
+          "kills": 798,
+          "level": 19,
+          "hp": 176.47749999999996,
+          "damage": 261.4546875
+        },
+        {
+          "time": 300,
+          "enemies": 4,
+          "kills": 818,
+          "level": 19,
+          "hp": 147.79749999999996,
+          "damage": 296.1346875
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 93.06666666666267
+        }
+      ],
+      "route": "lunar",
+      "seed": 99,
+      "time": 300,
+      "outcome": "survived",
+      "level": 19,
+      "kills": 818,
+      "hp": 147.79749999999996,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "dew",
+        "bell"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 39928.31012345992
+      },
+      "damageTaken": {
+        "contact": 140.0746875,
+        "hunt": 0,
+        "spore": 86.69999999999997,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 69.36
+      },
+      "healing": {
+        "field": 0,
+        "elite": 32.592187500000136,
+        "upgrade": 85.67000000000002,
+        "relic": 200.67000000000002
+      },
+      "peak": 85
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 35,
+          "kills": 3,
+          "level": 1,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 11,
+          "kills": 73,
+          "level": 5,
+          "hp": 111.4,
+          "damage": 13.6
+        },
+        {
+          "time": 90,
+          "enemies": 15,
+          "kills": 128,
+          "level": 8,
+          "hp": 145,
+          "damage": 25.5
+        },
+        {
+          "time": 120,
+          "enemies": 20,
+          "kills": 204,
+          "level": 11,
+          "hp": 149.70000000000002,
+          "damage": 49.3
+        },
+        {
+          "time": 150,
+          "enemies": 13,
+          "kills": 297,
+          "level": 13,
+          "hp": 167.50000000000003,
+          "damage": 76.5
+        },
+        {
+          "time": 180,
+          "enemies": 32,
+          "kills": 401,
+          "level": 15,
+          "hp": 199.9,
+          "damage": 95.2
+        },
+        {
+          "time": 210,
+          "enemies": 44,
+          "kills": 545,
+          "level": 17,
+          "hp": 199.9,
+          "damage": 115.60000000000001
+        },
+        {
+          "time": 240,
+          "enemies": 31,
+          "kills": 754,
+          "level": 18,
+          "hp": 205,
+          "damage": 148.75
+        },
+        {
+          "time": 270,
+          "enemies": 5,
+          "kills": 799,
+          "level": 19,
+          "hp": 183.8,
+          "damage": 181.04999999999998
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 95.09999999999589
+        }
+      ],
+      "route": "lunar-alternate",
+      "seed": 12,
+      "time": 291.81666666672993,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 815,
+      "hp": 149.00000000000003,
+      "branches": [
+        "horizon"
+      ],
+      "relics": [
+        "briar",
+        "dew"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 922.6097530864779,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 41268.88648148406
+      },
+      "damageTaken": {
+        "contact": 77.35,
+        "hunt": 0,
+        "spore": 76.5,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 68
+      },
+      "healing": {
+        "field": 32.99999999999997,
+        "elite": 15,
+        "upgrade": 108.5,
+        "relic": 89.34999999999997
+      },
+      "peak": 56
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 12,
+          "kills": 26,
+          "level": 4,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 11,
+          "kills": 73,
+          "level": 6,
+          "hp": 113.10000000000001,
+          "damage": 11.899999999999999
+        },
+        {
+          "time": 90,
+          "enemies": 12,
+          "kills": 123,
+          "level": 9,
+          "hp": 165,
+          "damage": 17
+        },
+        {
+          "time": 120,
+          "enemies": 25,
+          "kills": 205,
+          "level": 11,
+          "hp": 185,
+          "damage": 22.099999999999998
+        },
+        {
+          "time": 150,
+          "enemies": 18,
+          "kills": 298,
+          "level": 12,
+          "hp": 194.8,
+          "damage": 37.4
+        },
+        {
+          "time": 180,
+          "enemies": 19,
+          "kills": 418,
+          "level": 15,
+          "hp": 205,
+          "damage": 42.5
+        },
+        {
+          "time": 210,
+          "enemies": 46,
+          "kills": 553,
+          "level": 16,
+          "hp": 199.9,
+          "damage": 57.800000000000004
+        },
+        {
+          "time": 240,
+          "enemies": 34,
+          "kills": 758,
+          "level": 18,
+          "hp": 199.9,
+          "damage": 73.10000000000001
+        },
+        {
+          "time": 270,
+          "enemies": 4,
+          "kills": 807,
+          "level": 19,
+          "hp": 167.60000000000002,
+          "damage": 105.4
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 74.39999999999706
+        }
+      ],
+      "route": "lunar-alternate",
+      "seed": 42,
+      "time": 272.76666666674726,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 809,
+      "hp": 167.60000000000002,
+      "branches": [
+        "horizon"
+      ],
+      "relics": [
+        "briar",
+        "bell"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 836.7193209877298,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 39713.71481481738
+      },
+      "damageTaken": {
+        "contact": 6.8,
+        "hunt": 0,
+        "spore": 71.4,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 27.2
+      },
+      "healing": {
+        "field": 30.599999999999966,
+        "elite": 17.19999999999996,
+        "upgrade": 100.19999999999999,
+        "relic": 0
+      },
+      "peak": 60
+    },
+    {
+      "moments": [
+        {
+          "time": 30,
+          "enemies": 10,
+          "kills": 28,
+          "level": 4,
+          "hp": 125,
+          "damage": 0
+        },
+        {
+          "time": 60,
+          "enemies": 14,
+          "kills": 70,
+          "level": 6,
+          "hp": 119.9,
+          "damage": 5.1
+        },
+        {
+          "time": 90,
+          "enemies": 11,
+          "kills": 132,
+          "level": 8,
+          "hp": 156.5,
+          "damage": 18.7
+        },
+        {
+          "time": 120,
+          "enemies": 21,
+          "kills": 203,
+          "level": 10,
+          "hp": 171.4,
+          "damage": 42.5
+        },
+        {
+          "time": 150,
+          "enemies": 14,
+          "kills": 296,
+          "level": 13,
+          "hp": 145.28125000000003,
+          "damage": 83.61875
+        },
+        {
+          "time": 180,
+          "enemies": 41,
+          "kills": 392,
+          "level": 14,
+          "hp": 165.08125000000004,
+          "damage": 93.81875000000001
+        },
+        {
+          "time": 210,
+          "enemies": 49,
+          "kills": 540,
+          "level": 16,
+          "hp": 154.93125000000006,
+          "damage": 143.96875
+        },
+        {
+          "time": 240,
+          "enemies": 29,
+          "kills": 756,
+          "level": 18,
+          "hp": 86.08125000000008,
+          "damage": 212.81874999999997
+        },
+        {
+          "time": 270,
+          "enemies": 5,
+          "kills": 799,
+          "level": 19,
+          "hp": 58.88125000000009,
+          "damage": 240.01874999999995
+        }
+      ],
+      "evolutions": [
+        {
+          "key": "lunar",
+          "time": 97.38333333332909
+        }
+      ],
+      "route": "lunar-alternate",
+      "seed": 99,
+      "time": 292.483333333396,
+      "outcome": "victory",
+      "level": 19,
+      "kills": 815,
+      "hp": 18.081250000000082,
+      "branches": [
+        "horizon"
+      ],
+      "relics": [
+        "bell",
+        "coal"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 41857.36709876821
+      },
+      "damageTaken": {
+        "contact": 121.01875,
+        "hunt": 0,
+        "spore": 91.79999999999998,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 68
+      },
+      "healing": {
+        "field": 43.69999999999999,
+        "elite": 30,
+        "upgrade": 100.19999999999999,
+        "relic": 0
+      },
+      "peak": 59
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { attackPose, isEvolvedWeapon, hurtFeedback } from './impact.js';
-import { GIANT, waveAt } from './enemies.js';
+import { GIANT } from './enemies.js';
+import { combatPacing } from './pacing.js';
 import { canEquipKeepsake } from './journey.js';
 import { specializationFor, RELICS } from './expansion.js';
 import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, chooseCurse, chooseRelic } from './encounters.js';
@@ -272,7 +273,9 @@ function updateHud() {
   $('xp-text').textContent = `${game.xp} / ${game.xpNeed}`;
   $('xp-bar').firstElementChild.style.width = `${Math.min(100, game.xp / game.xpNeed * 100)}%`;
   $('xp-bar').setAttribute('aria-valuenow', String(Math.round(Math.min(100, game.xp / game.xpNeed * 100))));
-  $('phase-label').textContent = boss ? '최후의 대결' : waveAt(game.time).name;
+  const pacing = combatPacing(game);
+  $('phase-label').textContent = ['rest', 'evolution', 'surge'].includes(pacing.kind) ? `${pacing.label} · ${Math.ceil(pacing.remaining)}초` : pacing.label;
+  $('phase-label').dataset.pacing = pacing.kind;
   $('coach').style.opacity = game.time < 14 ? '1' : '0';
   const evolution = nextEvolution(game),
     path = evolution ? EVOLUTIONS[evolution] : null;
@@ -433,6 +436,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       outcome: game.outcome,
       phase: game.phase,
       time: game.time,
+      pacing: combatPacing(game),
       kills: game.kills,
       eliteKills: game.eliteKills,
       boss: game.enemies.filter(e => e.boss).map(e => ({
@@ -476,7 +480,13 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name === 'player-hurt' || name === 'player-hurt-lethal') {
+      if (name === 'pacing-surge' || name === 'pacing-rest' || name === 'pacing-boss') {
+        game.time = name === 'pacing-surge' ? 54 : name === 'pacing-rest' ? 82 : 239.9;
+        game.nextElite = 999;
+        game.xpNeed = 99999;
+        game.spawnClock = 0;
+        if (name === 'pacing-boss') game.evolutionBreatherUntil = 247;
+      } else if (name === 'player-hurt' || name === 'player-hurt-lethal') {
         game.ranks.sword = 0; game.player.invincible = 0;
         if (name.endsWith('-lethal')) game.player.hp = 3;
         const e = spawnEnemy(game, 0, false, {x:-20,y:0}); e.speed = 0;

@@ -129,6 +129,9 @@ button:focus-visible {
   color: #d3d9c2;
   letter-spacing: .06em;
 }
+.clock-pocket small[data-pacing="surge"] { color: #ffd29d; }
+.clock-pocket small[data-pacing="rest"],
+.clock-pocket small[data-pacing="evolution"] { color: #b6f1cf; }
 .clock-pocket>strong {
   display: block;
   margin: 4px 0;

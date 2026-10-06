@@ -6,6 +6,7 @@ import { BOSS, updateBoss, updateThorns } from './boss.js';
 import { getCharacter } from './characters.js';
 import { keepsakeStats, KEEPSAKES } from './journey.js';
 import { healPlayer, updateField } from './field.js';
+import { EVOLUTION_BREATHER, spawnPlan } from './pacing.js';
 export const RUN_SECONDS = 300;
 export const LIMITS = {
   enemies: 160,
@@ -255,6 +256,7 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none') {
     emberClock: 0.8,
     pulseClock: 1.2,
     spawnClock: 0.4,
+    evolutionBreatherUntil: 0,
     nextElite: 60,
     id: 0,
     damageDealt: {
@@ -338,7 +340,10 @@ export function chooseUpgrade(game, key) {
   if (game.phase !== 'upgrade' || !game.choices.includes(key) || game.ranks[key] >= UPGRADE_META[key]?.max) return false;
   if (SPECIALIZATIONS[key] && (game.ranks[SPECIALIZATIONS[key].weapon] < 3 || specializationFor(game, SPECIALIZATIONS[key].weapon))) return false;
   game.ranks[key]++;
-  if (EVOLUTIONS[key]) game.events.push('evolve');
+  if (EVOLUTIONS[key]) {
+    game.events.push('evolve');
+    game.evolutionBreatherUntil = Math.min(BOSS.arrival, game.time + EVOLUTION_BREATHER);
+  }
   if (key === 'vitality') {
     game.player.maxHp += 20;
     healPlayer(game, 30, 'upgrade');
@@ -825,8 +830,8 @@ export function updateGame(game, dt, input = {
   game.spawnClock -= dt;
   if (game.time >= BOSS.arrival && !game.bossSpawned) spawnBoss(game);
   if (game.spawnClock <= 0) {
-    game.spawnClock = game.bossSpawned ? 1.6 : Math.max(.18, .82 - game.time * .002);
-    const count = game.bossSpawned ? 1 : game.time > 180 ? 3 : game.time > 70 ? 2 : 1;
+    const { interval, count } = spawnPlan(game);
+    game.spawnClock = interval;
     for (let i = 0; i < count; i++) {
       const roll = game.rng();
       spawnEnemy(game, enemyTypeAt(game.time, roll));

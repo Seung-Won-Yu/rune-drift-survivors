@@ -82,6 +82,8 @@ test('earned evolution changes the weapon belt and produces piercing crescents',
   await expect(page.locator('[data-upgrade]').first()).toHaveAttribute('data-upgrade','dawn');
   await page.screenshot({ path: 'output/playwright/survivor/evolution-choice.png', animations: 'disabled' });
   await page.locator('[data-upgrade="dawn"]').click();
+  await expect(page.locator('#phase-label')).toContainText('진화의 여세');
+  expect((await snapshot(page)).pacing.kind).toBe('evolution');
   await expect(page.locator('#weapons .is-evolved')).toHaveAttribute('aria-label','여명의 검 3단계');
   await expect(page.locator('#evolution-hint')).toContainText('월광 고리 진화');
   expect((await snapshot(page)).ranks.dawn).toBe(1);
@@ -91,6 +93,7 @@ test('earned evolution changes the weapon belt and produces piercing crescents',
   await scenario(page, 'defeat');
   await page.getByRole('button', {name:'다시 숲으로'}).click();
   expect((await snapshot(page)).ranks.dawn).toBe(0);
+  expect((await snapshot(page)).pacing.kind).toBe('build');
   await expect(page.locator('#weapons .is-evolved')).toHaveCount(0);
 });
 
@@ -100,6 +103,7 @@ for(const [key,name,effect] of [['comet','잿불 혜성','ember-burst'],['lunar'
     await scenario(page,`evolution-${key}`);
     await expect(page.locator(`[data-upgrade="${key}"]`)).toBeVisible();
     await page.locator(`[data-upgrade="${key}"]`).click();
+    await expect(page.locator('#phase-label')).toContainText('진화의 여세');
     await expect(page.locator('#weapons .is-evolved')).toHaveAttribute('aria-label',`${name} 3단계`);
     await scenario(page,key);
     await page.waitForFunction(effect=>window.__ASH_QA__.snapshot().effects.includes(effect),effect);
@@ -659,3 +663,28 @@ test('long player damage labels fit the narrow HUD',async({page})=>{
   await page.locator('#overlay').evaluate(el=>{el.style.visibility='hidden';});
   await page.screenshot({path:'output/playwright/survivor/hurt-hound-320.png'});
 });
+
+for (const viewport of [{width:1280,height:720},{width:320,height:740},{width:740,height:360}]) {
+  test(`combat pacing countdown freezes and stays readable at ${viewport.width}x${viewport.height}`, async ({page}) => {
+    await page.setViewportSize(viewport);
+    for (const [name, kind, label] of [['pacing-surge','surge','밀려오는 무리'],['pacing-rest','rest','숨 고르기']]) {
+      await scenario(page, name);
+      await expect(page.locator('#phase-label')).toContainText(label);
+      await expect(page.locator('#phase-label')).toHaveAttribute('data-pacing',kind);
+      const bounds = await page.locator('#phase-label').boundingBox();
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.getByRole('button',{name:'일시정지',exact:true}).click();
+      const paused = await snapshot(page);
+      await page.waitForTimeout(150);
+      expect((await snapshot(page)).pacing.remaining).toBe(paused.pacing.remaining);
+      await page.getByRole('button',{name:'전투 계속하기'}).click();
+      await expect.poll(async () => (await snapshot(page)).pacing.remaining).toBeLessThan(paused.pacing.remaining);
+      await page.screenshot({path:`output/playwright/survivor/${name}-${viewport.width}.png`});
+    }
+    await scenario(page,'pacing-boss');
+    await expect(page.locator('#phase-label')).toHaveText('최후의 대결');
+    expect((await snapshot(page)).boss).not.toBeNull();
+  });
+}
