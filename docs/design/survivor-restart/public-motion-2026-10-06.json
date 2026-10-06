@@ -1,0 +1,60 @@
+{
+  "checkedAt": "2026-10-06T04:52:42.652Z",
+  "commit": "7a371bfd38fdbc469c5a4ac268d4910a9d64f02b",
+  "url": "https://seung-won-yu.github.io/rune-drift-survivors/survivor/",
+  "htmlReferencesMatch": true,
+  "assets": [
+    {
+      "path": "/rune-drift-survivors/assets/survivor-CSo_gLEs.js",
+      "sha256": "37399fbec28a455bf235aec35a543bfb3f1ecd125fef91e229f86bf301027e0e"
+    },
+    {
+      "path": "/rune-drift-survivors/assets/modulepreload-polyfill-B5Qt9EMX.js",
+      "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0"
+    },
+    {
+      "path": "/rune-drift-survivors/assets/survivor-C3LQqqht.css",
+      "sha256": "73c743f8219b25e6c567991947736afa2c5c34129fdcef3e96c6f4c2e504f9ec"
+    }
+  ],
+  "productionSmoke": {
+    "base": "/rune-drift-survivors/",
+    "loadedAssets": [
+      "ash-sovereign.png",
+      "hero-grove.png",
+      "hero-ash.png",
+      "hero-ember.png",
+      "enemies.png"
+    ],
+    "qaGlobal": "absent",
+    "startAndPause": "passed",
+    "failures": [],
+    "errors": []
+  },
+  "inAppPublicFlow": {
+    "input": "normal in-app browser UI; no DEV scene or QA hook",
+    "runtimeScript": "/rune-drift-survivors/assets/survivor-CSo_gLEs.js",
+    "savedRecordsRestored": {
+      "recordedRuns": 1,
+      "totalKills": 84,
+      "unlockedCompanions": 2,
+      "preparedExperiment": "duelist"
+    },
+    "hero": "ash",
+    "normalStart": {
+      "level": 1,
+      "kills": 0,
+      "health": 100,
+      "swordRank": 1
+    },
+    "pause": {
+      "displayedTime": "0:22",
+      "kills": 18,
+      "level": 1,
+      "target": "duelist"
+    },
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "screenshot": "images/public-motion-combat-1280.jpg"
+  }
+}

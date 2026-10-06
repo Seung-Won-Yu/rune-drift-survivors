@@ -90,5 +90,12 @@
     "exitCode": 0,
     "record": "motion-fullrun-2026-10-06.json",
     "normalExit": true
+  },
+  "visualFrameReview": {
+    "companions": 3,
+    "frames": 36,
+    "renderer": "current createRenderer",
+    "capture": "images/motion-frame-gallery.png",
+    "limits": "Existing four-pose proportions and cloak/weapon-edge cropping remain."
   }
 }
