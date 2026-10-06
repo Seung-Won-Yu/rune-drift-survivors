@@ -67,7 +67,7 @@ GPU 없이 최대 부하 렌더링을 재현하려면 다음 명령을 사용한
 ASH_QA_SOFTWARE=1 npx playwright test --config scripts/playwright-survivor.config.mjs --grep 'late-game entity caps'
 ```
 
-전체 시간 검사에는 개발 서버가 필요하다. 검사 중에는 해당 서버의 소스를 변경하지 않는다. 각 동료를 별도 브라우저에서 실행해 약 5분 걸리며 결과와 프레임 수치를 `output/playwright/survivor/fullrun/`에 저장한다.
+전체 시간 검사는 필요하면 개발 서버를 실행한다. 검사 중에는 해당 서버의 소스를 변경하지 않는다. CI와 같은 Playwright Chromium이 세 동료의 독립 브라우저와 종료를 관리하며 약 5분 걸린다. 처음에는 `npx playwright install chromium`으로 검사 브라우저를 준비한다. 결과와 프레임 수치를 `output/playwright/survivor/fullrun/`에 저장한다.
 
 ```sh
 npm run qa:survivor:fullrun
@@ -134,3 +134,8 @@ npm run qa:survivor:production
 ## 숲의 사건과 보상 미리보기
 
 발견한 사건의 ‘보상 후보 살펴보기’를 누르면 전투가 멈추고 조건과 실제 유물 후보 3개가 표시됩니다. 돌아가기 또는 Esc/P로 전투를 재개합니다. 저주 상자는 접근 후 수락 화면에서 후보를 확인할 수 있습니다. 완료 후에도 같은 후보 중 하나를 고릅니다. 카드의 ‘무기 필요’는 해당 무기를 얻은 뒤 효과가 적용된다는 뜻입니다. 두 사건은 서로 다른 후보를 제시합니다. [설계와 조사](./design/survivor-restart/18-RISK-REWARD-CHOICES.md).
+
+
+## 다음 판의 빌드 실험
+
+결과는 이번 판에 처음 발견한 전문화·진화·유물을 표시합니다. ‘이 빌드로 다음 판 준비’를 누르면 같은 동료의 다른 전문화를 목표로 준비합니다. 동료 선택 화면에서 효과와 조건을 확인하고 출발하세요. 목표는 저장되며 실제 후보가 나타날 때 표시됩니다. 목표를 지우거나 다른 갈래를 골라도 괜찮습니다. 무기는 1단계부터 시작하고 전문화·진화·유물은 새 판에서 다시 얻습니다. [설계와 검증](./design/survivor-restart/19-REPLAY-EXPERIMENTS.md).

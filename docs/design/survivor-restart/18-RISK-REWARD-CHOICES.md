@@ -35,3 +35,8 @@
 최종 패널 수정 후 영향받는 8개 시나리오도 통과했다. [검사 요약](./choices-local-qa-2026-10-06.json), [데스크톱 화면](./images/reward-preview-1280.png), [320px 화면](./images/reward-preview-320.png)을 기록했다. 짧은 화면에서는 세로 스크롤로 후보와 복귀 버튼을 모두 볼 수 있다.
 
 인앱 브라우저의 일반 실행에서도 검을 강화하고 45초 이후 발견한 제단의 실제 보상 미리보기를 열어 현재 검 연결/미보유 불씨 조건/수집 회복이 함께 표시되는 것을 확인했다. 후보 미리보기·복귀는 자동 시나리오와 일반 UI 양쪽에서 검수했다. main 전달 후 자동 Pages 배포를 확인할 예정이며, 전체 개발 목표는 다음 빌드/결과 연결과 최종 출시 대조까지 계속 진행한다.
+
+
+## main 전달
+
+`c4950239a224a713ffa948c7f4ddd9ca2b8a498b`의 [원격 실행 37403627157](https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/37403627157)에서 build와 deploy가 모두 성공했다. 새 게임·production·기존 3D 회귀 검사가 배포 게이트를 통과했다. 다음 빌드 연결은 [19번 기록](./19-REPLAY-EXPERIMENTS.md)으로 이어간다.

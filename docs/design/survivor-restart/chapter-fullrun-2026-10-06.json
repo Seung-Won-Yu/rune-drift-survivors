@@ -1,0 +1,248 @@
+[
+  {
+    "character": "ash",
+    "route": "blade",
+    "seed": 42,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "wallSeconds": 260.217,
+    "time": 259.1666666667596,
+    "outcome": "victory",
+    "kills": 808,
+    "level": 18,
+    "eliteKills": 3,
+    "ranks": {
+      "sweep": 1,
+      "duelist": 0,
+      "wildfire": 0,
+      "detonation": 0,
+      "bulwark": 0,
+      "horizon": 1,
+      "sword": 6,
+      "ember": 0,
+      "orbit": 5,
+      "fleet": 2,
+      "magnet": 0,
+      "vitality": 2,
+      "heal": 0,
+      "dawn": 1,
+      "comet": 0,
+      "lunar": 0
+    },
+    "damage": {
+      "relic": 74.95820987657393,
+      "sword": 38803.214567903895,
+      "ember": 0,
+      "orbit": 2590.981851852061
+    },
+    "healing": {
+      "field": 24,
+      "elite": 24,
+      "upgrade": 40,
+      "relic": 0
+    },
+    "relics": [
+      "fang",
+      "briar"
+    ],
+    "encounters": [
+      {
+        "kind": "altar",
+        "x": 199.86860827251766,
+        "y": -235.64289574802314,
+        "state": "completed",
+        "progress": 10.000000000000076,
+        "rewards": [
+          "dew",
+          "bell",
+          "fang"
+        ]
+      },
+      {
+        "kind": "chest",
+        "x": 58.69895773950191,
+        "y": -248.52690977538478,
+        "state": "completed",
+        "progress": 18.00000000000026,
+        "rewards": [
+          "briar",
+          "coal",
+          "sail"
+        ]
+      }
+    ],
+    "timing": {
+      "frames": 31097,
+      "p50": 8.30000000000291,
+      "p95": 9.199999999982538,
+      "over50": 0
+    },
+    "errors": []
+  },
+  {
+    "character": "ember",
+    "route": "comet",
+    "seed": 42,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "wallSeconds": 294.583,
+    "time": 293.7833333333948,
+    "outcome": "victory",
+    "kills": 828,
+    "level": 19,
+    "eliteKills": 3,
+    "ranks": {
+      "sweep": 0,
+      "duelist": 0,
+      "wildfire": 1,
+      "detonation": 0,
+      "bulwark": 0,
+      "horizon": 0,
+      "sword": 0,
+      "ember": 5,
+      "orbit": 0,
+      "fleet": 4,
+      "magnet": 4,
+      "vitality": 4,
+      "heal": 0,
+      "dawn": 0,
+      "comet": 1,
+      "lunar": 0
+    },
+    "damage": {
+      "relic": 0,
+      "sword": 0,
+      "ember": 43216.85370370715,
+      "orbit": 0
+    },
+    "healing": {
+      "field": 40,
+      "elite": 30,
+      "upgrade": 120,
+      "relic": 0
+    },
+    "relics": [
+      "coal",
+      "sail"
+    ],
+    "encounters": [
+      {
+        "kind": "altar",
+        "x": -256.26796517352733,
+        "y": -863.3813550743762,
+        "state": "completed",
+        "progress": 10.000000000000076,
+        "rewards": [
+          "dew",
+          "bell",
+          "coal"
+        ]
+      },
+      {
+        "kind": "chest",
+        "x": -288.02450181912707,
+        "y": -639.218456879532,
+        "state": "completed",
+        "progress": 18.00000000000026,
+        "rewards": [
+          "briar",
+          "sail",
+          "fang"
+        ]
+      }
+    ],
+    "timing": {
+      "frames": 35252,
+      "p50": 8.30000000000291,
+      "p95": 9.199999999982538,
+      "over50": 0
+    },
+    "errors": []
+  },
+  {
+    "character": "grove",
+    "route": "lunar",
+    "seed": 42,
+    "viewport": {
+      "width": 740,
+      "height": 360
+    },
+    "wallSeconds": 300.319,
+    "time": 300,
+    "outcome": "survived",
+    "kills": 827,
+    "level": 19,
+    "eliteKills": 3,
+    "ranks": {
+      "sweep": 0,
+      "duelist": 0,
+      "wildfire": 0,
+      "detonation": 0,
+      "bulwark": 1,
+      "horizon": 0,
+      "sword": 0,
+      "ember": 0,
+      "orbit": 5,
+      "fleet": 4,
+      "magnet": 4,
+      "vitality": 4,
+      "heal": 0,
+      "dawn": 0,
+      "comet": 0,
+      "lunar": 1
+    },
+    "damage": {
+      "relic": 2757.698024691669,
+      "sword": 0,
+      "ember": 0,
+      "orbit": 36892.470679015045
+    },
+    "healing": {
+      "field": 36.551875000000024,
+      "elite": 30,
+      "upgrade": 84.33500000000001,
+      "relic": 0
+    },
+    "relics": [
+      "bell",
+      "briar"
+    ],
+    "encounters": [
+      {
+        "kind": "altar",
+        "x": 199.74512277586254,
+        "y": -25.797212092034677,
+        "state": "completed",
+        "progress": 10.000000000000076,
+        "rewards": [
+          "dew",
+          "fang",
+          "bell"
+        ]
+      },
+      {
+        "kind": "chest",
+        "x": -187.15195247658372,
+        "y": -262.2400534488569,
+        "state": "completed",
+        "progress": 18.00000000000026,
+        "rewards": [
+          "briar",
+          "coal",
+          "sail"
+        ]
+      }
+    ],
+    "timing": {
+      "frames": 36001,
+      "p50": 8.30000000000291,
+      "p95": 9.100000000034925,
+      "over50": 0
+    },
+    "errors": []
+  }
+]

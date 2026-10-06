@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-06",
+  "core": {
+    "tests": 98,
+    "passed": 98
+  },
+  "browser": {
+    "tests": 81,
+    "passed": 81
+  },
+  "newChecks": {
+    "core": 7,
+    "browser": 8
+  },
+  "stress": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "frames": 721,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "frames": 721,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    }
+  ],
+  "normalRouteParity": {
+    "records": 18,
+    "baseline": "choices-balance-2026-10-06.jsonl",
+    "identical": true
+  },
+  "production": {
+    "base": "/rune-drift-survivors/",
+    "assets": 5,
+    "qaGlobal": "absent",
+    "startAndPause": "passed",
+    "errors": []
+  },
+  "limits": "Headless runs and viewport/touch emulation do not establish human replay intent or physical mobile performance.",
+  "finalLayout": {
+    "tests": 8,
+    "passed": 8,
+    "requirement": "Start action remains in viewport immediately after preparing an experiment"
+  },
+  "fullRun": {
+    "browser": "Playwright Chromium",
+    "tests": 3,
+    "passed": 3,
+    "normalExit": true,
+    "record": "chapter-fullrun-2026-10-06.json"
+  }
+}

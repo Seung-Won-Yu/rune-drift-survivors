@@ -7,6 +7,7 @@ import { getCharacter } from './characters.js';
 import { keepsakeStats, KEEPSAKES } from './journey.js';
 import { healPlayer, updateField } from './field.js';
 import { EVOLUTION_BREATHER, spawnPlan } from './pacing.js';
+import { validExperiment } from './experiments.js';
 export const RUN_SECONDS = 300;
 export const LIMITS = {
   enemies: 160,
@@ -171,10 +172,11 @@ export function seededRandom(seed = 1) {
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-export function createGame(seed = 1, characterId = 'ash', keepsake = 'none') {
+export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', experiment = null) {
   const character = getCharacter(characterId);
   keepsake = Object.hasOwn(KEEPSAKES, keepsake) ? keepsake : 'none';
   return {
+    experiment: validExperiment(character.id, experiment),
     keepsake,
     feedbackAt: {},
     spores: [],

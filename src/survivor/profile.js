@@ -1,6 +1,7 @@
 import { SPECIALIZATIONS, RELICS } from './expansion.js';
 import { canEquipKeepsake, completedChallenges, KEEPSAKES } from './journey.js';
 import { CHARACTERS, getCharacter, isUnlocked } from './characters.js';
+import { validExperiment } from './experiments.js';
 export const PROFILE_KEY = 'ash-profile-v1';
 const evolutions = ['dawn', 'comet', 'lunar'];
 const integer = (value, max = 1e9) => Number.isFinite(value) ? Math.min(max, Math.max(0, Math.floor(value))) : 0;
@@ -15,6 +16,7 @@ export function createProfile() {
   return {
     version: 1,
     selected: 'ash',
+    experiment: null,
     keepsake: 'none',
     altarRuns: 0,
     runs: 0,
@@ -49,6 +51,7 @@ export function normalizeProfile(input) {
     if (Number.isFinite(value.fastestWin) && value.fastestWin > 0) row.fastestWin = Math.min(300, value.fastestWin);
   }
   profile.selected = isUnlocked(profile, input.selected) ? getCharacter(input.selected).id : 'ash';
+  profile.experiment = validExperiment(profile.selected, input.experiment);
   if (Array.isArray(input.history)) profile.history = input.history.slice(0, 5).filter(row => row && typeof row === 'object').map(row => ({
     character: getCharacter(row.character).id,
     outcome: ['victory', 'survived', 'defeat'].includes(row.outcome) ? row.outcome : 'defeat',
@@ -107,10 +110,16 @@ export function recordRun(input, game) {
     profile,
     added: false,
     unlocked: [],
-    challenges: []
+    challenges: [],
+    discoveries: { evolutions: [], branches: [], relics: [] }
   };
   const before = Object.keys(CHARACTERS).filter(id => isUnlocked(profile, id));
   const previousChallenges = completedChallenges(profile).map(c => c.id);
+  const newDiscoveries = {
+    evolutions: evolutions.filter(key => game.ranks[key] > 0 && !profile.discoveries.includes(key)),
+    branches: Object.keys(SPECIALIZATIONS).filter(key => game.ranks[key] && !profile.buildDiscoveries.includes(key)),
+    relics: Object.keys(RELICS).filter(key => game.relics?.includes(key) && !profile.relicDiscoveries.includes(key))
+  };
   const character = getCharacter(game.characterId).id,
     kills = integer(game.kills),
     time = integer(game.time, 300),
@@ -150,6 +159,7 @@ export function recordRun(input, game) {
   return {
     profile,
     added: true,
+    discoveries: newDiscoveries,
     challenges: completedChallenges(profile).filter(c => !previousChallenges.includes(c.id)).map(c => c.id),
     unlocked: Object.keys(CHARACTERS).filter(id => !before.includes(id) && isUnlocked(profile, id))
   };

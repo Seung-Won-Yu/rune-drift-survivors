@@ -12,6 +12,106 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('button', { name: '숲에 들어가기' })).toBeVisible();
 });
 
+for (const viewport of [{width:1280,height:720}, {width:320,height:740}, {width:740,height:360}]) {
+  test(`new discoveries lead into an optional saved experiment at ${viewport.width}px`, async ({page}) => {
+    await page.setViewportSize(viewport);
+    await scenario(page, 'record-experiment');
+    await expect(page.locator('.run-discoveries')).toContainText('반월 검법');
+    await expect(page.locator('.run-discoveries')).toContainText('여명의 검');
+    await expect(page.locator('.run-discoveries')).toContainText('왕을 노리는 송곳니');
+    await expect(page.locator('.run-discoveries .found')).toHaveCount(3);
+    await expect(page.locator('[data-experiment]')).toHaveAttribute('data-experiment', 'duelist');
+    await page.locator('.next-experiment').scrollIntoViewIfNeeded();
+    const box = await page.locator('.next-experiment').boundingBox();
+    expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+    await page.screenshot({path:`output/playwright/survivor/next-experiment-${viewport.width}.png`});
+    await page.getByRole('button', {name:'이 빌드로 다음 판 준비'}).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.experiment-plan')).toContainText('일점 검법');
+    await expect(page.getByRole('button', {name:'숲에 들어가기'})).toBeInViewport();
+    await page.reload();
+    await expect(page.locator('.experiment-plan')).toContainText('일점 검법');
+    expect((await snapshot(page)).profile.runs).toBe(1);
+    await page.locator('.experiment-plan').scrollIntoViewIfNeeded();
+    await page.screenshot({path:`output/playwright/survivor/experiment-plan-${viewport.width}.png`});
+    await page.getByRole('button', {name:'숲에 들어가기'}).click();
+    let fresh = await snapshot(page);
+    expect(fresh.experiment).toBe('duelist'); expect(fresh.ranks.sword).toBe(1);
+    expect(fresh.ranks.duelist).toBe(0); expect(fresh.ranks.sweep).toBe(0); expect(fresh.ranks.dawn).toBe(0); expect(fresh.relics).toEqual([]);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.experiment-progress')).toContainText('1/3단계');
+    await scenario(page, 'experiment-offer');
+    await expect(page.locator('[data-upgrade="duelist"] .experiment-badge')).toHaveText('이번 판의 목표');
+    await expect(page.locator('[data-upgrade="sweep"]')).toBeEnabled();
+    await page.locator('[data-upgrade="duelist"]').scrollIntoViewIfNeeded();
+    await page.screenshot({path:`output/playwright/survivor/experiment-offer-${viewport.width}.png`});
+    await page.locator('[data-upgrade="duelist"]').click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.experiment-progress.is-complete')).toContainText('일점 검법 선택 완료');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await scenario(page, 'defeat');
+    await page.getByRole('button', {name:'다시 숲으로'}).click();
+    fresh = await snapshot(page);
+    expect(fresh.experiment).toBe('duelist'); expect(fresh.ranks.duelist).toBe(0); expect(fresh.ranks.sword).toBe(1);
+  });
+}
+
+test('an experiment allows another branch and can be cleared before departure', async ({page}) => {
+  await scenario(page, 'record-experiment');
+  await page.getByRole('button', {name:'이 빌드로 다음 판 준비'}).click();
+  await scenario(page, 'experiment-offer');
+  await page.locator('[data-upgrade="sweep"]').click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.experiment-progress.is-changed')).toContainText('반월 검법으로 방향을 바꿨습니다');
+  expect((await snapshot(page)).ranks.duelist).toBe(0);
+  await scenario(page, 'defeat');
+  await page.getByRole('button', {name:'동료 선택',exact:true}).click();
+  await page.getByRole('button', {name:'목표 지우기'}).click();
+  await expect(page.locator('.experiment-plan')).toHaveCount(0);
+  await page.reload(); expect((await snapshot(page)).profile.experiment).toBeNull();
+});
+
+test('selecting another companion clears an incompatible experiment and saves that choice', async ({page}) => {
+  await scenario(page, 'record-experiment');
+  await page.getByRole('button', {name:'이 빌드로 다음 판 준비'}).click();
+  await page.locator('[data-character="ember"]').click();
+  await expect(page.locator('.experiment-plan')).toHaveCount(0);
+  await page.reload(); const state = await snapshot(page);
+  expect(state.characterId).toBe('ember'); expect(state.experiment).toBeNull(); expect(state.profile.experiment).toBeNull();
+});
+
+test('keepsake selection preserves the experiment without granting its specialization', async ({page}) => {
+  await scenario(page, 'record-journey');
+  await page.getByRole('button', {name:'이 빌드로 다음 판 준비'}).click();
+  await page.locator('.journey-board summary').click();
+  await page.locator('[data-keepsake="seed"]').click();
+  await expect(page.locator('.experiment-plan')).toContainText('일점 검법');
+  await page.reload(); await page.getByRole('button', {name:'숲에 들어가기'}).click();
+  const state = await snapshot(page);
+  expect(state.keepsake).toBe('seed'); expect(state.player.maxHp).toBe(90); expect(state.experiment).toBe('duelist'); expect(state.ranks.duelist).toBe(0);
+});
+
+test('a failed save keeps the experiment usable in memory and reports its limit', async ({page}) => {
+  await page.addInitScript(() => {Storage.prototype.setItem = () => {throw new Error('quota');};});
+  await page.reload(); await scenario(page, 'record-experiment');
+  await page.getByRole('button', {name:'이 빌드로 다음 판 준비'}).click();
+  await expect(page.locator('.storage-note')).toContainText('기록을 저장하지 못했습니다');
+  await expect(page.locator('.experiment-plan')).toContainText('일점 검법');
+  await page.getByRole('button', {name:'숲에 들어가기'}).click();
+  expect((await snapshot(page)).experiment).toBe('duelist');
+});
+
+test('already discovered choices and unrecorded scenes do not announce new discoveries', async ({page}) => {
+  await scenario(page, 'record-experiment');
+  await expect(page.locator('.run-discoveries')).toBeVisible();
+  await scenario(page, 'record-experiment');
+  await expect(page.locator('.run-discoveries')).toHaveCount(0);
+  expect((await snapshot(page)).profile.runs).toBe(2);
+  await scenario(page, 'defeat');
+  await expect(page.locator('.run-discoveries')).toHaveCount(0);
+  expect((await snapshot(page)).profile.runs).toBe(2);
+});
+
 test('start, keyboard movement, pause, mute and resume', async ({ page }) => {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
