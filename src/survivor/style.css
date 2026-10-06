@@ -612,6 +612,10 @@ button:focus-visible {
 .panel.is-compact {
   max-width: 480px;
 }
+.panel.is-compact h1 {
+  word-break: keep-all;
+  text-wrap: balance;
+}
 .result-mark {
   display: grid;
   place-items: center;
