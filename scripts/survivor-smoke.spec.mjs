@@ -97,6 +97,9 @@ test('fresh lobby codex shows collection goals without writing records and Escap
   await expect(page.locator('.codex-card')).toHaveCount(9);
   await page.locator('[data-codex-entry="evolution:dawn"]').click();
   await expect(page.locator('.codex-detail')).toContainText('검 3 · 룬 1 · 정예 1');
+  await page.locator('.codex-detail').focus();await page.keyboard.press('End');
+  await expect.poll(async()=>page.locator('.codex-detail').evaluate(el=>el.scrollTop)).toBeGreaterThan(0);
+  expect(await page.locator('#overlay').evaluate(el=>el.scrollTop)).toBe(0);
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-open-codex]')).toBeFocused();
   expect((await snapshot(page)).phase).toBe('ready');expect((await snapshot(page)).time).toBe(0);
@@ -129,12 +132,28 @@ for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740
     await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,bestTime:60,buildDiscoveries:['sweep','wildfire'],relicDiscoveries:['dew']})));
     await page.reload();
     await page.locator('[data-keepsake="bookmark"]').click();
-    // Taller desktop captures show the whole preparation and inspected-entry text.
+    // Capture preparation separately; the codex is checked at the actual viewport below.
     if(viewport.width===1280) await page.setViewportSize({width:1280,height:1000});
     await page.locator('#overlay').evaluate(el=>el.scrollTop=0);
     await page.screenshot({path:`output/playwright/survivor/preparation-${viewport.width}.png`,animations:'disabled'});
     await page.setViewportSize(viewport);
     await page.locator('[data-open-codex]').click();
+    const headingBefore=await page.locator('.codex-heading').boundingBox();
+    // Inspect the final collection card: only the internal body may scroll.
+    await page.locator('[data-codex-entry="keepsake:bookmark"]').click();
+    await expect(page.locator('.codex-detail')).toContainText('첫 60초 획득 경험치 +20%');
+    if(viewport.width<=680) await page.locator('[data-codex-list]').click();
+    await expect(page.locator('[data-codex-entry="keepsake:bookmark"]')).toBeInViewport();
+    const headingAfter=await page.locator('.codex-heading').boundingBox();
+    expect(headingAfter.y).toBeCloseTo(headingBefore.y,0);
+    const internal=await page.evaluate(()=>{
+      const outer=document.getElementById('overlay'),panel=document.getElementById('panel');
+      const list=document.querySelector('.codex-grid'),body=document.querySelector('.codex-layout');
+      const r=panel.getBoundingClientRect();
+      return {outer:outer.scrollTop,outerOverflow:outer.scrollHeight-outer.clientHeight,panelOverflow:panel.scrollHeight-panel.clientHeight,
+        scrolled:Math.max(list.scrollTop,body.scrollTop)>0,fits:r.top>=0&&r.bottom<=innerHeight,documentFits:document.documentElement.scrollHeight<=innerHeight};
+    });
+    expect(internal).toEqual({outer:0,outerOverflow:0,panelOverflow:0,scrolled:true,fits:true,documentFits:true});
     await page.locator('[data-codex-filter="relics"]').click();
     await expect(page.locator('.codex-card')).toHaveCount(6);
     await page.locator('[data-codex-entry="relic:dew"]').click();
@@ -146,12 +165,12 @@ for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740
       await expect(page.locator('[data-codex-entry="relic:dew"]')).toBeFocused();
       await expect(page.locator('[data-codex-entry="relic:dew"]')).toBeInViewport();
     } else await expect(page.locator('[data-codex-entry="relic:dew"]')).toBeFocused();
-    const fits=await page.locator('[data-codex-filter], [data-codex-entry], [data-close-codex]').evaluateAll(nodes=>nodes.every(el=>{
+    const fits=await page.locator('[data-codex-entry], [data-close-codex]').evaluateAll(nodes=>nodes.every(el=>{
       const r=el.getBoundingClientRect();return r.x>=0&&r.right<=innerWidth&&r.height>=44;
     }));expect(fits).toBe(true);
+    expect(await page.locator('[data-codex-filter]').evaluateAll(nodes=>nodes.every(el=>el.getBoundingClientRect().height>=44))).toBe(true);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-    if(viewport.width===1280) await page.setViewportSize({width:1280,height:1000});
-    await page.locator('#overlay').evaluate(el=>el.scrollTop=0);
+    if(viewport.width<=680) await page.locator('.codex-layout').evaluate(el=>el.scrollTop=0);
     await page.screenshot({path:`output/playwright/survivor/codex-${viewport.width}.png`,animations:'disabled'});
     await page.locator('[data-close-codex]').click();
     await expect(page.locator('[data-open-codex]')).toBeFocused();
@@ -595,10 +614,13 @@ test('audio starts from a gesture, plays caster cues, and suspends on mute and p
   await expect.poll(async()=>(await snapshot(page)).audio).toBe('running');
 });
 
-test('a short desktop window can scroll the entire camp without clipping its top',async({page})=>{
+test('a short desktop window scrolls inside the camp and keeps the panel within the screen',async({page})=>{
   await page.setViewportSize({width:1280,height:600});
   const panel=await page.locator('#panel').boundingBox();expect(panel.y).toBeGreaterThanOrEqual(0);
   await page.locator('.camp-records summary').scrollIntoViewIfNeeded();await expect(page.locator('.camp-records summary')).toBeVisible();
+  expect(await page.locator('#panel').evaluate(el=>el.scrollTop)).toBeGreaterThan(0);
+  expect(await page.locator('#overlay').evaluate(el=>el.scrollTop)).toBe(0);
+  const bottom=await page.locator('#panel').boundingBox();expect(bottom.y+bottom.height).toBeLessThanOrEqual(600);
   await page.getByRole('heading',{name:'잿빛의 숲',exact:true}).scrollIntoViewIfNeeded();
   const heading=await page.getByRole('heading',{name:'잿빛의 숲',exact:true}).boundingBox();// Scrolling can round a fractional CSS pixel at the viewport edge.
   expect(heading.y).toBeGreaterThanOrEqual(-.5);

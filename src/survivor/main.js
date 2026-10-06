@@ -138,18 +138,18 @@ function clearExperiment() {
 }
 function selectKeepsake(id) {
   if (game.phase !== 'ready' || !canEquipKeepsake(profile, id)) return;
-  const scrollTop = $('overlay').scrollTop;
+  const scrollTop = $('panel').scrollTop;
   const journeyOpen = $('panel').querySelector('.journey-board')?.open;
   profile.keepsake = id;
   persist();
   camp();
   $('panel').querySelector('.journey-board').open = journeyOpen;
-  $('overlay').scrollTop = scrollTop;
+  $('panel').scrollTop = scrollTop;
   requestAnimationFrame(() => $('panel').querySelector(`[data-keepsake="${id}"]`)?.focus({preventScroll:true}));
 }
 function openCodex() {
   if (game.phase !== 'ready') return;
-  campScroll = $('overlay').scrollTop;
+  campScroll = $('panel').scrollTop;
   campView = 'codex';
   lastPhase = null; syncPhase();
 }
@@ -157,22 +157,24 @@ function closeCodex() {
   if (game.phase !== 'ready' || campView !== 'codex') return;
   campView = 'prepare';
   lastPhase = null; syncPhase();
-  $('overlay').scrollTop = campScroll;
+  $('panel').scrollTop = campScroll;
   requestAnimationFrame(() => $('panel').querySelector('[data-open-codex]')?.focus({preventScroll: true}));
 }
 function updateCodex(filter, entry) {
   if (game.phase !== 'ready' || campView !== 'codex') return;
   if (filter && !Object.hasOwn(CODEX_GROUPS, filter)) return;
   if (entry && !codexEntries(profile).some(e => e.id === entry)) return;
-  const scrollTop = $('overlay').scrollTop;
+  const gridScroll = $('panel').querySelector('.codex-grid').scrollTop;
+  const bodyScroll = $('panel').querySelector('.codex-layout').scrollTop;
   if (filter) { codexFilter = filter; codexSelection = null; }
   if (entry) codexSelection = entry;
   lastPhase = null; syncPhase();
-  $('overlay').scrollTop = scrollTop;
+  $('panel').querySelector('.codex-grid').scrollTop = filter ? 0 : gridScroll;
+  $('panel').querySelector('.codex-layout').scrollTop = filter ? 0 : bodyScroll;
   requestAnimationFrame(() => {
     if (entry && matchMedia('(max-width:680px)').matches) {
       $('panel').querySelector('.codex-detail h2')?.focus({preventScroll: true});
-      $('panel').querySelector('.codex-detail')?.scrollIntoView({block: 'start'});
+      $('panel').querySelector('.codex-layout').scrollTop = 0;
     } else $('panel').querySelector(filter ? `[data-codex-filter="${filter}"]` : `[data-codex-entry="${entry}"]`)?.focus({preventScroll: true});
   });
 }
@@ -212,7 +214,7 @@ function choose(key) {
 function panel(html, compact = false) {
   $('panel').className = `panel${compact ? ' is-compact' : ''}`;
   $('panel').innerHTML = html;
-  $('overlay').scrollTop = 0;
+  $('panel').scrollTop = 0;
   requestAnimationFrame(() => {
     ($('panel').querySelector('#start-game, #restart-game') ?? $('panel').querySelector('button:not(:disabled)'))?.focus({
       preventScroll: true

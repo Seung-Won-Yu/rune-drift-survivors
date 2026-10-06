@@ -320,15 +320,22 @@ button:focus-visible {
   inset: 0;
   z-index: 20;
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
   place-items: center;
   padding: 24px;
-  overflow-y: auto;
+  overflow: hidden;
   align-items: safe center;
   background: #0b191369;
   backdrop-filter: blur(5px);
 }
 .panel {
   width: min(780px,100%);
+  max-height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #91a68070 #14271c;
   position: relative;
   border: 1px solid #aab7983b;
   border-radius: 16px;
@@ -1675,25 +1682,31 @@ button:focus-visible {
 .departure-summary { margin: 12px 0 0; font-size: 11px; line-height: 1.7; color: #c4cdbb; }
 .departure-summary strong { color: #ecd6aa; margin-right: 8px; }
 .departure-summary > span { display: block; color: var(--gold); }
-.panel.is-codex { width: min(1040px, 100%); }
+.panel.is-codex { width: min(1040px, 100%); height: min(820px, 100%); display: flex; flex-direction: column; overflow: hidden; padding: 24px; }
 .codex-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.codex-heading, .codex-progress, .codex-filters { flex-shrink: 0; }
+.codex-heading .eyebrow { margin-bottom: 8px; }
+.codex-heading h1 { font-size: 32px; margin-bottom: 0; }
 .codex-back { min-height: 44px; white-space: nowrap; padding: 12px 16px; }
-.codex-progress { border-block: 1px solid #8fa17a40; padding: 18px 0; margin: 12px 0 20px; }
+.codex-progress { border-block: 1px solid #8fa17a40; padding: 10px 0; margin: 12px 0; }
 .codex-progress > div { display: flex; align-items: baseline; gap: 16px; color: #c1ccb5; font-size: 12px; }
-.codex-progress strong { font-size: 34px; color: var(--gold); }
+.codex-progress strong { font-size: 28px; color: var(--gold); }
 .codex-progress strong span { font-size: 18px; color: #b3bfa9; font-weight: 400; }
-.codex-progress progress { appearance: none; width: 100%; height: 6px; display: block; margin-top: 12px; accent-color: var(--gold); border: 0; border-radius: 3px; overflow: hidden; background: #40523e; }
+.codex-progress progress { appearance: none; width: 100%; height: 6px; display: block; margin-top: 8px; accent-color: var(--gold); border: 0; border-radius: 3px; overflow: hidden; background: #40523e; }
 .codex-progress progress::-webkit-progress-bar { background: #40523e; }
 .codex-progress progress::-webkit-progress-value { background: var(--gold); }
 .codex-progress progress::-moz-progress-bar { background: var(--gold); }
-.codex-progress p { color: #bac7b3; font-size: 12px; line-height: 1.6; margin: 12px 0 0; }
+.codex-progress p { color: #bac7b3; font-size: 12px; line-height: 1.6; margin: 8px 0 0; }
 .codex-filters { display: flex; flex-wrap: wrap; gap: 8px; }
 .codex-filters button { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 14px; border-radius: 8px; border: 1px solid #91a68050; background: #11241b; color: #dbe1ca; font-size: 12px; }
 .codex-filters button span { font-size: 10px; color: #b8c7ae; }
 .codex-filters button[aria-pressed="true"] { background: #414a32; border-color: var(--gold); color: #f5e4b8; }
-.codex-layout { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 24px; margin-top: 20px; align-items: start; }
+.codex-layout { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 24px; margin-top: 16px; flex: 1; min-height: 0; }
+.codex-list { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .codex-list-label { margin: 0 0 12px; color: #b7c4ae; font-size: 11px; line-height: 1.6; }
-.codex-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.codex-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; align-content: start; min-height: 0; overflow-y: auto; padding: 5px; }
+.codex-grid, .codex-detail, .codex-layout { overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #91a68070 #14271c; }
+.codex-grid, .codex-detail { scrollbar-gutter: stable; }
 .codex-card { min-width: 0; min-height: 155px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 12px 8px; gap: 5px; border-radius: 9px; background: #12271d; border: 1px solid #91a68038; color: #e3e7d4; }
 .codex-card strong { font-size: 12px; line-height: 1.6; }
 .codex-card small { font-size: 10px; color: #b7c7af; }
@@ -1707,7 +1720,8 @@ button:focus-visible {
 .codex-unknown { display: grid; place-items: center; color: #839a80; font-size: 32px; font-family: Georgia, serif; width: 52px; height: 58px; border: 1px solid #91a6802e; border-radius: 50% 50% 12px 12px; background: #1c3023; }
 .codex-state { font-size: 9px; color: #bccab5; margin-top: auto; }
 .codex-card.is-found .codex-state { color: #ebcb87; }
-.codex-detail { position: sticky; top: 16px; padding: 24px 18px; border: 1px solid #a3b18240; border-radius: 12px; background: #182c20; }
+.codex-detail { min-height: 0; overflow-y: auto; padding: 20px 18px; border: 1px solid #a3b18240; border-radius: 12px; background: #182c20; }
+.codex-detail:focus-visible { outline: 3px solid #ffe5b3; outline-offset: -4px; }
 .codex-detail-art { display: flex; justify-content: center; align-items: center; height: 100px; margin-bottom: 16px; color: var(--tone); }
 .codex-detail-art svg { width: 64px; height: 64px; }
 .codex-detail-art .codex-portrait { width: 76px; }
@@ -1734,21 +1748,41 @@ button:focus-visible {
   .departure-kit .keepsake-card:last-child { grid-column: 1 / -1; }
   .departure-kit .companion-heading { flex-wrap: wrap; gap: 6px; }
   .departure-kit .companion-heading > span { font-size: 10px; }
-  .codex-heading { flex-wrap: wrap; }
-  .codex-heading h1 { margin-bottom: 0; }
+  .panel.is-codex { padding: 14px; }
+  .codex-heading { gap: 8px; }
+  .codex-heading .eyebrow { display: none; }
+  .codex-heading h1 { font-size: 26px; }
   .codex-back { padding: 10px 12px; font-size: 11px; }
-  .codex-filters { gap: 6px; }
-  .codex-filters button { gap: 6px; padding: 10px; font-size: 11px; }
-  .codex-layout { display: flex; flex-direction: column; gap: 18px; }
-  .codex-layout > div { width: 100%; }
-  .codex-detail { position: static; width: 100%; order: -1; padding: 14px; }
+  .codex-progress { margin: 8px 0; padding: 8px 0; }
+  .codex-progress strong { font-size: 24px; }
+  .codex-progress p { font-size: 11px; }
+  .codex-filters { flex-wrap: nowrap; gap: 6px; overflow-x: auto; padding: 5px; margin: -5px; scrollbar-width: thin; overscroll-behavior-x: contain; }
+  .codex-filters button { flex-shrink: 0; gap: 6px; padding: 10px; font-size: 11px; }
+  .codex-layout { display: flex; flex-direction: column; gap: 18px; overflow-y: auto; margin-top: 12px; padding: 5px; }
+  .codex-list { width: 100%; flex-shrink: 0; }
+  .codex-detail { width: 100%; flex-shrink: 0; order: -1; padding: 14px; overflow: visible; scrollbar-gutter: auto; }
   .codex-detail-art { float: right; width: 60px; height: 64px; margin: 0 0 6px 10px; }
   .codex-detail-art svg { width: 44px; height: 44px; }
   .codex-detail-art .codex-portrait { width: 48px; }
   .codex-detail h2 { font-size: 18px; }
   .codex-detail p { font-size: 11px; margin-bottom: 10px; }
   .codex-hint { clear: both; padding-top: 10px; }
-  .codex-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .codex-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; scrollbar-gutter: auto; }
   .codex-card { min-height: 140px; }
   .codex-return { display: block; width: 100%; min-height: 44px; margin-top: 12px; padding: 10px; font-size: 11px; }
+}
+@media(max-height: 570px) and (orientation: landscape) {
+  .panel.is-codex { padding: 12px 20px; }
+  .codex-heading .eyebrow, .codex-progress p { display: none; }
+  .codex-heading h1 { font-size: 26px; }
+  .codex-progress { margin: 8px 0; padding: 8px 0; }
+  .codex-progress strong { font-size: 22px; }
+  .codex-layout { margin-top: 12px; }
+  .codex-card { min-height: 132px; }
+  .codex-detail-art { float: right; width: 48px; height: 56px; margin: 0 0 8px 10px; }
+  .codex-detail-art svg { width: 44px; height: 44px; }
+  .codex-detail-art .codex-portrait { width: 42px; }
+  .codex-detail { padding: 12px; }
+  .codex-detail h2 { font-size: 18px; margin: 6px 0 10px; }
+  .codex-hint { clear: both; }
 }

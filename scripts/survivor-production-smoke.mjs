@@ -19,6 +19,12 @@ try{
   await page.goto(`${origin}/rune-drift-survivors/survivor/?qa`);
   await page.locator('[data-open-codex]').click();
   assert.equal(await page.locator('[data-codex-entry]').count(),22);
+  await page.locator('[data-codex-entry="keepsake:bookmark"]').click();
+  assert.ok((await page.locator('.codex-detail').textContent()).includes('첫 60초 획득 경험치 +20%'));
+  assert.ok(await page.evaluate(()=>{
+    const panel=document.getElementById('panel'),outer=document.getElementById('overlay'),r=panel.getBoundingClientRect();
+    return r.top>=0&&r.bottom<=innerHeight&&outer.scrollHeight===outer.clientHeight&&outer.scrollTop===0&&panel.scrollHeight===panel.clientHeight&&document.querySelector('.codex-grid').scrollTop>0;
+  }),'codex stays within the viewport while the collection scrolls internally');
   await page.locator('[data-codex-filter="weapons"]').click();
   assert.equal(await page.locator('[data-codex-entry]').count(),9);
   await page.locator('[data-codex-entry="evolution:dawn"]').click();
