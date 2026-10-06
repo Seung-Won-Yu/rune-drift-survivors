@@ -1,0 +1,55 @@
+{
+  "checkedAt": "2026-10-06T03:18:12.553995+00:00",
+  "headSha": "26368303f08d86838deadcbb46cdb3e217f80e82",
+  "runId": 37406528238,
+  "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/37406528238",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": {
+    "build": "success",
+    "deploy": "success"
+  },
+  "deployCompletedAt": "2026-10-06T03:15:11Z",
+  "tests": {
+    "survivorCore": 98,
+    "survivorBrowser": 81,
+    "legacyBrowser": 86,
+    "survivorPagesSmoke": "passed"
+  },
+  "stressEnvironment": "GitHub Actions Ubuntu / Playwright Chromium",
+  "stress": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "frames": 524,
+      "elapsed": 12016.099999999999,
+      "p50": 16.700000000000728,
+      "p95": 33.399999999999864,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "frames": 719,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "over50": 0
+    }
+  ]
+}

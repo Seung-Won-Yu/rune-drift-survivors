@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-10-06T03:16:16.599Z",
+  "commit": "26368303f08d86838deadcbb46cdb3e217f80e82",
+  "url": "https://seung-won-yu.github.io/rune-drift-survivors/survivor/",
+  "htmlReferencesMatch": true,
+  "assets": [
+    {
+      "path": "/rune-drift-survivors/assets/survivor-CNgGiIqy.js",
+      "sha256": "6806355809432aa287c7d4183c274e0cd09be9e17c75b0dcb100362251d695cb"
+    },
+    {
+      "path": "/rune-drift-survivors/assets/modulepreload-polyfill-B5Qt9EMX.js",
+      "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0"
+    },
+    {
+      "path": "/rune-drift-survivors/assets/survivor-C3LQqqht.css",
+      "sha256": "73c743f8219b25e6c567991947736afa2c5c34129fdcef3e96c6f4c2e504f9ec"
+    }
+  ],
+  "productionSmoke": {
+    "base": "/rune-drift-survivors/",
+    "loadedAssets": [
+      "ash-sovereign.png",
+      "enemies.png",
+      "hero-grove.png",
+      "hero-ember.png",
+      "hero-ash.png"
+    ],
+    "qaGlobal": "absent",
+    "startAndPause": "passed",
+    "failures": [],
+    "errors": []
+  },
+  "inAppPublicFlow": {
+    "input": "normal browser UI; no DEV scene or QA hook",
+    "hero": "ash",
+    "ending": "defeat",
+    "displayedTime": "1:05",
+    "kills": 84,
+    "level": 4,
+    "newDiscovery": "sweep",
+    "preparedExperiment": "duelist",
+    "experimentRestoredAfterReload": true,
+    "recordedRunsAfterReload": 1,
+    "emberUnlockedAfterReload": true,
+    "restart": {
+      "level": 1,
+      "kills": 0,
+      "weaponRank": 1,
+      "branch": null,
+      "relicCount": 0,
+      "experiment": "duelist"
+    },
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "screenshots": [
+      "images/public-chapter-result-1280.jpg",
+      "images/public-chapter-plan-1280.jpg"
+    ]
+  }
+}

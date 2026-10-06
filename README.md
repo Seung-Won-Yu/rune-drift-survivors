@@ -29,6 +29,8 @@ Run `npm ci` and `npm run dev`, then open **[the local game](http://127.0.0.1:51
 
 Verification covers 98 core tests, 81 browser scenarios, capped-load checks, normal-rule route diagnostics, full real-time browser runs and the Pages build path. Generated four-pose artwork, initial image download size and untested physical mobile hardware are documented in the [release record](./docs/design/survivor-restart/09-RELEASE.md). The [first expansion record](./docs/design/survivor-restart/10-EXPANSION.md) covers the new choices and their validation. The [journey and combat-feel record](./docs/design/survivor-restart/11-JOURNEY-FEEL.md) covers starting keepsakes, challenge rewards and specialization feedback. The [enemy-role record](./docs/design/survivor-restart/12-ENEMY-ROLES.md) records warning timings, spawn composition and diagnostic limits. The [design history](./docs/design/survivor-restart/00-RELEASE-PLAN.md) retains the earlier style experiments and implementation decisions.
 
+The latest main build passed all survivor checks and 86 legacy browser regressions, deployed to Pages, and matched the verified public JS/CSS bytes. See the [final chapter audit](./docs/design/survivor-restart/20-CHAPTER-FINAL-AUDIT.md) for whole-run results, public replay verification and remaining evaluation limits.
+
 ## Existing Rune Drift prototype
 
 A five-minute browser survival roguelite built with **React, Three.js, React Three Fiber, and Vite**. Guide a hooded Rune Warden through a ruined forest, build an automatic-attack loadout, and connect four seals before the final rift.
