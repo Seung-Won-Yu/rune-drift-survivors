@@ -2,12 +2,14 @@ import { attackPose, isEvolvedWeapon, hurtFeedback } from './impact.js';
 import { GIANT } from './enemies.js';
 import { combatPacing } from './pacing.js';
 import { validExperiment, nextExperiment, experimentProgress } from './experiments.js';
+import { runPreparation, canTakeVow, validGoal, goalFound } from './progression.js';
+import { goalProgress, goalRelevant } from './goals.js';
 import { canEquipKeepsake } from './journey.js';
 import { specializationFor, RELICS } from './expansion.js';
 import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, chooseCurse, chooseRelic, inspectEncounter, closeEncounterPreview } from './encounters.js';
 import './style.css';
 import { BOSS, bossAttackLabel } from './boss.js';
-import { createGame, startGame, updateGame, chooseUpgrade, pauseGame, resumeGame, spawnEnemy, spawnBoss, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, nextEvolution, RUN_SECONDS } from './game.js';
+import { createGame, startGame, updateGame, chooseUpgrade, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, nextEvolution, RUN_SECONDS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
 import { getCharacter, isUnlocked } from './characters.js';
 import { loadProfile, saveProfile, recordRun } from './profile.js';
@@ -39,7 +41,7 @@ let profile = loaded.profile,
 function persist() {
   if (loaded.canSave && !saveProfile(storage, profile)) storageWarning = '기록을 저장하지 못했습니다. 이 창을 닫기 전까지 기록과 해금이 유지됩니다.';
 }
-let game = createGame(Date.now(), profile.selected, profile.keepsake, profile.experiment),
+let game = createGame(Date.now(), profile.selected, profile.keepsake, profile.experiment, runPreparation(profile)),
   renderer = null,
   lastPhase = null,
   lastHud = 0,
@@ -98,7 +100,7 @@ function start() {
   syncPhase();
 }
 function restart() {
-  game = createGame(++seed, game.characterId, profile.keepsake, profile.experiment);
+  game = createGame(++seed, game.characterId, profile.keepsake, profile.experiment, runPreparation(profile, game.characterId));
   start();
   last = 0;
   accumulator = 0;
@@ -106,7 +108,7 @@ function restart() {
 }
 function camp() {
   campView = 'prepare';
-  game = createGame(++seed, profile.selected, profile.keepsake, profile.experiment);
+  game = createGame(++seed, profile.selected, profile.keepsake, profile.experiment, runPreparation(profile));
   lastPhase = null;
   syncPhase();
   last = 0;
@@ -126,6 +128,7 @@ function prepareExperiment(key) {
   if (game.phase !== 'ended' || !isUnlocked(profile, game.characterId) || key !== nextExperiment(game, profile)) return;
   profile.selected = game.characterId;
   profile.experiment = validExperiment(game.characterId, key);
+  profile.goal = null;
   persist();
   camp();
   $('start-game').scrollIntoView({block: 'end'});
@@ -152,6 +155,26 @@ function openCodex() {
   campScroll = $('panel').scrollTop;
   campView = 'codex';
   lastPhase = null; syncPhase();
+}
+function selectVow(id) {
+  if (game.phase !== 'ready' || !canTakeVow(profile, id)) return;
+  const scroll = $('panel').scrollTop;
+  profile.vow = id; persist(); camp();
+  $('panel').scrollTop = scroll;
+  requestAnimationFrame(() => $('panel').querySelector(`[data-vow="${id}"]`)?.focus({preventScroll: true}));
+}
+function selectGoal(id) {
+  if (game.phase !== 'ready' || id !== null && (!validGoal(id) || goalFound(profile, id))) return;
+  const scroll = $('panel').scrollTop;
+  const codexScroll = ['.codex-grid', '.codex-layout', '.codex-detail'].map(selector => [selector, $('panel').querySelector(selector)?.scrollTop ?? 0]);
+  profile.goal = profile.goal === id ? null : id;
+  profile.experiment = null;
+  persist();
+  game = createGame(++seed, profile.selected, profile.keepsake, null, runPreparation(profile));
+  lastPhase = null; syncPhase();
+  $('panel').scrollTop = scroll;
+  for (const [selector, top] of codexScroll) { const element = $('panel').querySelector(selector); if (element) element.scrollTop = top; }
+  requestAnimationFrame(() => $('panel').querySelector(campView === 'codex' ? '[data-codex-goal]' : '[data-open-codex]')?.focus({preventScroll: true}));
 }
 function closeCodex() {
   if (game.phase !== 'ready' || campView !== 'codex') return;
@@ -262,6 +285,9 @@ function syncPhase() {
       entry?.scrollIntoView({block: 'center'}); entry?.focus({preventScroll: true});
     });
     for (const button of document.querySelectorAll('[data-keepsake]')) button.onclick = () => selectKeepsake(button.dataset.keepsake);
+    for (const button of $('panel').querySelectorAll('[data-vow]')) button.onclick = () => selectVow(button.dataset.vow);
+    $('panel').querySelector('[data-codex-goal]')?.addEventListener('click', event => selectGoal(event.currentTarget.dataset.codexGoal));
+    $('panel').querySelector('[data-clear-goal]')?.addEventListener('click', () => selectGoal(null));
     for (const button of document.querySelectorAll('[data-character]')) button.onclick = () => selectCharacter(button.dataset.character);
     $('panel').querySelector('[data-clear-experiment]')?.addEventListener('click', clearExperiment);
   } else if (game.phase === 'upgrade') {
@@ -272,11 +298,16 @@ function syncPhase() {
         ...UPGRADE_META[key],
         name: weaponName(game, key)
       } : UPGRADE_META[key];
-      return `<button class="upgrade-card${key === game.experiment ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" style="--tone:${m.color}">${key === game.experiment ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span><span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
-    }).join('')}</div>`);
+      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span><span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
+    }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button><p role="status">${game.rerollsUsed ? '후보가 바뀌었습니다. ' : ''}진화 후보는 유지 · 선택 전 ${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '다른 힘을 찾아보세요'}</p></div>`);
+    $('panel').querySelector('[data-reroll]').onclick = () => {
+      if (!rerollUpgrades(game)) return;
+      lastPhase = null; syncPhase();
+      requestAnimationFrame(() => $('panel').querySelector('[data-reroll]')?.focus({preventScroll: true}));
+    };
     for (const button of document.querySelectorAll('[data-upgrade]')) button.onclick = () => choose(button.dataset.upgrade);
   } else if (game.phase === 'relic') {
-    panel(`<p class="eyebrow">A GIFT FROM THE FOREST</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key]; return `<button class="upgrade-card relic-card" data-relic="${key}" style="--tone:${m.color}"><small>숲의 유물 · 이번 판 유지</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${m.change}</span>${relicContextMarkup(game, key)}<span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
+    panel(`<p class="eyebrow">A GIFT FROM THE FOREST</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key]; return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>숲의 유물 · 이번 판 유지</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${m.change}</span>${relicContextMarkup(game, key)}<span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
     for (const button of document.querySelectorAll('[data-relic]')) button.onclick = () => choose(button.dataset.relic);
   } else if (game.phase === 'preview') {
     const event = game.encounters.find(event => event.kind === game.previewEncounter);
@@ -295,11 +326,11 @@ function syncPhase() {
     const saved = recordRun(profile, game);
     profile = saved.profile;
     if (saved.added) {
-      game.resultRewards = { discoveries: saved.discoveries, unlocked: saved.unlocked, challenges: saved.challenges };
+      game.resultRewards = { discoveries: saved.discoveries, unlocked: saved.unlocked, challenges: saved.challenges, mastery: saved.mastery };
       persist();
     }
     const rewards = game.resultRewards ?? saved;
-    panel(`<div class="result-mark">${icon(win ? 'star' : 'heart')}</div><p class="eyebrow">${win ? 'THE FOREST REMEMBERS' : 'ANOTHER STORY AWAITS'}</p><h1 id="panel-title">${win ? '재의 군주를 쓰러뜨렸습니다' : survived ? '살아 돌아왔습니다' : '잠시 쓰러졌을 뿐'}</h1><p class="panel-lead">${win ? '당신의 선택으로 자라난 힘이 숲의 왕관을 깨뜨렸습니다.' : survived ? '5분을 버텼지만 재의 군주는 남아 있습니다. 다음 도전에서 마무리해 보세요.' : '모은 경험과 선택은 다음 도전의 실마리가 됩니다.'}</p><div class="result-stats"><div><small>생존 시간</small><strong>${formatTime(game.time)}</strong></div><div><small>쓰러뜨린 적</small><strong>${game.kills}</strong></div><div><small>도달 레벨</small><strong>${game.level}</strong></div></div><div class="result-build">${['sword', 'ember', 'orbit'].filter(k => game.ranks[k] > 0).map(k => `<span>${weaponName(game, k)} ${game.ranks[k]}단계</span>`).join('')}</div><p class="result-best">${record ? '새로운 처치 기록! · ' : ''}최고 기록 ${profile.bestKills} 처치</p>${resultDetails(game, profile, rewards.unlocked, storageWarning, rewards.challenges, rewards.discoveries)}<div class="panel-actions"><button id="restart-game" class="primary">다시 숲으로 <span aria-hidden="true">→</span></button><button id="camp-game" class="secondary">동료 선택</button></div>`, true);
+    panel(`<div class="result-mark">${icon(win ? 'star' : 'heart')}</div><p class="eyebrow">${win ? 'THE FOREST REMEMBERS' : 'ANOTHER STORY AWAITS'}</p><h1 id="panel-title">${win ? '재의 군주를 쓰러뜨렸습니다' : survived ? '살아 돌아왔습니다' : '잠시 쓰러졌을 뿐'}</h1><p class="panel-lead">${win ? '당신의 선택으로 자라난 힘이 숲의 왕관을 깨뜨렸습니다.' : survived ? '5분을 버텼지만 재의 군주는 남아 있습니다. 다음 도전에서 마무리해 보세요.' : '모은 경험과 선택은 다음 도전의 실마리가 됩니다.'}</p><div class="result-stats"><div><small>생존 시간</small><strong>${formatTime(game.time)}</strong></div><div><small>쓰러뜨린 적</small><strong>${game.kills}</strong></div><div><small>도달 레벨</small><strong>${game.level}</strong></div></div><div class="result-build">${['sword', 'ember', 'orbit'].filter(k => game.ranks[k] > 0).map(k => `<span>${weaponName(game, k)} ${game.ranks[k]}단계</span>`).join('')}</div><p class="result-best">${record ? '새로운 처치 기록! · ' : ''}최고 기록 ${profile.bestKills} 처치</p>${resultDetails(game, profile, rewards.unlocked, storageWarning, rewards.challenges, rewards.discoveries, rewards.mastery)}<div class="panel-actions"><button id="restart-game" class="primary">다시 숲으로 <span aria-hidden="true">→</span></button><button id="camp-game" class="secondary">동료 선택</button></div>`, true);
     $('restart-game').onclick = restart;
     $('camp-game').onclick = camp;
     $('panel').querySelector('[data-experiment]')?.addEventListener('click', event => prepareExperiment(event.currentTarget.dataset.experiment));
@@ -355,8 +386,9 @@ function updateHud() {
   $('coach').style.opacity = game.time < 14 ? '1' : '0';
   const evolution = nextEvolution(game),
     path = evolution ? EVOLUTIONS[evolution] : null;
-  $('evolution-hint').classList.toggle('is-ready', !!evolution && canEvolve(game, evolution));
-  $('evolution-hint').textContent = !path ? '세 무기 진화 완료 · 마지막 대결을 준비하세요' : canEvolve(game, evolution) ? `${UPGRADE_META[evolution].name} 준비 완료 · 다음 강화에서 선택` : `${UPGRADE_META[evolution].name} 진화 · ${UPGRADE_META[path.weapon].name} ${Math.min(3, game.ranks[path.weapon])}/3 · ${UPGRADE_META[path.support].name} ${Math.min(1, game.ranks[path.support])}/1 · 정예 ${Math.min(1, game.eliteKills)}/1`;
+  const trackedGoal = goalProgress(game);
+  $('evolution-hint').classList.toggle('is-ready', trackedGoal ? trackedGoal.state === 'complete' : !!evolution && canEvolve(game, evolution));
+  $('evolution-hint').textContent = trackedGoal ? `목표 · ${trackedGoal.text}` : !path ? '세 무기 진화 완료 · 마지막 대결을 준비하세요' : canEvolve(game, evolution) ? `${UPGRADE_META[evolution].name} 준비 완료 · 다음 강화에서 선택` : `${UPGRADE_META[evolution].name} 진화 · ${UPGRADE_META[path.weapon].name} ${Math.min(3, game.ranks[path.weapon])}/3 · ${UPGRADE_META[path.support].name} ${Math.min(1, game.ranks[path.support])}/1 · 정예 ${Math.min(1, game.eliteKills)}/1`;
   const signature = ['sword', 'ember', 'orbit', 'dawn', 'comet', 'lunar'].map(k => game.ranks[k]).join(',');
   if (signature !== beltKey) {
     beltKey = signature;
@@ -364,7 +396,10 @@ function updateHud() {
   }
 }
 function tick(now) {
-  if (qaPilot && game.phase === 'upgrade') choose(qaPilot.choose(game));
+  if (qaPilot && game.phase === 'upgrade') {
+    if (qaPilot.shouldReroll(game)) rerollUpgrades(game);
+    choose(qaPilot.choose(game));
+  }
   if (qaPilot && game.phase === 'relic') choose(qaPilot.relic(game));
   if (qaPilot && game.phase === 'playing' && nearbyChest(game)) { openChest(game); chooseCurse(game,true); }
 
@@ -484,9 +519,9 @@ for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) $('touc
 });
 if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
   window.__ASH_QA__ = {
-    async prepareRun(character, route, runSeed = 42) {
+    async prepareRun(character, route, runSeed = 42, preparation = {}) {
       qaPilot = (await import('./qa-pilot.js')).createPilot(route);
-      game = createGame(runSeed, character);
+      game = createGame(runSeed, character, preparation.keepsake, null, preparation);
       lastPhase = null;
       syncPhase();
     },
@@ -496,6 +531,11 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       enemyLessons: [...game.enemyLessons],
       damageTaken: {...game.damageTaken},
       keepsake: game.keepsake,
+      vow: game.vow,
+      goal: game.goal,
+      goalProgress: goalProgress(game),
+      rerolls: game.rerolls,
+      rerollsUsed: game.rerollsUsed,
       relics: [...game.relics],
       relicChoices: [...game.relicChoices],
       encounters: structuredClone(game.encounters),
@@ -556,7 +596,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
     scenario(name) {
       resetInput();
       const character = name.startsWith('character-') ? name.slice(10) : name === 'experiment-offer' ? game.characterId : 'ash';
-      game = createGame(42, character, 'none', profile.experiment);
+      game = createGame(42, character, 'none', profile.experiment, runPreparation(profile, character));
       game.phase = 'playing';
       game.spawnClock = 999;
       game.player.invincible = 999;

@@ -8,6 +8,7 @@ import { keepsakeStats, keepsakeXpMultiplier, KEEPSAKES } from './journey.js';
 import { healPlayer, updateField } from './field.js';
 import { EVOLUTION_BREATHER, spawnPlan } from './pacing.js';
 import { validExperiment } from './experiments.js';
+import { vowStats, validGoal } from './progression.js';
 export const RUN_SECONDS = 300;
 export const LIMITS = {
   enemies: 160,
@@ -172,10 +173,14 @@ export function seededRandom(seed = 1) {
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', experiment = null) {
+export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', experiment = null, preparation = {}) {
   const character = getCharacter(characterId);
   keepsake = Object.hasOwn(KEEPSAKES, keepsake) ? keepsake : 'none';
   return {
+    vow: preparation.vow === 'mist' ? 'mist' : 'none',
+    goal: validGoal(preparation.goal),
+    rerolls: preparation.rerolls === 2 ? 2 : 1,
+    rerollsUsed: 0,
     experiment: validExperiment(character.id, experiment),
     keepsake,
     feedbackAt: {},
@@ -331,6 +336,32 @@ export function draftUpgrades(game) {
   if (chosen.length < 3) chosen.push('heal');
   return chosen;
 }
+function rerollPool(game) {
+  return Object.keys(UPGRADE_META).filter(key => {
+    if (game.ranks[key] >= UPGRADE_META[key].max) return false;
+    if (EVOLUTIONS[key]) return canEvolve(game, key);
+    if (SPECIALIZATIONS[key]) return game.level >= 4 && game.ranks[SPECIALIZATIONS[key].weapon] >= 3 && !specializationFor(game, SPECIALIZATIONS[key].weapon);
+    return true;
+  });
+}
+export function canReroll(game) {
+  const fixed = Object.keys(EVOLUTIONS).filter(key => canEvolve(game, key));
+  return game.phase === 'upgrade' && game.rerolls > 0 && fixed.length < 3 && rerollPool(game).some(key => !game.choices.includes(key));
+}
+export function rerollUpgrades(game) {
+  if (!canReroll(game)) return false;
+  const chosen = Object.keys(EVOLUTIONS).filter(key => canEvolve(game, key)).slice(0, 3);
+  const pool = rerollPool(game).filter(key => !chosen.includes(key));
+  // Put a genuinely new option first; do not spend a charge on a shuffled copy.
+  const fresh = pool.filter(key => !game.choices.includes(key));
+  chosen.push(fresh[Math.floor(game.rewardRng() * fresh.length)]);
+  const remaining = pool.filter(key => !chosen.includes(key));
+  while (chosen.length < 3 && remaining.length) chosen.push(remaining.splice(Math.floor(game.rewardRng() * remaining.length), 1)[0]);
+  game.choices = chosen;
+  game.rerolls--;
+  game.rerollsUsed++;
+  return true;
+}
 function checkLevel(game) {
   if (game.xp < game.xpNeed) return;
   game.xp -= game.xpNeed;
@@ -399,7 +430,7 @@ export function spawnEnemy(game, type = 0, elite = false, position) {
   const meta = ENEMY[type] ?? ENEMY[0],
     angle = game.rng() * Math.PI * 2,
     radius = game.spawnRadius + game.rng() * 80;
-  const hp = meta.hp * (1 + game.time / 270) * (elite ? 5 : 1);
+  const hp = meta.hp * (1 + game.time / 270) * (elite ? 5 : 1) * vowStats(game.vow).hp;
   const enemy = {
     ...meta,
     type,
@@ -442,8 +473,8 @@ export function spawnBoss(game) {
   Object.assign(boss, {
     boss: true,
     name: '재의 군주',
-    hp: BOSS.hp,
-    maxHp: BOSS.hp,
+    hp: BOSS.hp * vowStats(game.vow).hp,
+    maxHp: BOSS.hp * vowStats(game.vow).hp,
     radius: BOSS.radius,
     size: BOSS.size,
     speed: BOSS.speed,
@@ -749,7 +780,7 @@ function updateWeapons(game, dt, s) {
 function hurtPlayer(game, damage, source = 'contact', origin) {
   const p = game.player;
   if (p.invincible > 0) return;
-  damage *= (1 - getCharacter(game.characterId).armor) * (game.ranks.bulwark ? .85 : 1);
+  damage *= (1 - getCharacter(game.characterId).armor) * (game.ranks.bulwark ? .85 : 1) * vowStats(game.vow).damage;
   const beforeHp = p.hp;
   p.hurt = .24;
   game.damageTaken[source] += Math.min(p.hp, damage);
@@ -926,8 +957,8 @@ export function updateGame(game, dt, input = {
       gem.y += dy / (d || 1) * step;
     }
     if (Math.hypot(p.x - gem.x, p.y - gem.y) < 16) {
-      // The 20% keepsake uses tenths; round accumulation so exact level thresholds stay exact.
-      game.xp = Math.round((game.xp + gem.value * keepsakeXpMultiplier(game)) * 10) / 10;
+      // Bonuses add; round at hundredths so 15% never drifts across level thresholds.
+      game.xp = Math.round((game.xp + gem.value * (keepsakeXpMultiplier(game) + vowStats(game.vow).xpBonus)) * 100) / 100;
       if (game.relics.includes('dew')) {
         game.dewXp += gem.value;
         const charges = Math.floor(game.dewXp / 30);

@@ -1625,6 +1625,28 @@ button:focus-visible {
 .experiment-progress.is-changed { color: #e8ccad; }
 .upgrade-card.is-experiment { border-color: #ead29b; box-shadow: inset 0 0 0 1px #ead29b40; }
 .experiment-badge { border-radius: 4px; background: #ead29b; color: #253323; padding: 5px 8px; font-size: 10px; font-weight: 750; margin-bottom: 9px; }
+.reroll-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.reroll-row button { min-height: 44px; }
+.reroll-row p { color: #a9b8a0; font-size: 12px; margin: 0; }
+.mastery-board { border-top: 1px solid #3a4e3c; margin: 18px 0; padding-top: 14px; }
+.mastery-board summary { cursor: pointer; font-size: 13px; color: #e8cf9d; }
+.mastery-board summary span { color: #a9b8a0; font-size: 11px; margin-left: 8px; }
+.mastery-seals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mastery-seals article { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #3a4e3c; border-radius: 8px; color: #a9b8a0; font-size: 12px; }
+.mastery-seals .complete { border-color: #d7b77a; color: #efd69f; background: #d7b77a12; }
+.vow-selection { margin: 20px 0; }
+.vow-options { display: grid; grid-template-columns: 1fr 1.6fr; gap: 8px; }
+.vow-options button { text-align: left; display: flex; flex-direction: column; gap: 8px; padding: 13px; min-height: 68px; }
+.vow-options button[aria-pressed="true"] { border-color: #e8bf79; background: #e8bf7919; }
+.vow-options span, .vow-options small { font-size: 11px; line-height: 1.65; }
+.vow-victory { padding: 14px; border: 1px solid #d7b77a; border-radius: 8px; color: #efd69f; }
+.codex-goal { width: 100%; min-height: 44px; margin-bottom: 8px; }
+.codex-goal[aria-pressed="true"] { border-color: #e8bf79; color: #efd69f; }
+@media(max-width: 680px) {
+  .mastery-board summary span { display: block; margin: 6px 0 0 16px; }
+  .mastery-seals article { padding: 10px 8px; font-size: 11px; }
+  .vow-options { grid-template-columns: 1fr; }
+}
 @media(max-width:680px) { .reward-preview-list { grid-template-columns: 1fr; gap: 9px; } .reward-preview-list article { padding: 12px 14px; } }
 @media(max-width:680px),(pointer:coarse) {
   .encounter-hud { top: 130px; left: 20px; right: 20px; width: auto; padding: 8px 11px; }
@@ -1655,9 +1677,9 @@ button:focus-visible {
 .keepsake-card small { color: #c3caa8; }
 .keepsake-card[aria-pressed="true"] { border-color: #ebc57c; background: #394330; }
 .keepsake-card:disabled { opacity: .65; cursor: not-allowed; }
-.challenge-reward { border: 1px solid #d7bb77; border-radius: 12px; padding: 16px; margin: 16px 0; background: #394330; color: #f0dfac; }
-.challenge-reward p { font-size: 14px; line-height: 1.5; }
-.challenge-reward small, .challenge-reward > span { display: block; margin-top: 5px; font-size: 12px; line-height: 1.6; color: #d3d9bf; }
+.challenge-reward, .mastery-reward { border: 1px solid #d7bb77; border-radius: 12px; padding: 16px; margin: 16px 0; background: #394330; color: #f0dfac; }
+.challenge-reward p, .mastery-reward p { font-size: 14px; line-height: 1.5; }
+.challenge-reward small, .challenge-reward > span, .mastery-reward > span { display: block; margin-top: 5px; font-size: 12px; line-height: 1.6; color: #d3d9bf; }
 @media (max-width: 380px) { .keepsake-grid { grid-template-columns: 1fr; } .journey-board summary span { display: block; margin: 6px 0 0; } }
 
 /* The lobby makes collection and next-run preparation visible before departure. */

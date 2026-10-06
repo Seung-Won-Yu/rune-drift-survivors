@@ -84,6 +84,78 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('button', { name: '숲에 들어가기' })).toBeVisible();
 });
 
+test('codex goal persists, marks eligible growth, records on defeat and completes companion mastery', async ({page}) => {
+  await page.evaluate(() => localStorage.setItem('ash-profile-v1', JSON.stringify({version:1, wins:1, bestTime:280, totalKills:400, characters:{ash:{wins:1, branches:['duelist'], evolved:true}}, buildDiscoveries:['duelist'], discoveries:['dawn']})));
+  await page.reload();
+  await page.locator('[data-open-codex]').click();
+  await page.locator('[data-codex-entry="branch:sweep"]').click();
+  await page.locator('[data-codex-goal]').focus(); await page.keyboard.press('Enter');
+  await expect(page.locator('[data-codex-goal]')).toHaveAttribute('aria-pressed', 'true');
+  expect((await snapshot(page)).profile.goal).toBe('branch:sweep');
+  await page.locator('[data-close-codex]').click();
+  await expect(page.locator('.experiment-plan')).toContainText('반월 검법');
+  await page.reload(); expect((await snapshot(page)).goal).toBe('branch:sweep');
+  await page.getByRole('button', {name:'숲에 들어가기'}).click();
+  await scenario(page, 'branch-sword');
+  await expect(page.locator('[data-upgrade="sweep"] .experiment-badge')).toContainText('이번 판의 목표');
+  await expect(page.locator('[data-upgrade="duelist"] .experiment-badge')).toHaveCount(0);
+  await page.locator('[data-upgrade="sweep"]').click();
+  await expect(page.locator('#evolution-hint')).toContainText('반월 검법 달성');
+  await scenario(page, 'record-experiment');
+  await expect(page.locator('.mastery-reward')).toContainText('숙련 완료');
+  const result = await snapshot(page);
+  expect(result.profile.goal).toBeNull(); expect(result.profile.characters.ash.branches).toEqual(['duelist', 'sweep']);
+  await page.getByRole('button',{name:'동료 선택',exact:true}).click();
+  await expect(page.locator('.mastery-board summary')).toContainText('3/3'); expect((await snapshot(page)).rerolls).toBe(2);
+  await page.locator('[data-vow="mist"]').click(); expect((await snapshot(page)).vow).toBe('mist');
+  await page.reload(); expect((await snapshot(page)).vow).toBe('mist'); expect((await snapshot(page)).rerolls).toBe(2);
+});
+
+test('tracked relic highlights only its promised offer and stays unrecorded until the journey ends', async ({page}) => {
+  await scenario(page, 'event-altar');
+  await page.getByRole('button', {name:'보상 후보 살펴보기'}).click();
+  const promised = (await snapshot(page)).encounters[0].rewards;
+  const key = promised.find(id => ['dew', 'briar'].includes(id)); expect(key).toBeTruthy();
+  await scenario(page, 'record-unlock');
+  await page.getByRole('button', {name:'동료 선택',exact:true}).click();
+  await page.locator('[data-open-codex]').click();
+  await page.locator(`[data-codex-entry="relic:${key}"]`).click(); await page.locator('[data-codex-goal]').click();
+  await page.locator('[data-close-codex]').click();
+  await page.getByRole('button', {name:'숲에 들어가기'}).click(); await scenario(page, 'event-altar');
+  await expect(page.locator('[data-relic]')).toHaveCount(3, {timeout:15000});
+  expect((await snapshot(page)).relicChoices).toEqual(promised);
+  await expect(page.locator(`[data-relic="${key}"] .experiment-badge`)).toContainText('이번 판의 목표');
+  await expect(page.locator('[data-relic] .experiment-badge')).toHaveCount(1);
+  await page.locator(`[data-relic="${key}"]`).click();
+  const selected = await snapshot(page); expect(selected.goalProgress.state).toBe('complete');
+  expect(selected.profile.goal).toBe(`relic:${key}`); expect(selected.profile.relicDiscoveries).toEqual([]);
+  await page.keyboard.press('Escape'); await expect(page.locator('.build-summary')).toContainText('여정을 마치면 도감에 기록');
+});
+
+for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]) {
+  test(`reroll and collection controls remain usable inside fixed panels at ${viewport.width}px`, async ({page}) => {
+    await page.setViewportSize(viewport);
+    await expect(page.locator('[data-vow="mist"]')).toBeDisabled();
+    await page.locator('[data-open-codex]').click();
+    await page.locator('[data-codex-entry="evolution:dawn"]').click();
+    await page.locator('[data-codex-goal]').click();
+    await expect(page.locator('[data-codex-goal]')).toHaveAttribute('aria-pressed','true');
+    await page.locator('[data-close-codex]').click();
+    await expect(page.locator('.experiment-plan')).toContainText('여명의 검');
+    await page.getByRole('button', {name:'숲에 들어가기'}).click();
+    await scenario(page, 'upgrade'); const before = await snapshot(page);
+    await page.locator('[data-reroll]').click(); const after = await snapshot(page);
+    expect(after.choices.some(key => !before.choices.includes(key))).toBe(true);
+    expect(after.phase).toBe('upgrade'); expect(after.time).toBe(before.time); expect(after.player.hp).toBe(before.player.hp); expect(after.ranks).toEqual(before.ranks);
+    expect(after.rerolls).toBe(0); await expect(page.locator('[data-reroll]')).toBeDisabled();
+    await expect(page.locator('.reroll-row [role="status"]')).toContainText('후보가 바뀌었습니다');
+    const bounds = await page.evaluate(() => {const p=document.querySelector('#panel').getBoundingClientRect();return {outer:document.documentElement.scrollHeight-innerHeight, horizontal:document.documentElement.scrollWidth-innerWidth, top:p.top,bottom:p.bottom,height:innerHeight};});
+    expect(bounds.outer).toBeLessThanOrEqual(1); expect(bounds.horizontal).toBeLessThanOrEqual(1); expect(bounds.top).toBeGreaterThanOrEqual(0); expect(bounds.bottom).toBeLessThanOrEqual(bounds.height);
+    await page.locator('[data-upgrade]').first().focus(); await page.keyboard.press('Enter');
+    expect((await snapshot(page)).phase).toBe('playing');
+  });
+}
+
 test('fresh lobby codex shows collection goals without writing records and Escape restores preparation', async ({page}) => {
   const raw=await page.evaluate(()=>localStorage.getItem('ash-profile-v1'));
   await expect(page.locator('[data-keepsake="bookmark"]')).toBeDisabled();

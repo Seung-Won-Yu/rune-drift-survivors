@@ -2,10 +2,14 @@ import { SPECIALIZATIONS, RELICS } from './expansion.js';
 import { canEquipKeepsake, completedChallenges, KEEPSAKES } from './journey.js';
 import { CHARACTERS, getCharacter, isUnlocked } from './characters.js';
 import { validExperiment } from './experiments.js';
+import { primaryBranches, masteryProgress, canTakeVow, validGoal, goalFound } from './progression.js';
 export const PROFILE_KEY = 'ash-profile-v1';
 const evolutions = ['dawn', 'comet', 'lunar'];
 const integer = (value, max = 1e9) => Number.isFinite(value) ? Math.min(max, Math.max(0, Math.floor(value))) : 0;
 const emptyRecord = () => ({
+  branches: [],
+  evolved: false,
+  vowWins: 0,
   runs: 0,
   wins: 0,
   bestKills: 0,
@@ -16,6 +20,8 @@ export function createProfile() {
   return {
     version: 1,
     selected: 'ash',
+    vow: 'none',
+    goal: null,
     experiment: null,
     keepsake: 'none',
     altarRuns: 0,
@@ -48,12 +54,20 @@ export function normalizeProfile(input) {
     const row = profile.characters[key];
     for (const field of ['runs', 'wins', 'bestKills']) row[field] = integer(value[field]);
     row.bestTime = integer(value.bestTime, 300);
+    row.branches = primaryBranches(key).filter(branch => Array.isArray(value.branches) && value.branches.includes(branch));
+    row.evolved = value.evolved === true;
+    row.vowWins = Math.min(row.wins, integer(value.vowWins));
     if (Number.isFinite(value.fastestWin) && value.fastestWin > 0) row.fastestWin = Math.min(300, value.fastestWin);
   }
   profile.selected = isUnlocked(profile, input.selected) ? getCharacter(input.selected).id : 'ash';
   profile.experiment = validExperiment(profile.selected, input.experiment);
-  if (Array.isArray(input.history)) profile.history = input.history.slice(0, 5).filter(row => row && typeof row === 'object').map(row => ({
+  profile.vow = canTakeVow(profile, input.vow) ? input.vow : 'none';
+  profile.goal = validGoal(input.goal);
+  if (goalFound(profile, profile.goal)) profile.goal = null;
+  if (profile.goal) profile.experiment = null;
+  if (Array.isArray(input.history)) profile.history = input.history.slice(0, 5).filter(row => row && typeof row === 'object' && Object.hasOwn(CHARACTERS, row.character)).map(row => ({
     character: getCharacter(row.character).id,
+    vow: row.vow === 'mist' ? 'mist' : 'none',
     outcome: ['victory', 'survived', 'defeat'].includes(row.outcome) ? row.outcome : 'defeat',
     time: integer(row.time, 300),
     kills: integer(row.kills),
@@ -63,6 +77,12 @@ export function normalizeProfile(input) {
     relics: Object.keys(RELICS).filter(key => Array.isArray(row.relics) && row.relics.includes(key)),
     evolutions: evolutions.filter(key => Array.isArray(row.evolutions) && row.evolutions.includes(key))
   }));
+  // Older saves prove builds only in their recent per-character history.
+  for (const past of profile.history) {
+    const row = profile.characters[past.character];
+    row.branches = [...new Set([...row.branches, ...past.branches.filter(key => primaryBranches(past.character).includes(key))])];
+    row.evolved ||= past.evolutions.includes(getCharacter(past.character).evolution);
+  }
   return profile;
 }
 export function loadProfile(storage) {
@@ -115,6 +135,7 @@ export function recordRun(input, game) {
   };
   const before = Object.keys(CHARACTERS).filter(id => isUnlocked(profile, id));
   const previousChallenges = completedChallenges(profile).map(c => c.id);
+  const previousMastery = masteryProgress(profile, game.characterId).filter(s => s.current >= s.target).map(s => s.id);
   const newDiscoveries = {
     evolutions: evolutions.filter(key => game.ranks[key] > 0 && !profile.discoveries.includes(key)),
     branches: Object.keys(SPECIALIZATIONS).filter(key => game.ranks[key] && !profile.buildDiscoveries.includes(key)),
@@ -133,6 +154,9 @@ export function recordRun(input, game) {
   const row = profile.characters[character];
   row.runs++;
   row.wins += Number(win);
+  row.vowWins += Number(win && game.vow === 'mist');
+  row.branches = [...new Set([...row.branches, ...primaryBranches(character).filter(key => game.ranks[key] > 0)])];
+  row.evolved ||= game.ranks[getCharacter(character).evolution] > 0;
   row.bestKills = Math.max(row.bestKills, kills);
   row.bestTime = Math.max(row.bestTime, time);
   if (win) row.fastestWin = row.fastestWin === null ? game.time : Math.min(row.fastestWin, game.time);
@@ -142,8 +166,10 @@ export function recordRun(input, game) {
   const relics = Object.keys(RELICS).filter(key => game.relics?.includes(key));
   profile.buildDiscoveries = [...new Set([...profile.buildDiscoveries, ...branches])];
   profile.relicDiscoveries = [...new Set([...profile.relicDiscoveries, ...relics])];
+  if (goalFound(profile, profile.goal)) profile.goal = null;
   profile.history.unshift({
     keepsake: Object.hasOwn(KEEPSAKES, game.keepsake) ? game.keepsake : 'none',
+    vow: game.vow === 'mist' ? 'mist' : 'none',
     branches,
     relics,
     character,
@@ -159,6 +185,7 @@ export function recordRun(input, game) {
   return {
     profile,
     added: true,
+    mastery: masteryProgress(profile, character).filter(s => s.current >= s.target && !previousMastery.includes(s.id)).map(s => s.id),
     discoveries: newDiscoveries,
     challenges: completedChallenges(profile).filter(c => !previousChallenges.includes(c.id)).map(c => c.id),
     unlocked: Object.keys(CHARACTERS).filter(id => !before.includes(id) && isUnlocked(profile, id))

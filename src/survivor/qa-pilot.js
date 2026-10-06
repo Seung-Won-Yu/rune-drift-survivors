@@ -3,6 +3,7 @@ import { trackedEncounter, encounterDistance } from './encounters.js';
 // Development-only input driver. Uses ordinary upgrades and simulation time; never changes combat stats.
 import { SLAM } from './game.js';
 import { BOSS } from './boss.js';
+import { goalProgress, goalRelevant } from './goals.js';
 export const routes = {
   blade: ['sweep', 'horizon', 'detonation', 'dawn', 'sword', 'orbit', 'vitality', 'fleet', 'magnet', 'comet', 'lunar', 'ember', 'heal'],
   comet: ['wildfire', 'duelist', 'horizon', 'comet', 'ember', 'fleet', 'magnet', 'vitality', 'orbit', 'sword', 'lunar', 'dawn', 'heal'],
@@ -14,12 +15,15 @@ export function createPilot(route) {
   const priorities = [...routes[base]];
   if (route.endsWith('-alternate')) priorities[0] = { blade: 'duelist', comet: 'detonation', lunar: 'horizon' }[base];
   return {
+    shouldReroll: game => goalProgress(game)?.state === 'preparing' && !game.choices.some(key => goalRelevant(game, key)),
     choose(game) {
       // Respond to the health shown on the choice screen; only choose real offers.
       if (game.player.hp <= game.player.maxHp * .4) {
         const recovery = ['vitality', 'heal'].find(key => game.choices.includes(key));
         if (recovery) return recovery;
       }
+      const target = game.choices.find(key => goalRelevant(game, key));
+      if (target) return target;
       return priorities.find(key => game.choices.includes(key)) ?? game.choices[0];
     },
     relic: game => (base === 'comet' ? ['coal','sail','dew','briar','fang','bell'] : base === 'lunar' ? ['bell','briar','dew','coal','fang','sail'] : ['fang','dew','briar','coal','bell','sail']).find(key=>game.relicChoices.includes(key)),
