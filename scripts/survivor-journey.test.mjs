@@ -30,6 +30,35 @@ test('different recorded branches unlock one reward and persistence keeps select
  assert.equal(loadProfile(storage).profile.keepsake,'ribbon');
  assert.deepEqual(recordRun(next.profile,ended('three')).challenges,[]);
 });
+test('three distinct combat discoveries unlock early growth once and survive old-profile normalization', () => {
+ const old=normalizeProfile({version:1,discoveries:['dawn'],buildDiscoveries:['sweep'],keepsake:'bookmark'});
+ assert.equal(old.keepsake,'none');assert.equal(canEquipKeepsake(old,'bookmark'),false);
+ const repeat=ended('repeat');repeat.ranks.sweep=1;
+ assert.deepEqual(recordRun(old,repeat).challenges,[]);
+ const third=ended('third');third.relics=['dew'];
+ const result=recordRun(old,third);assert.deepEqual(result.challenges,['collection']);
+ assert.equal(canEquipKeepsake(result.profile,'bookmark'),true);
+ assert.deepEqual(recordRun(result.profile,third).challenges,[]);
+ let raw;result.profile.keepsake='bookmark';
+ const storage={setItem:(_,v)=>raw=v,getItem:()=>raw};assert.ok(saveProfile(storage,result.profile));
+ assert.equal(loadProfile(storage).profile.keepsake,'bookmark');
+ assert.equal(normalizeProfile({version:1,discoveries:['dawn','dawn','fake'],keepsake:'bookmark'}).keepsake,'none');
+});
+test('early growth boosts real collected XP before 60 seconds, ends at the boundary and does not boost dew healing', () => {
+ const collect=(id,time)=>{
+  const g=createGame(42,'ash',id);startGame(g);g.spawnClock=999;g.xpNeed=9999;
+  g.time=time;g.relics=['dew'];g.player.hp=50;g.dewXp=24;
+  g.gems.push({x:0,y:0,value:5,age:0});updateGame(g,1/60);
+  return g;
+ };
+ const early=collect('bookmark',0);assert.equal(early.xp,6);assert.equal(early.dewXp,29);assert.equal(early.player.hp,50);
+ assert.equal(collect('bookmark',59.9).xp,6);
+ assert.equal(collect('bookmark',60).xp,5);assert.equal(collect('none',0).xp,5);
+ assert.equal(collect('seed',0).xp,5);
+ const fresh=createGame(44,'ash','bookmark');assert.equal(fresh.xp,0);assert.equal(fresh.time,0);assert.equal(fresh.player.hp,100);
+ const paused=collect('bookmark',59.9);paused.phase='paused';const before={time:paused.time,xp:paused.xp};
+ updateGame(paused,1);assert.equal(paused.time,before.time);assert.equal(paused.xp,before.xp);
+});
 test('all starting tradeoffs affect real movement, health or XP attraction and never stack on restart', () => {
  for(const id of ['none','seed','ribbon','crown']) {
   const g=createGame(42,'ash',id);startGame(g);g.spawnClock=999;

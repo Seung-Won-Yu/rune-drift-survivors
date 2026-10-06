@@ -12,6 +12,7 @@ import { loadArt, createRenderer } from './render.js';
 import { getCharacter, isUnlocked } from './characters.js';
 import { loadProfile, saveProfile, recordRun } from './profile.js';
 import { campScreen, resultDetails, formatTime, buildSummary, relicContextMarkup, encounterRewardPreview } from './camp.js';
+import { codexScreen, CODEX_GROUPS, codexEntries } from './codex.js';
 import { createAudio, selectAudioEvents } from './audio.js';
 import { nearestRecovery, RECOVERY } from './field.js';
 const $ = id => document.getElementById(id);
@@ -54,6 +55,7 @@ let stick = {
   sound = true;
 const audio = createAudio();
 const keys = new Set();
+let campView = 'prepare', codexFilter = 'all', codexSelection = null, campScroll = 0;
 let qaPilot = null;
 try {
   sound = localStorage.getItem('ash-sound') !== 'off';
@@ -103,6 +105,7 @@ function restart() {
   lastHud = 0;
 }
 function camp() {
+  campView = 'prepare';
   game = createGame(++seed, profile.selected, profile.keepsake, profile.experiment);
   lastPhase = null;
   syncPhase();
@@ -136,12 +139,42 @@ function clearExperiment() {
 function selectKeepsake(id) {
   if (game.phase !== 'ready' || !canEquipKeepsake(profile, id)) return;
   const scrollTop = $('overlay').scrollTop;
+  const journeyOpen = $('panel').querySelector('.journey-board')?.open;
   profile.keepsake = id;
   persist();
   camp();
-  $('panel').querySelector('.journey-board').open = true;
+  $('panel').querySelector('.journey-board').open = journeyOpen;
   $('overlay').scrollTop = scrollTop;
   requestAnimationFrame(() => $('panel').querySelector(`[data-keepsake="${id}"]`)?.focus({preventScroll:true}));
+}
+function openCodex() {
+  if (game.phase !== 'ready') return;
+  campScroll = $('overlay').scrollTop;
+  campView = 'codex';
+  lastPhase = null; syncPhase();
+}
+function closeCodex() {
+  if (game.phase !== 'ready' || campView !== 'codex') return;
+  campView = 'prepare';
+  lastPhase = null; syncPhase();
+  $('overlay').scrollTop = campScroll;
+  requestAnimationFrame(() => $('panel').querySelector('[data-open-codex]')?.focus({preventScroll: true}));
+}
+function updateCodex(filter, entry) {
+  if (game.phase !== 'ready' || campView !== 'codex') return;
+  if (filter && !Object.hasOwn(CODEX_GROUPS, filter)) return;
+  if (entry && !codexEntries(profile).some(e => e.id === entry)) return;
+  const scrollTop = $('overlay').scrollTop;
+  if (filter) { codexFilter = filter; codexSelection = null; }
+  if (entry) codexSelection = entry;
+  lastPhase = null; syncPhase();
+  $('overlay').scrollTop = scrollTop;
+  requestAnimationFrame(() => {
+    if (entry && matchMedia('(max-width:680px)').matches) {
+      $('panel').querySelector('.codex-detail h2')?.focus({preventScroll: true});
+      $('panel').querySelector('.codex-detail')?.scrollIntoView({block: 'start'});
+    } else $('panel').querySelector(filter ? `[data-codex-filter="${filter}"]` : `[data-codex-entry="${entry}"]`)?.focus({preventScroll: true});
+  });
 }
 function pause() {
   if (pauseGame(game)) {
@@ -215,8 +248,17 @@ function syncPhase() {
     return;
   }
   if (game.phase === 'ready') {
-    panel(campScreen(game, profile, storageWarning));
-    $('start-game').onclick = start;
+    panel(campView === 'codex' ? codexScreen(profile, codexFilter, codexSelection) : campScreen(game, profile, storageWarning));
+    $('panel').classList.toggle('is-codex', campView === 'codex');
+    $('start-game')?.addEventListener('click', start);
+    $('panel').querySelector('[data-open-codex]')?.addEventListener('click', openCodex);
+    $('panel').querySelector('[data-close-codex]')?.addEventListener('click', closeCodex);
+    for (const button of $('panel').querySelectorAll('[data-codex-filter]')) button.onclick = () => updateCodex(button.dataset.codexFilter);
+    for (const button of $('panel').querySelectorAll('[data-codex-entry]')) button.onclick = () => updateCodex(null, button.dataset.codexEntry);
+    $('panel').querySelector('[data-codex-list]')?.addEventListener('click', () => {
+      const entry = $('panel').querySelector('[data-codex-entry][aria-pressed="true"]');
+      entry?.scrollIntoView({block: 'center'}); entry?.focus({preventScroll: true});
+    });
     for (const button of document.querySelectorAll('[data-keepsake]')) button.onclick = () => selectKeepsake(button.dataset.keepsake);
     for (const button of document.querySelectorAll('[data-character]')) button.onclick = () => selectCharacter(button.dataset.character);
     $('panel').querySelector('[data-clear-experiment]')?.addEventListener('click', clearExperiment);
@@ -376,6 +418,7 @@ document.addEventListener('keydown', event => {
   }
   if ((key === 'escape' || key === 'p') && !event.repeat) {
     event.preventDefault();
+    if (game.phase === 'ready' && campView === 'codex') { closeCodex(); return; }
     if (game.phase === 'preview') closePreview();else if (game.phase === 'event') { chooseCurse(game,false); lastPhase=null; syncPhase(); } else if (game.phase === 'playing') pause();else if (game.phase === 'paused') resume();
     return;
   }

@@ -17,11 +17,19 @@ try{
   page.on('pageerror',error=>errors.push(error.message));
   page.on('response',response=>{if(response.status()>=400)failures.push(`${response.status()} ${response.url()}`);if(response.url().includes('/art/survivor/'))assets.push(response.url().split('/').at(-1));});
   await page.goto(`${origin}/rune-drift-survivors/survivor/?qa`);
+  await page.locator('[data-open-codex]').click();
+  assert.equal(await page.locator('[data-codex-entry]').count(),22);
+  await page.locator('[data-codex-filter="weapons"]').click();
+  assert.equal(await page.locator('[data-codex-entry]').count(),9);
+  await page.locator('[data-codex-entry="evolution:dawn"]').click();
+  assert.ok((await page.locator('.codex-detail').textContent()).includes('검 3 · 룬 1 · 정예 1'));
+  await page.locator('[data-close-codex]').click();
+  assert.equal(await page.locator('[data-keepsake="bookmark"]').isDisabled(),true);
   await page.getByRole('button',{name:'숲에 들어가기'}).click();
   await page.getByRole('button',{name:'일시정지',exact:true}).click();
   await page.getByRole('button',{name:'전투 계속하기'}).waitFor();
   assert.equal(await page.evaluate(()=>typeof window.__ASH_QA__),'undefined');
   for(const name of ['hero-ash.png','hero-ember.png','hero-grove.png','enemies.png','ash-sovereign.png'])assert.ok(assets.includes(name),name);
   assert.deepEqual(failures,[]);assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({base:'/rune-drift-survivors/',loadedAssets:[...new Set(assets)],qaGlobal:'absent',startAndPause:'passed',failures,errors}));
+  console.log(JSON.stringify({base:'/rune-drift-survivors/',loadedAssets:[...new Set(assets)],qaGlobal:'absent',codexEntries:22,codexRecipes:'passed',lockedGrowth:'passed',startAndPause:'passed',failures,errors}));
 }finally{await browser?.close();server?.kill();}

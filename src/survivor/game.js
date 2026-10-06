@@ -4,7 +4,7 @@ import { updateEncounters, curseActive } from './encounters.js';
 import { SPECIALIZATIONS, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
 import { BOSS, updateBoss, updateThorns } from './boss.js';
 import { getCharacter } from './characters.js';
-import { keepsakeStats, KEEPSAKES } from './journey.js';
+import { keepsakeStats, keepsakeXpMultiplier, KEEPSAKES } from './journey.js';
 import { healPlayer, updateField } from './field.js';
 import { EVOLUTION_BREATHER, spawnPlan } from './pacing.js';
 import { validExperiment } from './experiments.js';
@@ -926,7 +926,7 @@ export function updateGame(game, dt, input = {
       gem.y += dy / (d || 1) * step;
     }
     if (Math.hypot(p.x - gem.x, p.y - gem.y) < 16) {
-      game.xp += gem.value;
+      game.xp += gem.value * keepsakeXpMultiplier(game);
       if (game.relics.includes('dew')) {
         game.dewXp += gem.value;
         const charges = Math.floor(game.dewXp / 30);

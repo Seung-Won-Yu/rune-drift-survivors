@@ -84,6 +84,81 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('button', { name: '숲에 들어가기' })).toBeVisible();
 });
 
+test('fresh lobby codex shows collection goals without writing records and Escape restores preparation', async ({page}) => {
+  const raw=await page.evaluate(()=>localStorage.getItem('ash-profile-v1'));
+  await expect(page.locator('[data-keepsake="bookmark"]')).toBeDisabled();
+  await expect(page.locator('.codex-door')).toContainText('1 / 22');
+  await expect(page.locator('.codex-door')).toContainText('전투 발견 0/3');
+  await page.locator('[data-open-codex]').focus();await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading',{name:'숲의 도감',exact:true})).toBeVisible();
+  await expect(page.locator('.codex-card')).toHaveCount(22);
+  await expect(page.locator('.codex-card.is-found')).toHaveCount(1);
+  await page.locator('[data-codex-filter="weapons"]').click();
+  await expect(page.locator('.codex-card')).toHaveCount(9);
+  await page.locator('[data-codex-entry="evolution:dawn"]').click();
+  await expect(page.locator('.codex-detail')).toContainText('검 3 · 룬 1 · 정예 1');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-open-codex]')).toBeFocused();
+  expect((await snapshot(page)).phase).toBe('ready');expect((await snapshot(page)).time).toBe(0);
+  expect(await page.evaluate(()=>localStorage.getItem('ash-profile-v1'))).toBe(raw);
+});
+
+test('three real run discoveries unlock an equippable growth keepsake and its selection survives reload',async({page})=>{
+  // The ended-run fixture has a branch, an evolution and a relic; recordRun owns the unlock.
+  await scenario(page,'record-experiment');
+  await expect(page.locator('.challenge-reward')).toContainText('첫빛의 책갈피');
+  await page.getByRole('button',{name:'동료 선택',exact:true}).click();
+  await expect(page.locator('[data-keepsake="bookmark"]')).toBeEnabled();
+  await page.locator('[data-keepsake="bookmark"]').click();
+  await expect(page.locator('.departure-summary')).toContainText('첫 60초 획득 경험치 +20%');
+  await page.reload();await expect(page.locator('[data-keepsake="bookmark"]')).toHaveAttribute('aria-pressed','true');
+  await page.locator('[data-open-codex]').click();
+  await page.locator('[data-codex-filter="keepsakes"]').click();
+  await expect(page.locator('[data-codex-entry="keepsake:bookmark"]')).toHaveClass(/is-found/);
+  await page.locator('[data-close-codex]').click();
+  await page.getByRole('button',{name:'숲에 들어가기'}).click();
+  const state=await snapshot(page);expect(state.keepsake).toBe('bookmark');expect(state.player.maxHp).toBe(100);
+  await page.getByRole('button',{name:'일시정지',exact:true}).click();
+  await expect(page.locator('.build-summary')).toContainText('첫빛의 책갈피');
+  await expect(page.locator('.build-summary')).toContainText('효과');
+});
+
+for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+  test(`codex collection, inspection and return fit ${viewport.width}px`,async({page})=>{
+    await page.setViewportSize(viewport);
+    await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,bestTime:60,buildDiscoveries:['sweep','wildfire'],relicDiscoveries:['dew']})));
+    await page.reload();
+    await page.locator('[data-keepsake="bookmark"]').click();
+    // Taller desktop captures show the whole preparation and inspected-entry text.
+    if(viewport.width===1280) await page.setViewportSize({width:1280,height:1000});
+    await page.locator('#overlay').evaluate(el=>el.scrollTop=0);
+    await page.screenshot({path:`output/playwright/survivor/preparation-${viewport.width}.png`,animations:'disabled'});
+    await page.setViewportSize(viewport);
+    await page.locator('[data-open-codex]').click();
+    await page.locator('[data-codex-filter="relics"]').click();
+    await expect(page.locator('.codex-card')).toHaveCount(6);
+    await page.locator('[data-codex-entry="relic:dew"]').click();
+    await expect(page.locator('.codex-detail')).toContainText('경험치 30 수집마다 체력 3 회복');
+    if(viewport.width<=680) {
+      await expect(page.locator('.codex-detail h2')).toBeFocused();
+      await expect(page.locator('.codex-detail h2')).toBeInViewport();
+      await page.locator('[data-codex-list]').click();
+      await expect(page.locator('[data-codex-entry="relic:dew"]')).toBeFocused();
+      await expect(page.locator('[data-codex-entry="relic:dew"]')).toBeInViewport();
+    } else await expect(page.locator('[data-codex-entry="relic:dew"]')).toBeFocused();
+    const fits=await page.locator('[data-codex-filter], [data-codex-entry], [data-close-codex]').evaluateAll(nodes=>nodes.every(el=>{
+      const r=el.getBoundingClientRect();return r.x>=0&&r.right<=innerWidth&&r.height>=44;
+    }));expect(fits).toBe(true);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    if(viewport.width===1280) await page.setViewportSize({width:1280,height:1000});
+    await page.locator('#overlay').evaluate(el=>el.scrollTop=0);
+    await page.screenshot({path:`output/playwright/survivor/codex-${viewport.width}.png`,animations:'disabled'});
+    await page.locator('[data-close-codex]').click();
+    await expect(page.locator('[data-open-codex]')).toBeFocused();
+    await page.getByRole('button',{name:'숲에 들어가기'}).click();expect((await snapshot(page)).phase).toBe('playing');
+  });
+}
+
 for (const viewport of [{width:1280,height:720}, {width:320,height:740}, {width:740,height:360}]) {
   test(`new discoveries lead into an optional saved experiment at ${viewport.width}px`, async ({page}) => {
     await page.setViewportSize(viewport);

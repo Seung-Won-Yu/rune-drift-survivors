@@ -5,7 +5,7 @@ import { chooseRelic, nearbyChest, openChest, chooseCurse } from '../src/survivo
 import { SPECIALIZATIONS } from '../src/survivor/expansion.js';
 import { createPilot } from '../src/survivor/qa-pilot.js';
 for (const route of ['blade', 'comet', 'lunar']) {
-  for (const keepsake of ['none', 'seed', 'ribbon', 'crown']) {
+  for (const keepsake of ['none', 'seed', 'ribbon', 'crown', 'bookmark']) {
     const seed = 42;
     const base = route.replace('-alternate', ''),
       g = createGame(seed, {
@@ -15,7 +15,8 @@ for (const route of ['blade', 'comet', 'lunar']) {
       }[base], keepsake),
       pilot = createPilot(route);
     startGame(g);
-    let peak = 0;
+    let peak = 0, levelAt60 = null;
+    const earlyLevelTimes = [];
     for (let frame = 0; frame < 20000 && g.phase !== 'ended'; frame++) {
       if (g.phase === 'upgrade') assert.ok(chooseUpgrade(g, pilot.choose(g)));
       if (g.phase === 'relic') assert.ok(chooseRelic(g, pilot.relic(g)));
@@ -24,6 +25,8 @@ for (const route of ['blade', 'comet', 'lunar']) {
         assert.ok(chooseCurse(g, true));
       }
       updateGame(g, 1 / 60, pilot.move(g));
+      if (g.phase === 'upgrade' && g.time < 60 && !earlyLevelTimes.some(row => row.level === g.level)) earlyLevelTimes.push({level: g.level, time: g.time});
+      if (levelAt60 === null && g.time >= 60) levelAt60 = g.level;
       g.events = [];
       peak = Math.max(peak, g.enemies.length);
       assert.ok(g.enemies.length <= LIMITS.enemies && g.shots.length <= LIMITS.shots && g.effects.length <= LIMITS.effects);
@@ -36,6 +39,8 @@ for (const route of ['blade', 'comet', 'lunar']) {
       time: g.time,
       outcome: g.outcome,
       level: g.level,
+      levelAt60,
+      earlyLevelTimes,
       kills: g.kills,
       hp: g.player.hp,
       branches: Object.keys(SPECIALIZATIONS).filter(k => g.ranks[k]),

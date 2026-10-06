@@ -1,0 +1,1019 @@
+{
+  "seed": 42,
+  "step": 0.016666666666666666,
+  "note": "Automated normal-rule movement and choices; not human balance evidence.",
+  "runs": [
+    {
+      "route": "blade",
+      "keepsake": "none",
+      "seed": 42,
+      "time": 259.1666666667596,
+      "outcome": "victory",
+      "level": 18,
+      "levelAt60": 7,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 11.283333333333474
+        },
+        {
+          "level": 3,
+          "time": 17.950000000000262
+        },
+        {
+          "level": 4,
+          "time": 24.683333333333213
+        },
+        {
+          "level": 5,
+          "time": 35.399999999999274
+        },
+        {
+          "level": 6,
+          "time": 56.0999999999981
+        },
+        {
+          "level": 7,
+          "time": 59.08333333333126
+        }
+      ],
+      "kills": 808,
+      "hp": 106,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 74.95820987657393,
+        "sword": 38803.214567903895,
+        "ember": 0,
+        "orbit": 2590.981851852061
+      },
+      "healing": {
+        "field": 24,
+        "elite": 24,
+        "upgrade": 40,
+        "relic": 0
+      },
+      "peak": 65
+    },
+    {
+      "route": "blade",
+      "keepsake": "seed",
+      "seed": 42,
+      "time": 277.45000000007633,
+      "outcome": "victory",
+      "level": 19,
+      "levelAt60": 7,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 12.03333333333351
+        },
+        {
+          "level": 3,
+          "time": 17.91666666666693
+        },
+        {
+          "level": 4,
+          "time": 23.933333333333255
+        },
+        {
+          "level": 5,
+          "time": 35.983333333332574
+        },
+        {
+          "level": 6,
+          "time": 50.83333333333173
+        },
+        {
+          "level": 7,
+          "time": 58.683333333331284
+        }
+      ],
+      "kills": 814,
+      "hp": 112,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 280,
+        "sword": 40466.893641978175,
+        "ember": 0,
+        "orbit": 1579.6770987656037
+      },
+      "healing": {
+        "field": 6,
+        "elite": 18,
+        "upgrade": 96,
+        "relic": 0
+      },
+      "peak": 58
+    },
+    {
+      "route": "blade",
+      "keepsake": "ribbon",
+      "seed": 42,
+      "time": 285.25000000006924,
+      "outcome": "victory",
+      "level": 19,
+      "levelAt60": 6,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 11.266666666666806
+        },
+        {
+          "level": 3,
+          "time": 17.91666666666693
+        },
+        {
+          "level": 4,
+          "time": 24.64999999999988
+        },
+        {
+          "level": 5,
+          "time": 35.41666666666594
+        },
+        {
+          "level": 6,
+          "time": 44.316666666665434
+        }
+      ],
+      "kills": 820,
+      "hp": 150,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 73.22339506178209,
+        "sword": 37841.94493827409,
+        "ember": 0,
+        "orbit": 3404.075555555965
+      },
+      "healing": {
+        "field": 6,
+        "elite": 0,
+        "upgrade": 112,
+        "relic": 0
+      },
+      "peak": 72
+    },
+    {
+      "route": "blade",
+      "keepsake": "crown",
+      "seed": 42,
+      "time": 271.7500000000815,
+      "outcome": "victory",
+      "level": 19,
+      "levelAt60": 6,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 12.133333333333516
+        },
+        {
+          "level": 3,
+          "time": 17.783333333333605
+        },
+        {
+          "level": 4,
+          "time": 25.216666666666516
+        },
+        {
+          "level": 5,
+          "time": 35.21666666666595
+        },
+        {
+          "level": 6,
+          "time": 44.59999999999875
+        }
+      ],
+      "kills": 808,
+      "hp": 145,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 112.60444444449016,
+        "sword": 38948.18111111369,
+        "ember": 0,
+        "orbit": 1124.8781481483836
+      },
+      "healing": {
+        "field": 0,
+        "elite": 6,
+        "upgrade": 86,
+        "relic": 0
+      },
+      "peak": 60
+    },
+    {
+      "route": "blade",
+      "keepsake": "bookmark",
+      "seed": 42,
+      "time": 287.3500000000673,
+      "outcome": "victory",
+      "level": 19,
+      "levelAt60": 7,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 11.283333333333474
+        },
+        {
+          "level": 3,
+          "time": 16.066666666667036
+        },
+        {
+          "level": 4,
+          "time": 21.433333333333398
+        },
+        {
+          "level": 5,
+          "time": 27.816666666666368
+        },
+        {
+          "level": 6,
+          "time": 41.04999999999895
+        },
+        {
+          "level": 7,
+          "time": 57.233333333331366
+        }
+      ],
+      "kills": 822,
+      "hp": 62,
+      "branches": [
+        "sweep",
+        "horizon"
+      ],
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 175.02209876545243,
+        "sword": 38963.56098765685,
+        "ember": 0,
+        "orbit": 2595.2004320992055
+      },
+      "healing": {
+        "field": 0,
+        "elite": 30,
+        "upgrade": 20,
+        "relic": 0
+      },
+      "peak": 60
+    },
+    {
+      "route": "comet",
+      "keepsake": "none",
+      "seed": 42,
+      "time": 293.7833333333948,
+      "outcome": "victory",
+      "level": 19,
+      "levelAt60": 6,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 7.98333333333331
+        },
+        {
+          "level": 3,
+          "time": 16.883333333333656
+        },
+        {
+          "level": 4,
+          "time": 24.53333333333322
+        },
+        {
+          "level": 5,
+          "time": 35.166666666665954
+        },
+        {
+          "level": 6,
+          "time": 58.03333333333132
+        }
+      ],
+      "kills": 828,
+      "hp": 45,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 43216.85370370715,
+        "orbit": 0
+      },
+      "healing": {
+        "field": 40,
+        "elite": 30,
+        "upgrade": 120,
+        "relic": 0
+      },
+      "peak": 74
+    },
+    {
+      "route": "comet",
+      "keepsake": "seed",
+      "seed": 42,
+      "time": 277.55000000007624,
+      "outcome": "victory",
+      "level": 19,
+      "levelAt60": 6,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 7.916666666666644
+        },
+        {
+          "level": 3,
+          "time": 16.466666666667013
+        },
+        {
+          "level": 4,
+          "time": 23.283333333333292
+        },
+        {
+          "level": 5,
+          "time": 37.8166666666658
+        },
+        {
+          "level": 6,
+          "time": 58.63333333333129
+        }
+      ],
+      "kills": 818,
+      "hp": 79,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 42803.44382716375,
+        "orbit": 0
+      },
+      "healing": {
+        "field": 43,
+        "elite": 29,
+        "upgrade": 116,
+        "relic": 0
+      },
+      "peak": 68
+    },
+    {
+      "route": "comet",
+      "keepsake": "ribbon",
+      "seed": 42,
+      "time": 280.81666666673993,
+      "outcome": "victory",
+      "level": 19,
+      "levelAt60": 6,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 7.916666666666644
+        },
+        {
+          "level": 3,
+          "time": 17.050000000000313
+        },
+        {
+          "level": 4,
+          "time": 24.58333333333322
+        },
+        {
+          "level": 5,
+          "time": 36.03333333333257
+        },
+        {
+          "level": 6,
+          "time": 57.63333333333134
+        }
+      ],
+      "kills": 822,
+      "hp": 37.125,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 43372.75080247256,
+        "orbit": 0
+      },
+      "healing": {
+        "field": 25,
+        "elite": 30,
+        "upgrade": 120,
+        "relic": 0
+      },
+      "peak": 75
+    },
+    {
+      "route": "comet",
+      "keepsake": "crown",
+      "seed": 42,
+      "time": 266.9833333334192,
+      "outcome": "victory",
+      "level": 19,
+      "levelAt60": 6,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 8.483333333333334
+        },
+        {
+          "level": 3,
+          "time": 18.61666666666689
+        },
+        {
+          "level": 4,
+          "time": 26.48333333333311
+        },
+        {
+          "level": 5,
+          "time": 36.449999999999214
+        },
+        {
+          "level": 6,
+          "time": 59.19999999999792
+        }
+      ],
+      "kills": 806,
+      "hp": 78.5,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 41377.34925926248,
+        "orbit": 0
+      },
+      "healing": {
+        "field": 40,
+        "elite": 30,
+        "upgrade": 120,
+        "relic": 0
+      },
+      "peak": 68
+    },
+    {
+      "route": "comet",
+      "keepsake": "bookmark",
+      "seed": 42,
+      "time": 226.21666666673883,
+      "outcome": "defeat",
+      "level": 17,
+      "levelAt60": 6,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 7.98333333333331
+        },
+        {
+          "level": 3,
+          "time": 15.666666666667025
+        },
+        {
+          "level": 4,
+          "time": 22.033333333333363
+        },
+        {
+          "level": 5,
+          "time": 28.616666666666323
+        },
+        {
+          "level": 6,
+          "time": 40.033333333332344
+        }
+      ],
+      "kills": 655,
+      "hp": 0,
+      "branches": [
+        "wildfire"
+      ],
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 29767.093888890427,
+        "orbit": 0
+      },
+      "healing": {
+        "field": 6,
+        "elite": 21,
+        "upgrade": 60,
+        "relic": 0
+      },
+      "peak": 70
+    },
+    {
+      "route": "lunar",
+      "keepsake": "none",
+      "seed": 42,
+      "time": 300,
+      "outcome": "survived",
+      "level": 19,
+      "levelAt60": 7,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 11.716666666666828
+        },
+        {
+          "level": 3,
+          "time": 18.4666666666669
+        },
+        {
+          "level": 4,
+          "time": 24.549999999999887
+        },
+        {
+          "level": 5,
+          "time": 33.58333333333271
+        },
+        {
+          "level": 6,
+          "time": 45.5499999999987
+        },
+        {
+          "level": 7,
+          "time": 56.999999999998046
+        }
+      ],
+      "kills": 827,
+      "hp": 27.075624999999977,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 2356.6574691360665,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 37144.28104938542
+      },
+      "healing": {
+        "field": 25,
+        "elite": 30,
+        "upgrade": 124.33500000000001,
+        "relic": 0
+      },
+      "peak": 72
+    },
+    {
+      "route": "lunar",
+      "keepsake": "seed",
+      "seed": 42,
+      "time": 300,
+      "outcome": "survived",
+      "level": 19,
+      "levelAt60": 7,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 11.500000000000151
+        },
+        {
+          "level": 3,
+          "time": 17.866666666666934
+        },
+        {
+          "level": 4,
+          "time": 23.816666666666595
+        },
+        {
+          "level": 5,
+          "time": 33.7333333333327
+        },
+        {
+          "level": 6,
+          "time": 47.41666666666526
+        },
+        {
+          "level": 7,
+          "time": 56.48333333333141
+        }
+      ],
+      "kills": 817,
+      "hp": 2.822812499999923,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 2792.276851852211,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 35856.32790123716
+      },
+      "healing": {
+        "field": 0,
+        "elite": 30,
+        "upgrade": 133.00500000000002,
+        "relic": 0
+      },
+      "peak": 68
+    },
+    {
+      "route": "lunar",
+      "keepsake": "ribbon",
+      "seed": 42,
+      "time": 300,
+      "outcome": "survived",
+      "level": 19,
+      "levelAt60": 7,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 11.716666666666828
+        },
+        {
+          "level": 3,
+          "time": 18.450000000000234
+        },
+        {
+          "level": 4,
+          "time": 24.566666666666553
+        },
+        {
+          "level": 5,
+          "time": 33.54999999999938
+        },
+        {
+          "level": 6,
+          "time": 47.53333333333192
+        },
+        {
+          "level": 7,
+          "time": 57.39999999999802
+        }
+      ],
+      "kills": 817,
+      "hp": 11.927812499999966,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 2885.9652469139764,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 36496.97802469385
+      },
+      "healing": {
+        "field": 25,
+        "elite": 30,
+        "upgrade": 124.33500000000001,
+        "relic": 0
+      },
+      "peak": 75
+    },
+    {
+      "route": "lunar",
+      "keepsake": "crown",
+      "seed": 42,
+      "time": 300,
+      "outcome": "survived",
+      "level": 19,
+      "levelAt60": 7,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 11.716666666666828
+        },
+        {
+          "level": 3,
+          "time": 18.450000000000234
+        },
+        {
+          "level": 4,
+          "time": 24.549999999999887
+        },
+        {
+          "level": 5,
+          "time": 33.566666666666045
+        },
+        {
+          "level": 6,
+          "time": 45.716666666665354
+        },
+        {
+          "level": 7,
+          "time": 57.53333333333135
+        }
+      ],
+      "kills": 812,
+      "hp": 44.26812499999992,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 2263.2979012347414,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 36093.96018518782
+      },
+      "healing": {
+        "field": 0,
+        "elite": 34.33500000000001,
+        "upgrade": 93.00500000000002,
+        "relic": 0
+      },
+      "peak": 67
+    },
+    {
+      "route": "lunar",
+      "keepsake": "bookmark",
+      "seed": 42,
+      "time": 300,
+      "outcome": "survived",
+      "level": 19,
+      "levelAt60": 7,
+      "earlyLevelTimes": [
+        {
+          "level": 2,
+          "time": 11.716666666666828
+        },
+        {
+          "level": 3,
+          "time": 16.733333333333665
+        },
+        {
+          "level": 4,
+          "time": 23.433333333333284
+        },
+        {
+          "level": 5,
+          "time": 30.79999999999953
+        },
+        {
+          "level": 6,
+          "time": 39.49999999999904
+        },
+        {
+          "level": 7,
+          "time": 52.99999999999827
+        }
+      ],
+      "kills": 812,
+      "hp": 12.535312500000025,
+      "branches": [
+        "bulwark"
+      ],
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "events": [
+        {
+          "kind": "altar",
+          "state": "completed",
+          "progress": 10.000000000000076
+        },
+        {
+          "kind": "chest",
+          "state": "completed",
+          "progress": 18.00000000000026
+        }
+      ],
+      "damage": {
+        "relic": 1742.6840123458796,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 37609.793641978154
+      },
+      "healing": {
+        "field": 0,
+        "elite": 45,
+        "upgrade": 138.67000000000002,
+        "relic": 0
+      },
+      "peak": 89
+    }
+  ]
+}
