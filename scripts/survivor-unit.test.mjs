@@ -186,9 +186,9 @@ test('audio retains a contact beside a foreground cue and collapses a crowd into
 test('attack poses separate windup, release and recovery without mutating combat state',async()=>{
   const {attackPose}=await import('../src/survivor/impact.js');
   const g=playing();g.swing={age:.15,angle:0,hit:false};
-  const saved=structuredClone({...g,rng:undefined});
+  const saved=structuredClone({...g,rng:undefined,rewardRng:undefined});
   assert.ok(attackPose(g).x<0);assert.ok(attackPose(g).sy<1);
-  assert.deepEqual({...g,rng:undefined},saved);
+  assert.deepEqual({...g,rng:undefined,rewardRng:undefined},saved);
   g.swing.age=.2;const strike=attackPose(g);assert.ok(strike.x>10);assert.ok(strike.sy>1);
   g.swing.age=.48;assert.ok(attackPose(g).x<strike.x*.1);
   g.swing.age=.2;g.swing.angle=Math.PI;assert.ok(attackPose(g).x<0);

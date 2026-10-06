@@ -1,4 +1,4 @@
-import { RELICS } from './expansion.js';
+import { RELICS, relicContext } from './expansion.js';
 export const ENCOUNTERS = {
   altar: {
     name: '봉인 제단',
@@ -22,6 +22,7 @@ export function nearbyChest(game) {
 }
 export function openChest(game) {
   if (game.phase !== 'playing' || !nearbyChest(game)) return false;
+  prepareEncounterRewards(game, nearbyChest(game));
   game.phase = 'event';
   game.player.moving = false;
   return true;
@@ -43,11 +44,42 @@ export function chooseRelic(game, key) {
   game.events.push('choose');
   return true;
 }
+// A visible offer is a promise. Reserve it across both objectives for the run.
+export function prepareEncounterRewards(game, event) {
+  if (Array.isArray(event.rewards)) return event.rewards;
+  const reserved = game.encounters.flatMap(other => other === event ? [] : other.rewards ?? []);
+  const pool = Object.keys(RELICS).filter(key => !game.relics.includes(key) && !reserved.includes(key));
+  const pick = keys => keys.length ? keys[Math.floor(game.rewardRng() * keys.length)] : null;
+  const utility = pick(pool.filter(key => ['dew', 'briar'].includes(key)));
+  const weapon = pick(pool.filter(key => !['dew', 'briar'].includes(key) && relicContext(game, key).kind !== 'future'));
+  const chosen = [utility, weapon].filter(Boolean);
+  // Leave the second general-purpose relic for the other objective when possible.
+  const remaining = pool.filter(key => !chosen.includes(key) && (pool.length <= 3 || !['dew', 'briar'].includes(key)));
+  while (chosen.length < 3 && remaining.length) {
+    const key = pick(remaining); chosen.push(key); remaining.splice(remaining.indexOf(key), 1);
+  }
+  event.rewards = [];
+  while (chosen.length) event.rewards.push(chosen.splice(Math.floor(game.rewardRng() * chosen.length), 1)[0]);
+  return event.rewards;
+}
+export function inspectEncounter(game) {
+  const event = trackedEncounter(game);
+  if (game.phase !== 'playing' || !event) return false;
+  prepareEncounterRewards(game, event);
+  game.previewEncounter = event.kind;
+  game.phase = 'preview';
+  game.player.moving = false;
+  return true;
+}
+export function closeEncounterPreview(game) {
+  if (game.phase !== 'preview') return false;
+  game.previewEncounter = null;
+  game.phase = 'playing';
+  return true;
+}
 function reward(game, event) {
   event.state = 'completed';
-  const pool = Object.keys(RELICS).filter(key => !game.relics.includes(key));
-  game.relicChoices = [];
-  while (game.relicChoices.length < 3 && pool.length) game.relicChoices.push(pool.splice(Math.floor(game.rng() * pool.length), 1)[0]);
+  game.relicChoices = prepareEncounterRewards(game, event).filter(key => !game.relics.includes(key));
   if (game.relicChoices.length) {
     game.phase = 'relic';
     game.rewardFrom = event.kind;
@@ -69,6 +101,7 @@ export function updateEncounters(game, dt) {
   }
   for (const event of game.encounters) {
     if (event.state === 'completed' || event.state === 'declined' || event.state === 'expired') continue;
+    prepareEncounterRewards(game, event);
     const meta = ENCOUNTERS[event.kind];
     // Unaccepted choices expire before the boss; active challenges keep their contract.
     if (game.time >= 225 && (event.state === 'available' || event.kind === 'altar')) {

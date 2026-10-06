@@ -1,0 +1,51 @@
+{
+  "core": {
+    "tests": 91,
+    "passed": 91
+  },
+  "browser": {
+    "tests": 73,
+    "passed": 73
+  },
+  "layoutAfterAdjustment": {
+    "tests": 8,
+    "passed": 8
+  },
+  "stress": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "frames": 721,
+      "elapsed": 12016.199999999999,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999272,
+      "over50": 0
+    },
+    {
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "frames": 721,
+      "elapsed": 12016.2,
+      "p50": 16.699999999999818,
+      "p95": 16.799999999999727,
+      "over50": 0
+    }
+  ],
+  "balance": "choices-balance-2026-10-06.jsonl",
+  "limits": "Browser runs are not physical mobile measurements or human retention evidence."
+}

@@ -183,6 +183,7 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none') {
     encounters: [],
     relicChoices: [],
     rewardFrom: null,
+    previewEncounter: null,
     relics: [],
     relicClock: 0,
     dewXp: 0,
@@ -266,6 +267,7 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none') {
       orbit: 0
     },
     rng: seededRandom(seed),
+    rewardRng: seededRandom(seed ^ 0x51F15EED),
     spawnRadius: 370
   };
 }

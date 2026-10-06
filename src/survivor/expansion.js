@@ -93,6 +93,20 @@ export const RELICS = {
     change: '반경 110 · 피해 35 · 재사용 6초'
   }
 };
+export function relicContext(game, key) {
+  const weapon = { coal: 'ember', sail: 'ember', fang: 'sword', bell: 'orbit' }[key];
+  if (weapon && !game.ranks[weapon]) return { kind: 'future', label: '무기 필요', detail: `${{sword:'검을',ember:'불씨를',orbit:'룬을'}[weapon]} 얻은 뒤 효과가 적용됩니다.` };
+  if (key === 'coal' && game.ranks.wildfire) return { kind: 'synergy', label: '연소 강화', detail: '선택한 번지는 불꽃의 연소 피해가 50% 증가합니다.' };
+  const details = {
+    coal: '현재 불씨 공격에 3초 연소를 더합니다.',
+    fang: '현재 검의 정예·군주 피해가 늘고 일반 적 피해는 줄어듭니다.',
+    bell: '현재 룬이 일반 적을 늦춰 거리를 유지하기 쉬워집니다.',
+    sail: '불씨를 쓰며 계속 이동할 때 발사 준비가 빨라집니다.',
+    dew: '경험치를 모으며 회복합니다. 최대 체력일 때 회복을 쌓아두지는 않습니다.',
+    briar: '살아남은 피격 뒤 가까운 적에게 반격합니다. 피격을 막아주지는 않습니다.'
+  };
+  return { kind: weapon ? 'ready' : 'utility', label: weapon ? '현재 무기와 연결' : key === 'dew' ? '수집으로 회복' : '피격 후 반격', detail: details[key] };
+}
 export const specializationFor = (game, weapon) => Object.keys(SPECIALIZATIONS).find(key => SPECIALIZATIONS[key].weapon === weapon && game.ranks[key]);
 export function specializationOffers(game) {
   if (game.level < 4) return [];

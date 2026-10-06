@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, startGame, stats, spawnEnemy, updateGame, chooseUpgrade, draftUpgrades } from '../src/survivor/game.js';
-import { SPECIALIZATIONS, RELICS } from '../src/survivor/expansion.js';
+import { SPECIALIZATIONS, RELICS, relicContext } from '../src/survivor/expansion.js';
 const playing = () => {
   const g = createGame(42);
   startGame(g);
@@ -205,7 +205,7 @@ test('briar retaliates once per cooldown and never resurrects lethal contact', (
   assert.equal(Object.keys(RELICS).length, 6);
   assert.deepEqual(createGame().relics, []);
 });
-import { updateEncounters, openChest, chooseCurse, chooseRelic, curseActive } from '../src/survivor/encounters.js';
+import { updateEncounters, openChest, chooseCurse, chooseRelic, curseActive, prepareEncounterRewards, inspectEncounter, closeEncounterPreview } from '../src/survivor/encounters.js';
 test('altar requires ten seconds inside, pauses outside, and rewards once', () => {
   const g = playing();
   g.time = 45;
@@ -360,4 +360,58 @@ test('event reward preserves pending XP and ordinary upgrades resume after the r
   assert.equal(g.level,2);
   assert.equal(g.xp,2);
   assert.equal(g.relics.length,1);
+});
+
+test('both objectives reserve distinct promised offers with a general-purpose option', () => {
+  for (const character of ['ash','ember','grove']) for (let seed=1;seed<=40;seed++) {
+    const g=createGame(seed,character);startGame(g);g.time=135;updateEncounters(g,0);
+    const [altar,chest]=g.encounters;
+    assert.equal(altar.rewards.length,3);assert.equal(chest.rewards.length,3);
+    assert.equal(new Set([...altar.rewards,...chest.rewards]).size,6);
+    assert.ok(altar.rewards.some(key=>relicContext(g,key).kind==='ready'));
+    for (const event of g.encounters) assert.ok(event.rewards.some(key=>['dew','briar'].includes(key)));
+    const promised=[...chest.rewards];
+    g.ranks.ember=3;g.ranks.orbit=3;g.ranks.wildfire=1;
+    assert.deepEqual(prepareEncounterRewards(g,chest),promised);
+    g.player.x=altar.x;g.player.y=altar.y;updateEncounters(g,10);
+    assert.deepEqual(g.relicChoices,altar.rewards);
+    chooseRelic(g,g.relicChoices[0]);
+    g.player.x=chest.x;g.player.y=chest.y;openChest(g);chooseCurse(g,true);updateEncounters(g,18);
+    assert.deepEqual(g.relicChoices,promised);
+  }
+});
+
+test('preview freezes combat without accepting or granting the objective and restores play', () => {
+  const g=playing();g.time=135;updateEncounters(g,0);
+  assert.ok(inspectEncounter(g));assert.equal(g.phase,'preview');
+  const time=g.time, events=structuredClone(g.encounters),hp=g.player.hp;
+  frames(g,120);assert.equal(g.time,time);assert.deepEqual(g.encounters,events);
+  assert.equal(g.player.hp,hp);assert.equal(curseActive(g),false);assert.deepEqual(g.relics,[]);
+  assert.equal(chooseRelic(g,g.encounters[0].rewards[0]),false);
+  assert.equal(openChest(g),false);assert.equal(inspectEncounter(g),false);
+  assert.ok(closeEncounterPreview(g));assert.equal(g.phase,'playing');assert.equal(g.previewEncounter,null);
+  assert.equal(closeEncounterPreview(g),false);
+  g.enemies=[];frames(g,1);assert.ok(g.time>time);
+  g.phase='ended';assert.equal(inspectEncounter(g),false);
+});
+
+test('reward planning uses its own deterministic randomness and resets on a new run', () => {
+  const g=createGame(99),other=createGame(99);g.time=45;other.time=45;
+  updateEncounters(g,0);updateEncounters(other,0);
+  assert.deepEqual(g.encounters[0].rewards,other.encounters[0].rewards);
+  const untouched=createGame(99);
+  for(let i=0;i<10;i++)assert.equal(g.rng(),untouched.rng());
+  assert.deepEqual(createGame(99).encounters,[]);
+  assert.equal(createGame(99).previewEncounter,null);
+});
+
+test('relic context states real weapon requirements and specialization synergy', () => {
+  const g=createGame(42);
+  for(const key of ['coal','bell','sail'])assert.equal(relicContext(g,key).kind,'future');
+  assert.equal(relicContext(g,'fang').kind,'ready');
+  for(const key of ['dew','briar'])assert.equal(relicContext(g,key).kind,'utility');
+  g.ranks.ember=1;assert.equal(relicContext(g,'coal').kind,'ready');
+  g.ranks.wildfire=1;assert.equal(relicContext(g,'coal').kind,'synergy');
+  assert.match(relicContext(g,'coal').detail,/50%/);
+  g.ranks.orbit=1;assert.equal(relicContext(g,'bell').kind,'ready');
 });

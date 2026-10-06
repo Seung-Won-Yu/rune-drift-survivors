@@ -3,14 +3,14 @@ import { GIANT } from './enemies.js';
 import { combatPacing } from './pacing.js';
 import { canEquipKeepsake } from './journey.js';
 import { specializationFor, RELICS } from './expansion.js';
-import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, chooseCurse, chooseRelic } from './encounters.js';
+import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, chooseCurse, chooseRelic, inspectEncounter, closeEncounterPreview } from './encounters.js';
 import './style.css';
 import { BOSS, bossAttackLabel } from './boss.js';
 import { createGame, startGame, updateGame, chooseUpgrade, pauseGame, resumeGame, spawnEnemy, spawnBoss, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, nextEvolution, RUN_SECONDS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
 import { getCharacter, isUnlocked } from './characters.js';
 import { loadProfile, saveProfile, recordRun } from './profile.js';
-import { campScreen, resultDetails, formatTime, buildSummary } from './camp.js';
+import { campScreen, resultDetails, formatTime, buildSummary, relicContextMarkup, encounterRewardPreview } from './camp.js';
 import { createAudio, selectAudioEvents } from './audio.js';
 import { nearestRecovery, RECOVERY } from './field.js';
 const $ = id => document.getElementById(id);
@@ -142,6 +142,11 @@ function resume() {
   last = 0;
   accumulator = 0;
 }
+function closePreview() {
+  if (!closeEncounterPreview(game)) return;
+  initAudio(); resetInput(); last = 0; accumulator = 0;
+  lastPhase = null; syncPhase();
+}
 function choose(key) {
   initAudio();
   if (game.phase === 'relic') {
@@ -210,10 +215,14 @@ function syncPhase() {
     }).join('')}</div>`);
     for (const button of document.querySelectorAll('[data-upgrade]')) button.onclick = () => choose(button.dataset.upgrade);
   } else if (game.phase === 'relic') {
-    panel(`<p class="eyebrow">A GIFT FROM THE FOREST</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key]; return `<button class="upgrade-card relic-card" data-relic="${key}" style="--tone:${m.color}"><small>숲의 유물 · 이번 판 유지</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${m.change}</span><span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
+    panel(`<p class="eyebrow">A GIFT FROM THE FOREST</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key]; return `<button class="upgrade-card relic-card" data-relic="${key}" style="--tone:${m.color}"><small>숲의 유물 · 이번 판 유지</small><span class="upgrade-icon">${icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${m.change}</span>${relicContextMarkup(game, key)}<span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
     for (const button of document.querySelectorAll('[data-relic]')) button.onclick = () => choose(button.dataset.relic);
+  } else if (game.phase === 'preview') {
+    const event = game.encounters.find(event => event.kind === game.previewEncounter);
+    panel(`<p class="eyebrow">CHOOSE YOUR DETOUR</p><h1 id="panel-title">${ENCOUNTERS[event.kind].name}의 보상</h1><p class="panel-lead">${event.kind === 'altar' ? '원 안에서 총 10초 버티면 보상을 얻습니다. 범위 밖에서는 진행이 멈춥니다.' : '상자에 접근해 저주를 수락하면 18초간 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.'}</p>${encounterRewardPreview(game, event)}<div class="panel-actions"><button id="close-preview" class="primary">전장으로 돌아가기</button></div><p class="controls-note">살펴보는 동안 전투와 사건의 시간이 멈춥니다.</p>`);
+    $('close-preview').onclick = closePreview;
   } else if (game.phase === 'event') {
-    panel(`<p class="eyebrow">A PRICE FOR POWER</p><h1 id="panel-title">저주를 받아들이겠습니까?</h1><p class="panel-lead">18초 동안 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.</p><div class="curse-contract"><strong>살아남으면 유물 3개 중 하나 선택</strong><p>지금은 시간이 멈춰 있습니다. 도전을 수락한 뒤부터 저주가 시작됩니다.</p></div><div class="panel-actions"><button id="accept-curse" class="primary">저주를 받아들인다</button><button id="decline-curse" class="secondary">상자를 두고 간다</button></div>`, true);
+    panel(`<p class="eyebrow">A PRICE FOR POWER</p><h1 id="panel-title">저주를 받아들이겠습니까?</h1><p class="panel-lead">18초 동안 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.</p><div class="curse-contract"><strong>살아남으면 아래 유물 중 하나 선택</strong><p>지금은 시간이 멈춰 있습니다. 도전을 수락한 뒤부터 저주가 시작됩니다.</p></div>${encounterRewardPreview(game, nearbyChest(game))}<div class="panel-actions"><button id="accept-curse" class="primary">저주를 받아들인다</button><button id="decline-curse" class="secondary">상자를 두고 간다</button></div>`);
     for (const [id, accept] of [['accept-curse',true],['decline-curse',false]]) $(id).onclick = () => { if (chooseCurse(game,accept)) { resetInput(); lastPhase=null; syncPhase(); } };
   } else if (game.phase === 'paused') {
     panel(`<p class="eyebrow">TAKE A BREATH</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">숲도 함께 멈췄습니다.<br>${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p>${buildSummary(game)}${buildGuide()}<div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
@@ -242,6 +251,7 @@ function updateHud() {
     $('encounter-copy').textContent = encounter.kind === 'chest' && encounter.state === 'active' ? `저주 ${Math.ceil(meta.duration-encounter.progress)}초 · 일반 적 속도·접촉 피해 +25%` : encounter.kind === 'altar' && encounter.state === 'active' ? `봉인 ${Math.min(10,Math.floor(encounter.progress))}/10초 · ${distance <= meta.radius ? '범위 안에서 버티세요' : '제단으로 돌아가면 계속 진행'}` : encounter.kind === 'altar' ? `${Math.round(distance)} 거리 · 원 안에서 10초 버티면 유물` : `${Math.round(distance)} 거리 · 저주를 견디면 유물`;
   }
   $('open-chest').hidden = !nearbyChest(game);
+  $('preview-rewards').hidden = !encounter || !!nearbyChest(game);
   const boss = game.enemies.find(e => e.boss && e.hp > 0);
   $('boss-hud').hidden = !boss;
   document.body.classList.toggle('has-boss', !!boss);
@@ -344,7 +354,7 @@ document.addEventListener('keydown', event => {
   }
   if ((key === 'escape' || key === 'p') && !event.repeat) {
     event.preventDefault();
-    if (game.phase === 'event') { chooseCurse(game,false); lastPhase=null; syncPhase(); } else if (game.phase === 'playing') pause();else if (game.phase === 'paused') resume();
+    if (game.phase === 'preview') closePreview();else if (game.phase === 'event') { chooseCurse(game,false); lastPhase=null; syncPhase(); } else if (game.phase === 'playing') pause();else if (game.phase === 'paused') resume();
     return;
   }
   if (['upgrade', 'relic'].includes(game.phase) && ['1', '2', '3'].includes(key) && !event.repeat) {
@@ -370,6 +380,7 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 $('open-chest').onclick = () => { if (openChest(game)) { resetInput(); lastPhase=null; syncPhase(); } };
+$('preview-rewards').onclick = () => { if (inspectEncounter(game)) { audio.suspend(); resetInput(); lastPhase=null; syncPhase(); } };
 $('pause').onclick = pause;
 $('pause').innerHTML = icon('pause');
 $('sound').onclick = () => {

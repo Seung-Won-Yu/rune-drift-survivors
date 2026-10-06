@@ -383,7 +383,12 @@ for (const [weapon, first, second] of [['sword','sweep','duelist'],['ember','wil
 }
 test('altar completes through real time, rewards once, and relic choice resumes input',async({page})=>{
   await scenario(page,'event-altar');await expect(page.locator('#encounter-hud')).toContainText('봉인 제단');
+  await page.getByRole('button',{name:'보상 후보 살펴보기'}).click();
+  const promised=(await snapshot(page)).encounters[0].rewards;
+  await expect(page.locator('[data-preview-relic]')).toHaveCount(3);
+  await page.getByRole('button',{name:'전장으로 돌아가기'}).click();
   await expect(page.locator('[data-relic]')).toHaveCount(3,{timeout:15000});
+  expect(await page.locator('[data-relic]').evaluateAll(nodes=>nodes.map(n=>n.dataset.relic))).toEqual(promised);
   const before=await snapshot(page);expect(before.encounters[0].state).toBe('completed');await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(before.time);
   await page.screenshot({path:'output/playwright/survivor/relic-desktop.png'});
   await page.keyboard.press('1');expect((await snapshot(page)).relics).toHaveLength(1);
@@ -393,12 +398,15 @@ test('altar completes through real time, rewards once, and relic choice resumes 
 test('chest consent can be declined and accepted curse completes in ordinary time',async({page})=>{
   await scenario(page,'event-chest');await page.getByRole('button',{name:'저주 상자 살펴보기'}).click();
   await expect(page.getByRole('heading',{name:'저주를 받아들이겠습니까?'})).toBeVisible();
+  await expect(page.locator('[data-preview-relic]')).toHaveCount(3);
   const time=(await snapshot(page)).time;await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(time);
   await page.keyboard.press('Escape');expect((await snapshot(page)).encounters.find(e=>e.kind==='chest').state).toBe('declined');
   await scenario(page,'event-chest');await page.getByRole('button',{name:'저주 상자 살펴보기'}).click();
+  const promised=(await snapshot(page)).encounters.find(e=>e.kind==='chest').rewards;
   await page.getByRole('button',{name:'저주를 받아들인다'}).click();await expect(page.locator('#encounter-hud')).toContainText('접촉 피해 +25%');
   await page.keyboard.press('Escape');const paused=await snapshot(page);await page.waitForTimeout(150);expect((await snapshot(page)).encounters).toEqual(paused.encounters);
   await page.getByRole('button',{name:'전투 계속하기'}).click();await expect(page.locator('[data-relic]')).toHaveCount(3,{timeout:22000});
+  expect(await page.locator('[data-relic]').evaluateAll(nodes=>nodes.map(n=>n.dataset.relic))).toEqual(promised);
   expect((await snapshot(page)).encounters.find(e=>e.kind==='chest').state).toBe('completed');
   await page.locator('[data-relic]').nth(2).click();expect((await snapshot(page)).relics).toHaveLength(1);
 });
@@ -687,4 +695,26 @@ for (const viewport of [{width:1280,height:720},{width:320,height:740},{width:74
     await expect(page.locator('#phase-label')).toHaveText('최후의 대결');
     expect((await snapshot(page)).boss).not.toBeNull();
   });
+}
+
+for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+ test(`reward preview freezes the objective, fits and resumes without a grant at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'event-altar');
+  await page.getByRole('button',{name:'보상 후보 살펴보기'}).click();
+  await expect(page.getByRole('heading',{name:'봉인 제단의 보상'})).toBeVisible();
+  await expect(page.locator('[data-preview-relic]')).toHaveCount(3);
+  await expect(page.locator('.relic-context.is-future')).toContainText('무기 필요');
+  const before=await snapshot(page);await page.waitForTimeout(150);
+  expect((await snapshot(page)).time).toBe(before.time);
+  expect((await snapshot(page)).encounters).toEqual(before.encounters);
+  await page.keyboard.press('1');expect((await snapshot(page)).phase).toBe('preview');
+  expect((await snapshot(page)).relics).toEqual([]);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:`output/playwright/survivor/reward-preview-${viewport.width}.png`});
+  await page.getByRole('button',{name:'전장으로 돌아가기'}).click();
+  await expect.poll(async()=>(await snapshot(page)).time).toBeGreaterThan(before.time);
+  await page.getByRole('button',{name:'보상 후보 살펴보기'}).click();
+  expect((await snapshot(page)).encounters[0].rewards).toEqual(before.encounters[0].rewards);
+  await page.keyboard.press('Escape');expect((await snapshot(page)).phase).toBe('playing');
+ });
 }

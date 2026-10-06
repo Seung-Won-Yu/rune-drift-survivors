@@ -1,4 +1,4 @@
-import { SPECIALIZATIONS, RELICS } from './expansion.js';
+import { SPECIALIZATIONS, RELICS, relicContext } from './expansion.js';
 import { CHALLENGES, KEEPSAKES, challengeProgress, completedChallenges, canEquipKeepsake, keepsakeStats } from './journey.js';
 import { CHARACTERS, getCharacter, isUnlocked, unlockProgress } from './characters.js';
 import { UPGRADE_META, EVOLUTIONS, weaponName } from './game.js';
@@ -26,6 +26,13 @@ export function nextGoal(profile) {
 }
 export function storageNotice(warning) {
   return warning ? `<p class="storage-note" role="status">${warning}</p>` : '';
+}
+export function relicContextMarkup(game, key) {
+  const context = relicContext(game, key);
+  return `<span class="relic-context is-${context.kind}"><b>${context.label}</b><span>${context.detail}</span></span>`;
+}
+export function encounterRewardPreview(game, event) {
+  return `<div class="reward-preview-list">${(event?.rewards ?? []).map(key => `<article data-preview-relic="${key}" style="--tone:${RELICS[key].color}"><strong>${RELICS[key].name}</strong><p>${RELICS[key].change}</p>${relicContextMarkup(game, key)}</article>`).join('')}</div><p class="record-line">완료하면 이 후보 중 하나를 선택합니다. 살펴보기로 보상이 바뀌지는 않습니다.</p>`;
 }
 export function journeyScreen(profile) {
   const completed = completedChallenges(profile);

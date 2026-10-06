@@ -1596,6 +1596,17 @@ button:focus-visible {
 .curse-contract { padding: 18px; border: 1px solid #cc9bc16b; border-radius: 8px; background: #5438483b; color: #efc4df; line-height: 1.7; }
 .curse-contract p { font-size: 12px; color: #cebfcb; }
 .relic-card { border-style: double; }
+.relic-context { display: block; margin: 12px 0; padding-top: 10px; border-top: 1px solid #78978140; font-size: 11px; line-height: 1.6; text-align: left; }
+.relic-context b { display: block; color: #b8e7c3; font-weight: 600; }
+.relic-context>span { display: block; margin-top: 3px; color: #d1d9cd; }
+.relic-context.is-future b { color: #d9c6ae; }
+.relic-context.is-synergy b { color: #ffd08d; }
+.reward-preview-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 18px 0; text-align: left; }
+.reward-preview-list article { padding: 16px; border: 1px solid #8da58c50; border-top: 3px solid var(--tone); border-radius: 7px; background: #13271f80; }
+.reward-preview-list strong { font-size: 14px; color: var(--tone); }
+.reward-preview-list p { font-size: 11px; line-height: 1.6; color: #d5dccd; }
+.reward-preview-list .relic-context { margin-bottom: 0; }
+@media(max-width:680px) { .reward-preview-list { grid-template-columns: 1fr; gap: 9px; } .reward-preview-list article { padding: 12px 14px; } }
 @media(max-width:680px),(pointer:coarse) {
   .encounter-hud { top: 130px; left: 20px; right: 20px; width: auto; padding: 8px 11px; }
   .encounter-hud strong { font-size: 12px; }

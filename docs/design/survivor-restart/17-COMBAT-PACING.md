@@ -67,3 +67,5 @@
 구현 커밋 `be1e56e`를 main에 푸시했다. [Pages 배포 실행](https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/37398077187)은 새 게임 QA와 프로덕션 확인을 통과했고, 이 기록 시점에는 기존 3D 게임 회귀 검사가 진행 중이다. 공개 페이지에 새 버전이 반영됐다는 확인은 아직 하지 않았다.
 
 전체 실행 스크립트는 모든 assertion 후 요약 파일을 저장했지만 Node 프로세스가 연결 핸들을 유지해 자동 종료되지 않았다. 결과 저장을 확인한 뒤 해당 검사 프로세스만 종료했다. 따라서 전체 실행은 플레이 assertion 완료로 기록하며 정상 exit-code 통과로 계산하지 않는다.
+
+2026-10-06 후속 확인: 위 Pages 실행의 build와 deploy가 모두 성공한 것을 GitHub Actions에서 확인했다. 최신의 조사/보상 선택 개선은 18번 기록에서 이어간다.
