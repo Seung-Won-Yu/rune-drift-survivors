@@ -749,7 +749,8 @@ for (const [weapon, branch, evolution] of [['sword','duelist','dawn'],['ember','
     expect(bounds.x).toBeGreaterThanOrEqual(0); expect(bounds.x+bounds.width).toBeLessThanOrEqual(viewport.width);
     expect(bounds.y+bounds.height).toBeLessThanOrEqual(viewport.height);
     const stateBounds = await slot.locator('.weapon-state').boundingBox(), rankBounds = await slot.locator('span').boundingBox();
-    expect(stateBounds.x+stateBounds.width).toBeLessThan(rankBounds.x);
+    const labelsSeparated = stateBounds.x+stateBounds.width < rankBounds.x || rankBounds.x+rankBounds.width < stateBounds.x || stateBounds.y+stateBounds.height < rankBounds.y || rankBounds.y+rankBounds.height < stateBounds.y;
+    expect(labelsSeparated, 'weapon stage and rank must not overlap with any platform font').toBe(true);
     await page.screenshot({path:`output/playwright/survivor/growth-identity-${weapon}.png`,animations:'disabled'});
     // A second fixture supplies earned prerequisites while keeping this same branch.
     // The evolution itself is selected through the real card and chooseUpgrade path.

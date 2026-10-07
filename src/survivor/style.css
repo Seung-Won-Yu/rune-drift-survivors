@@ -252,6 +252,15 @@ button:focus-visible {
   font-size: 8px;
   font-weight: 700;
 }
+.weapon-slot:not(.is-empty)>span {
+  top: 3px;
+  right: 3px;
+  bottom: auto;
+  padding: 0 2px;
+  line-height: 12px;
+  background: #11271ee8;
+  border-radius: 3px;
+}
 .upgrade-commitment {
   margin: -6px 0 16px;
   border-left: 2px solid var(--gold);
