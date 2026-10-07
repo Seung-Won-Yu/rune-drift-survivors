@@ -15,6 +15,11 @@ const outcomeName = {
   survived: '생존',
   defeat: '쓰러짐'
 };
+const companionRhythm = {
+  ash: '검을 맞혀 충전하고, 다음 검격으로 돌파하세요.',
+  ember: '움직여 충전하고, 강화 불씨를 날리세요.',
+  grove: '룬을 맞혀 충전하고, 보호막으로 버티세요.'
+};
 export function portrait(id, large = false) {
   const c = getCharacter(id);
   return `<div class="${large ? 'hero-art' : 'companion-art'}" role="img" aria-label="${c.name}" style="--atlas-height:${id === 'grove' ? 261.25 : 285}%;--portrait-ratio:${313.5 / (id === 'grove' ? 480 : 440)};background-image:url('${import.meta.env.BASE_URL}art/survivor/${c.art}')"></div>`;
@@ -72,14 +77,20 @@ export function journeyScreen(profile) {
 }
 function inheritanceSelection(game, profile) {
   const branches = primaryBranches(game.characterId);
-  return `<section class="inheritance-selection" aria-labelledby="inheritance-title"><div class="companion-heading"><h2 id="inheritance-title">전투법 전승</h2><span>발견한 갈래 하나로 시작</span></div><div class="inheritance-grid" role="group" aria-label="시작 전투법"><button class="inheritance-card" data-inheritance="none" aria-pressed="${!game.inheritance}"><strong>자유로운 출발</strong><span>전투 중 두 갈래에서 선택</span></button>${branches.map(key => {
+  return `<section class="inheritance-selection" aria-labelledby="inheritance-title"><div class="companion-heading"><h2 id="inheritance-title">전투법 전승</h2><span>하나의 갈래로 출발</span></div><div class="inheritance-grid" role="group" aria-label="시작 전투법"><button class="inheritance-card" data-inheritance="none" aria-pressed="${!game.inheritance}"><strong>자유로운 출발</strong><span>전투 중 두 갈래에서 선택</span><b class="selection-mark" aria-hidden="true">${!game.inheritance ? '✓' : '○'}</b></button>${branches.map(key => {
     const item = SPECIALIZATIONS[key], unlocked = !!validInheritance(profile, game.characterId, key);
-    return `<button class="inheritance-card" data-inheritance="${key}" aria-pressed="${game.inheritance === key}" ${unlocked ? '' : 'disabled'}>${collectionArt(key, !unlocked)}<strong>${item.name}</strong><span>${unlocked ? item.change : '여정에서 발견하면 전승 가능'}</span><small>${game.inheritance === key ? '1단계부터 이 전투법으로 시작' : unlocked ? '선택해 전승하기' : '아직 기록하지 못한 전투법'}</small></button>`;
-  }).join('')}</div><p class="record-line">전승하면 이번 판의 갈래는 고정됩니다. 무기 단계와 진화 조건은 직접 성장시켜야 합니다.</p></section>`;
+    return `<button class="inheritance-card" data-inheritance="${key}" aria-pressed="${game.inheritance === key}" ${unlocked ? '' : 'disabled'}>${collectionArt(key, !unlocked)}<span class="inheritance-copy"><strong>${item.name}</strong><span>${unlocked ? item.change : '여정에서 발견하면 전승 가능'}</span><small>${game.inheritance === key ? '1단계부터 이 전투법으로 시작' : unlocked ? '선택해 전승하기' : '미발견'}</small></span>${game.inheritance === key ? '<b class="selection-mark" aria-hidden="true">✓</b>' : ''}</button>`;
+  }).join('')}</div><p class="record-line">전승한 갈래는 이번 판에 고정됩니다. 무기와 진화는 여정에서 성장시켜요.</p></section>`;
+}
+function companionRoster(game, profile) {
+  return `<div class="companion-roster"><div class="companion-heading"><h2>숲에 함께할 동료</h2><span>${Object.keys(CHARACTERS).filter(id => isUnlocked(profile, id)).length} / 3</span></div><div class="companion-grid" role="group" aria-label="동료 선택">${Object.values(CHARACTERS).map(char => {
+    const unlocked = isUnlocked(profile, char.id), selected = game.characterId === char.id;
+    return `<button class="companion-card" data-character="${char.id}" aria-pressed="${selected}" ${unlocked ? '' : 'disabled'} style="--tone:${char.color}">${portrait(char.id)}<span class="companion-copy"><strong>${char.name}</strong><small>${UPGRADE_META[char.weapon].name} 시작</small><span>${unlocked ? selected ? '선택한 동료' : char.title : unlockProgress(profile, char.id)}</span></span></button>`;
+  }).join('')}</div></div>`;
 }
 function departureKit(game, profile) {
   const c = getCharacter(game.characterId), k = keepsakeStats(profile.keepsake);
-  return `<section class="departure-kit" aria-labelledby="keepsake-title"><div class="companion-heading"><h2 id="keepsake-title">출발 기념품</h2><span>한 개만 선택 · 해금은 계속 유지</span></div><div class="keepsake-grid" role="group" aria-label="출발 기념품">${Object.entries(KEEPSAKES).map(([id, item]) => {
+  return `<section class="departure-kit" aria-labelledby="keepsake-title"><div class="companion-heading"><h2 id="keepsake-title">출발 기념품</h2><span>하나를 골라 가져가세요</span></div><div class="keepsake-grid" role="group" aria-label="출발 기념품">${Object.entries(KEEPSAKES).map(([id, item]) => {
     const unlocked = canEquipKeepsake(profile, id), challenge = CHALLENGES.find(c => c.reward === id);
     return `<button class="keepsake-card" data-keepsake="${id}" aria-pressed="${profile.keepsake === id}" ${unlocked ? '' : 'disabled'}><span class="keepsake-art">${collectionArt(id, !unlocked)}</span><span class="keepsake-copy"><strong>${item.name}</strong><span>${item.change}</span><small>${unlocked ? profile.keepsake === id ? '이번 출발에 선택됨' : '선택하기' : `${challenge.name} ${challengeProgress(profile, challenge)}/${challenge.target}`}</small></span></button>`;
   }).join('')}</div></section>`;
@@ -103,17 +114,12 @@ export function campScreen(game, profile, warning, section = 'prepare') {
   const growthUnlocked = canEquipKeepsake(profile, 'bookmark');
   const k = keepsakeStats(profile.keepsake), mastery = masteryCount(profile, c.id);
   return `<header class="camp-heading"><div class="camp-brand">${forestCrest()}<div><p class="eyebrow">Ash & Amber</p><h1 id="panel-title">잿빛의 숲</h1></div></div><p>작은 힘으로 시작해<br>숲의 왕관을 깨뜨리는 여정</p></header>
-  <div class="camp-navigation"><div class="folio-heading"><h2>${section === 'journal' ? '숲이 기억하는 여정' : '여정을 준비하세요'}</h2><p>${section === 'journal' ? '모은 발견이 다음 출발의 힘이 됩니다.' : '함께할 동료와 작은 힘 하나를 골라주세요.'}</p></div><div class="camp-tabs" role="group" aria-label="로비 메뉴"><button data-camp-section="prepare" aria-pressed="${section === 'prepare'}">출발 준비</button><button data-camp-section="journal" aria-pressed="${section === 'journal'}">숙련과 기록</button></div>
+  <div class="camp-navigation"><div class="folio-heading"><h2>${section === 'journal' ? '숲이 기억하는 여정' : '여정을 준비하세요'}</h2><p>${section === 'journal' ? '발견은 쓰러져도 남습니다.' : '자동 공격 · 5분의 여정'}</p></div><div class="camp-tabs" role="group" aria-label="로비 메뉴"><button data-camp-section="prepare" aria-pressed="${section === 'prepare'}">출발 준비</button><button data-camp-section="journal" aria-pressed="${section === 'journal'}">숙련과 기록</button></div>
   <button class="codex-door" data-open-codex>${codexIcon('book')}<span><strong>숲의 도감 <b>${found} / ${entries.length}</b></strong><small>${growthUnlocked ? '첫빛의 책갈피 해금 완료 · 출발 준비에서 초반 경험치 강화' : `전투 발견 ${Math.min(3, discoveryCount(profile))}/3 → 첫빛의 책갈피 · 첫 60초 경험치 +20%`}</small></span><span aria-hidden="true">→</span></button></div>
-  <div class="camp-content"><aside class="camp-stage" aria-label="선택한 동료와 이번 판의 목표"><div class="camp-scene" aria-hidden="true"><div class="camp-stage-light"></div>${portrait(c.id, true)}</div><div class="camp-stage-caption"><small>이번 여정의 동료</small><strong>${c.name}</strong><span>${c.title}</span></div><button class="camp-mastery-link" data-camp-section="journal">숙련 인장 ${mastery}/3 <span>다시 뽑기 ${game.rerolls}회 →</span></button>
+  <div class="camp-content"><aside class="camp-stage" aria-label="선택한 동료와 이번 판의 목표"><div class="camp-scene" aria-hidden="true"><div class="camp-stage-light"></div><img class="hero-art camp-portrait" src="${import.meta.env.BASE_URL}art/survivor/portrait-${c.id}-v1.webp" width="1024" height="1536" alt="" decoding="async"></div><div class="camp-stage-caption"><small>${UPGRADE_META[c.weapon].name}와 함께</small><strong>${c.name}</strong><span>${c.title}</span></div>${companionRoster(game, profile)}<button class="camp-mastery-link" data-camp-section="journal">숙련 인장 ${mastery}/3 <span>다시 뽑기 ${game.rerolls}회 →</span></button>
   <div class="camp-stage-note"><small>다음에 만날 작은 목표</small><p>${nextGoal(profile)}</p><span>도감에서 이번 판에 모을 항목을 정할 수 있어요.</span></div></aside>
   <section class="camp-controls camp-section" aria-label="출발 준비" ${section === 'prepare' ? '' : 'hidden'}>
-  <div class="companion-heading"><h2>숲에 함께할 동료</h2><span>${Object.keys(CHARACTERS).filter(id => isUnlocked(profile, id)).length} / 3</span></div>
-  <div class="companion-grid">${Object.values(CHARACTERS).map(char => {
-    const unlocked = isUnlocked(profile, char.id);
-    return `<button class="companion-card" data-character="${char.id}" aria-pressed="${c.id === char.id}" ${unlocked ? '' : 'disabled'} style="--tone:${char.color}">${portrait(char.id)}<span class="companion-copy"><strong>${char.name}</strong><small>${UPGRADE_META[char.weapon].name} 시작</small><span>${unlocked ? c.id === char.id ? '선택한 동료' : char.title : unlockProgress(profile, char.id)}</span></span></button>`;
-  }).join('')}</div>
-  <div class="companion-detail"><strong>${c.name} <span>기본 · ${c.trait}</span></strong><p>${c.description}</p><p class="companion-signature"><b>${SIGNATURES[c.id].name}</b> ${SIGNATURES[c.id].description}</p></div>
+  <div class="companion-detail"><div class="signature-emblem" aria-hidden="true">${collectionArt(c.weapon)}</div><div><strong>${SIGNATURES[c.id].name} <span>${UPGRADE_META[c.weapon].name} · ${c.trait}</span></strong><p class="companion-signature">${companionRhythm[c.id]}</p><details class="companion-guide"><summary>동료의 전투 방식</summary><p>${c.description}</p><p>${SIGNATURES[c.id].description}</p></details></div></div>
   ${inheritanceSelection(game, profile)}
 
   ${game.goal || game.experiment ? `<div class="camp-objective">${goalPlan(game, profile)}${experimentPlan(game)}</div>` : ''}${departureKit(game, profile)}${vowSelection(game, profile)}</section>

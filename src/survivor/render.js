@@ -9,6 +9,7 @@ import { BOSS } from './boss.js';
 import { nearestRecovery } from './field.js';
 import { evolutionFeedback, evolutionFrame } from './evolution-feedback.js';
 import { drawWeaponMotif } from './weapon-motifs.js';
+import { drawFootfall, drawHitCut, drawChampionCrest, drawSwordRibbon } from './combat-ink.js';
 export async function loadArt(base, onProgress = () => {}) {
   let loaded = 0;
   const total = 6;
@@ -201,6 +202,7 @@ export function createRenderer(canvas, art) {
   function drawPlayer(game, hurt) {
     const p = game.player;
     shadow(p.x, p.y, 20, 7);
+    drawFootfall(ctx, game, reduced.matches);
     ctx.strokeStyle = '#b7e5c887';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -462,6 +464,7 @@ export function createRenderer(canvas, art) {
       const frame = a.hunt ? (a.hunt.age < huntRule(a).windup ? 0 : a.hunt.age < huntRule(a).windup + huntRule(a).duration ? 2 : 3) : a.slam ? a.slam.hit ? 2 : 0 : game.phase === 'ready' ? 0 : Math.floor(game.time * (a.type === 1 ? 9 : 5) + a.id) % 4;
       const slamPose = enemyMotion(a, game.time, reduced.matches);
       sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.hunt ? Math.cos(a.hunt.angle) < 0 : a.x > p.x, a.hit > 0, false, { ...slamPose, ...impactPose(a, game.time, reduced.matches) });
+      drawHitCut(ctx, a, game.time, reduced.matches);
       if (a.type === 2 && a.slam && !a.slam.hit) {
         const lift = reduced.matches ? 1 : Math.min(1,a.slam.age/(a.elite ? SLAM.windup : GIANT.windup));
         ctx.lineCap='round';
@@ -478,6 +481,7 @@ export function createRenderer(canvas, art) {
         ctx.fillRect(a.x - bar / 2, a.y - a.size * .69, bar * Math.max(0, a.hp / a.maxHp), 3);
       }
       if (a.elite) {
+        drawChampionCrest(ctx, a);
         ctx.font = 'bold 9px system-ui';
         ctx.textAlign = 'center';
         ctx.fillStyle = '#ffd994';
@@ -617,6 +621,7 @@ export function createRenderer(canvas, art) {
         ctx.strokeStyle = '#eba45966';
         ctx.lineWidth = 18 * (1 - progress);
         ctx.stroke();
+        drawSwordRibbon(ctx, e, progress, reduced.matches);
         if (e.evolved) {
           ctx.translate(e.range * .65, 0);
           drawWeaponMotif(ctx, 'dawn', 18);

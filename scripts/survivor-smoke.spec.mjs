@@ -1225,7 +1225,7 @@ for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740
  });
 }
 
-for (const viewport of [{width:1280,height:720},{width:1280,height:600},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
+for (const viewport of [{width:1280,height:720},{width:1280,height:600},{width:390,height:844},{width:320,height:568},{width:640,height:360},{width:740,height:360}]) {
   test(`departure stays visible across workspaces and scrolling at ${viewport.width}x${viewport.height}`, async ({page}) => {
     await page.setViewportSize(viewport);
     await page.locator('#panel').evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
@@ -1246,6 +1246,12 @@ for (const viewport of [{width:1280,height:720},{width:1280,height:600},{width:3
     await expect(page.locator('[data-character="ash"]')).toBeFocused();
     expect(await page.evaluate(() => ({y:document.documentElement.scrollHeight-innerHeight,x:document.documentElement.scrollWidth-innerWidth,panel:document.querySelector('#panel').scrollTop}))).toEqual({y:0,x:0,panel:0});
     await expect(page.locator('#start-game')).toBeInViewport();
+    const roster = page.locator('.companion-roster');
+    await expect(roster).toBeInViewport({ratio:1});
+    for (const id of ['ash','ember','grove']) await expect(roster.locator(`[data-character="${id}"]`)).toBeInViewport({ratio:1});
+    const readable = await page.locator('.companion-signature').evaluate(el => ({size:parseFloat(getComputedStyle(el).fontSize),color:getComputedStyle(el).color}));
+    expect(readable.size).toBeGreaterThanOrEqual(12);
+    expect(readable.color).toBe('rgb(82, 96, 68)');
     if(viewport.width>680) {
       const hero=await page.locator('.camp-scene .hero-art').boundingBox(),caption=await page.locator('.camp-stage-caption').boundingBox();
       expect(hero.y+hero.height).toBeLessThanOrEqual(caption.y);
@@ -1254,6 +1260,25 @@ for (const viewport of [{width:1280,height:720},{width:1280,height:600},{width:3
     await page.locator('#start-game').click(); expect((await snapshot(page)).phase).toBe('playing');
   });
 }
+
+test('all illustrated companions load, follow selection and keep motion optional', async ({page}) => {
+  await page.evaluate(() => localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,bestTime:90,totalKills:230})));
+  await page.reload();
+  for (const id of ['ash','ember','grove']) {
+    await page.locator(`[data-character="${id}"]`).click();
+    const portrait = page.locator('.camp-portrait');
+    await expect(portrait).toHaveAttribute('src',`/art/survivor/portrait-${id}-v1.webp`);
+    await expect.poll(() => portrait.evaluate(img => img.complete && img.naturalWidth === 1024 && img.naturalHeight === 1536)).toBe(true);
+    expect((await snapshot(page)).characterId).toBe(id);
+    await page.screenshot({path:`output/playwright/survivor/illustrated-${id}.png`,animations:'disabled'});
+  }
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.locator('[data-character="ash"]').click();
+  expect(await page.locator('.camp-portrait').evaluate(el => getComputedStyle(el).animationName)).toBe('none');
+  await page.locator('.companion-guide summary').click();
+  await expect(page.locator('.companion-guide')).toContainText('검 적중 6회마다');
+  await page.locator('#start-game').click();expect((await snapshot(page)).characterId).toBe('ash');
+});
 
 test('original collection art reveals real discoveries and the result links to the recorded page', async ({page}) => {
   await page.locator('[data-open-codex]').click();

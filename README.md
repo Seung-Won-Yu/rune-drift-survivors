@@ -6,12 +6,15 @@ A complete five-minute **2D cartoon survivor chapter** for the browser. Choose a
 
 **[Play Ash & Amber](https://seung-won-yu.github.io/rune-drift-survivors/survivor/)** · [Play / development guide](./docs/survivor.md) · [Enemy design and verification](./docs/design/survivor-restart/12-ENEMY-ROLES.md)
 
-![Ash & Amber illustrated sanctuary and preparation journal](./docs/design/survivor-restart/images/sanctuary-camp-desktop.png)
+![Ash & Amber illustrated companions and preparation journal](./docs/design/survivor-restart/images/illustrated-camp-1280.png)
+
+The lobby image uses an isolated earned-progress fixture to show companion selection and a discovered combat style. New players unlock these through play.
 
 ![Ash & Amber painted combat ground and the sovereign’s attack warning](./docs/design/survivor-restart/images/sanctuary-boss.png)
 
 The combat image uses a development-only boss scenario to show the warning clearly; ordinary runs reach the sovereign after four minutes.
 
+- **A companion-led departure:** three new painted character portraits share the forest’s texture and lighting. Companion selection stays beside the character; the folio concentrates on combat style and keepsake choices, with readable ability summaries and a fixed departure button. [Design and verification](./docs/design/survivor-restart/28-COMPANION-PRESENTATION.md).
 - **Three companions:** a swordsman, a fast ember caster and a defensive rune guardian, with distinct starting weapons and dedicated walk/attack/hurt/defeat art. Survive 60 seconds to unlock the caster; earn 200 total kills to unlock the guardian.
 - **Companion combat rhythms:** Ash earns an empowered slash through real blade contacts; Ember charges a stronger first firebolt by moving; Grove earns a temporary damage-absorbing shield through rune contacts. A compact HUD, weapon feedback and result totals show what the ability actually did.
 - **Inherit a discovered combat style:** equip one recorded specialization for the companion's starting weapon, or keep a free start. The selected branch applies from weapon rank one, with no free levels or evolution. Each companion remembers its choice; the codex can prepare it directly. See the [character rhythm and inheritance record](./docs/design/survivor-restart/27-CHARACTER-RHYTHM-AND-LEGACY.md).
@@ -41,7 +44,7 @@ The combat image uses a development-only boss scenario to show the warning clear
 
 Run `npm ci` and `npm run dev`, then open **[the local game](http://127.0.0.1:5173/survivor/)**. Move with WASD/arrows or the touch stick. Attacks are automatic; use Escape/P to pause and 1–3 or a card to choose an upgrade.
 
-Verification covers 136 core tests, 124 browser scenarios, capped-load checks, normal-rule route diagnostics, full real-time browser runs and the Pages build path. Generated four-pose artwork, initial image download size and untested physical mobile hardware are documented in the [release record](./docs/design/survivor-restart/09-RELEASE.md). The [first expansion record](./docs/design/survivor-restart/10-EXPANSION.md) covers the new choices and their validation. The [journey and combat-feel record](./docs/design/survivor-restart/11-JOURNEY-FEEL.md) covers starting keepsakes, challenge rewards and specialization feedback. The [enemy-role record](./docs/design/survivor-restart/12-ENEMY-ROLES.md) records warning timings, spawn composition and diagnostic limits. The [design history](./docs/design/survivor-restart/00-RELEASE-PLAN.md) retains the earlier style experiments and implementation decisions.
+Verification covers 137 core tests, 126 browser scenarios, capped-load checks, normal-rule route diagnostics, full real-time browser runs and the Pages build path. Generated four-pose artwork, initial image download size and untested physical mobile hardware are documented in the [release record](./docs/design/survivor-restart/09-RELEASE.md). The [first expansion record](./docs/design/survivor-restart/10-EXPANSION.md) covers the new choices and their validation. The [journey and combat-feel record](./docs/design/survivor-restart/11-JOURNEY-FEEL.md) covers starting keepsakes, challenge rewards and specialization feedback. The [enemy-role record](./docs/design/survivor-restart/12-ENEMY-ROLES.md) records warning timings, spawn composition and diagnostic limits. The [design history](./docs/design/survivor-restart/00-RELEASE-PLAN.md) retains the earlier style experiments and implementation decisions.
 
 The first chapter passed its survivor checks and 86 legacy browser regressions, deployed to Pages, and matched the verified public JS/CSS bytes. See the [final chapter audit](./docs/design/survivor-restart/20-CHAPTER-FINAL-AUDIT.md) for that release. The [readability and motion pass](./docs/design/survivor-restart/21-COMBAT-READABILITY-MOTION.md) retains that earlier implementation record. The [presentation development record](./docs/design/survivor-restart/24-PRESENTATION-DEVELOPMENT.md) tracks the camp, collection artwork and motion; the [growth presentation record](./docs/design/survivor-restart/25-GROWTH-VISUAL-IDENTITY.md) records the latest weapon identity and delivery evidence.
 

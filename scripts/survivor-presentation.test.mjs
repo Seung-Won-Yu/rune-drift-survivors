@@ -5,11 +5,22 @@ import { createProfile } from '../src/survivor/profile.js';
 import { codexEntries } from '../src/survivor/codex.js';
 import { collectionArt } from '../src/survivor/collection-art.js';
 import { attackPose } from '../src/survivor/impact.js';
-import { heroGait } from '../src/survivor/motion.js';
+import { heroGait, enemyMotion } from '../src/survivor/motion.js';
+import { CHAMPION_HUNT } from '../src/survivor/champions.js';
 import { evolutionFeedback, evolutionFrame } from '../src/survivor/evolution-feedback.js';
 import { weaponPresentation, weaponLoadout, weaponBeltKey } from '../src/survivor/weapon-presentation.js';
 import { SPECIALIZATIONS } from '../src/survivor/expansion.js';
 import { drawWeaponMotif } from '../src/survivor/weapon-motifs.js';
+
+test('champion anticipation remains readable until its actual dash starts', () => {
+  const enemy = {champion:'fang',hunt:{age:CHAMPION_HUNT.windup-.01}};
+  const before=JSON.stringify(enemy), anticipation=enemyMotion(enemy,0);
+  assert.ok(anticipation.sy < .85);
+  assert.equal(JSON.stringify(enemy),before);
+  enemy.hunt.age=CHAMPION_HUNT.windup+.1;
+  assert.deepEqual(enemyMotion(enemy,0),{sx:1.2,sy:.86});
+  assert.deepEqual(enemyMotion(enemy,0,true),{});
+});
 
 test('every non-companion codex entry has a distinct original illustration and an honest locked silhouette', () => {
   const profile = createProfile(), before = JSON.stringify(profile);

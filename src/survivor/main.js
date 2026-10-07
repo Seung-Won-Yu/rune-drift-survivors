@@ -127,6 +127,7 @@ function selectCharacter(id) {
   profile.experiment = validExperiment(id, profile.experiment);
   persist();
   camp();
+  $('panel').querySelector('.camp-portrait')?.classList.add('is-arriving');
   requestAnimationFrame(() => $('panel').querySelector(`[data-character="${id}"]`)?.focus({
     preventScroll: true
   }));

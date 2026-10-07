@@ -1,4 +1,4 @@
-import { HOUND, GIANT } from './enemies.js';
+import { GIANT, huntRule } from './enemies.js';
 import { SLAM } from './game.js';
 
 // Render poses use simulation time. They never move a collision body or run while paused.
@@ -21,12 +21,13 @@ export function enemyMotion(enemy, time, reduced = false) {
   if (reduced || enemy.boss) return {};
   if (enemy.hunt) {
     const age = enemy.hunt.age;
-    if (age < HOUND.windup) {
-      const tension = Math.min(1, age / HOUND.windup) ** 2;
+    const rule = huntRule(enemy);
+    if (age < rule.windup) {
+      const tension = Math.min(1, age / rule.windup) ** 2;
       return { sx: 1 + .12 * tension, sy: 1 - .18 * tension, tilt: -.06 * tension };
     }
-    if (age < HOUND.windup + HOUND.duration) return { sx: 1.2, sy: .86 };
-    const settle = Math.max(0, 1 - (age - HOUND.windup - HOUND.duration) / HOUND.recovery);
+    if (age < rule.windup + rule.duration) return { sx: 1.2, sy: .86 };
+    const settle = Math.max(0, 1 - (age - rule.windup - rule.duration) / rule.recovery);
     return { sy: 1 - .06 * settle };
   }
   if (enemy.slam) {
