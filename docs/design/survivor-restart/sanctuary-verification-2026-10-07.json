@@ -1,0 +1,167 @@
+{
+  "runtimeCommit": "85949969f906c40d1ff0d1c8fcb594fbdf953399",
+  "local": {
+    "core": 127,
+    "chromiumScenarios": 120,
+    "pagesBuild": "passed",
+    "pagesProduction": "passed",
+    "webkitFocusedFlows": 15,
+    "firefoxFocusedFlows": 15,
+    "independentReview": "no unresolved required fixes",
+    "fullRealTimeRuns": 3,
+    "fullRunOutcomes": {
+      "ash": "victory",
+      "ember": "victory",
+      "grove": "survived"
+    }
+  },
+  "screens": [
+    "1440x900",
+    "1280x720",
+    "1280x600",
+    "390x844",
+    "320x568",
+    "740x360"
+  ],
+  "rendererProbe": {
+    "secondsPerViewport": 12,
+    "viewports": [
+      "1280x720",
+      "390x844",
+      "740x360"
+    ],
+    "p95FrameIntervalMs": [
+      16.8,
+      16.7,
+      16.7
+    ],
+    "framesAbove50ms": [
+      0,
+      0,
+      0
+    ],
+    "environment": "local headless Chrome; diagnostic, not physical mobile hardware"
+  },
+  "preserved": [
+    "combat rules",
+    "profile storage schema",
+    "collection truth",
+    "reduced motion",
+    "keyboard and touch controls"
+  ],
+  "ci": {
+    "runId": 37570002052,
+    "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/37570002052",
+    "status": "success",
+    "core": 127,
+    "survivorBrowserScenarios": 120,
+    "legacyBrowserScenarios": 86,
+    "pagesProduction": "passed",
+    "pagesDeploy": "success"
+  },
+  "publicVerification": {
+    "commit": "85949969f906c40d1ff0d1c8fcb594fbdf953399",
+    "url": "https://seung-won-yu.github.io/rune-drift-survivors/survivor/",
+    "parity": [
+      {
+        "asset": "/rune-drift-survivors/assets/survivor-CKNn_TP6.js",
+        "bytes": 137101,
+        "sha256": "3e1c81a8bb3535812fdec9389b05e5c29436710e00e6a9e1b0816778421ed3c2"
+      },
+      {
+        "asset": "/rune-drift-survivors/assets/survivor-u0OmfAbn.css",
+        "bytes": 84582,
+        "sha256": "0b43f63319c77d4a45428a3b3b9bb771c54f671d9f21bfdad9f45039f55e2916"
+      },
+      {
+        "asset": "/rune-drift-survivors/art/survivor/forest-sanctuary-v2.webp",
+        "bytes": 335312,
+        "sha256": "c6068228b52b871c6cda05de8827bef52dd1b2197d6bc45cb9f1d76ff833e38b"
+      },
+      {
+        "asset": "/rune-drift-survivors/art/survivor/forest-ground-v1.webp",
+        "bytes": 239638,
+        "sha256": "80b515243c24a317257d04fdbfa764da32f0c475a65be2d18e9b6a159a622b9a"
+      },
+      {
+        "asset": "/rune-drift-survivors/fonts/ash-journal-700.woff2",
+        "bytes": 76888,
+        "sha256": "8589f94878172c3ac317809cc01bc763d17e425a06a6393820c5cb50d7bed02c"
+      }
+    ],
+    "checks": [
+      {
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "codexEntries": 22,
+        "lockedSilhouettes": 19,
+        "goalPersistence": "passed",
+        "fixedDeparture": "passed",
+        "startAndPause": "passed",
+        "initialWeaponArt": "sword",
+        "freshWeaponState": "passed",
+        "qaGlobal": "absent",
+        "bounds": {
+          "outside": 0,
+          "x": 0,
+          "top": 36,
+          "bottom": 700,
+          "height": 720
+        },
+        "errors": [],
+        "failures": [],
+        "screenshot": "output/playwright/survivor/sanctuary-public-1280.png"
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "codexEntries": 22,
+        "lockedSilhouettes": 19,
+        "goalPersistence": "passed",
+        "fixedDeparture": "passed",
+        "startAndPause": "passed",
+        "initialWeaponArt": "sword",
+        "freshWeaponState": "passed",
+        "qaGlobal": "absent",
+        "bounds": {
+          "outside": 0,
+          "x": 0,
+          "top": 20,
+          "bottom": 840,
+          "height": 844
+        },
+        "errors": [],
+        "failures": [],
+        "screenshot": "output/playwright/survivor/sanctuary-public-390.png"
+      },
+      {
+        "viewport": {
+          "width": 740,
+          "height": 360
+        },
+        "codexEntries": 22,
+        "lockedSilhouettes": 19,
+        "goalPersistence": "passed",
+        "fixedDeparture": "passed",
+        "startAndPause": "passed",
+        "initialWeaponArt": "sword",
+        "freshWeaponState": "passed",
+        "qaGlobal": "absent",
+        "bounds": {
+          "outside": 0,
+          "x": 0,
+          "top": 18,
+          "bottom": 358,
+          "height": 360
+        },
+        "errors": [],
+        "failures": [],
+        "screenshot": "output/playwright/survivor/sanctuary-public-740.png"
+      }
+    ]
+  }
+}

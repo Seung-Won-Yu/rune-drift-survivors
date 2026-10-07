@@ -8,7 +8,9 @@ A complete five-minute **2D cartoon survivor chapter** for the browser. Choose a
 
 ![Ash & Amber illustrated sanctuary and preparation journal](./docs/design/survivor-restart/images/sanctuary-camp-desktop.png)
 
-![Ash & Amber combat with evolved weapons](./docs/design/survivor-restart/images/combat-desktop.png)
+![Ash & Amber painted combat ground and the sovereign’s attack warning](./docs/design/survivor-restart/images/sanctuary-boss.png)
+
+The combat image uses a development-only boss scenario to show the warning clearly; ordinary runs reach the sovereign after four minutes.
 
 - **Three companions:** a swordsman, a fast ember caster and a defensive rune guardian, with distinct starting weapons and dedicated walk/attack/hurt/defeat art. Survive 60 seconds to unlock the caster; earn 200 total kills to unlock the guardian.
 - **Six specialization paths:** choose a wide or focused sword, spreading fire or concentrated explosions, and close defense or a distant rune orbit. Each weapon keeps one path for the run, alongside its evolution.
@@ -40,7 +42,7 @@ Verification covers 127 core tests, 120 browser scenarios, capped-load checks, n
 
 The first chapter passed its survivor checks and 86 legacy browser regressions, deployed to Pages, and matched the verified public JS/CSS bytes. See the [final chapter audit](./docs/design/survivor-restart/20-CHAPTER-FINAL-AUDIT.md) for that release. The [readability and motion pass](./docs/design/survivor-restart/21-COMBAT-READABILITY-MOTION.md) retains that earlier implementation record. The [presentation development record](./docs/design/survivor-restart/24-PRESENTATION-DEVELOPMENT.md) tracks the camp, collection artwork and motion; the [growth presentation record](./docs/design/survivor-restart/25-GROWTH-VISUAL-IDENTITY.md) records the latest weapon identity and delivery evidence.
 
-The illustrated sanctuary redesign passed 127 core tests, 120 survivor browser scenarios, the Pages production build and 15 focused UI flows in each of WebKit and Firefox. The previous runtime release (`7c9b488`) also passed 86 legacy browser checks in CI. Current deployment evidence is tracked in the [sanctuary design record](./docs/design/survivor-restart/26-ILLUSTRATED-SANCTUARY.md). Human playtests and physical mobile performance remain separate evaluation steps; the existing character sheets retain their four-pose movement and action art.
+The illustrated sanctuary release (`8594996`) passed 127 core tests, 120 survivor browser scenarios, 86 legacy browser regressions and the Pages production check in CI, then deployed successfully. The public JS/CSS, two environment images and Korean font match the verified build. WebKit and Firefox each passed 15 focused UI flows; three real-time normal-rule diagnostic runs also verified results and restart. See the [sanctuary design record](./docs/design/survivor-restart/26-ILLUSTRATED-SANCTUARY.md). Human playtests and physical mobile performance remain separate evaluation steps; the existing character sheets retain their four-pose movement and action art.
 
 ## Existing Rune Drift prototype
 
