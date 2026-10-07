@@ -8,12 +8,13 @@ import { canEquipKeepsake } from './journey.js';
 import { specializationFor, SPECIALIZATIONS, RELICS } from './expansion.js';
 import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, chooseCurse, chooseRelic, inspectEncounter, closeEncounterPreview } from './encounters.js';
 import './style.css';
+import './folio.css';
 import { BOSS, bossAttackLabel } from './boss.js';
 import { createGame, startGame, updateGame, chooseUpgrade, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, nextEvolution, RUN_SECONDS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
 import { getCharacter, isUnlocked } from './characters.js';
 import { loadProfile, saveProfile, recordRun } from './profile.js';
-import { campScreen, resultDetails, formatTime, buildSummary, relicContextMarkup, encounterRewardPreview } from './camp.js';
+import { campScreen, resultDetails, formatTime, buildSummary, relicContextMarkup, encounterRewardPreview, portrait } from './camp.js';
 import { codexScreen, CODEX_GROUPS, codexEntries } from './codex.js';
 import { collectionArt } from './collection-art.js';
 import { weaponPresentation, weaponLoadout, weaponBeltKey } from './weapon-presentation.js';
@@ -246,8 +247,19 @@ function choose(key) {
   }
 }
 function panel(html, compact = false) {
-  $('panel').className = `panel${compact ? ' is-compact' : ''}`;
+  $('panel').className = `panel phase-${game.phase}${compact ? ' is-compact' : ''}`;
   $('panel').innerHTML = html;
+  // Keep returning to combat reachable while long field notes scroll inside.
+  const actions = $('panel').querySelector(':scope > .panel-actions');
+  if (actions && ['paused', 'preview', 'event'].includes(game.phase)) {
+    $('panel').classList.add('has-folio-body');
+    const body = document.createElement('div');
+    body.className = 'folio-body';
+    body.tabIndex = 0;
+    body.setAttribute('aria-label', '여정 안내');
+    while ($('panel').firstElementChild !== actions) body.append($('panel').firstElementChild);
+    $('panel').prepend(body);
+  }
   $('panel').scrollTop = 0;
   requestAnimationFrame(() => {
     ($('panel').querySelector('#start-game, #restart-game') ?? $('panel').querySelector('button:not(:disabled)'))?.focus({
@@ -272,6 +284,7 @@ function syncPhase() {
   }
   if (lastPhase === game.phase) return;
   lastPhase = game.phase;
+  $('overlay').dataset.screen = game.phase === 'ready' ? campView : game.phase;
   resetInput();
   accumulator = 0;
   const inPlay = game.phase === 'playing';
@@ -307,7 +320,7 @@ function syncPhase() {
     const lowHealth = game.player.hp <= game.player.maxHp * .4;
     const recoveryOffered = game.choices.some(key => key === 'heal' || key === 'vitality');
     const choosingBranch = game.choices.some(key => SPECIALIZATIONS[key]);
-    panel(`<div class="upgrade-top"><div><p class="eyebrow">A LITTLE STRONGER</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<div class="upgrade-grid">${game.choices.map((key, i) => {
+    panel(`<div class="upgrade-top"><div><p class="eyebrow">성장의 갈림길</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<div class="upgrade-grid">${game.choices.map((key, i) => {
       const weapon = weaponPresentation(game, key);
       const m = ['sword', 'ember', 'orbit'].includes(key) ? {
         ...UPGRADE_META[key],
@@ -324,17 +337,17 @@ function syncPhase() {
     };
     for (const button of document.querySelectorAll('[data-upgrade]')) button.onclick = () => choose(button.dataset.upgrade);
   } else if (game.phase === 'relic') {
-    panel(`<p class="eyebrow">A GIFT FROM THE FOREST</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key]; return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>숲의 유물 · 이번 판 유지</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${m.change}</span>${relicContextMarkup(game, key)}<span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
+    panel(`<p class="eyebrow">숲이 남긴 선물</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key]; return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>숲의 유물 · 이번 판 유지</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${m.change}</span>${relicContextMarkup(game, key)}<span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
     for (const button of document.querySelectorAll('[data-relic]')) button.onclick = () => choose(button.dataset.relic);
   } else if (game.phase === 'preview') {
     const event = game.encounters.find(event => event.kind === game.previewEncounter);
-    panel(`<p class="eyebrow">CHOOSE YOUR DETOUR</p><h1 id="panel-title">${ENCOUNTERS[event.kind].name}의 보상</h1><p class="panel-lead">${event.kind === 'altar' ? '원 안에서 총 10초 버티면 보상을 얻습니다. 범위 밖에서는 진행이 멈춥니다.' : '상자에 접근해 저주를 수락하면 18초간 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.'}</p>${encounterRewardPreview(game, event)}<div class="panel-actions"><button id="close-preview" class="primary">전장으로 돌아가기</button></div><p class="controls-note">살펴보는 동안 전투와 사건의 시간이 멈춥니다.</p>`);
+    panel(`<p class="eyebrow">선택할 수 있는 보상</p><h1 id="panel-title">${ENCOUNTERS[event.kind].name}의 보상</h1><p class="panel-lead">${event.kind === 'altar' ? '원 안에서 총 10초 버티면 보상을 얻습니다. 범위 밖에서는 진행이 멈춥니다.' : '상자에 접근해 저주를 수락하면 18초간 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.'}</p>${encounterRewardPreview(game, event)}<div class="panel-actions"><button id="close-preview" class="primary">전장으로 돌아가기</button></div><p class="controls-note">살펴보는 동안 전투와 사건의 시간이 멈춥니다.</p>`);
     $('close-preview').onclick = closePreview;
   } else if (game.phase === 'event') {
-    panel(`<p class="eyebrow">A PRICE FOR POWER</p><h1 id="panel-title">저주를 받아들이겠습니까?</h1><p class="panel-lead">18초 동안 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.</p><div class="curse-contract"><strong>살아남으면 아래 유물 중 하나 선택</strong><p>지금은 시간이 멈춰 있습니다. 도전을 수락한 뒤부터 저주가 시작됩니다.</p></div>${encounterRewardPreview(game, nearbyChest(game))}<div class="panel-actions"><button id="accept-curse" class="primary">저주를 받아들인다</button><button id="decline-curse" class="secondary">상자를 두고 간다</button></div>`);
+    panel(`<p class="eyebrow">저주 상자의 계약</p><h1 id="panel-title">저주를 받아들이겠습니까?</h1><p class="panel-lead">18초 동안 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.</p><div class="curse-contract"><strong>살아남으면 아래 유물 중 하나 선택</strong><p>지금은 시간이 멈춰 있습니다. 도전을 수락한 뒤부터 저주가 시작됩니다.</p></div>${encounterRewardPreview(game, nearbyChest(game))}<div class="panel-actions"><button id="accept-curse" class="primary">저주를 받아들인다</button><button id="decline-curse" class="secondary">상자를 두고 간다</button></div>`);
     for (const [id, accept] of [['accept-curse',true],['decline-curse',false]]) $(id).onclick = () => { if (chooseCurse(game,accept)) { resetInput(); lastPhase=null; syncPhase(); } };
   } else if (game.phase === 'paused') {
-    panel(`<p class="eyebrow">TAKE A BREATH</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">숲도 함께 멈췄습니다.<br>${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p>${buildSummary(game)}${buildGuide()}<div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
+    panel(`<p class="eyebrow">여정의 쉼표</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">숲도 함께 멈췄습니다.<br>${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p>${buildSummary(game)}${buildGuide()}<div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
     $('resume-game').onclick = resume;
   } else if (game.phase === 'ended') {
     const win = game.outcome === 'victory',
@@ -347,7 +360,7 @@ function syncPhase() {
       persist();
     }
     const rewards = game.resultRewards ?? saved;
-    panel(`<div class="result-body" tabindex="0" aria-label="이번 여정의 결과"><div class="result-mark">${icon(win ? 'star' : 'heart')}</div><p class="eyebrow">${win ? 'THE FOREST REMEMBERS' : 'ANOTHER STORY AWAITS'}</p><h1 id="panel-title">${win ? '재의 군주를 쓰러뜨렸습니다' : survived ? '살아 돌아왔습니다' : '잠시 쓰러졌을 뿐'}</h1><p class="panel-lead">${win ? '당신의 선택으로 자라난 힘이 숲의 왕관을 깨뜨렸습니다.' : survived ? '5분을 버텼지만 재의 군주는 남아 있습니다. 다음 도전에서 마무리해 보세요.' : '모은 경험과 선택은 다음 도전의 실마리가 됩니다.'}</p><div class="result-stats"><div><small>생존 시간</small><strong>${formatTime(game.time)}</strong></div><div><small>쓰러뜨린 적</small><strong>${game.kills}</strong></div><div><small>도달 레벨</small><strong>${game.level}</strong></div></div><div class="result-build">${['sword', 'ember', 'orbit'].filter(k => game.ranks[k] > 0).map(k => `<span>${weaponName(game, k)} ${game.ranks[k]}단계</span>`).join('')}</div><p class="result-best">${record ? '새로운 처치 기록! · ' : ''}최고 기록 ${profile.bestKills} 처치</p>${resultDetails(game, profile, rewards.unlocked, storageWarning, rewards.challenges, rewards.discoveries, rewards.mastery)}</div><div class="panel-actions"><button id="restart-game" class="primary">다시 숲으로 <span aria-hidden="true">→</span></button><button id="camp-game" class="secondary">동료 선택</button></div>`, true);
+    panel(`<div class="result-body" tabindex="0" aria-label="이번 여정의 결과"><div class="result-portrait" aria-hidden="true">${portrait(game.characterId, true)}</div><div class="result-mark">${icon(win ? 'star' : 'heart')}</div><p class="eyebrow">${win ? '숲이 기억할 이름' : '다음 장을 향해'}</p><h1 id="panel-title">${win ? '재의 군주를 쓰러뜨렸습니다' : survived ? '살아 돌아왔습니다' : '잠시 쓰러졌을 뿐'}</h1><p class="panel-lead">${win ? '당신의 선택으로 자라난 힘이 숲의 왕관을 깨뜨렸습니다.' : survived ? '5분을 버텼지만 재의 군주는 남아 있습니다. 다음 도전에서 마무리해 보세요.' : '모은 경험과 선택은 다음 도전의 실마리가 됩니다.'}</p><div class="result-stats"><div><small>생존 시간</small><strong>${formatTime(game.time)}</strong></div><div><small>쓰러뜨린 적</small><strong>${game.kills}</strong></div><div><small>도달 레벨</small><strong>${game.level}</strong></div></div><div class="result-build">${['sword', 'ember', 'orbit'].filter(k => game.ranks[k] > 0).map(k => `<span>${weaponName(game, k)} ${game.ranks[k]}단계</span>`).join('')}</div><p class="result-best">${record ? '새로운 처치 기록! · ' : ''}최고 기록 ${profile.bestKills} 처치</p>${resultDetails(game, profile, rewards.unlocked, storageWarning, rewards.challenges, rewards.discoveries, rewards.mastery)}</div><div class="panel-actions"><button id="restart-game" class="primary">다시 숲으로 <span aria-hidden="true">→</span></button><button id="camp-game" class="secondary">동료 선택</button></div>`, true);
     $('panel').classList.add('is-result');
     $('restart-game').onclick = restart;
     $('panel').querySelector('[data-review-discoveries]')?.addEventListener('click', event => {
@@ -371,6 +384,12 @@ function syncPhase() {
 }
 let beltKey = '';
 function updateHud() {
+  const heroMark = document.querySelector('.hero-mark');
+  if (heroMark.dataset.portrait !== game.characterId) {
+    heroMark.dataset.portrait = game.characterId;
+    heroMark.setAttribute('aria-hidden', 'true');
+    heroMark.innerHTML = portrait(game.characterId);
+  }
   const encounter = trackedEncounter(game);
   $('encounter-hud').hidden = !encounter || game.phase !== 'playing';
   if (encounter) {
@@ -907,12 +926,18 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
     }
   };
 }
-loadArt(import.meta.env.BASE_URL).then(art => {
+loadArt(import.meta.env.BASE_URL, (loaded, total) => {
+  const progress = $('art-progress');
+  if (!progress) return;
+  progress.max = total;
+  progress.value = loaded;
+  $('art-progress-label').textContent = `여정 준비 ${loaded} / ${total}`;
+}).then(art => {
   renderer = createRenderer($('world'), art);
   syncPhase();
   requestAnimationFrame(tick);
 }).catch(error => {
-  panel(`<p class="eyebrow">LOADING FAILED</p><h1 id="panel-title">숲을 불러오지 못했습니다</h1><p class="panel-lead">이미지 연결을 확인한 뒤 다시 시도하세요.</p><div class="panel-actions"><button id="retry" class="primary">다시 불러오기</button></div>`, true);
+  panel(`<p class="eyebrow">잠시 길이 끊겼습니다</p><h1 id="panel-title">숲을 불러오지 못했습니다</h1><p class="panel-lead">이미지 연결을 확인한 뒤 다시 시도하세요.</p><div class="panel-actions"><button id="retry" class="primary">다시 불러오기</button></div>`, true);
   $('retry').onclick = () => location.reload();
   console.error(error);
 });

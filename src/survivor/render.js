@@ -8,14 +8,17 @@ import { BOSS } from './boss.js';
 import { nearestRecovery } from './field.js';
 import { evolutionFeedback, evolutionFrame } from './evolution-feedback.js';
 import { drawWeaponMotif } from './weapon-motifs.js';
-export async function loadArt(base) {
-  const load = name => new Promise((resolve, reject) => {
+export async function loadArt(base, onProgress = () => {}) {
+  let loaded = 0;
+  const total = 6;
+  onProgress(loaded, total);
+  const load = (name, extension = 'png') => new Promise((resolve, reject) => {
     const image = new Image();
-    image.onload = () => resolve(image);
+    image.onload = () => { onProgress(++loaded, total); resolve(image); };
     image.onerror = () => reject(new Error(`${name} 이미지를 불러오지 못했습니다.`));
-    image.src = `${base}art/survivor/${name}.png`;
+    image.src = `${base}art/survivor/${name}.${extension}`;
   });
-  const [ash, ember, grove, enemies, boss] = await Promise.all([load('hero-ash'), load('hero-ember'), load('hero-grove'), load('enemies'), load('ash-sovereign')]);
+  const [ash, ember, grove, enemies, boss, ground] = await Promise.all([load('hero-ash'), load('hero-ember'), load('hero-grove'), load('enemies'), load('ash-sovereign'), load('forest-ground-v1', 'webp')]);
   return {
     heroes: {
       ash,
@@ -23,17 +26,22 @@ export async function loadArt(base) {
       grove
     },
     enemies,
-    boss
+    boss,
+    ground
   };
 }
 const noise = (x, y) => {
   const t = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
   return t - Math.floor(t);
 };
-function makeGround() {
+function makeGround(image) {
   const tile = document.createElement('canvas');
   tile.width = tile.height = 512;
   const c = tile.getContext('2d');
+  if (image) {
+    c.drawImage(image, 0, 0, 512, 512);
+    return tile;
+  }
   c.fillStyle = '#34453a';
   c.fillRect(0, 0, 512, 512);
   for (let i = 0; i < 180; i++) {
@@ -81,7 +89,7 @@ export function createRenderer(canvas, art) {
     height = 0,
     dpr = 1,
     scale = 1;
-  const ground = makeGround();
+  const ground = makeGround(art.ground);
   let evolution = null;
   const pattern = ctx.createPattern(ground, 'repeat');
   // Canvas filters can force expensive software raster passes per actor. Bake

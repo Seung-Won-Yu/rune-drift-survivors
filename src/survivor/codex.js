@@ -62,7 +62,7 @@ export function codexScreen(profile, filter = 'all', selected = null) {
   const entries = codexEntries(profile), found = entries.filter(e => e.found).length;
   const visible = entries.filter(e => filter === 'all' || e.group === filter);
   const current = visible.find(e => e.id === selected) ?? visible[0];
-  return `<div class="codex-heading"><div><p class="eyebrow">THE FOREST REMEMBERS</p><h1 id="panel-title">숲의 도감</h1></div><button class="secondary codex-back" data-close-codex>← 출발 준비</button></div>
+  return `<div class="codex-heading"><div><p class="eyebrow">숲에서 발견한 것들</p><h1 id="panel-title">숲의 도감</h1></div><button class="secondary codex-back" data-close-codex>← 출발 준비</button></div>
     <div class="codex-progress"><div><strong>${found}<span> / ${entries.length}</span></strong><span>발견과 해금</span></div><progress value="${found}" max="${entries.length}" aria-label="도감 수집 진행도"></progress><p>쓰러져도 발견은 남습니다. 한 장씩 채우며 다음 여정을 준비하세요.</p></div>
     <div class="codex-filters" role="group" aria-label="도감 분류">${Object.entries(CODEX_GROUPS).map(([key, label]) => {
       const group = entries.filter(e => key === 'all' || e.group === key);

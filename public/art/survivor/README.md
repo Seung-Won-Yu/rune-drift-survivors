@@ -1,12 +1,12 @@
 # Ash & Amber prototype art
 
-These are generated prototype assets, not a finalized animation production pack.
+The character sheets are generated four-pose production assets for the current chapter, not a full frame-by-frame animation pack. The environment and interface art are documented below.
 
 - `hero-ash.png`, `hero-ember.png`, `hero-grove.png`: dedicated 1254 × 1254 RGBA companion atlases, 4 × 3. Four walk poses, four attack/cast poses, two hurt poses and two defeat poses. [Prompts and extraction provenance](./HERO-PROMPTS.md).
 - `player.png` (style lab reference only, no longer loaded by the game): 1254 × 1254 RGBA, 4 × 4 atlas. The cartoon walk/attack animations occupy rows 3 and 4. The first two rows retain the pixel comparison. Original prompt and generation notes: [style lab prompt](../../../docs/design/survivor-restart/style-lab/PROMPT.md).
 - `enemies.png`: 1448 × 1086 RGBA, 4 × 3 atlas. Four walking poses per row: mushroom imp, forest hound, forest brute. Generated with OpenAI image generation on 2026-09-08, referencing the player atlas for visual style. Original alpha PNG copied without raster editing.
 - `ash-sovereign.png`: 1774 × 887 RGBA, 4 × 2 boss atlas. Separate walk and cast poses with a branched crown, ivory mask and burgundy mantle. [Generation and alpha-extraction prompts](./ASH-SOVEREIGN-PROMPT.md).
-- Ground, shadows, gems, weapon effects and HUD icons are drawn in Canvas/CSS/SVG in the repository.
+- The active ground uses the painted WebP below. Shadows, gems, warning shapes, weapon effects and HUD icons are drawn in Canvas/CSS/SVG in the repository.
 
 Enemy generation prompt:
 
@@ -18,5 +18,7 @@ The October 6 readability pass keeps these original PNG bytes. At runtime, each 
 
 
 The October 7 presentation pass adds `forest-camp-v1.webp`: a generated 1536 × 1024 forest camp illustration, encoded at WebP quality 90 without changing the composition or resolution (203,986 bytes). It appears only in departure preparation, with text and the existing companion sprite layered separately. [Exact prompt and provenance](./CAMP-PROMPT.md).
+
+The illustrated sanctuary redesign supersedes that background in the active game with `forest-sanctuary-v2.webp` (335,312 bytes), adds a painted `forest-ground-v1.webp` (239,638 bytes), a chapter crest, and four distinct non-weapon growth illustrations. The older camp image remains as historical source material. [Prompts, source IDs and encoding](./SANCTUARY-PROMPT.md). Korean display type is self-hosted with its [font license and rebuild instructions](../../fonts/README.md).
 
 `src/survivor/collection-art.js` contains original repository SVG drawings for 19 collectible specializations/evolutions/relics/keepsakes, the three starting weapons and the empty departure option. Unrecorded entries use a monochrome version of the same shape; browsing never grants discoveries. The four-phase attacks, character-specific casting and idle breathing reuse the existing sprite frames, and the evolution celebration is bounded Canvas drawing. These improvements do not add directional artwork or remove the atlas limitations above.

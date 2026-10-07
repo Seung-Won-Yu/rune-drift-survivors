@@ -642,6 +642,43 @@ test('failed art loading offers a recoverable reload instead of broken play',asy
   expect((await snapshot(page)).phase).toBe('playing');
 });
 
+test('loading progress waits for the actual forest image before enabling departure', async ({page}) => {
+  let releaseGround;
+  const held = new Promise(resolve => { releaseGround = resolve; });
+  await page.route('**/art/survivor/forest-ground-v1.webp', async route => { await held; await route.continue(); });
+  await page.reload({waitUntil:'domcontentloaded'});
+  try {
+    await expect(page.locator('#art-progress')).toHaveAttribute('value','5');
+    await expect(page.locator('#art-progress-label')).toHaveText('여정 준비 5 / 6');
+    await expect(page.locator('#start-game')).toHaveCount(0);
+  } finally { releaseGround(); }
+  await expect(page.locator('#start-game')).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  // Engines serialize CSS family names with or without surrounding quotes.
+  expect(await page.evaluate(() => [...document.fonts].some(font => font.family.replace(/^["']|["']$/g,'') === 'Ash Journal' && font.status === 'loaded'))).toBe(true);
+  await page.locator('#start-game').click();
+  expect((await snapshot(page)).phase).toBe('playing');
+});
+
+test('short landscape keeps combat return and reroll controls visible without scrolling', async ({page}) => {
+  await page.setViewportSize({width:740,height:360});
+  const inside = async selector => {
+    const box = await page.locator(selector).boundingBox();
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(360);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+  };
+  await page.locator('#start-game').click();
+  await page.locator('#pause').click();
+  await inside('#resume-game');
+  await page.locator('#resume-game').click();
+  expect((await snapshot(page)).phase).toBe('playing');
+  await scenario(page,'recovery-choice');
+  await inside('[data-reroll]');
+  await page.locator('[data-reroll]').click();
+  expect((await snapshot(page)).rerolls).toBe(0);
+});
+
 for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]){
   test(`recovery fruit is readable, pause-safe and collected by movement at ${viewport.width}px`,async({page})=>{
     await page.setViewportSize(viewport);await scenario(page,'recovery');
@@ -1233,7 +1270,7 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
  test(`new discovery results keep retry and preparation visible at ${viewport.width}px`, async ({page}) => {
   await page.setViewportSize(viewport); await scenario(page,'record-experiment');
   await expect(page.locator('#restart-game')).toBeInViewport(); await expect(page.locator('#camp-game')).toBeInViewport();
-  if(viewport.width===1280) expect(await page.locator('#panel').evaluate(el=>el.getBoundingClientRect().width)).toBe(620);
+  if(viewport.width===1280) expect(await page.locator('#panel').evaluate(el=>el.getBoundingClientRect().width)).toBe(760);
   await page.locator('.battle-record summary').scrollIntoViewIfNeeded();
   await expect(page.locator('#restart-game')).toBeInViewport(); await expect(page.locator('#camp-game')).toBeInViewport();
   expect(await page.locator('#panel').evaluate(el=>el.scrollTop)).toBe(0);

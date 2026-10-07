@@ -1,0 +1,4 @@
+// The broken crown and living seed belong to the chapter, rather than a generic UI kit.
+export function forestCrest(className = '') {
+  return `<svg class="forest-crest ${className}" viewBox="0 0 64 72" fill="none" aria-hidden="true"><path d="M12 20 19 26 22 10 32 21 42 10 45 26 52 20 47 39H17Z" fill="currentColor" opacity=".16"/><path d="M12 20 19 26 22 10 32 21 42 10 45 26 52 20 47 39H17Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M32 31v30M32 52c-15 0-19-9-18-17 11 0 18 5 18 17ZM32 45c0-12 7-19 18-18 0 12-7 18-18 18Z" stroke="currentColor" stroke-width="1.6"/><path d="m32 62-4 4 4 4 4-4Z" fill="currentColor"/><path d="M9 46c2 9 8 16 15 19M55 46c-2 9-8 16-15 19" stroke="currentColor" opacity=".5"/><circle cx="32" cy="5" r="2" fill="currentColor"/></svg>`;
+}
