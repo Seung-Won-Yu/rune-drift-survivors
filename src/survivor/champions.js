@@ -19,6 +19,7 @@ export function updateChampionBloom(game, enemy, dt) {
   return game.time < enemy.bloomUntil;
 }
 export function championStatus(game) {
+  if (game.bossSpawned || game.championBreatherUntil > game.time) return null;
   const active = game.enemies.find(e => e.champion && e.hp > 0);
   if (active) {
     const angle = Math.atan2(active.y - game.player.y, active.x - game.player.x);

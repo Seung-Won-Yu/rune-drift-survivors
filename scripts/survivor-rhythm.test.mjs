@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createGame, startGame, updateGame, spawnEnemy, spawnBoss, spawnChampion, draftUpgrades, chooseUpgrade, LIMITS} from '../src/survivor/game.js';
 import {advanceSignature, chargeBlade, chargeRune, signatureState} from '../src/survivor/signature.js';
-import {CHAMPIONS, CHAMPION_HUNT, CHAMPION_SPORE, updateChampionBloom} from '../src/survivor/champions.js';
+import {CHAMPIONS, CHAMPION_HUNT, CHAMPION_SPORE, updateChampionBloom, championStatus} from '../src/survivor/champions.js';
 import {updateHound, updateSpores, huntRule, sporeRule, SPORE} from '../src/survivor/enemies.js';
 import {combatPacing} from '../src/survivor/pacing.js';
 import {SPECIALIZATIONS} from '../src/survivor/expansion.js';
@@ -72,7 +72,8 @@ test('minute encounters spawn three different champions even at capacity, with b
   const full=arena();for(let i=0;i<LIMITS.enemies;i++)spawnEnemy(full,0);assert.ok(spawnChampion(full,1));assert.equal(full.enemies.length,LIMITS.enemies);
   const kill=arena();const e=spawnChampion(kill,0);Object.assign(e,{x:50,y:0,hp:1,speed:0});kill.gems=[{x:200,y:0,value:2,age:0},{x:900,y:0,value:2,age:0}];step(kill,25);
   assert.deepEqual(kill.championsDefeated,['root']);assert.equal(combatPacing(kill).kind,'champion');assert.ok(kill.gems.some(g=>g.recalled));assert.ok(kill.gems.some(g=>g.x===900&&!g.recalled));assert.equal(kill.eliteKills,1);
-  kill.time=240;assert.equal(combatPacing(kill).kind,'boss');
+  assert.equal(championStatus(kill),null,'the reward window keeps its own HUD label');
+  kill.time=240;kill.bossSpawned=true;kill.nextElite=120;assert.equal(combatPacing(kill).kind,'boss');assert.equal(championStatus(kill),null,'missed champions never advertise an impossible arrival after the boss');
 });
 test('champion dash and bloom use their displayed geometry, fixed warnings, cooldown and shared hazard cap', () => {
   const g=arena();const h=spawnChampion(g,1);Object.assign(h,{x:0,y:0,hunt:{x:0,y:0,angle:0,age:CHAMPION_HUNT.windup,hit:false}});g.player.x=150;let damage=0;
