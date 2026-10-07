@@ -96,9 +96,9 @@ GITHUB_PAGES=true npm run build
 npm run qa:survivor:production
 ```
 
-`npm run qa:smoke`는 기존 3D 게임의 86개 검사다. main 배포 workflow는 두 게임의 검사와 새 게임의 production 검사를 실행한 뒤 Pages에 배포한다.
+`npm run qa:smoke`는 기존 3D 게임의 87개 검사다. main 배포 workflow는 두 게임의 검사와 새 게임의 production 검사를 실행한 뒤 Pages에 배포한다.
 
-현재 코어 검사는 136개, 브라우저 검사는 124개다. 실제 시간 전체 플레이 검사는 3개다. 확장 경로 진단은 6개 경로 × 3개 시드의 18판을 실행한다.
+현재 코어 검사는 137개, 브라우저 검사는 126개다. 실제 시간 전체 플레이 검사는 3개다. 확장 경로 진단은 6개 경로 × 3개 시드의 18판을 실행한다.
 
 구조와 실제 검증 범위는 [통합 기록](./design/survivor-restart/09-RELEASE.md), 자산 출처와 포즈 한계는 [그림 문서](../public/art/survivor/README.md)를 참고한다.
 

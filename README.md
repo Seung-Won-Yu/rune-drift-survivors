@@ -52,6 +52,8 @@ The illustrated sanctuary release (`8594996`) passed 127 core tests, 120 survivo
 
 The companion-rhythm and inheritance release (`80e8cc2`) passed 136 core tests, 124 survivor browser scenarios, 86 legacy browser regressions and the Pages production check in CI, then deployed successfully. Public assets match the verified build, and three public viewports verified saved inheritance, codex preparation, movement charging and pause. A 150-route diagnostic and three full real-time runs are recorded with the initial failed route and its follow-up corrections in the [character rhythm verification](./docs/design/survivor-restart/27-CHARACTER-RHYTHM-AND-LEGACY.md).
 
+The companion-presentation release (`c0afd96`, visual changes in `f063321`) passed 137 core tests, 126 survivor browser scenarios, 87 legacy regressions and the Pages production check, then deployed successfully. Public JS/CSS, the Korean font and all three new portraits match the verified build. Four public viewport checks verified internal scrolling, fixed departure, inheritance persistence, codex preparation and movement/pause. See the [illustrated companion release record](./docs/design/survivor-restart/28-COMPANION-PRESENTATION.md) for the initial legacy QA reset failure, its fix, cross-engine checks and three full real-time runs.
+
 ## Existing Rune Drift prototype
 
 A five-minute browser survival roguelite built with **React, Three.js, React Three Fiber, and Vite**. Guide a hooded Rune Warden through a ruined forest, build an automatic-attack loadout, and connect four seals before the final rift.
@@ -139,7 +141,7 @@ npm run qa:smoke
 npm run qa:balance
 ```
 
-The smoke suite currently contains **86 cases**. It covers movement/dash, all 80 authored character animation cells, opening progression, seal rewards, optional detours, keyboard/dialog behavior, mobile layouts, damage feedback, results, and performance budgets. Viewport checks include 320×568, 360×740, 568×320, 740×360, tablet, and desktop layouts.
+The smoke suite currently contains **87 cases**. It covers movement/dash, all 80 authored character animation cells, opening progression, seal rewards, optional detours, keyboard/dialog behavior, mobile layouts, damage feedback, results, and performance budgets. Viewport checks include 320×568, 360×740, 568×320, 740×360, tablet, and desktop layouts.
 
 Local tests run headlessly with installed Google Chrome and enforce the real-time stress threshold. CI installs Playwright Chromium and uses software WebGL to check behavior and budgets without imposing the local FPS threshold. See [docs/qa.md](./docs/qa.md) for setup details and shorter balance runs.
 

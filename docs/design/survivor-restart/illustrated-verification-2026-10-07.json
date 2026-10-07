@@ -1,0 +1,535 @@
+{
+  "date": "2026-10-07",
+  "runtimeCommit": "c0afd965a496670c162a5fddcaf04a8a10a8bb7c",
+  "scope": [
+    "three lobby portraits",
+    "companion-led camp",
+    "fixed departure with internal scrolling",
+    "readable preparation",
+    "bounded combat ink",
+    "champion dash anticipation"
+  ],
+  "assets": {
+    "dimensions": [
+      1024,
+      1536
+    ],
+    "encoding": "cwebp -q 86 -alpha_q 100",
+    "alphaExactlyPreserved": true,
+    "bytes": {
+      "ash": 176832,
+      "ember": 213228,
+      "grove": 228542
+    }
+  },
+  "localChecks": {
+    "unit": {
+      "passed": 137
+    },
+    "browserInitial": {
+      "passed": 121,
+      "failed": 4,
+      "failures": [
+        "portrait arrival crossed caption on 1280x720, 1280x600 and 740x360",
+        "new exact-copy assertion expected absent wording"
+      ]
+    },
+    "browserFocusedAfterFix": {
+      "passed": 7,
+      "viewports": [
+        [
+          1280,
+          720
+        ],
+        [
+          1280,
+          600
+        ],
+        [
+          390,
+          844
+        ],
+        [
+          320,
+          568
+        ],
+        [
+          640,
+          360
+        ],
+        [
+          740,
+          360
+        ]
+      ]
+    },
+    "firefox": {
+      "passed": 15
+    },
+    "webkitInitial": {
+      "passed": 14,
+      "failed": 1,
+      "cause": "subpixel clipping at stage edge in 640x360"
+    },
+    "webkitLayoutAfterFix": {
+      "passed": 6
+    },
+    "productionSmoke": "passed",
+    "legacyTransitionFix": {
+      "focusedPassed": 6,
+      "lifecyclePassed": 2,
+      "build": "passed",
+      "mechanism": "Suspend simulation until the matching QA scene is ready; reset pending frame elapsed time.",
+      "assertionsRelaxed": false
+    }
+  },
+  "fullRealtimeRuns": [
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 42,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "wallSeconds": 282.075,
+      "time": 281.18333333340627,
+      "outcome": "victory",
+      "kills": 782,
+      "level": 19,
+      "eliteKills": 3,
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 274.116666666746,
+        "blockedAt": -10,
+        "activations": 72,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "ranks": {
+        "sweep": 1,
+        "duelist": 0,
+        "wildfire": 0,
+        "detonation": 0,
+        "bulwark": 0,
+        "horizon": 1,
+        "sword": 6,
+        "ember": 0,
+        "orbit": 4,
+        "fleet": 2,
+        "magnet": 0,
+        "vitality": 4,
+        "heal": 0,
+        "dawn": 1,
+        "comet": 0,
+        "lunar": 0
+      },
+      "damage": {
+        "relic": 70,
+        "sword": 40541.91608642244,
+        "ember": 0,
+        "orbit": 1551.4108888891149
+      },
+      "healing": {
+        "field": 12,
+        "elite": 0,
+        "upgrade": 80,
+        "relic": 0
+      },
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "encounters": [
+        {
+          "kind": "altar",
+          "x": 223.67530659072432,
+          "y": 119.37580447259472,
+          "state": "completed",
+          "progress": 10.000000000000076,
+          "rewards": [
+            "dew",
+            "bell",
+            "fang"
+          ]
+        },
+        {
+          "kind": "chest",
+          "x": -1163.4847753154713,
+          "y": -895.0767720799316,
+          "state": "completed",
+          "progress": 18.00000000000026,
+          "rewards": [
+            "briar",
+            "coal",
+            "sail"
+          ]
+        }
+      ],
+      "timing": {
+        "frames": 33744,
+        "p50": 8.30000000000291,
+        "p95": 9.699999999982538,
+        "over50": 0
+      },
+      "errors": []
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 42,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "wallSeconds": 271.666,
+      "time": 270.866666666749,
+      "outcome": "victory",
+      "kills": 769,
+      "level": 18,
+      "eliteKills": 3,
+      "signature": {
+        "charge": 0.44696666666666685,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 269.98333333341645,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "ranks": {
+        "sweep": 0,
+        "duelist": 0,
+        "wildfire": 1,
+        "detonation": 0,
+        "bulwark": 0,
+        "horizon": 0,
+        "sword": 0,
+        "ember": 5,
+        "orbit": 0,
+        "fleet": 4,
+        "magnet": 4,
+        "vitality": 3,
+        "heal": 0,
+        "dawn": 0,
+        "comet": 1,
+        "lunar": 0
+      },
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 37874.626790126174,
+        "orbit": 0
+      },
+      "healing": {
+        "field": 0,
+        "elite": 21,
+        "upgrade": 80,
+        "relic": 0
+      },
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "encounters": [
+        {
+          "kind": "altar",
+          "x": -301.58051780321773,
+          "y": 8.659492712471078,
+          "state": "completed",
+          "progress": 10.000000000000076,
+          "rewards": [
+            "dew",
+            "bell",
+            "coal"
+          ]
+        },
+        {
+          "kind": "chest",
+          "x": -275.9713363426615,
+          "y": -63.07321367903643,
+          "state": "completed",
+          "progress": 18.00000000000026,
+          "rewards": [
+            "briar",
+            "sail",
+            "fang"
+          ]
+        }
+      ],
+      "timing": {
+        "frames": 32504,
+        "p50": 8.30000000000291,
+        "p95": 9.69999999999709,
+        "over50": 0
+      },
+      "errors": []
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 42,
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "wallSeconds": 300.544,
+      "time": 300,
+      "outcome": "survived",
+      "kills": 811,
+      "level": 19,
+      "eliteKills": 3,
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 302.00000000005764,
+        "cooldownUntil": 303.00000000005764,
+        "hitAt": 298.00000000005764,
+        "activatedAt": 298.00000000005764,
+        "blockedAt": 282.18333333340536,
+        "activations": 30,
+        "absorbed": 127.99087499999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "ranks": {
+        "sweep": 0,
+        "duelist": 0,
+        "wildfire": 0,
+        "detonation": 0,
+        "bulwark": 1,
+        "horizon": 0,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 5,
+        "fleet": 4,
+        "magnet": 4,
+        "vitality": 4,
+        "heal": 0,
+        "dawn": 0,
+        "comet": 0,
+        "lunar": 1
+      },
+      "damage": {
+        "relic": 1496.3668518520496,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 37658.90111111382
+      },
+      "healing": {
+        "field": 25,
+        "elite": 15,
+        "upgrade": 97.34000000000002,
+        "relic": 0
+      },
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "encounters": [
+        {
+          "kind": "altar",
+          "x": 82.56925575038747,
+          "y": -24.21636574459042,
+          "state": "completed",
+          "progress": 10.000000000000076,
+          "rewards": [
+            "dew",
+            "fang",
+            "bell"
+          ]
+        },
+        {
+          "kind": "chest",
+          "x": -164.38060754746465,
+          "y": -71.1188175496381,
+          "state": "completed",
+          "progress": 18.00000000000026,
+          "rewards": [
+            "briar",
+            "coal",
+            "sail"
+          ]
+        }
+      ],
+      "timing": {
+        "frames": 35998,
+        "p50": 8.30000000000291,
+        "p95": 9.699999999982538,
+        "over50": 0
+      },
+      "errors": []
+    }
+  ],
+  "ci": {
+    "runId": 37606003260,
+    "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/37606003260",
+    "state": "success",
+    "commit": "c0afd965a496670c162a5fddcaf04a8a10a8bb7c",
+    "corePassed": 137,
+    "survivorBrowserPassed": 126,
+    "legacyPassed": 87,
+    "productionSmoke": "passed",
+    "deploy": "success"
+  },
+  "limits": [
+    "Automated input is not human fun or win-rate evidence.",
+    "Desktop browser timing is not a physical mobile performance result.",
+    "Combat art remains four poses per action with horizontal mirroring."
+  ],
+  "designCommit": "f06332184ee9aa851c7173ab42f48cd6159fc26c",
+  "initialCi": {
+    "runId": 37602669133,
+    "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/37602669133",
+    "survivorCorePassed": 137,
+    "survivorBrowserPassed": 126,
+    "productionSmoke": "passed",
+    "legacyPassed": 85,
+    "legacyFailed": 1,
+    "cause": "Pending QA scene replacement allowed old runtime rewards to be sampled by the new game."
+  },
+  "public": {
+    "url": "https://seung-won-yu.github.io/rune-drift-survivors/survivor/",
+    "parity": [
+      {
+        "path": "/rune-drift-survivors/assets/survivor-Ckq6vMjw.js",
+        "bytes": 151009,
+        "sha256": "900e85f5070547a1ce04700ab9229968aea09599fbfaefa838acfa3687fd30e6"
+      },
+      {
+        "path": "/rune-drift-survivors/assets/modulepreload-polyfill-B5Qt9EMX.js",
+        "bytes": 711,
+        "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0"
+      },
+      {
+        "path": "/rune-drift-survivors/assets/survivor-Cwn5hGZi.css",
+        "bytes": 89526,
+        "sha256": "3388304d80fb97a417e3a7608453327532db83f49d5c5e64b1653abdc7549222"
+      },
+      {
+        "path": "/rune-drift-survivors/fonts/ash-journal-700.woff2",
+        "bytes": 78384,
+        "sha256": "628604ce533402715d3b22928c8b60c087ec681f4ce743a33c9141767f2113da"
+      },
+      {
+        "path": "/rune-drift-survivors/art/survivor/portrait-ash-v1.webp",
+        "bytes": 176832,
+        "sha256": "59a92c6336c94741082c3df4a2dd057f986638c9491fc9a191da50ba1f868227"
+      },
+      {
+        "path": "/rune-drift-survivors/art/survivor/portrait-ember-v1.webp",
+        "bytes": 213228,
+        "sha256": "d7166ad64a568d13eb5063f80f2f2e3d5322a6a9d50d1e3f0cb7c6d065b43c7f"
+      },
+      {
+        "path": "/rune-drift-survivors/art/survivor/portrait-grove-v1.webp",
+        "bytes": 228542,
+        "sha256": "5a38ff99266848211f6ba5260dfbf2754f9e5e0db71322fee7d6d0a79d749d74"
+      }
+    ],
+    "checks": [
+      {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "fixture": "isolated discovered branch profile",
+        "fit": {
+          "overflowX": 0,
+          "overflowY": 0,
+          "startBottom": 724.203125,
+          "height": 800
+        },
+        "initiallyLocked": true,
+        "choicePersisted": true,
+        "allPortraitsLoaded": true,
+        "codexPreparedCharacter": true,
+        "movementCharge": 27,
+        "pauseFrozen": true,
+        "qaGlobal": "absent",
+        "errors": []
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "fixture": "isolated discovered branch profile",
+        "fit": {
+          "overflowX": 0,
+          "overflowY": 0,
+          "startBottom": 817,
+          "height": 844
+        },
+        "initiallyLocked": true,
+        "choicePersisted": true,
+        "allPortraitsLoaded": true,
+        "codexPreparedCharacter": true,
+        "movementCharge": 27,
+        "pauseFrozen": true,
+        "qaGlobal": "absent",
+        "errors": []
+      },
+      {
+        "viewport": {
+          "width": 640,
+          "height": 360
+        },
+        "fixture": "isolated discovered branch profile",
+        "fit": {
+          "overflowX": 0,
+          "overflowY": 0,
+          "startBottom": 338,
+          "height": 360
+        },
+        "initiallyLocked": true,
+        "choicePersisted": true,
+        "allPortraitsLoaded": true,
+        "codexPreparedCharacter": true,
+        "movementCharge": 27,
+        "pauseFrozen": true,
+        "qaGlobal": "absent",
+        "errors": []
+      },
+      {
+        "viewport": {
+          "width": 740,
+          "height": 360
+        },
+        "fixture": "isolated discovered branch profile",
+        "fit": {
+          "overflowX": 0,
+          "overflowY": 0,
+          "startBottom": 338,
+          "height": 360
+        },
+        "initiallyLocked": true,
+        "choicePersisted": true,
+        "allPortraitsLoaded": true,
+        "codexPreparedCharacter": true,
+        "movementCharge": 27,
+        "pauseFrozen": true,
+        "qaGlobal": "absent",
+        "errors": []
+      }
+    ]
+  }
+}
