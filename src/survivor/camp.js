@@ -6,6 +6,7 @@ import { UPGRADE_META, EVOLUTIONS, weaponName } from './game.js';
 import { nextExperiment, experimentProgress } from './experiments.js';
 import { masteryProgress, masteryCount, VOWS, canTakeVow, vowStats } from './progression.js';
 import { goalMeta, goalProgress } from './goals.js';
+import { collectionArt } from './collection-art.js';
 export const formatTime = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 const outcomeName = {
   victory: '군주 격파',
@@ -45,13 +46,13 @@ export function experimentPlan(game) {
   return `<section class="experiment-plan" aria-label="이번 판의 목표"><small>이번 판의 목표</small><strong>${target.name}</strong><p>${target.description}</p><p class="record-line">${UPGRADE_META[target.weapon].name} 3단계 · 레벨 4부터 선택 후보로 등장합니다. 다른 갈래를 골라도 괜찮습니다.</p><button class="secondary" data-clear-experiment>목표 지우기</button></section>`;
 }
 export function runDiscoveries(discoveries) {
-  const names = [
-    ...(discoveries?.branches ?? []).map(key => `전문화 · ${SPECIALIZATIONS[key].name}`),
-    ...(discoveries?.evolutions ?? []).map(key => `진화 · ${UPGRADE_META[key].name}`),
-    ...(discoveries?.relics ?? []).map(key => `유물 · ${RELICS[key].name}`)
+  const items = [
+    ...(discoveries?.branches ?? []).map(key => ({ key, id: `branch:${key}`, kind: '전문화', name: SPECIALIZATIONS[key].name })),
+    ...(discoveries?.evolutions ?? []).map(key => ({ key, id: `evolution:${key}`, kind: '진화', name: UPGRADE_META[key].name })),
+    ...(discoveries?.relics ?? []).map(key => ({ key, id: `relic:${key}`, kind: '유물', name: RELICS[key].name }))
   ];
-  if (!names.length) return '';
-  return `<section class="run-discoveries" aria-label="이번 판의 새 발견"><strong>이번 판에 새로 발견했어요</strong><div class="discoveries">${names.map(name => `<span class="found">${name}</span>`).join('')}</div><p class="record-line">발견은 숲의 도감에 남습니다. 전투 발견 3개를 모으면 초반 성장을 돕는 기념품이 열립니다.</p></section>`;
+  if (!items.length) return '';
+  return `<section class="run-discoveries" aria-label="이번 판의 새 발견"><strong>이번 판에 새로 발견했어요</strong><div class="discoveries">${items.map(item => `<article class="found discovery-trophy">${collectionArt(item.key)}<div><small>새 기록 · ${item.kind}</small><strong>${item.name}</strong></div></article>`).join('')}</div><p class="record-line">발견은 숲의 도감에 남습니다. 전투 발견 3개를 모으면 초반 성장을 돕는 기념품이 열립니다.</p><button class="secondary discovery-review" data-review-discoveries="${items[0].id}">도감에서 새 발견 보기 →</button></section>`;
 }
 export function nextExperimentCard(game, profile) {
   const key = nextExperiment(game, profile);
@@ -71,8 +72,8 @@ function departureKit(game, profile) {
   const c = getCharacter(game.characterId), k = keepsakeStats(profile.keepsake);
   return `<section class="departure-kit" aria-labelledby="keepsake-title"><div class="companion-heading"><h2 id="keepsake-title">출발 기념품</h2><span>한 개만 선택 · 해금은 계속 유지</span></div><div class="keepsake-grid" role="group" aria-label="출발 기념품">${Object.entries(KEEPSAKES).map(([id, item]) => {
     const unlocked = canEquipKeepsake(profile, id), challenge = CHALLENGES.find(c => c.reward === id);
-    return `<button class="keepsake-card" data-keepsake="${id}" aria-pressed="${profile.keepsake === id}" ${unlocked ? '' : 'disabled'}><strong>${item.name}</strong><span>${item.change}</span><small>${unlocked ? profile.keepsake === id ? '이번 출발에 선택됨' : '선택하기' : `${challenge.name} ${challengeProgress(profile, challenge)}/${challenge.target}`}</small></button>`;
-  }).join('')}</div><p class="departure-summary"><strong>이번 출발</strong> ${UPGRADE_META[c.weapon].name} · 체력 ${game.player.maxHp} · 이동 ${c.speed + k.speed}<span>${k.name} · ${k.change}</span></p></section>`;
+    return `<button class="keepsake-card" data-keepsake="${id}" aria-pressed="${profile.keepsake === id}" ${unlocked ? '' : 'disabled'}><span class="keepsake-art">${collectionArt(id, !unlocked)}</span><span class="keepsake-copy"><strong>${item.name}</strong><span>${item.change}</span><small>${unlocked ? profile.keepsake === id ? '이번 출발에 선택됨' : '선택하기' : `${challenge.name} ${challengeProgress(profile, challenge)}/${challenge.target}`}</small></span></button>`;
+  }).join('')}</div></section>`;
 }
 function masteryBoard(game, profile) {
   const c = getCharacter(game.characterId), count = masteryCount(profile, c.id);
@@ -87,28 +88,28 @@ function goalPlan(game, profile) {
   const entry = codexEntries(profile).find(e => e.id === game.goal);
   return `<section class="experiment-plan" aria-label="도감 수집 목표"><small>이번 판의 도감 목표</small><strong>${meta.name}</strong><p>${entry.hint}</p><p class="record-line">획득한 뒤 여정을 마치면 기록됩니다. 쓰러져도 발견은 남아요.</p><button class="secondary" data-clear-goal>수집 목표 지우기</button></section>`;
 }
-export function campScreen(game, profile, warning) {
-  const c = getCharacter(game.characterId),
-    record = profile.characters[c.id];
+export function campScreen(game, profile, warning, section = 'prepare') {
+  const c = getCharacter(game.characterId), record = profile.characters[c.id];
   const entries = codexEntries(profile), found = entries.filter(e => e.found).length;
   const growthUnlocked = canEquipKeepsake(profile, 'bookmark');
-  return `<div class="start-layout"><div><p class="eyebrow">ASH & AMBER / CHAPTER 01</p><h1 id="panel-title">잿빛의 숲</h1><p class="panel-lead">동료를 고르고, 작은 힘을 키워<br>숲의 군주를 쓰러뜨리세요.</p><div class="start-meta"><span>5분의 도전</span><span>자동 공격</span><span>선택으로 성장</span></div></div>${portrait(c.id, true)}</div>
-  <button class="codex-door" data-open-codex>${codexIcon('book')}<span><strong>숲의 도감 <b>${found} / ${entries.length}</b></strong><small>${growthUnlocked ? '첫빛의 책갈피 해금 완료 · 출발 준비에서 초반 경험치 강화' : `전투 발견 ${Math.min(3, discoveryCount(profile))}/3 → 첫빛의 책갈피 · 첫 60초 경험치 +20%`}</small></span><span aria-hidden="true">→</span></button>
+  const k = keepsakeStats(profile.keepsake), mastery = masteryCount(profile, c.id);
+  return `<header class="camp-heading"><div><p class="eyebrow">ASH & AMBER / CHAPTER 01</p><h1 id="panel-title">잿빛의 숲</h1></div><p>작은 힘으로 시작해<br>숲의 왕관을 깨뜨리는 여정</p></header>
+  <div class="camp-navigation"><div class="camp-tabs" role="group" aria-label="로비 메뉴"><button data-camp-section="prepare" aria-pressed="${section === 'prepare'}">출발 준비</button><button data-camp-section="journal" aria-pressed="${section === 'journal'}">숙련과 기록</button></div>
+  <button class="codex-door" data-open-codex>${codexIcon('book')}<span><strong>숲의 도감 <b>${found} / ${entries.length}</b></strong><small>${growthUnlocked ? '첫빛의 책갈피 해금 완료 · 출발 준비에서 초반 경험치 강화' : `전투 발견 ${Math.min(3, discoveryCount(profile))}/3 → 첫빛의 책갈피 · 첫 60초 경험치 +20%`}</small></span><span aria-hidden="true">→</span></button></div>
+  <div class="camp-content"><aside class="camp-stage" aria-label="선택한 동료와 이번 판의 목표"><div class="camp-scene" aria-hidden="true" style="--camp-art:url('${import.meta.env.BASE_URL}art/survivor/forest-camp-v1.webp')"><div class="camp-stage-light"></div>${portrait(c.id, true)}</div><div class="camp-stage-caption"><small>이번 여정의 동료</small><strong>${c.name}</strong><span>${c.title}</span></div><button class="camp-mastery-link" data-camp-section="journal">숙련 인장 ${mastery}/3 <span>다시 뽑기 ${game.rerolls}회 →</span></button>
+  <div class="camp-stage-note"><small>다음에 만날 작은 목표</small><p>${nextGoal(profile)}</p><span>도감에서 이번 판에 모을 항목을 정할 수 있어요.</span></div></aside>
+  <section class="camp-controls camp-section" aria-label="출발 준비" ${section === 'prepare' ? '' : 'hidden'}>
   <div class="companion-heading"><h2>숲에 함께할 동료</h2><span>${Object.keys(CHARACTERS).filter(id => isUnlocked(profile, id)).length} / 3</span></div>
   <div class="companion-grid">${Object.values(CHARACTERS).map(char => {
     const unlocked = isUnlocked(profile, char.id);
     return `<button class="companion-card" data-character="${char.id}" aria-pressed="${c.id === char.id}" ${unlocked ? '' : 'disabled'} style="--tone:${char.color}">${portrait(char.id)}<span class="companion-copy"><strong>${char.name}</strong><small>${UPGRADE_META[char.weapon].name} 시작</small><span>${unlocked ? c.id === char.id ? '선택한 동료' : char.title : unlockProgress(profile, char.id)}</span></span></button>`;
   }).join('')}</div>
   <div class="companion-detail"><strong>${c.name} <span>기본 · ${c.trait}</span></strong><p>${c.description}</p></div>
-  ${masteryBoard(game, profile)}
-  ${departureKit(game, profile)}
-  ${vowSelection(game, profile)}
-  ${goalPlan(game, profile)}
-  ${experimentPlan(game)}
-  <div class="panel-actions"><button id="start-game" class="primary">숲에 들어가기 <span aria-hidden="true">→</span></button></div>
-  <p class="controls-note"><span class="keyboard-copy"><kbd>WASD</kbd> / <kbd>방향키</kbd> 이동 · <kbd>Esc</kbd> 일시정지</span><span class="touch-copy">왼쪽 조이스틱으로 이동 · 공격은 자동으로 실행됩니다</span></p>
-  ${journeyScreen(profile)}
-  <details class="camp-records"><summary>여정 기록 <span>${profile.runs}회 도전 · ${profile.wins}회 군주 격파</span></summary><p class="next-goal">${nextGoal(profile)}</p><p class="record-line">전문화 발견 ${profile.buildDiscoveries.length}/6 · 유물 발견 ${profile.relicDiscoveries.length}/6</p><p class="record-line">${c.name} · 최고 ${record.bestKills} 처치 · 최장 ${formatTime(record.bestTime)}${record.fastestWin === null ? '' : ` · 최단 격파 ${formatTime(record.fastestWin)}`}</p><div class="discoveries">${Object.keys(EVOLUTIONS).map(id => `<span class="${profile.discoveries.includes(id) ? 'found' : ''}">${profile.discoveries.includes(id) ? '발견' : '미발견'} · ${UPGRADE_META[id].name}</span>`).join('')}</div>${profile.history.length ? `<ol class="run-history">${profile.history.map(row => `<li><span>${getCharacter(row.character).name} · ${outcomeName[row.outcome]}${row.vow === 'mist' ? ' · 짙은 안개' : ''}</span><span>${formatTime(row.time)} · ${row.kills} 처치</span></li>`).join('')}</ol>` : '<p class="record-line">첫 여정을 시작하면 기록이 남습니다.</p>'}</details>${storageNotice(warning)}`;
+
+  ${game.goal || game.experiment ? `<div class="camp-objective">${goalPlan(game, profile)}${experimentPlan(game)}</div>` : ''}${departureKit(game, profile)}${vowSelection(game, profile)}</section>
+  <section class="camp-journal camp-section" aria-label="숙련과 여정 기록" ${section === 'journal' ? '' : 'hidden'}><div class="journal-heading"><p class="eyebrow">THE FOREST REMEMBERS</p><h2>지난 여정이 다음 힘이 됩니다</h2><p>발견과 해금은 쓰러져도 남습니다.</p></div>${masteryBoard(game, profile)}${journeyScreen(profile)}
+  <details class="camp-records"><summary>여정 기록 <span>${profile.runs}회 도전 · ${profile.wins}회 군주 격파</span></summary><p class="next-goal">${nextGoal(profile)}</p><p class="record-line">전문화 발견 ${profile.buildDiscoveries.length}/6 · 유물 발견 ${profile.relicDiscoveries.length}/6</p><p class="record-line">${c.name} · 최고 ${record.bestKills} 처치 · 최장 ${formatTime(record.bestTime)}${record.fastestWin === null ? '' : ` · 최단 격파 ${formatTime(record.fastestWin)}`}</p><div class="discoveries">${Object.keys(EVOLUTIONS).map(id => `<span class="${profile.discoveries.includes(id) ? 'found' : ''}">${profile.discoveries.includes(id) ? '발견' : '미발견'} · ${UPGRADE_META[id].name}</span>`).join('')}</div>${profile.history.length ? `<ol class="run-history">${profile.history.map(row => `<li><span>${getCharacter(row.character).name} · ${outcomeName[row.outcome]}${row.vow === 'mist' ? ' · 짙은 안개' : ''}</span><span>${formatTime(row.time)} · ${row.kills} 처치</span></li>`).join('')}</ol>` : '<p class="record-line">첫 여정을 시작하면 기록이 남습니다.</p>'}</details></section></div>${storageNotice(warning)}
+  <footer class="camp-departure"><p class="departure-summary"><strong>이번 출발 · ${c.name}</strong><span>${UPGRADE_META[c.weapon].name} · 체력 ${game.player.maxHp} · 이동 ${c.speed + k.speed} · ${vowStats(game.vow).name}</span><span>${k.name} · ${k.change}</span>${game.goal || game.experiment ? `<span class="departure-goal">목표 · ${goalMeta(game.goal)?.name ?? SPECIALIZATIONS[game.experiment].name}</span>` : ''}</p><div><button id="start-game" class="primary">숲에 들어가기 <span aria-hidden="true">→</span></button><p class="controls-note"><span class="keyboard-copy">WASD / 방향키 이동 · Esc 일시정지</span><span class="touch-copy">왼쪽 조이스틱 이동 · 공격은 자동</span></p></div></footer>`;
 }
 export function buildSummary(game) {
   const branches = Object.keys(SPECIALIZATIONS).filter(key => game.ranks[key]);

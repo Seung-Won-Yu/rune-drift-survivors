@@ -616,6 +616,7 @@ button:focus-visible {
   word-break: keep-all;
   text-wrap: balance;
 }
+
 .result-mark {
   display: grid;
   place-items: center;
@@ -1812,3 +1813,170 @@ button:focus-visible {
   .codex-detail h2 { font-size: 18px; margin: 6px 0 10px; }
   .codex-hint { clear: both; }
 }
+
+.camp-stage-note { padding: 14px 18px; }
+.camp-stage-note small { font-size: 10px; color: #e0bd7d; }
+.camp-stage-note p { font-size: 13px; line-height: 1.7; color: #e8dfc1; margin: 8px 0; }
+.camp-stage-note > span { font-size: 11px; line-height: 1.7; color: #abbfa8; }
+.camp-controls .camp-objective { padding: 12px; border-left: 2px solid #d9ba7b; background: #e0bd7910; margin-top: 12px; }
+@media(max-height:570px) and (orientation:landscape) { .camp-stage-note { display: none; } .camp-controls .camp-objective { display: block; } }
+
+/* Departure camp: the primary action is outside both scrolling workspaces. */
+.panel.is-camp {
+  width: min(1120px, 100%); height: min(780px, 100%); overflow: hidden;
+  display: flex; flex-direction: column; padding: 24px;
+}
+.camp-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-shrink: 0; }
+.camp-heading .eyebrow { margin: 0 0 6px; font-size: 9px; }
+.camp-heading h1 { font-size: 30px; margin: 0; }
+.camp-heading > p { color: #bdcbb6; font-size: 12px; line-height: 1.7; margin: 0; text-align: right; }
+.camp-navigation { display: flex; align-items: center; gap: 24px; margin: 16px 0; flex-shrink: 0; }
+.camp-tabs { display: flex; gap: 6px; flex-shrink: 0; }
+.camp-tabs button { min-height: 44px; padding: 10px 15px; border: 0; border-bottom: 2px solid transparent; color: #b4c4b1; background: transparent; font-size: 13px; }
+.camp-tabs button[aria-pressed="true"] { border-bottom-color: var(--gold); color: #f2ddb3; background: #d9b5770c; }
+.camp-navigation .codex-door { margin: 0 0 0 auto; padding: 8px 12px; max-width: 420px; min-height: 54px; border-radius: 8px; }
+.camp-navigation .codex-door > svg { width: 26px; height: 26px; }
+.camp-navigation .codex-door strong { font-size: 13px; }
+.camp-navigation .codex-door small { font-size: 10px; margin-top: 3px; }
+.camp-content { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.25fr); gap: 28px; flex: 1; min-height: 0; }
+.camp-stage { position: relative; min-height: 0; display: flex; flex-direction: column; border-radius: 12px; overflow: auto; scrollbar-width: thin; background: #10281d; border: 1px solid #8ca17928; }
+.camp-scene { position: relative; flex: 1 0 auto; padding: 12px 0; min-height: 170px; max-height: 300px; display: grid; place-items: center; background: linear-gradient(0deg,#10281d 0%,#10281d00 45%),var(--camp-art) center 58% / cover; }
+.camp-scene .hero-art { position: relative; width: clamp(95px, calc((100dvh - 420px) * .45), 180px); height: auto; aspect-ratio: var(--portrait-ratio); z-index: 1; filter: drop-shadow(0 8px 4px #05160b85); }
+.camp-scene .hero-art { transform-origin: 50% 90%; animation: camp-breath 3.2s ease-in-out infinite; }
+@keyframes camp-breath { 0%,100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(-2px) scaleY(1.012); } }
+.camp-stage-light { position: absolute; width: 60%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(ellipse,#e7ba6630,#77ad8110 45%,transparent 70%); }
+.camp-stage-caption { display: grid; gap: 5px; justify-items: center; margin: 4px 0 12px; z-index: 1; }
+.camp-stage-caption small { font-size: 10px; color: #b0c4a7; }
+.camp-stage-caption strong { font-size: 23px; color: #f1e2c2; }
+.camp-stage-caption > span { font-size: 11px; color: #c8cfb4; }
+.camp-mastery-link { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 0 18px; min-height: 44px; background: transparent; color: #ebcc93; border: 0; border-block: 1px solid #a1b38a2e; font-size: 12px; }
+.camp-mastery-link span { font-size: 10px; color: #b6c7af; }
+.camp-objective { padding: 14px 18px; }
+.camp-objective > small, .camp-objective .experiment-plan > small { color: #e0bd7d; font-size: 10px; letter-spacing: .04em; }
+.camp-objective > p { color: #e8dfc1; font-size: 13px; line-height: 1.7; margin: 8px 0; }
+.camp-objective > span { color: #abbfa8; font-size: 11px; line-height: 1.7; }
+.camp-objective .experiment-plan { margin: 0; padding: 0; border: 0; background: transparent; }
+.camp-objective .experiment-plan > strong { font-size: 18px; }
+.camp-objective .experiment-plan > p { font-size: 11px; line-height: 1.65; margin: 7px 0; }
+.camp-objective .experiment-plan .secondary { min-height: 44px; padding: 7px 12px; font-size: 11px; }
+.camp-controls, .camp-journal { min-height: 0; min-width: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; padding: 0 8px 6px 0; scrollbar-color: #8a9f7880 #15291d; }
+.camp-controls .companion-heading { margin-top: 0; }
+.camp-controls .companion-heading h2 { font-size: 12px; }
+.camp-controls .companion-heading > span { font-size: 10px; }
+.camp-controls .companion-grid { gap: 7px; margin-top: 9px; }
+.camp-controls .companion-card { flex-direction: column; gap: 3px; padding: 8px 4px; text-align: center; min-height: 108px; }
+.camp-controls .companion-art { width: 45px; height: auto; aspect-ratio: var(--portrait-ratio); }
+.camp-controls .companion-copy { gap: 4px; }
+.camp-controls .companion-copy strong { font-size: 12px; }
+.camp-controls .companion-copy small, .camp-controls .companion-copy > span { font-size: 10px; }
+.camp-controls .companion-detail { padding: 10px 0 0; }
+.camp-controls .companion-detail > strong { font-size: 12px; }
+.camp-controls .companion-detail p { font-size: 11px; margin-top: 5px; }
+.camp-controls .departure-kit { margin-top: 14px; padding-top: 12px; }
+.camp-controls .keepsake-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 9px; }
+.camp-controls .keepsake-card { display: flex; align-items: center; gap: 7px; padding: 8px; min-height: 78px; }
+.keepsake-art { display: grid; place-items: center; flex-shrink: 0; width: 35px; height: 42px; }
+.keepsake-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.camp-controls .keepsake-copy strong { font-size: 11px; line-height: 1.5; }
+.camp-controls .keepsake-copy > span, .camp-controls .keepsake-copy small { font-size: 11px; line-height: 1.5; }
+.camp-controls .vow-selection { margin: 14px 0 0; border-top: 1px solid #79947c40; padding-top: 12px; }
+.camp-controls .vow-options { margin-top: 9px; gap: 7px; grid-template-columns: 1fr 1.4fr; }
+.camp-controls .vow-options button { min-height: 60px; padding: 10px; gap: 4px; }
+.camp-controls .vow-options strong { font-size: 11px; }
+.camp-controls .vow-options span, .camp-controls .vow-options small { font-size: 10px; }
+.camp-controls .vow-selection > .record-line { font-size: 10px; margin: 8px 0 0; }
+.journal-heading .eyebrow { margin: 4px 0 7px; font-size: 9px; }
+.journal-heading h2 { margin: 0; font-size: 21px; line-height: 1.5; }
+.journal-heading > p { font-size: 12px; color: #b9c9ae; margin: 6px 0 0; }
+.camp-journal .mastery-board { margin-top: 16px; }
+.camp-departure { flex-shrink: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .7fr); gap: 24px; align-items: center; border-top: 1px solid #9aac8638; margin-top: 16px; padding-top: 14px; }
+.camp-departure .departure-summary { margin: 0; font-size: 10px; }
+.camp-departure .departure-summary strong { display: block; font-size: 12px; margin: 0 0 4px; }
+.camp-departure .departure-summary > span { color: #c2cdb4; }
+.camp-departure .departure-summary > span:last-child { color: #e0c28b; }
+.camp-departure .controls-note { font-size: 10px; margin: 6px 0 0; }
+.camp-departure .primary { min-height: 50px; font-size: 14px; }
+.collection-illustration { display: block; width: 100%; height: 100%; filter: drop-shadow(0 3px 2px #061b1855); }
+.collection-illustration.is-silhouette { filter: none; opacity: .8; }
+.collection-illustration.is-silhouette [fill] { fill: #65765d; }
+.codex-portrait.is-silhouette { filter: grayscale(1) brightness(.75); opacity: .6; }
+.codex-art { width: 78px; height: 78px; }
+.codex-art .collection-illustration { width: 70px; height: 70px; }
+.codex-detail-art .collection-illustration { width: 96px; height: 96px; }
+.codex-card.is-missing .codex-art { border-radius: 50%; background: #78916910; }
+.upgrade-icon .collection-illustration { width: 62px; height: 62px; }
+.run-discoveries .discoveries { gap: 9px; }
+.discovery-trophy { display: flex; align-items: center; gap: 10px; flex: 1 0 150px; min-width: 0; padding: 10px 12px; border: 1px solid #deb87066; border-radius: 8px; background: #d9b66a0b; }
+.discovery-trophy > svg { width: 44px; height: 44px; flex-shrink: 0; }
+.discovery-trophy > div { display: grid; gap: 4px; }
+.discovery-trophy small { font-size: 9px; color: #c1cbae; letter-spacing: .08em; }
+.discovery-trophy strong { font-size: 13px; color: #f2d99d; }
+@media (max-width: 900px) {
+  .panel.is-camp { padding: 18px; }
+  .camp-content { gap: 18px; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); }
+  .camp-navigation { gap: 10px; }
+  .camp-navigation .codex-door { max-width: 350px; }
+  .camp-controls .keepsake-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .panel.is-camp { padding: 14px; border-radius: 12px; }
+  .camp-heading h1 { font-size: 24px; }
+  .camp-heading .eyebrow { font-size: 7px; letter-spacing: .15em; }
+  .camp-heading > p { display: none; }
+  .camp-navigation { margin: 10px 0; gap: 6px; }
+  .camp-tabs { gap: 1px; }
+  .camp-tabs button { padding: 8px; font-size: 11px; }
+  .camp-navigation .codex-door { width: auto; min-width: 0; gap: 6px; padding: 7px; min-height: 44px; }
+  .camp-navigation .codex-door > svg { width: 20px; height: 20px; }
+  .camp-navigation .codex-door strong { font-size: 10px; white-space: nowrap; }
+  .camp-navigation .codex-door b { font-size: 10px; margin-left: 4px; }
+  .camp-navigation .codex-door small, .camp-navigation .codex-door > span:last-child { display: none; }
+  .camp-content { display: block; }
+  .camp-stage { display: none; }
+  .camp-controls, .camp-journal { height: 100%; padding-right: 6px; }
+  .camp-controls .companion-card { min-height: 103px; }
+  .camp-controls .companion-art { width: 40px; }
+  .camp-controls .companion-copy strong { font-size: 10px; }
+  .camp-controls .companion-copy > span { font-size: 9px; }
+  .camp-controls .companion-detail strong span { font-size: 10px; }
+  .camp-controls .keepsake-art { width: 31px; }
+  .camp-departure { grid-template-columns: 1fr; gap: 7px; margin-top: 10px; padding-top: 10px; }
+  .camp-departure .departure-summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px 6px; }
+  .camp-departure .departure-summary strong { margin: 0; font-size: 10px; }
+  .camp-departure .departure-summary > span:first-of-type { display: none; }
+  .camp-departure .departure-summary > span:last-child { font-size: 9px; }
+  .camp-departure .primary { min-height: 46px; font-size: 13px; }
+  .camp-departure .controls-note { margin-top: 4px; font-size: 9px; }
+  .codex-detail-art .collection-illustration { width: 56px; height: 56px; }
+}
+@media (max-height: 570px) and (orientation: landscape) {
+  .panel.is-camp { padding: 12px 18px; }
+  .camp-heading .eyebrow, .camp-heading > p { display: none; }
+  .camp-heading h1 { font-size: 23px; }
+  .camp-navigation { margin: 5px 0 8px; }
+  .camp-navigation .codex-door { min-height: 44px; padding: 5px 10px; }
+  .camp-navigation .codex-door small { display: none; }
+  .camp-content { gap: 18px; grid-template-columns: minmax(0, .65fr) minmax(0, 1.35fr); }
+  .camp-scene { min-height: 100px; padding: 0; }
+  .camp-scene .hero-art { width: 62px; }
+  .camp-stage-caption { margin: 4px 0 7px; }
+  .camp-stage-caption small, .camp-stage-caption > span, .camp-objective { display: none; }
+  .camp-stage-caption strong { font-size: 15px; }
+  .camp-mastery-link { display: none; }
+  .camp-mastery-link span { display: none; }
+  .camp-departure { margin-top: 8px; padding-top: 8px; gap: 14px; }
+  .camp-departure .primary { min-height: 44px; padding: 9px 14px; }
+  .camp-departure .controls-note { display: none; }
+}
+
+/* Rewards remain inspectable while both next-run actions stay within the viewport. */
+.panel.is-result { max-width: none; display: flex; flex-direction: column; width: min(620px,100%); height: min(780px,100%); overflow: hidden; padding: 24px; }
+.result-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #8a9f7880 #15291d; scrollbar-gutter: stable; padding: 4px 8px 4px 4px; }
+.result-body:focus-visible { outline: 2px solid #ffe5b3; outline-offset: -2px; }
+.is-result .result-mark { width: 44px; height: 44px; margin-bottom: 14px; }
+.is-result .result-mark svg { width: 24px; height: 24px; }
+.is-result > .panel-actions { flex-shrink: 0; display: grid; grid-template-columns: 1.2fr 1fr; margin-top: 14px; padding-top: 14px; border-top: 1px solid #9aac8638; }
+.discovery-review { min-height: 44px; padding: 10px 12px; font-size: 12px; }
+@media (max-width:680px),(max-height:570px) { .panel.is-result { padding: 14px; } .is-result > .panel-actions { margin-top: 10px; padding-top: 10px; gap: 8px; } .is-result > .panel-actions button { min-height: 44px; padding: 10px; font-size: 12px; } }
+
+.is-camp > .storage-note { flex-shrink: 0; margin: 8px 0 0; font-size: 11px; }

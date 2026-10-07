@@ -6,6 +6,7 @@ import { ENCOUNTERS } from './encounters.js';
 import { orbitPositions, stats, SLAM } from './game.js';
 import { BOSS } from './boss.js';
 import { nearestRecovery } from './field.js';
+import { evolutionFeedback, evolutionFrame } from './evolution-feedback.js';
 export async function loadArt(base) {
   const load = name => new Promise((resolve, reject) => {
     const image = new Image();
@@ -80,6 +81,7 @@ export function createRenderer(canvas, art) {
     dpr = 1,
     scale = 1;
   const ground = makeGround();
+  let evolution = null;
   const pattern = ctx.createPattern(ground, 'repeat');
   // Canvas filters can force expensive software raster passes per actor. Bake
   // the identical hit tint once per atlas and keep drawing ordinary sprites.
@@ -701,6 +703,22 @@ export function createRenderer(canvas, art) {
       ctx.fillStyle = '#ffe6b5'; ctx.fillText('정예 격파', 0, finish.labelY - finish.y);
       ctx.restore();
     }
+    const celebration = evolutionFrame(evolution, game.time, reduced.matches);
+    if (celebration) {
+      ctx.save(); ctx.translate(p.x, p.y - 30); ctx.globalAlpha = celebration.alpha;
+      ctx.fillStyle = celebration.color; ctx.strokeStyle = '#16291e'; ctx.lineWidth = 2;
+      for (let i = 0; i < celebration.shards; i++) {
+        ctx.save(); ctx.rotate(i * Math.PI / 4 + Math.PI / 8);
+        const r = celebration.reach, length = 9 * (1 - celebration.progress) + 3;
+        ctx.beginPath(); ctx.moveTo(r - length, 0); ctx.lineTo(r, -3); ctx.lineTo(r + length, 0); ctx.lineTo(r, 3); ctx.closePath(); ctx.stroke(); ctx.fill(); ctx.restore();
+      }
+      // A small banner above the actor, not a full-screen flash or danger circle.
+      ctx.font = 'bold 13px system-ui'; ctx.textAlign = 'center';
+      const label = `${celebration.name} · 진화`, labelWidth = ctx.measureText(label).width + 24;
+      ctx.fillStyle = '#192a21ee'; ctx.fillRect(-labelWidth / 2, -87, labelWidth, 25);
+      ctx.strokeStyle = celebration.color; ctx.lineWidth = 1; ctx.strokeRect(-labelWidth / 2, -87, labelWidth, 25);
+      ctx.fillStyle = '#f8e5be'; ctx.fillText(label, 0, -70); ctx.restore();
+    }
     // The companion is drawn once, above friendly effects and front-row enemies.
     drawPlayer(game, hurt);
     if (hurt?.fade > 0) {
@@ -818,6 +836,9 @@ export function createRenderer(canvas, art) {
   resize();
   return {
     render,
-    resize
+    resize,
+    celebrateEvolution(key, time) { evolution = evolutionFeedback(key, time); return !!evolution; },
+    clearCelebration() { evolution = null; },
+    celebration(time) { return evolutionFrame(evolution, time, reduced.matches); }
   };
 }

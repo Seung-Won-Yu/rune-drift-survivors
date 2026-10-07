@@ -24,7 +24,7 @@ test('companion gait is bounded, presentation-only and yields to attacks, damage
   g.characterId='grove';assert.ok(Math.abs(heroGait(g).y)<Math.abs(pose.y));
   g.characterId='ember';assert.ok(Math.abs(heroGait(g).y)>Math.abs(pose.y));
   assert.deepEqual(heroGait(g,true),{});
-  for(const state of [{moving:false},{hurt:.2},{cast:.3}]){Object.assign(g.player,{moving:true,hurt:0,cast:0},state);assert.deepEqual(heroGait(g),{});}
+  for(const state of [{hurt:.2},{cast:.3}]){Object.assign(g.player,{moving:true,hurt:0,cast:0},state);assert.deepEqual(heroGait(g),{});}
   Object.assign(g.player,{moving:true,hurt:0,cast:0});g.swing={age:.1,angle:0};assert.deepEqual(heroGait(g),{});
   g.swing=null;g.outcome='defeat';assert.deepEqual(heroGait(g),{});
 });

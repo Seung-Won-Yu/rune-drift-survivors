@@ -4,7 +4,12 @@ import { SLAM } from './game.js';
 // Render poses use simulation time. They never move a collision body or run while paused.
 export function heroGait(game, reduced = false) {
   const p = game.player;
-  if (reduced || !p.moving || game.swing || p.cast > 0 || p.hurt > 0 || game.outcome === 'defeat') return {};
+  if (reduced || game.swing || p.cast > 0 || p.hurt > 0 || game.outcome === 'defeat') return {};
+  if (!p.moving) {
+    const breath = Math.sin(game.time * (game.characterId === 'grove' ? 2.1 : 2.8));
+    return game.characterId === 'grove' ? { sx: 1 + .006 * breath, sy: 1 - .006 * breath }
+      : { y: -Math.max(0, breath) * (game.characterId === 'ember' ? 1 : .6), tilt: breath * .006 };
+  }
   const step = Math.cos(p.walk * 7 * Math.PI);
   const weight = game.characterId === 'grove' ? .7 : game.characterId === 'ember' ? 1.2 : 1;
   return { y: -Math.max(0, -step) * 3.5 * weight,

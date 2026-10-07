@@ -2,6 +2,7 @@ import { CHARACTERS, isUnlocked, unlockProgress } from './characters.js';
 import { SPECIALIZATIONS, RELICS } from './expansion.js';
 import { EVOLUTIONS, UPGRADE_META } from './game.js';
 import { validGoal } from './progression.js';
+import { collectionArt } from './collection-art.js';
 import { CHALLENGES, KEEPSAKES, canEquipKeepsake, challengeProgress } from './journey.js';
 
 export const CODEX_GROUPS = { all: '전체', companions: '동료', weapons: '무기', relics: '유물', keepsakes: '기념품' };
@@ -54,8 +55,8 @@ const paths = {
 };
 export const codexIcon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] ?? paths.book}"/></svg>`;
 function art(entry) {
-  if (!entry.found) return '<span class="codex-unknown" aria-hidden="true">?</span>';
-  return entry.art ? `<span class="codex-portrait" aria-hidden="true" style="background-image:url('${import.meta.env.BASE_URL}art/survivor/${entry.art}');--atlas-height:${entry.id === 'companion:grove' ? 261.25 : 285}%;--portrait-ratio:${313.5 / (entry.id === 'companion:grove' ? 480 : 440)}"></span>` : codexIcon(entry.icon);
+  if (!entry.art) return collectionArt(entry.id, !entry.found) || codexIcon(entry.icon);
+  return `<span class="codex-portrait${entry.found ? '' : ' is-silhouette'}" aria-hidden="true" style="background-image:url('${import.meta.env.BASE_URL}art/survivor/${entry.art}');--atlas-height:${entry.id === 'companion:grove' ? 261.25 : 285}%;--portrait-ratio:${313.5 / (entry.id === 'companion:grove' ? 480 : 440)}"></span>`;
 }
 export function codexScreen(profile, filter = 'all', selected = null) {
   const entries = codexEntries(profile), found = entries.filter(e => e.found).length;

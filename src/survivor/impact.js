@@ -39,23 +39,28 @@ export function attackPose(game, reduced = false) {
   if (reduced || p.hurt > 0 || game.outcome === 'defeat') return {};
   if (game.swing) {
     const { age, angle } = game.swing;
-    const weight = game.ranks.dawn ? 1.15 : 1;
+    const weight = (game.ranks.dawn ? 1.15 : 1) * (game.characterId === 'grove' ? .9 : game.characterId === 'ember' ? .92 : 1);
     if (age < .18) {
       const tension = (age / .18) ** 2;
       return { x: -Math.cos(angle) * 6 * tension, y: -Math.sin(angle) * 4 * tension,
         tilt: -.14 * tension, sx: 1 + .06 * tension, sy: 1 - .07 * tension };
     }
-    // Snap at the existing damage frame, briefly hold, then ease back to neutral.
-    const release = Math.max(0, 1 - Math.max(0, age - .23) / .32) ** 2;
+    // Four authored poses: impact at .18, follow-through at .26, settle at .40.
+    // This changes the illustration only; the hit and swing clocks stay intact.
+    const smooth = t => { const v = Math.max(0, Math.min(1, t)); return v * v * (3 - 2 * v); };
+    const contact = age < .26;
+    const release = contact ? 1 - .07 * smooth((age - .18) / .08)
+      : age < .4 ? .93 - .77 * smooth((age - .26) / .14)
+      : .16 * (1 - smooth((age - .4) / .15));
     return { x: Math.cos(angle) * 11 * release * weight, y: Math.sin(angle) * 7 * release * weight,
-      tilt: .18 * release, sx: 1 - .05 * release, sy: 1 + .05 * release };
+      tilt: (contact ? .19 : .16) * release, sx: 1 - .05 * release, sy: 1 + .05 * release };
   }
   if (p.cast > 0) {
     // Casting already emits at the start of this clock; animate the release, not a delayed windup.
     const release = (p.cast / .4) ** 2;
-    return game.characterId === 'grove'
-      ? { y: 2 * release, sx: 1 + .07 * release, sy: 1 - .05 * release }
-      : { x: p.facing * 5 * release, y: -3 * release, tilt: .1 * release, sy: 1 + .05 * release };
+    if (game.characterId === 'grove') return { y: 2 * release, tilt: -.035 * release, sx: 1 + .09 * release, sy: 1 - .065 * release };
+    if (game.characterId === 'ember') return { x: p.facing * 6 * release, y: -4 * release, tilt: .13 * release, sx: 1 - .025 * release, sy: 1 + .065 * release };
+    return { x: p.facing * 4 * release, y: -1.5 * release, tilt: .075 * release, sx: 1 + .02 * release, sy: 1 + .025 * release };
   }
   return {};
 }
