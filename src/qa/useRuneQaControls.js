@@ -87,7 +87,7 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
       const token = ++revisionRef.current;
       const nextGame = { ...input, qaRevision: token };
       pending = true;
-      sceneApi.current?.reset();
+      sceneApi.current?.reset({ qaRevision: token, pending: true });
       gameRef.current = nextGame;
       setUpgradeChoices(choices);
       setGame(nextGame);
@@ -96,7 +96,7 @@ export function useRuneQaControls({ game, sceneApi, setGame, setUpgradeChoices }
           if (disposed || revisionRef.current !== token) { resolve(false); return; }
           const api = sceneApi.current;
           if (api?.state?.()?.qaRevision !== token) { window.requestAnimationFrame(apply); return; }
-          api.reset();
+          api.reset({ qaRevision: token });
           prepare?.(api);
           pending = false;
           resolve(true);

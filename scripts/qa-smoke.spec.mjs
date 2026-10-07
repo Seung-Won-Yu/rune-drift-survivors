@@ -441,6 +441,44 @@ test('a newer QA scene supersedes a pending fixture', async ({ page }) => {
   await guards.assertClean();
 });
 
+test('QA reset keeps cleared rewards empty while scene acknowledgement is delayed', async ({ page }) => {
+  const guards = await openGuardedPage(page, '/?qa=seal&quality=low');
+  await page.waitForFunction(() => window.__RUNE_DRIFT_QA__.snapshot().fieldDetour !== null);
+  const samples = await page.evaluate(async () => {
+    const qa = window.__RUNE_DRIFT_QA__;
+    const originalRaf = window.requestAnimationFrame;
+    let delayed = 0;
+    // Expose the gap between the HUD commit and QA's scene acknowledgement.
+    // Ordinary render frames continue, as they do on a slow CI renderer.
+    window.requestAnimationFrame = callback => originalRaf.call(window, time => {
+      if (callback.name === 'apply') {
+        delayed += 1;
+        setTimeout(() => callback(time), 180);
+      } else callback(time);
+    });
+    const snapshots = [];
+    const timer = setInterval(() => snapshots.push(qa.snapshot()), 20);
+    try {
+      const applied = await qa.reset();
+      return { applied, delayed, snapshots, after: qa.snapshot() };
+    } finally {
+      clearInterval(timer);
+      window.requestAnimationFrame = originalRaf;
+    }
+  });
+  expect(samples.applied).toBe(true);
+  expect(samples.delayed).toBeGreaterThan(0);
+  expect(samples.snapshots.length).toBeGreaterThan(0);
+  for (const snapshot of [...samples.snapshots, samples.after]) {
+    expect(snapshot.time).toBe(0);
+    expect(snapshot.fieldDetour).toBeNull();
+    expect(snapshot.shrineActivations).toBe(0);
+  }
+  await page.waitForFunction(() => window.__RUNE_DRIFT_QA__.snapshot().time >= 0.25);
+  expect((await page.evaluate(() => window.__RUNE_DRIFT_QA__.snapshot())).fieldDetour).toBeNull();
+  await guards.assertClean();
+});
+
 test('paused gameplay stops continuous rendering and resumes frames', async ({ page }) => {
   const guards = await openGuardedPage(page, '/?quality=low');
   await page.getByRole('button', { name: '일시정지', exact: true }).click();

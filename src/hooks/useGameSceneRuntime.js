@@ -101,6 +101,7 @@ export function useGameSceneRuntime(visualQuality) {
   const playerMesh = useRef();
   const weaponEffects = useLazyRef(() => []);
   const stateSyncElapsed = useRef(0);
+  const qaTransition = useRef({ revision: undefined, ready: true });
   const cameraTarget = useLazyRef(() => new THREE.Vector3());
   const cameraShake = useRef(0);
   const runtimeBudget = useLazyRef(() => ({ ...SIMULATION_BUDGET }));
@@ -142,6 +143,7 @@ export function useGameSceneRuntime(visualQuality) {
     scheduledFieldItems.current = new Set();
     runStats.current = createEmptyRunStats();
     resetFrameStats(frameStats);
+    stateSyncElapsed.current = 0;
     bossSpawnedWave.current = 0;
     eliteSpawnedMinute.current = 0;
     surgeIndex.current = 0;
@@ -215,6 +217,7 @@ export function useGameSceneRuntime(visualQuality) {
   }, [visualQuality]);
 
   return {
+    qaTransition,
     player,
     keys,
     dashQueued,

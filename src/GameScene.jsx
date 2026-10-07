@@ -65,6 +65,13 @@ export function GameScene({ refApi, game, setGame, onLevelUp, visualQuality = 'h
   });
 
   useFrame((state, delta) => {
+    // The React HUD and R3F scene commit separately. Keep the old world from
+    // repopulating cleared pools while a QA scene replacement is pending.
+    if (import.meta.env.DEV && (!runtime.qaTransition.current.ready
+      || runtime.qaTransition.current.revision !== game.qaRevision)) {
+      renderInstances();
+      return;
+    }
     recordFrameSample(frameStats, delta);
     updateFramePressure(delta, game.phase);
     const dt = Math.min(delta, 0.033);

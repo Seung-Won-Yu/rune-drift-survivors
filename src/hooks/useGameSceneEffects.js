@@ -33,6 +33,7 @@ export function useGameSceneEffects({
     frameStats,
     levelUpQueued,
     resetRuntime,
+    qaTransition,
     getMetrics
   } = runtime;
 
@@ -59,7 +60,10 @@ export function useGameSceneEffects({
 
   useEffect(() => {
     const api = {
-      reset: () => resetRuntime(touchControlsRef),
+      reset: ({ qaRevision, pending = false } = {}) => {
+        if (import.meta.env.DEV) qaTransition.current = { revision: qaRevision, ready: !pending };
+        resetRuntime(touchControlsRef);
+      },
       stress: (options = {}) => {
         populateStressScene({
           options,
@@ -135,6 +139,7 @@ export function useGameSceneEffects({
     touchControlsRef,
     visualQuality,
     resetRuntime,
+    qaTransition,
     getMetrics,
     player,
     enemies,
