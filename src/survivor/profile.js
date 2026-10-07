@@ -2,7 +2,7 @@ import { SPECIALIZATIONS, RELICS } from './expansion.js';
 import { canEquipKeepsake, completedChallenges, KEEPSAKES } from './journey.js';
 import { CHARACTERS, getCharacter, isUnlocked } from './characters.js';
 import { validExperiment } from './experiments.js';
-import { primaryBranches, masteryProgress, canTakeVow, validGoal, goalFound } from './progression.js';
+import { primaryBranches, validInheritance, masteryProgress, canTakeVow, validGoal, goalFound } from './progression.js';
 export const PROFILE_KEY = 'ash-profile-v1';
 const evolutions = ['dawn', 'comet', 'lunar'];
 const integer = (value, max = 1e9) => Number.isFinite(value) ? Math.min(max, Math.max(0, Math.floor(value))) : 0;
@@ -23,6 +23,7 @@ export function createProfile() {
     vow: 'none',
     goal: null,
     experiment: null,
+    inheritances: {ash: null, ember: null, grove: null},
     keepsake: 'none',
     altarRuns: 0,
     runs: 0,
@@ -60,11 +61,13 @@ export function normalizeProfile(input) {
     if (Number.isFinite(value.fastestWin) && value.fastestWin > 0) row.fastestWin = Math.min(300, value.fastestWin);
   }
   profile.selected = isUnlocked(profile, input.selected) ? getCharacter(input.selected).id : 'ash';
+  for (const id of Object.keys(CHARACTERS)) profile.inheritances[id] = validInheritance(profile, id, input.inheritances?.[id]);
   profile.experiment = validExperiment(profile.selected, input.experiment);
   profile.vow = canTakeVow(profile, input.vow) ? input.vow : 'none';
   profile.goal = validGoal(input.goal);
   if (goalFound(profile, profile.goal)) profile.goal = null;
-  if (profile.goal) profile.experiment = null;
+  if (profile.goal?.startsWith('branch:') && primaryBranches(profile.selected).includes(profile.goal.slice(7))) profile.inheritances[profile.selected] = null;
+  if (profile.goal || profile.inheritances[profile.selected]) profile.experiment = null;
   if (Array.isArray(input.history)) profile.history = input.history.slice(0, 5).filter(row => row && typeof row === 'object' && Object.hasOwn(CHARACTERS, row.character)).map(row => ({
     character: getCharacter(row.character).id,
     vow: row.vow === 'mist' ? 'mist' : 'none',

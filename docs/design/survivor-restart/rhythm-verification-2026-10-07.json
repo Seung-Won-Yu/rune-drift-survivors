@@ -1,0 +1,7193 @@
+{
+  "date": "2026-10-07",
+  "scope": [
+    "companion signatures",
+    "discovered starting specialization",
+    "three champion encounters",
+    "fixed viewport UI"
+  ],
+  "checks": {
+    "core": 136,
+    "browserFullBeforeFinalSmallFix": 123,
+    "focusedWarningsAndHud": 11,
+    "webkitFocused": 11,
+    "firefoxFocused": 11,
+    "production": "passed final Pages build",
+    "ci": "pending",
+    "public": "pending",
+    "focusedGoalAndInheritanceFinal": 4
+  },
+  "baseline": [
+    {
+      "mode": "normal",
+      "runs": 30,
+      "wins": 19,
+      "finalEncounter": 28,
+      "evolved": 30,
+      "rerollsUsed": 0,
+      "averageLevel": 18.73
+    },
+    {
+      "mode": "goal",
+      "runs": 30,
+      "wins": 23,
+      "finalEncounter": 29,
+      "evolved": 30,
+      "rerollsUsed": 30,
+      "averageLevel": 18.93
+    },
+    {
+      "mode": "mastery",
+      "runs": 30,
+      "wins": 19,
+      "finalEncounter": 29,
+      "evolved": 30,
+      "rerollsUsed": 60,
+      "averageLevel": 18.9
+    },
+    {
+      "mode": "mist",
+      "runs": 30,
+      "wins": 16,
+      "finalEncounter": 25,
+      "evolved": 30,
+      "rerollsUsed": 60,
+      "averageLevel": 19.57
+    }
+  ],
+  "firstPassFailure": [
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 42,
+      "mode": "normal",
+      "outcome": "defeat",
+      "time": 199.2,
+      "level": 15,
+      "levelAt60": 6,
+      "kills": 508,
+      "hp": 0,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "peak": 50,
+      "damageTaken": {
+        "contact": 31,
+        "hunt": 0,
+        "spore": 69,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.7155661952517403,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 197.516666666716,
+        "blockedAt": -10,
+        "activations": 66,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang"
+      ],
+      "inheritance": null
+    }
+  ],
+  "diagnosticCaveat": "The input driver was updated to respond to the new displayed hazard geometry and prioritize escaping active poison over XP. Before/after wins are not a controlled identical-input experiment or human fun measurement.",
+  "summary": [
+    {
+      "mode": "normal",
+      "runs": 30,
+      "wins": 21,
+      "finalEncounter": 28,
+      "evolved": 30,
+      "rerollsUsed": 0,
+      "averageLevel": 18.73
+    },
+    {
+      "mode": "goal",
+      "runs": 30,
+      "wins": 21,
+      "finalEncounter": 29,
+      "evolved": 30,
+      "rerollsUsed": 30,
+      "averageLevel": 18.8
+    },
+    {
+      "mode": "mastery",
+      "runs": 30,
+      "wins": 20,
+      "finalEncounter": 28,
+      "evolved": 30,
+      "rerollsUsed": 60,
+      "averageLevel": 18.73
+    },
+    {
+      "mode": "mist",
+      "runs": 30,
+      "wins": 21,
+      "finalEncounter": 27,
+      "evolved": 30,
+      "rerollsUsed": 60,
+      "averageLevel": 19.57
+    },
+    {
+      "mode": "inheritance",
+      "runs": 30,
+      "wins": 21,
+      "finalEncounter": 30,
+      "evolved": 30,
+      "rerollsUsed": 0,
+      "averageLevel": 18.83
+    }
+  ],
+  "results": [
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 7,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 259.53,
+      "level": 18,
+      "levelAt60": 6,
+      "kills": 782,
+      "hp": 140,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 61,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 255.53333333342883,
+        "blockedAt": -10,
+        "activations": 70,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 7,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 260.23,
+      "level": 18,
+      "levelAt60": 7,
+      "kills": 783,
+      "hp": 132,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 48,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 260.2333333334253,
+        "blockedAt": -10,
+        "activations": 71,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 7,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 272.28,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 790,
+      "hp": 140,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 53,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 272.28333333341436,
+        "blockedAt": -10,
+        "activations": 71,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 7,
+      "mode": "mist",
+      "outcome": "survived",
+      "time": 300,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 796,
+      "hp": 140,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 84,
+      "damageTaken": {
+        "contact": 9.2,
+        "hunt": 0,
+        "spore": 55.199999999999996,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.16666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 295.96666666672616,
+        "blockedAt": -10,
+        "activations": 73,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 7,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 270.73,
+      "level": 18,
+      "levelAt60": 6,
+      "kills": 758,
+      "hp": 136,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 66,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.6666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 267.3166666667522,
+        "blockedAt": -10,
+        "activations": 68,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "sweep"
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 7,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 256.68,
+      "level": 18,
+      "levelAt60": 6,
+      "kills": 765,
+      "hp": 112,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 75,
+      "damageTaken": {
+        "contact": 24,
+        "hunt": 0,
+        "spore": 54,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.16666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 255.68333333342895,
+        "blockedAt": -10,
+        "activations": 56,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 7,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 280.48,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 775,
+      "hp": 72,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 74,
+      "damageTaken": {
+        "contact": 15,
+        "hunt": 12,
+        "spore": 72,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.3333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 278.95000000007497,
+        "blockedAt": -10,
+        "activations": 58,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 7,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 277.43,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 793,
+      "hp": 123,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 59,
+      "damageTaken": {
+        "contact": 38,
+        "hunt": 0,
+        "spore": 90,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 265.65000000008706,
+        "blockedAt": -10,
+        "activations": 57,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 7,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 267.6,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 787,
+      "hp": 113.6,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 67,
+      "damageTaken": {
+        "contact": 87.285,
+        "hunt": 13.799999999999999,
+        "spore": 48.3,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 18.4
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 263.1000000000894,
+        "blockedAt": -10,
+        "activations": 58,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 7,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 279.85,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 796,
+      "hp": 156,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 61,
+      "damageTaken": {
+        "contact": 40,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 279.7333333334076,
+        "blockedAt": -10,
+        "activations": 61,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "duelist"
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 42,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 281.18,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 782,
+      "hp": 164,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 48,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 12,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 274.116666666746,
+        "blockedAt": -10,
+        "activations": 72,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 42,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 292.73,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 805,
+      "hp": 160,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "dew",
+        "fang"
+      ],
+      "peak": 52,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 289.6333333333986,
+        "blockedAt": -10,
+        "activations": 73,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 42,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 269.12,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 775,
+      "hp": 124,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 46,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 18,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.16666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 268.4833333334178,
+        "blockedAt": -10,
+        "activations": 71,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 42,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 299.75,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 809,
+      "hp": 180,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 45,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 27.599999999999998,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.9999999999999999,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 297.216666666725,
+        "blockedAt": -10,
+        "activations": 77,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 42,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 259.17,
+      "level": 18,
+      "levelAt60": 6,
+      "kills": 768,
+      "hp": 104,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 48,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 256.0500000000958,
+        "blockedAt": -10,
+        "activations": 69,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "sweep"
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 42,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 256.28,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 768,
+      "hp": 56.6,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 59,
+      "damageTaken": {
+        "contact": 108.4,
+        "hunt": 0,
+        "spore": 54,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 252.53333333342644,
+        "blockedAt": -10,
+        "activations": 61,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 42,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 272.6,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 778,
+      "hp": 180,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "dew",
+        "fang"
+      ],
+      "peak": 55,
+      "damageTaken": {
+        "contact": 118,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 272.60000000008074,
+        "blockedAt": -10,
+        "activations": 61,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 42,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 273.07,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 793,
+      "hp": 89,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 50,
+      "damageTaken": {
+        "contact": 30,
+        "hunt": 0,
+        "spore": 66,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 273.066666666747,
+        "blockedAt": -10,
+        "activations": 55,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 42,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 279.23,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 784,
+      "hp": 85.2,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 53,
+      "damageTaken": {
+        "contact": 23,
+        "hunt": 0,
+        "spore": 75.9,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 18.4
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 272.28333333341436,
+        "blockedAt": -10,
+        "activations": 55,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 42,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 272.68,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 780,
+      "hp": 66,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 50,
+      "damageTaken": {
+        "contact": 41,
+        "hunt": 12,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 266.68333333341945,
+        "blockedAt": -10,
+        "activations": 60,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "duelist"
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 101,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 269.08,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 785,
+      "hp": 160,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 51,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 42,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 266.55000000008624,
+        "blockedAt": -10,
+        "activations": 71,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 101,
+      "mode": "goal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 797,
+      "hp": 98,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "briar",
+        "fang"
+      ],
+      "peak": 51,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 6,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 291.2833333333971,
+        "blockedAt": -10,
+        "activations": 74,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 101,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 298.22,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 789,
+      "hp": 90,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 70,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 294.73333333339394,
+        "blockedAt": -10,
+        "activations": 73,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 101,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 290.22,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 793,
+      "hp": 153.2,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 55,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 55.199999999999996,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 36.8
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 290.2166666667314,
+        "blockedAt": -10,
+        "activations": 72,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 101,
+      "mode": "inheritance",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 796,
+      "hp": 158,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 76,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.6666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 298.6666666667237,
+        "blockedAt": -10,
+        "activations": 73,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "sweep"
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 101,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 264.55,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 774,
+      "hp": 110,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 66,
+      "damageTaken": {
+        "contact": 33,
+        "hunt": 0,
+        "spore": 60,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.3333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 262.31666666675676,
+        "blockedAt": -10,
+        "activations": 62,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 101,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 265.12,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 787,
+      "hp": 124,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "briar",
+        "fang"
+      ],
+      "peak": 54,
+      "damageTaken": {
+        "contact": 26,
+        "hunt": 0,
+        "spore": 60,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.16666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 264.3666666667549,
+        "blockedAt": -10,
+        "activations": 58,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 101,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 279.8,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 792,
+      "hp": 105,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 57,
+      "damageTaken": {
+        "contact": 150,
+        "hunt": 0,
+        "spore": 60,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.5,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 273.016666666747,
+        "blockedAt": -10,
+        "activations": 66,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 101,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 275.98,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 767,
+      "hp": 109.5,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 49,
+      "damageTaken": {
+        "contact": 11.5,
+        "hunt": 0,
+        "spore": 75.9,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 18.4
+      },
+      "signature": {
+        "charge": 0.3333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 273.73333333341304,
+        "blockedAt": -10,
+        "activations": 62,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 101,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 287.77,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 763,
+      "hp": 91,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 50,
+      "damageTaken": {
+        "contact": 28,
+        "hunt": 0,
+        "spore": 42,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.6666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 281.56666666673925,
+        "blockedAt": -10,
+        "activations": 58,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "duelist"
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 333,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 279.18,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 769,
+      "hp": 120,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 54,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 48
+      },
+      "signature": {
+        "charge": 0.9999999999999999,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 275.61666666674466,
+        "blockedAt": -10,
+        "activations": 71,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 333,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 297.13,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 799,
+      "hp": 120,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 61,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 48,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 295.2333333333935,
+        "blockedAt": -10,
+        "activations": 70,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 333,
+      "mode": "mastery",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 806,
+      "hp": 160,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "briar",
+        "fang"
+      ],
+      "peak": 44,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 284.51666666673657,
+        "blockedAt": -10,
+        "activations": 74,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 333,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 288.67,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 789,
+      "hp": 173.1,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "briar",
+        "fang"
+      ],
+      "peak": 65,
+      "damageTaken": {
+        "contact": 17.25,
+        "hunt": 0,
+        "spore": 55.199999999999996,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 285.500000000069,
+        "blockedAt": -10,
+        "activations": 73,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 333,
+      "mode": "inheritance",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 793,
+      "hp": 131,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 48,
+      "damageTaken": {
+        "contact": 15,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 294.5833333333941,
+        "blockedAt": -10,
+        "activations": 77,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "sweep"
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 333,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 280.02,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 792,
+      "hp": 80,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 55,
+      "damageTaken": {
+        "contact": 39,
+        "hunt": 0,
+        "spore": 72,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 48
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 279.7000000000743,
+        "blockedAt": -10,
+        "activations": 65,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 333,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 259.5,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 783,
+      "hp": 104,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 79,
+      "damageTaken": {
+        "contact": 20,
+        "hunt": 0,
+        "spore": 78,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.3333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 258.000000000094,
+        "blockedAt": -10,
+        "activations": 57,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 333,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 266.72,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 787,
+      "hp": 104,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "briar",
+        "fang"
+      ],
+      "peak": 53,
+      "damageTaken": {
+        "contact": 10,
+        "hunt": 0,
+        "spore": 54,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.6666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 262.63333333342314,
+        "blockedAt": -10,
+        "activations": 55,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 333,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 271.6,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 796,
+      "hp": 16.35,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "briar",
+        "fang"
+      ],
+      "peak": 60,
+      "damageTaken": {
+        "contact": 175.95,
+        "hunt": 0,
+        "spore": 82.80000000000001,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 36.8
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 271.60000000008165,
+        "blockedAt": -10,
+        "activations": 61,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 333,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 258.3,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 773,
+      "hp": 140,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "peak": 70,
+      "damageTaken": {
+        "contact": 10,
+        "hunt": 12,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.16666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 257.5500000000944,
+        "blockedAt": -10,
+        "activations": 57,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "duelist"
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 2026,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 297.75,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 803,
+      "hp": 147,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 59,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 18,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 297.38333333339153,
+        "blockedAt": -10,
+        "activations": 73,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 2026,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 299.6,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 815,
+      "hp": 167,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "dew",
+        "fang"
+      ],
+      "peak": 40,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.3333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 298.20000000005746,
+        "blockedAt": -10,
+        "activations": 75,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 2026,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 265.72,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 763,
+      "hp": 110,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 49,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.9999999999999999,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 259.63333333342587,
+        "blockedAt": -10,
+        "activations": 70,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 2026,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 286.13,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 801,
+      "hp": 179.1,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 50,
+      "damageTaken": {
+        "contact": 11.5,
+        "hunt": 0,
+        "spore": 69,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.16666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 285.500000000069,
+        "blockedAt": -10,
+        "activations": 76,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 2026,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 279.1,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 766,
+      "hp": 140,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 49,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.3333333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 276.700000000077,
+        "blockedAt": -10,
+        "activations": 71,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "sweep"
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 2026,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 260.83,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 761,
+      "hp": 124,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 72,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.16666666666666666,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 260.08333333342546,
+        "blockedAt": -10,
+        "activations": 58,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 2026,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 265.22,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 768,
+      "hp": 127,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "dew",
+        "fang"
+      ],
+      "peak": 53,
+      "damageTaken": {
+        "contact": 20.4,
+        "hunt": 0,
+        "spore": 78,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 265.2166666667541,
+        "blockedAt": -10,
+        "activations": 61,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 2026,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 272.03,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 769,
+      "hp": 180,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 55,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 78,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 272.0333333334146,
+        "blockedAt": -10,
+        "activations": 59,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 2026,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 262.98,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 771,
+      "hp": 129.2,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 51,
+      "damageTaken": {
+        "contact": 36.8,
+        "hunt": 0,
+        "spore": 75.9,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 36.8
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 262.9833333334228,
+        "blockedAt": -10,
+        "activations": 60,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ash",
+      "route": "blade-alternate",
+      "seed": 2026,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 263.9,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 768,
+      "hp": 117,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "fang",
+        "dew"
+      ],
+      "peak": 72,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 66,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.9999999999999999,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 259.0666666667597,
+        "blockedAt": -10,
+        "activations": 59,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "duelist"
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 7,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 273.5,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 780,
+      "hp": 43,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 69,
+      "damageTaken": {
+        "contact": 140,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "signature": {
+        "charge": 0.9107999999999983,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 271.70000000008156,
+        "blockedAt": -10,
+        "activations": 97,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 7,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 294.52,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 811,
+      "hp": 77,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 84,
+      "damageTaken": {
+        "contact": 125,
+        "hunt": 0,
+        "spore": 18,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.7421333333333324,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 293.05000000006214,
+        "blockedAt": -10,
+        "activations": 109,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 7,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 271.57,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 789,
+      "hp": 62,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 71,
+      "damageTaken": {
+        "contact": 131,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.8417042123444911,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 269.9000000000832,
+        "blockedAt": -10,
+        "activations": 97,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 7,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 270.67,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 772,
+      "hp": 102.93,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 55,
+      "damageTaken": {
+        "contact": 84.87,
+        "hunt": 0,
+        "spore": 27.599999999999998,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 18.4
+      },
+      "signature": {
+        "charge": 0.43010000000000015,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 269.81666666674994,
+        "blockedAt": -10,
+        "activations": 98,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 7,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 266.28,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 768,
+      "hp": 52,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 63,
+      "damageTaken": {
+        "contact": 131.4,
+        "hunt": 12,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "signature": {
+        "charge": 0.48070000000000024,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 265.3333333334207,
+        "blockedAt": -10,
+        "activations": 99,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "wildfire"
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 7,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 285.53,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 808,
+      "hp": 160,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 80,
+      "damageTaken": {
+        "contact": 15,
+        "hunt": 0,
+        "spore": 12,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.1265,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 285.28333333340254,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 7,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 293.17,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 801,
+      "hp": 165,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 59,
+      "damageTaken": {
+        "contact": 20.8,
+        "hunt": 0,
+        "spore": 18,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.9197784179572897,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 291.2333333333971,
+        "blockedAt": -10,
+        "activations": 100,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 7,
+      "mode": "mastery",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 803,
+      "hp": 154,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 66,
+      "damageTaken": {
+        "contact": 23,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.5144333333333335,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 298.9833333333901,
+        "blockedAt": -10,
+        "activations": 102,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 7,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 280.23,
+      "level": 20,
+      "levelAt60": 6,
+      "kills": 780,
+      "hp": 118.65,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 57,
+      "damageTaken": {
+        "contact": 26.45,
+        "hunt": 13.799999999999999,
+        "spore": 27.599999999999998,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 18.4
+      },
+      "signature": {
+        "charge": 0.05059999999999999,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 280.1333333334072,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 7,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 266.42,
+      "level": 18,
+      "levelAt60": 6,
+      "kills": 764,
+      "hp": 154,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 58,
+      "damageTaken": {
+        "contact": 15,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 264.18333333342173,
+        "blockedAt": -10,
+        "activations": 86,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "detonation"
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 42,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 270.87,
+      "level": 18,
+      "levelAt60": 6,
+      "kills": 769,
+      "hp": 74,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "peak": 62,
+      "damageTaken": {
+        "contact": 78,
+        "hunt": 0,
+        "spore": 18,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.44696666666666685,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 269.98333333341645,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 42,
+      "mode": "goal",
+      "outcome": "defeat",
+      "time": 199.17,
+      "level": 15,
+      "levelAt60": 6,
+      "kills": 500,
+      "hp": 0,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 46,
+      "damageTaken": {
+        "contact": 85,
+        "hunt": 6,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.3542,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 198.46666666671675,
+        "blockedAt": -10,
+        "activations": 67,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 42,
+      "mode": "mastery",
+      "outcome": "defeat",
+      "time": 199.17,
+      "level": 15,
+      "levelAt60": 6,
+      "kills": 500,
+      "hp": 0,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 46,
+      "damageTaken": {
+        "contact": 85,
+        "hunt": 6,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.3542,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 198.46666666671675,
+        "blockedAt": -10,
+        "activations": 67,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 42,
+      "mode": "mist",
+      "outcome": "defeat",
+      "time": 192.28,
+      "level": 15,
+      "levelAt60": 6,
+      "kills": 458,
+      "hp": 0,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 54,
+      "damageTaken": {
+        "contact": 71.2,
+        "hunt": 0,
+        "spore": 20.7,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.17709999999999992,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 191.93333333337822,
+        "blockedAt": -10,
+        "activations": 64,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 42,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 269.82,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 790,
+      "hp": 71,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "peak": 68,
+      "damageTaken": {
+        "contact": 126.4,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.1012,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 269.6166666667501,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "wildfire"
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 42,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 267.65,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 781,
+      "hp": 165,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "peak": 62,
+      "damageTaken": {
+        "contact": 23,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.18553333333333324,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 267.2833333334189,
+        "blockedAt": -10,
+        "activations": 89,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 42,
+      "mode": "goal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 783,
+      "hp": 140.6,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 65,
+      "damageTaken": {
+        "contact": 55.4,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 300,
+        "blockedAt": -10,
+        "activations": 106,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 42,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 277.77,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 773,
+      "hp": 149,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 57,
+      "damageTaken": {
+        "contact": 53,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 275.4666666667448,
+        "blockedAt": -10,
+        "activations": 94,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 42,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 283.08,
+      "level": 20,
+      "levelAt60": 6,
+      "kills": 797,
+      "hp": 89.25,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 80,
+      "damageTaken": {
+        "contact": 75.0375,
+        "hunt": 0,
+        "spore": 34.5,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 36.8
+      },
+      "signature": {
+        "charge": 0.8517666666666652,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 281.40000000007274,
+        "blockedAt": -10,
+        "activations": 94,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 42,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 284.22,
+      "level": 18,
+      "levelAt60": 5,
+      "kills": 775,
+      "hp": 159,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "peak": 48,
+      "damageTaken": {
+        "contact": 0,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.9017099492055578,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 282.3333333334052,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "detonation"
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 101,
+      "mode": "normal",
+      "outcome": "defeat",
+      "time": 230.9,
+      "level": 17,
+      "levelAt60": 6,
+      "kills": 652,
+      "hp": 0,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 74,
+      "damageTaken": {
+        "contact": 144,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.2781850269377501,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 230.3000000000754,
+        "blockedAt": -10,
+        "activations": 78,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 101,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 293.22,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 780,
+      "hp": 105,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "dew"
+      ],
+      "peak": 66,
+      "damageTaken": {
+        "contact": 188,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 48
+      },
+      "signature": {
+        "charge": 0.2445666666666665,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 292.73333333339576,
+        "blockedAt": -10,
+        "activations": 101,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 101,
+      "mode": "mastery",
+      "outcome": "defeat",
+      "time": 194,
+      "level": 15,
+      "levelAt60": 6,
+      "kills": 484,
+      "hp": 0,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 45,
+      "damageTaken": {
+        "contact": 91,
+        "hunt": 12,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 191.60000000004462,
+        "blockedAt": -10,
+        "activations": 64,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 101,
+      "mode": "mist",
+      "outcome": "defeat",
+      "time": 234.42,
+      "level": 18,
+      "levelAt60": 6,
+      "kills": 692,
+      "hp": 0,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 77,
+      "damageTaken": {
+        "contact": 143.95,
+        "hunt": 13.799999999999999,
+        "spore": 48.3,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.6777564756366853,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 233.00000000007756,
+        "blockedAt": -10,
+        "activations": 77,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 101,
+      "mode": "inheritance",
+      "outcome": "defeat",
+      "time": 241.8,
+      "level": 18,
+      "levelAt60": 6,
+      "kills": 737,
+      "hp": 0,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 57,
+      "damageTaken": {
+        "contact": 217,
+        "hunt": 0,
+        "spore": 18,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 239.30000000008258,
+        "blockedAt": -10,
+        "activations": 82,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "wildfire"
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 101,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 274.75,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 791,
+      "hp": 39,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 59,
+      "damageTaken": {
+        "contact": 116,
+        "hunt": 0,
+        "spore": 48,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "signature": {
+        "charge": 0.2445666666666665,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 274.2666666667459,
+        "blockedAt": -10,
+        "activations": 97,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 101,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 274.93,
+      "level": 18,
+      "levelAt60": 6,
+      "kills": 763,
+      "hp": 119,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "dew"
+      ],
+      "peak": 72,
+      "damageTaken": {
+        "contact": 46.4,
+        "hunt": 0,
+        "spore": 48,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "signature": {
+        "charge": 0.7168333333333325,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 273.5166666667466,
+        "blockedAt": -10,
+        "activations": 97,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 101,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 272.72,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 782,
+      "hp": 119,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 63,
+      "damageTaken": {
+        "contact": 68,
+        "hunt": 12,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.209676369942971,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 272.2666666667477,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 101,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 291.48,
+      "level": 20,
+      "levelAt60": 6,
+      "kills": 780,
+      "hp": 106.5,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 97,
+      "damageTaken": {
+        "contact": 60.95,
+        "hunt": 0,
+        "spore": 27.599999999999998,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 36.8
+      },
+      "signature": {
+        "charge": 0.016866666666666665,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 291.4500000000636,
+        "blockedAt": -10,
+        "activations": 104,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 101,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 288.07,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 798,
+      "hp": 92,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "briar"
+      ],
+      "peak": 48,
+      "damageTaken": {
+        "contact": 82,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.5144333333333335,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 287.0500000000676,
+        "blockedAt": -10,
+        "activations": 100,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "detonation"
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 333,
+      "mode": "normal",
+      "outcome": "defeat",
+      "time": 232.95,
+      "level": 17,
+      "levelAt60": 6,
+      "kills": 692,
+      "hp": 0,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 70,
+      "damageTaken": {
+        "contact": 132,
+        "hunt": 0,
+        "spore": 25,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.42525139228038505,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 232.08333333341017,
+        "blockedAt": -10,
+        "activations": 82,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 333,
+      "mode": "goal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 803,
+      "hp": 58,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "dew"
+      ],
+      "peak": 70,
+      "damageTaken": {
+        "contact": 218.8,
+        "hunt": 12,
+        "spore": 18,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 48
+      },
+      "signature": {
+        "charge": 0.5987666666666664,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 298.81666666672356,
+        "blockedAt": -10,
+        "activations": 102,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 333,
+      "mode": "mastery",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 806,
+      "hp": 70.6,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 71,
+      "damageTaken": {
+        "contact": 144.4,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.7083999999999993,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 298.6000000000571,
+        "blockedAt": -10,
+        "activations": 112,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 333,
+      "mode": "mist",
+      "outcome": "defeat",
+      "time": 203.95,
+      "level": 16,
+      "levelAt60": 6,
+      "kills": 525,
+      "hp": 0,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 45,
+      "damageTaken": {
+        "contact": 87.4,
+        "hunt": 13.799999999999999,
+        "spore": 20.7,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.776182908938607,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 202.1666666667197,
+        "blockedAt": -10,
+        "activations": 70,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 333,
+      "mode": "inheritance",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 807,
+      "hp": 107,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 82,
+      "damageTaken": {
+        "contact": 104,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.6577999999999995,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 298.700000000057,
+        "blockedAt": -10,
+        "activations": 111,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "wildfire"
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 333,
+      "mode": "normal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 780,
+      "hp": 139,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 52,
+      "damageTaken": {
+        "contact": 26,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 297.9166666667244,
+        "blockedAt": -10,
+        "activations": 99,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 333,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 274.8,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 773,
+      "hp": 165,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "dew"
+      ],
+      "peak": 56,
+      "damageTaken": {
+        "contact": 15,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.13493333333333332,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 274.5333333334123,
+        "blockedAt": -10,
+        "activations": 95,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 333,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 280.72,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 799,
+      "hp": 165,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 47,
+      "damageTaken": {
+        "contact": 15,
+        "hunt": 0,
+        "spore": 42,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.17709999999999992,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 280.36666666674034,
+        "blockedAt": -10,
+        "activations": 95,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 333,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 280.83,
+      "level": 20,
+      "levelAt60": 6,
+      "kills": 779,
+      "hp": 124.9,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 72,
+      "damageTaken": {
+        "contact": 11.5,
+        "hunt": 0,
+        "spore": 69,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 18.4
+      },
+      "signature": {
+        "charge": 0.9276666666666649,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 278.43333333340877,
+        "blockedAt": -10,
+        "activations": 93,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 333,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 296.1,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 793,
+      "hp": 143,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 53,
+      "damageTaken": {
+        "contact": 10,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.08433333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 295.93333333339285,
+        "blockedAt": -10,
+        "activations": 97,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "detonation"
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 2026,
+      "mode": "normal",
+      "outcome": "defeat",
+      "time": 241.35,
+      "level": 18,
+      "levelAt60": 6,
+      "kills": 727,
+      "hp": 0,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "peak": 62,
+      "damageTaken": {
+        "contact": 133,
+        "hunt": 0,
+        "spore": 72,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.8913637280222858,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 239.43333333341602,
+        "blockedAt": -10,
+        "activations": 83,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 2026,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 291.32,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 789,
+      "hp": 61,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 79,
+      "damageTaken": {
+        "contact": 106,
+        "hunt": 0,
+        "spore": 42,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.9027799019934177,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 289.516666666732,
+        "blockedAt": -10,
+        "activations": 107,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 2026,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 284.32,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 796,
+      "hp": 128,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "dew"
+      ],
+      "peak": 76,
+      "damageTaken": {
+        "contact": 189.4,
+        "hunt": 0,
+        "spore": 48,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.9016285617385509,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 282.50000000007174,
+        "blockedAt": -10,
+        "activations": 97,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 2026,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 291.6,
+      "level": 20,
+      "levelAt60": 6,
+      "kills": 787,
+      "hp": 83.5,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "dew"
+      ],
+      "peak": 55,
+      "damageTaken": {
+        "contact": 315.1,
+        "hunt": 0,
+        "spore": 41.4,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.961399999999998,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 289.7000000000652,
+        "blockedAt": -10,
+        "activations": 99,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 2026,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 284.4,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 793,
+      "hp": 71,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "peak": 62,
+      "damageTaken": {
+        "contact": 174.5,
+        "hunt": 12,
+        "spore": 42,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.37950000000000006,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 283.6500000000707,
+        "blockedAt": -10,
+        "activations": 104,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "wildfire"
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 2026,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 290.9,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 801,
+      "hp": 149,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "peak": 78,
+      "damageTaken": {
+        "contact": 24,
+        "hunt": 0,
+        "spore": 12,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.8601999999999985,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 289.20000000006564,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 2026,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 288.02,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 791,
+      "hp": 165,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "sail",
+        "coal"
+      ],
+      "peak": 66,
+      "damageTaken": {
+        "contact": 10,
+        "hunt": 0,
+        "spore": 24,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 285.55000000006896,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 2026,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 275.62,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 769,
+      "hp": 142,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "dew"
+      ],
+      "peak": 53,
+      "damageTaken": {
+        "contact": 77,
+        "hunt": 0,
+        "spore": 36,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 32
+      },
+      "signature": {
+        "charge": 0.3120333333333333,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 275.00000000007856,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 2026,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 275.7,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 768,
+      "hp": 134.2,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "coal",
+        "dew"
+      ],
+      "peak": 67,
+      "damageTaken": {
+        "contact": 77.05000000000001,
+        "hunt": 0,
+        "spore": 48.3,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 36.8
+      },
+      "signature": {
+        "charge": 0.6830999999999994,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 274.35000000007915,
+        "blockedAt": -10,
+        "activations": 98,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "ember",
+      "route": "comet-alternate",
+      "seed": 2026,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 289.58,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 799,
+      "hp": 122,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "peak": 54,
+      "damageTaken": {
+        "contact": 46,
+        "hunt": 0,
+        "spore": 30,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 16
+      },
+      "signature": {
+        "charge": 0.42307779276287305,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 288.55000000006623,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "detonation"
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 7,
+      "mode": "normal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 798,
+      "hp": 126.51,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 84,
+      "damageTaken": {
+        "contact": 65.7475,
+        "hunt": 8.669999999999998,
+        "spore": 39.01499999999999,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 46.239999999999995
+      },
+      "signature": {
+        "charge": 0.3333333333333333,
+        "guard": 0,
+        "guardUntil": 292.4333333333997,
+        "cooldownUntil": 293.4333333333997,
+        "hitAt": 296.35000000005914,
+        "activatedAt": 288.4333333333997,
+        "blockedAt": 277.1833333334099,
+        "activations": 30,
+        "absorbed": 130.04999999999995
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 7,
+      "mode": "goal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 776,
+      "hp": 132.03,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 65,
+      "damageTaken": {
+        "contact": 18.0625,
+        "hunt": 0,
+        "spore": 39.015,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 46.239999999999995
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 303.65000000005614,
+        "cooldownUntil": 304.65000000005614,
+        "hitAt": 299.65000000005614,
+        "activatedAt": 299.65000000005614,
+        "blockedAt": 276.9833333334101,
+        "activations": 32,
+        "absorbed": 94.10562499999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 7,
+      "mode": "mastery",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 795,
+      "hp": 145.19,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 99,
+      "damageTaken": {
+        "contact": 75.98150000000001,
+        "hunt": 8.669999999999998,
+        "spore": 30.345,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 57.8
+      },
+      "signature": {
+        "charge": 0.3333333333333333,
+        "guard": 0,
+        "guardUntil": 294.5500000000644,
+        "cooldownUntil": 295.5500000000644,
+        "hitAt": 298.85000000005687,
+        "activatedAt": 290.5500000000644,
+        "blockedAt": 275.13333333341177,
+        "activations": 29,
+        "absorbed": 128.98749999999998
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 7,
+      "mode": "mist",
+      "outcome": "survived",
+      "time": 300,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 806,
+      "hp": 155.38,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 88,
+      "damageTaken": {
+        "contact": 101.78218749999996,
+        "hunt": 0,
+        "spore": 44.86725,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 53.17599999999999
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 15.014750000000001,
+        "guardUntil": 301.75000000005787,
+        "cooldownUntil": 302.75000000005787,
+        "hitAt": 297.75000000005787,
+        "activatedAt": 297.75000000005787,
+        "blockedAt": 299.7666666667227,
+        "activations": 32,
+        "absorbed": 117.56881249999998
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 7,
+      "mode": "inheritance",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 804,
+      "hp": 114.28,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 115,
+      "damageTaken": {
+        "contact": 45.5175,
+        "hunt": 0,
+        "spore": 43.35,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 34.91
+      },
+      "signature": {
+        "charge": 0.3333333333333333,
+        "guard": 0,
+        "guardUntil": 294.8000000000642,
+        "cooldownUntil": 295.8000000000642,
+        "hitAt": 298.7333333333903,
+        "activatedAt": 290.8000000000642,
+        "blockedAt": 273.93333333341286,
+        "activations": 30,
+        "absorbed": 113.20249999999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "bulwark"
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 7,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 276.43,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 769,
+      "hp": 171,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 74,
+      "damageTaken": {
+        "contact": 39.099999999999994,
+        "hunt": 0,
+        "spore": 10.2,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 27.2
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 6.4,
+        "guardUntil": 278.1333333334127,
+        "cooldownUntil": 279.1333333334127,
+        "hitAt": 274.1333333334127,
+        "activatedAt": 274.1333333334127,
+        "blockedAt": 275.8500000000778,
+        "activations": 30,
+        "absorbed": 105.39999999999998
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 7,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 274.38,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 766,
+      "hp": 158.25,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 73,
+      "damageTaken": {
+        "contact": 36.55,
+        "hunt": 0,
+        "spore": 15.299999999999999,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 27.2
+      },
+      "signature": {
+        "charge": 0.3333333333333333,
+        "guard": 0,
+        "guardUntil": 272.4500000000845,
+        "cooldownUntil": 273.4500000000845,
+        "hitAt": 274.38333333341245,
+        "activatedAt": 268.4500000000845,
+        "blockedAt": 238.4500000000819,
+        "activations": 31,
+        "absorbed": 75.22499999999998
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 7,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 279.58,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 800,
+      "hp": 162.1,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 73,
+      "damageTaken": {
+        "contact": 15.3,
+        "hunt": 0,
+        "spore": 15.299999999999999,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 40.8
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 283.5833333334077,
+        "cooldownUntil": 284.5833333334077,
+        "hitAt": 279.5833333334077,
+        "activatedAt": 279.5833333334077,
+        "blockedAt": 275.2000000000784,
+        "activations": 31,
+        "absorbed": 79.89999999999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 7,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 289.47,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 773,
+      "hp": 176.99,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 71,
+      "damageTaken": {
+        "contact": 17.595,
+        "hunt": 0,
+        "spore": 17.595,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 15.639999999999999
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 292.5666666667329,
+        "cooldownUntil": 293.5666666667329,
+        "hitAt": 288.5666666667329,
+        "activatedAt": 288.5666666667329,
+        "blockedAt": 267.9333333334183,
+        "activations": 30,
+        "absorbed": 92.37374999999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 7,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 276.35,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 772,
+      "hp": 194.5,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 65,
+      "damageTaken": {
+        "contact": 22.1,
+        "hunt": 0,
+        "spore": 25.5,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 276.3333333334143,
+        "cooldownUntil": 277.3333333334143,
+        "hitAt": 272.3333333334143,
+        "activatedAt": 272.3333333334143,
+        "blockedAt": 275.600000000078,
+        "activations": 31,
+        "absorbed": 91.79999999999998
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "horizon"
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 42,
+      "mode": "normal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 780,
+      "hp": 110.61,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 67,
+      "damageTaken": {
+        "contact": 50.574999999999996,
+        "hunt": 0,
+        "spore": 43.349999999999994,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 57.8
+      },
+      "signature": {
+        "charge": 0.5,
+        "guard": 0,
+        "guardUntil": 292.9666666667325,
+        "cooldownUntil": 293.9666666667325,
+        "hitAt": 298.85000000005687,
+        "activatedAt": 288.9666666667325,
+        "blockedAt": 290.01666666673157,
+        "activations": 30,
+        "absorbed": 88.25337499999998
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 42,
+      "mode": "goal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 799,
+      "hp": 135.18,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 96,
+      "damageTaken": {
+        "contact": 59.967499999999994,
+        "hunt": 0,
+        "spore": 47.685,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 34.67999999999999
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 287.2333333334044,
+        "cooldownUntil": 288.2333333334044,
+        "hitAt": 299.65000000005614,
+        "activatedAt": 283.2333333334044,
+        "blockedAt": 286.96666666673434,
+        "activations": 28,
+        "absorbed": 112.71
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 42,
+      "mode": "mastery",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 773,
+      "hp": 67.33,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 69,
+      "damageTaken": {
+        "contact": 75.68187499999999,
+        "hunt": 0,
+        "spore": 38.522499999999994,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 57.8
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 302.78333333339026,
+        "cooldownUntil": 303.78333333339026,
+        "hitAt": 298.78333333339026,
+        "activatedAt": 298.78333333339026,
+        "blockedAt": 267.58333333341864,
+        "activations": 30,
+        "absorbed": 103.80999999999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 42,
+      "mode": "mist",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 751,
+      "hp": 58.29,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 67,
+      "damageTaken": {
+        "contact": 70.35765624999998,
+        "hunt": 0,
+        "spore": 39.88199999999999,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 66.46999999999998
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 292.30000000006646,
+        "cooldownUntil": 293.30000000006646,
+        "hitAt": 299.416666666723,
+        "activatedAt": 288.30000000006646,
+        "blockedAt": 243.78333333341948,
+        "activations": 30,
+        "absorbed": 115.88297499999996
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 42,
+      "mode": "inheritance",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 814,
+      "hp": 96.22,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 75,
+      "damageTaken": {
+        "contact": 58.029999999999994,
+        "hunt": 0,
+        "spore": 43.35,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 57.8
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 302.10000000005755,
+        "cooldownUntil": 303.10000000005755,
+        "hitAt": 298.10000000005755,
+        "activatedAt": 298.10000000005755,
+        "blockedAt": 286.45000000006814,
+        "activations": 30,
+        "absorbed": 85.928125
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "bulwark"
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 42,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 271.1,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 801,
+      "hp": 183.8,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 63,
+      "damageTaken": {
+        "contact": 47.175,
+        "hunt": 0,
+        "spore": 30.599999999999998,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0.5,
+        "guard": 0,
+        "guardUntil": 269.10000000008756,
+        "cooldownUntil": 270.10000000008756,
+        "hitAt": 271.1000000000821,
+        "activatedAt": 265.10000000008756,
+        "blockedAt": 266.8833333334193,
+        "activations": 29,
+        "absorbed": 64.94
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 42,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 277.72,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 758,
+      "hp": 123.1,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 59,
+      "damageTaken": {
+        "contact": 39.099999999999994,
+        "hunt": 0,
+        "spore": 20.4,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 54.4
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 280.8333333334102,
+        "cooldownUntil": 281.8333333334102,
+        "hitAt": 276.8333333334102,
+        "activatedAt": 276.8333333334102,
+        "blockedAt": 270.33333333341614,
+        "activations": 30,
+        "absorbed": 66.64
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 42,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 290.87,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 811,
+      "hp": 179.2,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 82,
+      "damageTaken": {
+        "contact": 43.35,
+        "hunt": 0,
+        "spore": 10.2,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 13.6
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 294.4500000000645,
+        "cooldownUntil": 295.4500000000645,
+        "hitAt": 290.4500000000645,
+        "activatedAt": 290.4500000000645,
+        "blockedAt": 259.1833333334263,
+        "activations": 31,
+        "absorbed": 61.2
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 42,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 269.78,
+      "level": 20,
+      "levelAt60": 6,
+      "kills": 790,
+      "hp": 189.36,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 61,
+      "damageTaken": {
+        "contact": 19.549999999999997,
+        "hunt": 0,
+        "spore": 17.595,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 15.639999999999999
+      },
+      "signature": {
+        "charge": 0.16666666666666666,
+        "guard": 0,
+        "guardUntil": 268.3666666667549,
+        "cooldownUntil": 269.3666666667549,
+        "hitAt": 269.78333333341664,
+        "activatedAt": 264.3666666667549,
+        "blockedAt": 266.68333333341945,
+        "activations": 29,
+        "absorbed": 86.50874999999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 42,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 269.38,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 797,
+      "hp": 191.4,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 71,
+      "damageTaken": {
+        "contact": 17,
+        "hunt": 0,
+        "spore": 20.4,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 13.6
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 273.383333333417,
+        "cooldownUntil": 274.383333333417,
+        "hitAt": 269.383333333417,
+        "activatedAt": 269.383333333417,
+        "blockedAt": 248.63333333342334,
+        "activations": 30,
+        "absorbed": 49.300000000000004
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "horizon"
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 101,
+      "mode": "normal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 780,
+      "hp": 145.58,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 74,
+      "damageTaken": {
+        "contact": 30.164374999999996,
+        "hunt": 17.339999999999996,
+        "spore": 47.685,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 23.119999999999997
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 299.48333333339326,
+        "cooldownUntil": 300.48333333339326,
+        "hitAt": 295.48333333339326,
+        "activatedAt": 295.48333333339326,
+        "blockedAt": 296.6666666667255,
+        "activations": 29,
+        "absorbed": 151.29149999999996
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 101,
+      "mode": "goal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 771,
+      "hp": 151.86,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 82,
+      "damageTaken": {
+        "contact": 18.0625,
+        "hunt": 0,
+        "spore": 60.69,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 57.8
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 302.2166666667241,
+        "cooldownUntil": 303.2166666667241,
+        "hitAt": 298.2166666667241,
+        "activatedAt": 298.2166666667241,
+        "blockedAt": 248.46666666675654,
+        "activations": 31,
+        "absorbed": 67.91499999999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 101,
+      "mode": "mastery",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 775,
+      "hp": 156.59,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 80,
+      "damageTaken": {
+        "contact": 43.349999999999994,
+        "hunt": 8.669999999999998,
+        "spore": 43.35,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 11.559999999999999
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 303.78333333338935,
+        "cooldownUntil": 304.78333333338935,
+        "hitAt": 299.78333333338935,
+        "activatedAt": 299.78333333338935,
+        "blockedAt": 287.2833333334007,
+        "activations": 31,
+        "absorbed": 73.69500000000001
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 101,
+      "mode": "mist",
+      "outcome": "survived",
+      "time": 300,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 812,
+      "hp": 64.7,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 99,
+      "damageTaken": {
+        "contact": 54.00687499999999,
+        "hunt": 0,
+        "spore": 74.77874999999997,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 66.46999999999998
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 290.68333333340127,
+        "cooldownUntil": 291.68333333340127,
+        "hitAt": 286.68333333340127,
+        "activatedAt": 286.68333333340127,
+        "blockedAt": 249.35000000009057,
+        "activations": 30,
+        "absorbed": 173.2374375
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 101,
+      "mode": "inheritance",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 803,
+      "hp": 115.73,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 117,
+      "damageTaken": {
+        "contact": 43.349999999999994,
+        "hunt": 0,
+        "spore": 47.192499999999995,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 46.239999999999995
+      },
+      "signature": {
+        "charge": 0.6666666666666666,
+        "guard": 0,
+        "guardUntil": 287.66666666673734,
+        "cooldownUntil": 288.66666666673734,
+        "hitAt": 292.100000000063,
+        "activatedAt": 283.66666666673734,
+        "blockedAt": 286.7833333334012,
+        "activations": 28,
+        "absorbed": 112.66062500000001
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "bulwark"
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 101,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 288.42,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 796,
+      "hp": 177.8,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 101,
+      "damageTaken": {
+        "contact": 28.875,
+        "hunt": 0,
+        "spore": 10.2,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 27.2
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 292.00000000006673,
+        "cooldownUntil": 293.00000000006673,
+        "hitAt": 288.00000000006673,
+        "activatedAt": 288.00000000006673,
+        "blockedAt": 283.11666666673784,
+        "activations": 31,
+        "absorbed": 131.34999999999997
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 101,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 295.92,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 786,
+      "hp": 149,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 48,
+      "damageTaken": {
+        "contact": 49.3,
+        "hunt": 0,
+        "spore": 20.4,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 68
+      },
+      "signature": {
+        "charge": 0.6666666666666666,
+        "guard": 0,
+        "guardUntil": 290.65000000006796,
+        "cooldownUntil": 291.65000000006796,
+        "hitAt": 295.9166666667262,
+        "activatedAt": 286.65000000006796,
+        "blockedAt": 276.7333333334103,
+        "activations": 32,
+        "absorbed": 114.74999999999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 101,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 288.12,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 788,
+      "hp": 198.2,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 58,
+      "damageTaken": {
+        "contact": 56.5,
+        "hunt": 10.2,
+        "spore": 10.2,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 40.8
+      },
+      "signature": {
+        "charge": 0.16666666666666666,
+        "guard": 0,
+        "guardUntil": 287.01666666673793,
+        "cooldownUntil": 288.01666666673793,
+        "hitAt": 288.1166666667333,
+        "activatedAt": 283.01666666673793,
+        "blockedAt": 284.016666666737,
+        "activations": 29,
+        "absorbed": 86.29999999999998
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 101,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 280.58,
+      "level": 20,
+      "levelAt60": 6,
+      "kills": 801,
+      "hp": 101.72,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 99,
+      "damageTaken": {
+        "contact": 101.66,
+        "hunt": 0,
+        "spore": 29.324999999999996,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 46.919999999999995
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 280.06666666674425,
+        "cooldownUntil": 281.06666666674425,
+        "hitAt": 276.06666666674425,
+        "activatedAt": 276.06666666674425,
+        "blockedAt": 258.4500000000936,
+        "activations": 31,
+        "absorbed": 85.4335
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 101,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 268.85,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 804,
+      "hp": 148.6,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 96,
+      "damageTaken": {
+        "contact": 15.3,
+        "hunt": 0,
+        "spore": 20.4,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 40.8
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 271.2833333334189,
+        "cooldownUntil": 272.2833333334189,
+        "hitAt": 267.2833333334189,
+        "activatedAt": 267.2833333334189,
+        "blockedAt": 239.96666666674977,
+        "activations": 30,
+        "absorbed": 51.85
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "horizon"
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 333,
+      "mode": "normal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 776,
+      "hp": 162.86,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 62,
+      "damageTaken": {
+        "contact": 20.229999999999997,
+        "hunt": 8.669999999999998,
+        "spore": 34.68,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 13.957499999999996
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 300.2666666667259,
+        "cooldownUntil": 301.2666666667259,
+        "hitAt": 296.2666666667259,
+        "activatedAt": 296.2666666667259,
+        "blockedAt": 284.90000000006955,
+        "activations": 32,
+        "absorbed": 140.6575
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 333,
+      "mode": "goal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 801,
+      "hp": 177.36,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 92,
+      "damageTaken": {
+        "contact": 41.10062499999999,
+        "hunt": 17.339999999999996,
+        "spore": 43.349999999999994,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 34.67999999999999
+      },
+      "signature": {
+        "charge": 0.16666666666666666,
+        "guard": 0,
+        "guardUntil": 297.200000000062,
+        "cooldownUntil": 298.200000000062,
+        "hitAt": 299.00000000005673,
+        "activatedAt": 293.200000000062,
+        "blockedAt": 296.55000000005896,
+        "activations": 29,
+        "absorbed": 167.16
+      },
+      "championsDefeated": [
+        "root",
+        "fang"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 333,
+      "mode": "mastery",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 805,
+      "hp": 151.86,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 81,
+      "damageTaken": {
+        "contact": 81.14999999999998,
+        "hunt": 8.669999999999998,
+        "spore": 52.019999999999996,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 57.8
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 15.665000000000001,
+        "guardUntil": 303.55000000005623,
+        "cooldownUntil": 304.55000000005623,
+        "hitAt": 299.55000000005623,
+        "activatedAt": 299.55000000005623,
+        "blockedAt": 299.58333333338953,
+        "activations": 31,
+        "absorbed": 150.15837499999998
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 333,
+      "mode": "mist",
+      "outcome": "survived",
+      "time": 300,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 796,
+      "hp": 180.44,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 96,
+      "damageTaken": {
+        "contact": 139.92109374999995,
+        "hunt": 0,
+        "spore": 59.823,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 39.88199999999999
+      },
+      "signature": {
+        "charge": 0.6666666666666666,
+        "guard": 0,
+        "guardUntil": 292.3166666667331,
+        "cooldownUntil": 293.3166666667331,
+        "hitAt": 299.4833333333896,
+        "activatedAt": 288.3166666667331,
+        "blockedAt": 289.0833333333991,
+        "activations": 31,
+        "absorbed": 164.21581249999997
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 333,
+      "mode": "inheritance",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 809,
+      "hp": 89.23,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 86,
+      "damageTaken": {
+        "contact": 54.18749999999999,
+        "hunt": 0,
+        "spore": 52.019999999999996,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 46.239999999999995
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 298.5166666667275,
+        "cooldownUntil": 299.5166666667275,
+        "hitAt": 294.5166666667275,
+        "activatedAt": 294.5166666667275,
+        "blockedAt": 296.2166666667259,
+        "activations": 29,
+        "absorbed": 115.96124999999996
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "bulwark"
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 333,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 280.33,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 810,
+      "hp": 147.75,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 78,
+      "damageTaken": {
+        "contact": 45.05,
+        "hunt": 0,
+        "spore": 15.299999999999999,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 27.2
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 284.33333333340704,
+        "cooldownUntil": 285.33333333340704,
+        "hitAt": 280.33333333340704,
+        "activatedAt": 280.33333333340704,
+        "blockedAt": 258.50000000009356,
+        "activations": 30,
+        "absorbed": 66.3
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 333,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 279.28,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 804,
+      "hp": 205,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 100,
+      "damageTaken": {
+        "contact": 40.8,
+        "hunt": 0,
+        "spore": 10.2,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 0,
+        "guardUntil": 278.3666666667458,
+        "cooldownUntil": 279.3666666667458,
+        "hitAt": 274.3666666667458,
+        "activatedAt": 274.3666666667458,
+        "blockedAt": 276.06666666674425,
+        "activations": 30,
+        "absorbed": 71.4
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 333,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 280.63,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 809,
+      "hp": 194.4,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 62,
+      "damageTaken": {
+        "contact": 52.25,
+        "hunt": 0,
+        "spore": 30.599999999999998,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 27.2
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 282.13333333340904,
+        "cooldownUntil": 283.13333333340904,
+        "hitAt": 278.13333333340904,
+        "activatedAt": 278.13333333340904,
+        "blockedAt": 266.6333333334195,
+        "activations": 30,
+        "absorbed": 89.69999999999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 333,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 274.53,
+      "level": 20,
+      "levelAt60": 6,
+      "kills": 786,
+      "hp": 195.36,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 85,
+      "damageTaken": {
+        "contact": 112.168125,
+        "hunt": 0,
+        "spore": 46.919999999999995,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 15.639999999999999
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 276.38333333341427,
+        "cooldownUntil": 277.38333333341427,
+        "hitAt": 272.38333333341427,
+        "activatedAt": 272.38333333341427,
+        "blockedAt": 266.9833333334192,
+        "activations": 29,
+        "absorbed": 132.93999999999997
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 333,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 270.85,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 766,
+      "hp": 156.7,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 56,
+      "damageTaken": {
+        "contact": 46.3,
+        "hunt": 0,
+        "spore": 10.2,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 27.2
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 271.2833333334189,
+        "cooldownUntil": 272.2833333334189,
+        "hitAt": 267.2833333334189,
+        "activatedAt": 267.2833333334189,
+        "blockedAt": 249.05000000009034,
+        "activations": 29,
+        "absorbed": 74.4
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "horizon"
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 2026,
+      "mode": "normal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 784,
+      "hp": 179.32,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 73,
+      "damageTaken": {
+        "contact": 71.28312499999998,
+        "hunt": 8.669999999999998,
+        "spore": 60.690000000000005,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 34.67999999999999
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 296.483333333396,
+        "cooldownUntil": 297.483333333396,
+        "hitAt": 299.5166666667229,
+        "activatedAt": 292.483333333396,
+        "blockedAt": 295.9833333333928,
+        "activations": 29,
+        "absorbed": 98.98249999999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 2026,
+      "mode": "goal",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 778,
+      "hp": 98.62,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 78,
+      "damageTaken": {
+        "contact": 64.6,
+        "hunt": 0,
+        "spore": 30.345,
+        "slam": 13.004999999999999,
+        "charge": 0,
+        "thorns": 46.239999999999995
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 290.75000000006787,
+        "cooldownUntil": 291.75000000006787,
+        "hitAt": 295.80000000005964,
+        "activatedAt": 286.75000000006787,
+        "blockedAt": 277.9166666667426,
+        "activations": 29,
+        "absorbed": 103.3175
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 2026,
+      "mode": "mastery",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 786,
+      "hp": 178.97,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 72,
+      "damageTaken": {
+        "contact": 63.443999999999996,
+        "hunt": 8.669999999999998,
+        "spore": 39.01499999999999,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 23.119999999999997
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 8.440000000000001,
+        "guardUntil": 300.06666666672606,
+        "cooldownUntil": 301.06666666672606,
+        "hitAt": 296.06666666672606,
+        "activatedAt": 296.06666666672606,
+        "blockedAt": 296.3000000000592,
+        "activations": 30,
+        "absorbed": 88.14499999999998
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 2026,
+      "mode": "mist",
+      "outcome": "survived",
+      "time": 300,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 787,
+      "hp": 178.82,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 96,
+      "damageTaken": {
+        "contact": 47.775312499999984,
+        "hunt": 9.970499999999998,
+        "spore": 39.882,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 53.17599999999999
+      },
+      "signature": {
+        "charge": 0.8333333333333333,
+        "guard": 0,
+        "guardUntil": 289.0833333334027,
+        "cooldownUntil": 290.0833333334027,
+        "hitAt": 299.5166666667229,
+        "activatedAt": 285.0833333334027,
+        "blockedAt": 267.95000000008497,
+        "activations": 30,
+        "absorbed": 119.14747499999997
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 2026,
+      "mode": "inheritance",
+      "outcome": "survived",
+      "time": 300,
+      "level": 19,
+      "levelAt60": 7,
+      "kills": 771,
+      "hp": 174.98,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 67,
+      "damageTaken": {
+        "contact": 34.91,
+        "hunt": 0,
+        "spore": 39.01499999999999,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 34.67999999999999
+      },
+      "signature": {
+        "charge": 0.6666666666666666,
+        "guard": 0,
+        "guardUntil": 286.4000000000718,
+        "cooldownUntil": 287.4000000000718,
+        "hitAt": 297.8166666667245,
+        "activatedAt": 282.4000000000718,
+        "blockedAt": 249.01666666675698,
+        "activations": 29,
+        "absorbed": 150.59187499999996
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "bulwark"
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 2026,
+      "mode": "normal",
+      "outcome": "victory",
+      "time": 289.47,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 780,
+      "hp": 146,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 57,
+      "damageTaken": {
+        "contact": 50.489999999999995,
+        "hunt": 0,
+        "spore": 35.7,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 68
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 292.8666666667326,
+        "cooldownUntil": 293.8666666667326,
+        "hitAt": 288.8666666667326,
+        "activatedAt": 288.8666666667326,
+        "blockedAt": 230.35000000007545,
+        "activations": 30,
+        "absorbed": 87.125
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 2026,
+      "mode": "goal",
+      "outcome": "victory",
+      "time": 276.58,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 759,
+      "hp": 204.5,
+      "rerollsUsed": 1,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "peak": 55,
+      "damageTaken": {
+        "contact": 64.6,
+        "hunt": 0,
+        "spore": 10.2,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 0
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 6.4,
+        "guardUntil": 278.2000000000793,
+        "cooldownUntil": 279.2000000000793,
+        "hitAt": 274.2000000000793,
+        "activatedAt": 274.2000000000793,
+        "blockedAt": 275.13333333341177,
+        "activations": 29,
+        "absorbed": 131.74999999999997
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 2026,
+      "mode": "mastery",
+      "outcome": "victory",
+      "time": 282.47,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 788,
+      "hp": 183.8,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 67,
+      "damageTaken": {
+        "contact": 98.6,
+        "hunt": 0,
+        "spore": 25.5,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 27.2
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 286.46666666673843,
+        "cooldownUntil": 287.46666666673843,
+        "hitAt": 282.46666666673843,
+        "activatedAt": 282.46666666673843,
+        "blockedAt": 276.58333333341045,
+        "activations": 30,
+        "absorbed": 72.59
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 2026,
+      "mode": "mist",
+      "outcome": "victory",
+      "time": 280.97,
+      "level": 20,
+      "levelAt60": 7,
+      "kills": 771,
+      "hp": 161.08,
+      "rerollsUsed": 2,
+      "evolved": true,
+      "goal": "complete",
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 55,
+      "damageTaken": {
+        "contact": 77.12474999999998,
+        "hunt": 0,
+        "spore": 23.459999999999997,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 46.919999999999995
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 281.30000000007647,
+        "cooldownUntil": 282.30000000007647,
+        "hitAt": 277.30000000007647,
+        "activatedAt": 277.30000000007647,
+        "blockedAt": 238.43333333341522,
+        "activations": 30,
+        "absorbed": 93.83999999999997
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": null
+    },
+    {
+      "character": "grove",
+      "route": "lunar-alternate",
+      "seed": 2026,
+      "mode": "inheritance",
+      "outcome": "victory",
+      "time": 272.13,
+      "level": 19,
+      "levelAt60": 6,
+      "kills": 774,
+      "hp": 180.8,
+      "rerollsUsed": 0,
+      "evolved": true,
+      "goal": null,
+      "relics": [
+        "bell",
+        "dew"
+      ],
+      "peak": 71,
+      "damageTaken": {
+        "contact": 38.65,
+        "hunt": 0,
+        "spore": 20.4,
+        "slam": 0,
+        "charge": 0,
+        "thorns": 27.2
+      },
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 272.88333333341745,
+        "cooldownUntil": 273.88333333341745,
+        "hitAt": 268.88333333341745,
+        "activatedAt": 268.88333333341745,
+        "blockedAt": 248.9166666667569,
+        "activations": 30,
+        "absorbed": 71
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "inheritance": "horizon"
+    }
+  ],
+  "fullrun": [
+    {
+      "character": "ash",
+      "route": "blade",
+      "seed": 42,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "wallSeconds": 282.328,
+      "time": 281.18333333340627,
+      "outcome": "victory",
+      "kills": 782,
+      "level": 19,
+      "eliteKills": 3,
+      "signature": {
+        "charge": 1,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 274.116666666746,
+        "blockedAt": -10,
+        "activations": 72,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "ranks": {
+        "sweep": 1,
+        "duelist": 0,
+        "wildfire": 0,
+        "detonation": 0,
+        "bulwark": 0,
+        "horizon": 1,
+        "sword": 6,
+        "ember": 0,
+        "orbit": 4,
+        "fleet": 2,
+        "magnet": 0,
+        "vitality": 4,
+        "heal": 0,
+        "dawn": 1,
+        "comet": 0,
+        "lunar": 0
+      },
+      "damage": {
+        "relic": 70,
+        "sword": 40541.91608642244,
+        "ember": 0,
+        "orbit": 1551.4108888891149
+      },
+      "healing": {
+        "field": 12,
+        "elite": 0,
+        "upgrade": 80,
+        "relic": 0
+      },
+      "relics": [
+        "fang",
+        "briar"
+      ],
+      "encounters": [
+        {
+          "kind": "altar",
+          "x": 223.67530659072432,
+          "y": 119.37580447259472,
+          "state": "completed",
+          "progress": 10.000000000000076,
+          "rewards": [
+            "dew",
+            "bell",
+            "fang"
+          ]
+        },
+        {
+          "kind": "chest",
+          "x": -1163.4847753154713,
+          "y": -895.0767720799316,
+          "state": "completed",
+          "progress": 18.00000000000026,
+          "rewards": [
+            "briar",
+            "coal",
+            "sail"
+          ]
+        }
+      ],
+      "timing": {
+        "frames": 33742,
+        "p50": 8.30000000000291,
+        "p95": 9,
+        "over50": 0
+      },
+      "errors": []
+    },
+    {
+      "character": "ember",
+      "route": "comet",
+      "seed": 42,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "wallSeconds": 272.047,
+      "time": 270.866666666749,
+      "outcome": "victory",
+      "kills": 769,
+      "level": 18,
+      "eliteKills": 3,
+      "signature": {
+        "charge": 0.44696666666666685,
+        "guard": 0,
+        "guardUntil": 0,
+        "cooldownUntil": 0,
+        "hitAt": -1,
+        "activatedAt": 269.98333333341645,
+        "blockedAt": -10,
+        "activations": 96,
+        "absorbed": 0
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "ranks": {
+        "sweep": 0,
+        "duelist": 0,
+        "wildfire": 1,
+        "detonation": 0,
+        "bulwark": 0,
+        "horizon": 0,
+        "sword": 0,
+        "ember": 5,
+        "orbit": 0,
+        "fleet": 4,
+        "magnet": 4,
+        "vitality": 3,
+        "heal": 0,
+        "dawn": 0,
+        "comet": 1,
+        "lunar": 0
+      },
+      "damage": {
+        "relic": 0,
+        "sword": 0,
+        "ember": 37874.626790126174,
+        "orbit": 0
+      },
+      "healing": {
+        "field": 0,
+        "elite": 21,
+        "upgrade": 80,
+        "relic": 0
+      },
+      "relics": [
+        "coal",
+        "sail"
+      ],
+      "encounters": [
+        {
+          "kind": "altar",
+          "x": -301.58051780321773,
+          "y": 8.659492712471078,
+          "state": "completed",
+          "progress": 10.000000000000076,
+          "rewards": [
+            "dew",
+            "bell",
+            "coal"
+          ]
+        },
+        {
+          "kind": "chest",
+          "x": -275.9713363426615,
+          "y": -63.07321367903643,
+          "state": "completed",
+          "progress": 18.00000000000026,
+          "rewards": [
+            "briar",
+            "sail",
+            "fang"
+          ]
+        }
+      ],
+      "timing": {
+        "frames": 32504,
+        "p50": 8.30000000000291,
+        "p95": 9,
+        "over50": 0
+      },
+      "errors": []
+    },
+    {
+      "character": "grove",
+      "route": "lunar",
+      "seed": 42,
+      "viewport": {
+        "width": 740,
+        "height": 360
+      },
+      "wallSeconds": 300.395,
+      "time": 300,
+      "outcome": "survived",
+      "kills": 811,
+      "level": 19,
+      "eliteKills": 3,
+      "signature": {
+        "charge": 0,
+        "guard": 20,
+        "guardUntil": 302.00000000005764,
+        "cooldownUntil": 303.00000000005764,
+        "hitAt": 298.00000000005764,
+        "activatedAt": 298.00000000005764,
+        "blockedAt": 282.18333333340536,
+        "activations": 30,
+        "absorbed": 127.99087499999999
+      },
+      "championsDefeated": [
+        "root",
+        "fang",
+        "bloom"
+      ],
+      "ranks": {
+        "sweep": 0,
+        "duelist": 0,
+        "wildfire": 0,
+        "detonation": 0,
+        "bulwark": 1,
+        "horizon": 0,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 5,
+        "fleet": 4,
+        "magnet": 4,
+        "vitality": 4,
+        "heal": 0,
+        "dawn": 0,
+        "comet": 0,
+        "lunar": 1
+      },
+      "damage": {
+        "relic": 1496.3668518520496,
+        "sword": 0,
+        "ember": 0,
+        "orbit": 37658.90111111382
+      },
+      "healing": {
+        "field": 25,
+        "elite": 15,
+        "upgrade": 97.34000000000002,
+        "relic": 0
+      },
+      "relics": [
+        "bell",
+        "briar"
+      ],
+      "encounters": [
+        {
+          "kind": "altar",
+          "x": 82.56925575038747,
+          "y": -24.21636574459042,
+          "state": "completed",
+          "progress": 10.000000000000076,
+          "rewards": [
+            "dew",
+            "fang",
+            "bell"
+          ]
+        },
+        {
+          "kind": "chest",
+          "x": -164.38060754746465,
+          "y": -71.1188175496381,
+          "state": "completed",
+          "progress": 18.00000000000026,
+          "rewards": [
+            "briar",
+            "coal",
+            "sail"
+          ]
+        }
+      ],
+      "timing": {
+        "frames": 36000,
+        "p50": 8.30000000000291,
+        "p95": 9,
+        "over50": 0
+      },
+      "errors": []
+    }
+  ]
+}

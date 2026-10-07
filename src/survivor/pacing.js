@@ -22,6 +22,7 @@ export function combatPacing(game) {
   if (game.time >= BOSS.arrival || game.bossSpawned) {
     return { kind: 'boss', rate: 1, remaining: 0, label: '최후의 대결' };
   }
+  if (game.championBreatherUntil > game.time) return {kind: 'champion', rate: .35, remaining: game.championBreatherUntil - game.time, label: '정예 격파 · 수확의 시간'};
   const beat = PACING.find(beat => game.time < beat.until);
   const evolutionRemaining = Math.min(BOSS.arrival, game.evolutionBreatherUntil ?? 0) - game.time;
   if (evolutionRemaining > 0) {

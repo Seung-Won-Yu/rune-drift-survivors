@@ -1,4 +1,4 @@
-import { SPORE, HOUND, GIANT } from './enemies.js';
+import { SPORE, HOUND, GIANT, sporeRule, huntRule } from './enemies.js';
 import { BOSS } from './boss.js';
 import { SLAM } from './game.js';
 
@@ -10,15 +10,17 @@ function warningStroke(ctx, color, width = 2) {
 export function drawEnemyGround(ctx, game) {
   ctx.save();
   for (const s of game.spores) {
-    const active=s.age>=SPORE.windup;
+    const rule = sporeRule(s);
+    const active=s.age>=rule.windup;
     ctx.fillStyle=active?'#ca95512c':'#c2ab6510';
-    ctx.beginPath();ctx.arc(s.x,s.y,SPORE.radius,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(s.x,s.y,rule.radius,0,Math.PI*2);ctx.fill();
   }
   for (const enemy of game.enemies) {
-    if (enemy.hunt && enemy.hunt.age < HOUND.windup + HOUND.duration) {
+    const hunt = huntRule(enemy);
+    if (enemy.hunt && enemy.hunt.age < hunt.windup + hunt.duration) {
       ctx.save(); ctx.translate(enemy.hunt.x, enemy.hunt.y); ctx.rotate(enemy.hunt.angle);
-      ctx.strokeStyle = '#edaa6340'; ctx.lineWidth = HOUND.width; ctx.lineCap = 'butt';
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(HOUND.length, 0); ctx.stroke(); ctx.restore();
+      ctx.strokeStyle = '#edaa6340'; ctx.lineWidth = hunt.width; ctx.lineCap = 'butt';
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(hunt.length, 0); ctx.stroke(); ctx.restore();
     }
     if (enemy.slam && !enemy.slam.hit) {
       const rule = enemy.elite ? SLAM : GIANT;
@@ -38,6 +40,7 @@ export function drawEnemyGround(ctx, game) {
 export function drawEnemyWarnings(ctx, game, reduced, scale = 1) {
   ctx.save();
   for (const enemy of game.enemies) {
+    const hunt = huntRule(enemy);
     if (enemy.boss) {
       const pattern = enemy.pattern;
       if (enemy.entrance > 0) {
@@ -83,21 +86,23 @@ export function drawEnemyWarnings(ctx, game, reduced, scale = 1) {
     }
   }
   for (const s of game.spores) {
-    const active=s.age>=SPORE.windup;
-    ctx.setLineDash(active?[]:[4,5]);ctx.beginPath();ctx.arc(s.x,s.y,SPORE.radius,0,Math.PI*2);warningStroke(ctx,active?'#edc082':'#d7cc96');ctx.setLineDash([]);
-    if (!active) {ctx.beginPath();ctx.arc(s.x,s.y,SPORE.radius,-Math.PI/2,-Math.PI/2+Math.min(1,s.age/SPORE.windup)*Math.PI*2);warningStroke(ctx,'#d7cc96',3);}
+    const rule = sporeRule(s);
+    const active=s.age>=rule.windup;
+    ctx.setLineDash(active?[]:[4,5]);ctx.beginPath();ctx.arc(s.x,s.y,rule.radius,0,Math.PI*2);warningStroke(ctx,active?'#edc082':'#d7cc96');ctx.setLineDash([]);
+    if (!active) {ctx.beginPath();ctx.arc(s.x,s.y,rule.radius,-Math.PI/2,-Math.PI/2+Math.min(1,s.age/rule.windup)*Math.PI*2);warningStroke(ctx,'#d7cc96',3);}
     ctx.fillStyle='#edc082';
     for(let i=0;i<3;i++){const a=i*Math.PI*2/3;ctx.beginPath();ctx.arc(s.x+Math.cos(a)*12,s.y+Math.sin(a)*9-(active&&!reduced?Math.sin(game.time*3+i)*2:0),2.5,0,7);ctx.fill();}
-    ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#192219';ctx.strokeText(active?'포자':'포자 예고',s.x,s.y-SPORE.radius-8);ctx.fillText(active?'포자':'포자 예고',s.x,s.y-SPORE.radius-8);
+    ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#192219';ctx.strokeText(active?'포자':'포자 예고',s.x,s.y-rule.radius-8);ctx.fillText(active?'포자':'포자 예고',s.x,s.y-rule.radius-8);
   }
   for (const enemy of game.enemies) {
+    const hunt = huntRule(enemy);
     const h=enemy.hunt;
-    if (!h || h.age>=HOUND.windup+HOUND.duration) continue;
+    if (!h || h.age>=hunt.windup+hunt.duration) continue;
     ctx.save();ctx.translate(h.x,h.y);ctx.rotate(h.angle);
     ctx.lineCap='butt';
-    ctx.setLineDash(h.age<HOUND.windup?[7,5]:[]);
-    ctx.beginPath();ctx.moveTo(0,-HOUND.width/2);ctx.lineTo(HOUND.length,-HOUND.width/2);ctx.moveTo(0,HOUND.width/2);ctx.lineTo(HOUND.length,HOUND.width/2);warningStroke(ctx,'#f8c986');ctx.setLineDash([]);
-    const tip=HOUND.length*Math.min(1,h.age/HOUND.windup);
+    ctx.setLineDash(h.age<hunt.windup?[7,5]:[]);
+    ctx.beginPath();ctx.moveTo(0,-hunt.width/2);ctx.lineTo(hunt.length,-hunt.width/2);ctx.moveTo(0,hunt.width/2);ctx.lineTo(hunt.length,hunt.width/2);warningStroke(ctx,'#f8c986');ctx.setLineDash([]);
+    const tip=hunt.length*Math.min(1,h.age/hunt.windup);
     ctx.beginPath();ctx.moveTo(tip-10,-7);ctx.lineTo(tip,0);ctx.lineTo(tip-10,7);warningStroke(ctx,'#f8c986');ctx.restore();
   }
   ctx.restore();

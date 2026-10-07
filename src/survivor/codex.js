@@ -1,7 +1,7 @@
 import { CHARACTERS, isUnlocked, unlockProgress } from './characters.js';
 import { SPECIALIZATIONS, RELICS } from './expansion.js';
 import { EVOLUTIONS, UPGRADE_META } from './game.js';
-import { validGoal } from './progression.js';
+import { validGoal, validInheritance } from './progression.js';
 import { collectionArt } from './collection-art.js';
 import { CHALLENGES, KEEPSAKES, canEquipKeepsake, challengeProgress } from './journey.js';
 
@@ -20,7 +20,7 @@ export function codexEntries(profile) {
     ...Object.entries(SPECIALIZATIONS).map(([key, s]) => ({
       ...s, id: `branch:${key}`, group: 'weapons', kind: '전문화', found: profile.buildDiscoveries.includes(key),
       hint: `${UPGRADE_META[s.weapon].name} 3단계 · 레벨 4부터 ${s.name}을 선택하고 여정을 마치세요.`,
-      use: '한 무기당 한 갈래를 선택합니다. 다음 판에서는 다시 성장시킵니다.'
+      use: '발견한 전투법은 해당 무기로 시작하는 동료에게 전승할 수 있습니다. 한 갈래를 골라 1단계부터 사용하며 무기는 다시 성장시킵니다.'
     })),
     ...Object.entries(EVOLUTIONS).map(([key, recipe]) => ({
       ...UPGRADE_META[key], id: `evolution:${key}`, group: 'weapons', kind: '진화', found: profile.discoveries.includes(key),
@@ -62,6 +62,8 @@ export function codexScreen(profile, filter = 'all', selected = null) {
   const entries = codexEntries(profile), found = entries.filter(e => e.found).length;
   const visible = entries.filter(e => filter === 'all' || e.group === filter);
   const current = visible.find(e => e.id === selected) ?? visible[0];
+  const inheritanceKey = current.id.startsWith('branch:') ? current.id.slice(7) : null;
+  const heir = inheritanceKey ? Object.values(CHARACTERS).find(c => c.weapon === current.weapon && validInheritance(profile, c.id, inheritanceKey)) : null;
   return `<div class="codex-heading"><div><p class="eyebrow">숲에서 발견한 것들</p><h1 id="panel-title">숲의 도감</h1></div><button class="secondary codex-back" data-close-codex>← 출발 준비</button></div>
     <div class="codex-progress"><div><strong>${found}<span> / ${entries.length}</span></strong><span>발견과 해금</span></div><progress value="${found}" max="${entries.length}" aria-label="도감 수집 진행도"></progress><p>쓰러져도 발견은 남습니다. 한 장씩 채우며 다음 여정을 준비하세요.</p></div>
     <div class="codex-filters" role="group" aria-label="도감 분류">${Object.entries(CODEX_GROUPS).map(([key, label]) => {
@@ -69,5 +71,5 @@ export function codexScreen(profile, filter = 'all', selected = null) {
       return `<button data-codex-filter="${key}" aria-pressed="${filter === key}">${label}<span>${group.filter(e => e.found).length}/${group.length}</span></button>`;
     }).join('')}</div>
     <div class="codex-layout"><div class="codex-list"><p class="codex-list-label" role="status">${CODEX_GROUPS[filter]} · ${visible.filter(e => e.found).length}/${visible.length} 기록 · 항목을 눌러 살펴보세요</p><div class="codex-grid" role="group" aria-label="도감 항목">${visible.map(e => `<button class="codex-card ${e.found ? 'is-found' : 'is-missing'}" data-codex-entry="${e.id}" aria-pressed="${e.id === current.id}" style="--tone:${e.color}"><span class="codex-art">${art(e)}</span><small>${e.kind}</small><strong>${e.name}</strong><span class="codex-state">${e.found ? e.group === 'companions' || e.group === 'keepsakes' ? '해금 완료' : '발견 완료' : e.group === 'companions' || e.group === 'keepsakes' ? '미해금' : '미발견'}</span></button>`).join('')}</div></div>
-    <section class="codex-detail" tabindex="0" aria-live="polite" aria-label="선택한 도감 항목" style="--tone:${current.color}"><div class="codex-detail-art">${art(current)}</div><small>${current.kind} · ${current.found ? '기록 완료' : '다음 발견을 기다리는 중'}</small><h2 tabindex="-1">${current.name}</h2><p>${current.description}</p><p class="codex-effect">${current.change}</p>${!current.found && validGoal(current.id) ? `<button class="secondary codex-goal" data-codex-goal="${current.id}" aria-pressed="${profile.goal === current.id}">${profile.goal === current.id ? '목표 지정됨 · 해제하기' : '이번 판의 목표로 지정'}</button><p class="record-line">목표는 하나만 추적합니다. 실제로 획득해야 기록됩니다.</p>` : ''}<div class="codex-hint"><strong>${current.found ? '발견 방법' : '이렇게 기록하세요'}</strong><p>${current.hint}</p></div><p class="record-line">${current.use}</p><button class="secondary codex-return" data-codex-list>선택 항목으로 돌아가기 ↓</button></section></div>`;
+    <section class="codex-detail" tabindex="0" aria-live="polite" aria-label="선택한 도감 항목" style="--tone:${current.color}"><div class="codex-detail-art">${art(current)}</div><small>${current.kind} · ${current.found ? '기록 완료' : '다음 발견을 기다리는 중'}</small><h2 tabindex="-1">${current.name}</h2><p>${current.description}</p><p class="codex-effect">${current.change}</p>${!current.found && validGoal(current.id) ? `<button class="secondary codex-goal" data-codex-goal="${current.id}" aria-pressed="${profile.goal === current.id}">${profile.goal === current.id ? '목표 지정됨 · 해제하기' : '이번 판의 목표로 지정'}</button><p class="record-line">목표는 하나만 추적합니다. 실제로 획득해야 기록됩니다.</p>` : ''}<div class="codex-hint"><strong>${current.found ? '발견 방법' : '이렇게 기록하세요'}</strong><p>${current.hint}</p></div><p class="record-line">${current.use}</p>${heir ? `<button class="secondary codex-goal" data-prepare-inheritance="${inheritanceKey}" data-heir="${heir.id}">${heir.name}로 전승 준비 →</button>` : ''}<button class="secondary codex-return" data-codex-list>선택 항목으로 돌아가기 ↓</button></section></div>`;
 }

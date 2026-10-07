@@ -30,18 +30,19 @@ test.describe('rendered combat priorities',()=>{
       await page.setViewportSize(viewport);
       const checks=await page.evaluate(async()=>{
         const {createRenderer,loadArt}=await import('/src/survivor/render.js');
-        const {createGame,spawnEnemy,spawnBoss,SLAM}=await import('/src/survivor/game.js');
+        const {createGame,spawnEnemy,spawnBoss,spawnChampion,SLAM}=await import('/src/survivor/game.js');
+        const {CHAMPION_HUNT,CHAMPION_SPORE}=await import('/src/survivor/champions.js');
         const {GIANT,HOUND,SPORE}=await import('/src/survivor/enemies.js');const {BOSS}=await import('/src/survivor/boss.js');
         const canvas=document.createElement('canvas');canvas.style.cssText=`width:${innerWidth}px;height:${innerHeight}px;position:absolute;left:0;top:0`;
         document.body.append(canvas);const renderer=createRenderer(canvas,await loadArt('/')),ctx=canvas.getContext('2d'),checks=[];
-        for(const kind of ['giant','elite','spore','hound','charge','thorns']){
+        for(const kind of ['giant','elite','spore','royal-spore','hound','champion-hound','charge','thorns']){
           const g=createGame(42);g.phase='paused';g.player.invincible=0;let point;
           if(kind==='giant'||kind==='elite'){
             const rule=kind==='elite'?SLAM:GIANT,e=spawnEnemy(g,2,kind==='elite',{x:-140,y:-90});
             e.slam={x:0,y:0,age:rule.windup*.65,hit:false};point={x:rule.radius,y:0};
-          }else if(kind==='spore'){g.spores=[{x:90,y:0,age:SPORE.windup*.65}];point={x:90+SPORE.radius,y:0};}
-          else if(kind==='hound'){
-            const e=spawnEnemy(g,1,false,{x:-140,y:-90});e.hunt={x:0,y:0,angle:0,age:HOUND.windup+.1};point={x:100,y:HOUND.width/2};
+          }else if(kind==='spore'||kind==='royal-spore'){const rule=kind==='spore'?SPORE:CHAMPION_SPORE;g.spores=[{x:90,y:0,age:rule.windup*.65,royal:kind==='royal-spore'}];point={x:90+rule.radius,y:0};}
+          else if(kind==='hound'||kind==='champion-hound'){
+            const e=kind==='hound'?spawnEnemy(g,1,false,{x:-140,y:-90}):spawnChampion(g,1),rule=kind==='hound'?HOUND:CHAMPION_HUNT;Object.assign(e,{x:-140,y:-90,hunt:{x:0,y:0,angle:0,age:rule.windup+.1}});point={x:100,y:rule.width/2};
           }else{
             const boss=spawnBoss(g);Object.assign(boss,{x:-200,y:-150,entrance:0,pattern:{kind,x:0,y:0,angle:0,age:BOSS.windup*.65}});
             point={x:100,y:kind==='charge'?BOSS.chargeWidth/2:0};
@@ -83,6 +84,36 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/survivor/?qa');
   await expect(page.getByRole('button', { name: '숲에 들어가기' })).toBeVisible();
 });
+
+for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]) {
+  test(`discovered inheritance is selectable, saved per companion and ready at departure ${viewport.width}`, async ({page}) => {
+    await page.setViewportSize(viewport);
+    await expect(page.locator('[data-inheritance="sweep"]')).toBeDisabled();
+    await page.evaluate(() => localStorage.setItem('ash-profile-v1', JSON.stringify({version:1,bestTime:90,totalKills:230,buildDiscoveries:['sweep','wildfire']})));
+    await page.reload();
+    await page.locator('[data-inheritance="sweep"]').click();
+    await expect(page.locator('[data-inheritance="sweep"]')).toHaveAttribute('aria-pressed','true');
+    expect((await snapshot(page)).ranks.sweep).toBe(1);
+    await page.reload();expect((await snapshot(page)).inheritance).toBe('sweep');
+    await page.locator('[data-character="ember"]').click();expect((await snapshot(page)).inheritance).toBeNull();
+    await page.locator('[data-open-codex]').click();
+    await page.locator('[data-codex-entry="branch:wildfire"]').click();
+    await page.locator('[data-prepare-inheritance="wildfire"]').click();
+    expect((await snapshot(page)).inheritance).toBe('wildfire');
+    await expect(page.locator('.departure-summary')).toContainText('번지는 불꽃');
+    await page.locator('[data-character="ash"]').click();expect((await snapshot(page)).inheritance).toBe('sweep');
+    const layout=await page.evaluate(()=>({outer:document.documentElement.scrollHeight-innerHeight,start:document.getElementById('start-game').getBoundingClientRect().bottom,height:innerHeight}));
+    expect(layout.outer).toBeLessThanOrEqual(1);expect(layout.start).toBeLessThanOrEqual(layout.height);
+    await page.screenshot({path:`output/playwright/survivor/rhythm-camp-${viewport.width}.png`});
+    await page.getByRole('button',{name:'숲에 들어가기'}).click();
+    await expect(page.locator('#signature-name')).toHaveText('잿빛 결의');
+    await expect(page.locator('#signature-state')).toContainText('적중');
+    await page.screenshot({path:`output/playwright/survivor/rhythm-hud-${viewport.width}.png`});
+    await page.getByRole('button',{name:'일시정지',exact:true}).click();
+    const frozen=await snapshot(page);await page.waitForTimeout(250);expect((await snapshot(page)).signature).toEqual(frozen.signature);
+    await page.screenshot({path:`output/playwright/survivor/rhythm-${viewport.width}.png`});
+  });
+}
 
 test('codex goal persists, marks eligible growth, records on defeat and completes companion mastery', async ({page}) => {
   await page.evaluate(() => localStorage.setItem('ash-profile-v1', JSON.stringify({version:1, wins:1, bestTime:280, totalKills:400, characters:{ash:{wins:1, branches:['duelist'], evolved:true}}, buildDiscoveries:['duelist'], discoveries:['dawn']})));
@@ -1282,3 +1313,15 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
   expect((await snapshot(page)).phase).toBe('playing'); expect((await snapshot(page)).ranks.sweep).toBe(0);
  });
 }
+
+
+test('a saved alternate inheritance yields to a branch goal when switching companions', async ({page}) => {
+  await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,selected:'ash',bestTime:90,buildDiscoveries:['detonation'],inheritances:{ember:'detonation'}})));
+  await page.reload();await page.locator('[data-open-codex]').click();
+  await page.locator('[data-codex-entry="branch:wildfire"]').click();await page.locator('[data-codex-goal]').click();
+  await page.locator('[data-close-codex]').click();await page.locator('[data-character="ember"]').click();
+  const state=await snapshot(page);expect(state.goal).toBe('branch:wildfire');expect(state.inheritance).toBeNull();expect(state.ranks.detonation).toBe(0);
+  expect(state.profile.inheritances.ember).toBeNull();
+  await page.reload();expect((await snapshot(page)).inheritance).toBeNull();
+  await expect(page.locator('[data-inheritance="none"]')).toHaveAttribute('aria-pressed','true');
+});

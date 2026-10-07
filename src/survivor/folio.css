@@ -538,3 +538,33 @@
   .primary:active,.upgrade-card:hover,.camp-controls .companion-card:hover:not(:disabled) { transform: none; }
   .camp-scene .hero-art { animation: none; }
 }
+/* A compact second HUD row keeps the ability visible without displacing warnings. */
+.signature-pocket { grid-column: 1; grid-row: 2; color: #f3e5c6; min-width: 0; }
+.signature-pocket > div:first-child { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 5px; font-size: 10px; }
+.signature-pocket strong { color: var(--signature-color); }
+.signature-pocket .meter { height: 3px; background: #071c16c9; }
+.signature-pocket .meter i { background: var(--signature-color); }
+.signature-pocket[data-state="ready"], .signature-pocket[data-state="guard"] { text-shadow: 0 1px 3px #071c16; }
+.xp-pocket { grid-column: 2 / -1; grid-row: 2; align-self: center; }
+.companion-signature { border-left: 2px solid #9a743e; padding-left: 10px; }
+.companion-signature b { color: #805325; }
+.inheritance-selection { border-top: 1px solid #9c895b50; padding-top: 16px; margin: 18px 0; }
+.inheritance-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin-top: 10px; }
+.inheritance-card { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-height: 110px; padding: 12px; border: 1px solid #9c895b80; border-radius: 2px; background: #f5edd536; color: var(--paper-ink); font: inherit; text-align: left; cursor: pointer; }
+.inheritance-card svg { width: 32px; height: 32px; }
+.inheritance-card strong { font-size: 13px; }
+.inheritance-card span, .inheritance-card small { font-size: 11px; line-height: 1.55; }
+.inheritance-card small { margin-top: auto; color: var(--paper-note); }
+.inheritance-card[aria-pressed="true"] { border-color: #856137; background: #c4a15a24; box-shadow: inset 0 -3px #856137; }
+.inheritance-card:disabled { cursor: default; border-style: dashed; background: #bcae9020; }
+.inheritance-card:focus-visible { outline: 2px solid #60451f; outline-offset: 3px; }
+@media(max-width:680px) {
+  .signature-pocket { grid-column: 1 / 3; }
+  .signature-pocket > div:first-child { font-size: 10px; }
+  .xp-pocket { grid-column: 3; display: grid; grid-template-columns: auto 1fr; gap: 5px 3px; }
+  .xp-pocket #xp-label { display: block; font-size: 9px; }
+  .xp-pocket .meter { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+  .xp-pocket small { grid-column: 2; grid-row: 1; text-align: right; font-size: 9px; }
+  .inheritance-grid { grid-template-columns: 1fr 1fr; }
+  .inheritance-card:first-child { grid-column: 1 / -1; min-height: 44px; flex-direction: row; flex-wrap: wrap; align-items: center; }
+}

@@ -1,3 +1,6 @@
+import { CHAMPION_HUNT, CHAMPION_SPORE } from './champions.js';
+export const huntRule = enemy => enemy.champion === 'fang' ? CHAMPION_HUNT : HOUND;
+export const sporeRule = spore => spore.royal ? CHAMPION_SPORE : SPORE;
 export const SPORE = { radius: 32, windup: .7, active: 1.6, damage: 6, limit: 4, interval: .6 };
 export const HOUND = { windup: .8, duration: .4, recovery: .65, cooldown: 4.6, length: 150, width: 30, damage: 12, limit: 2 };
 export const GIANT = { radius: 62, windup: 1.15, recovery: .85, cooldown: 5.4, damage: 18 };
@@ -28,21 +31,23 @@ export function leaveSpores(game, enemy) {
 }
 export function updateSpores(game, dt, hurt) {
   for (const s of game.spores) {
+    const rule = sporeRule(s);
     s.age += dt;
-    if (s.age >= SPORE.windup && s.age < SPORE.windup + SPORE.active && Math.hypot(game.player.x-s.x,game.player.y-s.y) <= SPORE.radius + 12) {
-      hurt(game, SPORE.damage, 'spore', s);
+    if (s.age >= rule.windup && s.age < rule.windup + rule.active && Math.hypot(game.player.x-s.x,game.player.y-s.y) <= rule.radius + 12) {
+      hurt(game, rule.damage, 'spore', s);
       if (game.phase === 'ended') return;
     }
   }
-  game.spores = game.spores.filter(s => s.age < SPORE.windup + SPORE.active);
+  game.spores = game.spores.filter(s => s.age < sporeRule(s).windup + sporeRule(s).active);
 }
 export const activeThreats = game => game.enemies.filter(e => e.hp > 0 && (e.hunt || e.slam)).length;
 export function updateHound(game, enemy, dt, hurt) {
-  if (enemy.type !== 1 || enemy.elite) return false;
+  if (enemy.type !== 1 || enemy.elite && enemy.champion !== 'fang') return false;
+  const rule = huntRule(enemy);
   enemy.huntClock -= dt;
   if (!enemy.hunt && enemy.huntClock <= 0) {
     const d = Math.hypot(enemy.x-game.player.x,enemy.y-game.player.y);
-    if (d > 55 && d < 240 && activeThreats(game) < 3 && game.enemies.filter(e=>e.hp>0 && e.hunt).length < HOUND.limit) {
+    if (d > 55 && d < 240 && activeThreats(game) < 3 && game.enemies.filter(e=>e.hp>0 && e.hunt).length < rule.limit) {
       enemy.hunt = { x: enemy.x, y: enemy.y, angle: Math.atan2(game.player.y-enemy.y,game.player.x-enemy.x), age: 0, hit: false };
       enemy.knockX = enemy.knockY = 0;
       teachEnemy(game, 'hound');
@@ -51,10 +56,10 @@ export function updateHound(game, enemy, dt, hurt) {
   const hunt = enemy.hunt;
   if (!hunt) return false;
   const before = hunt.age;
-  const charging = before >= HOUND.windup && before < HOUND.windup + HOUND.duration;
+  const charging = before >= rule.windup && before < rule.windup + rule.duration;
   hunt.age += dt * (charging && enemy.slowUntil > game.time ? .7 : 1);
-  const dash = age => Math.min(1, Math.max(0, (age-HOUND.windup)/HOUND.duration));
-  const from = dash(before)*HOUND.length, to = dash(hunt.age)*HOUND.length;
+  const dash = age => Math.min(1, Math.max(0, (age-rule.windup)/rule.duration));
+  const from = dash(before)*rule.length, to = dash(hunt.age)*rule.length;
   const c = Math.cos(hunt.angle), s = Math.sin(hunt.angle);
   enemy.x = hunt.x + c*to; enemy.y = hunt.y + s*to;
   if (!hunt.hit && to > from) {
@@ -62,12 +67,12 @@ export function updateHound(game, enemy, dt, hurt) {
     const x=game.player.x-hunt.x, y=game.player.y-hunt.y;
     const along=x*c+y*s, across=-x*s+y*c;
     const nearest=Math.max(from,Math.min(to,along));
-    if (Math.hypot(along-nearest,across) <= HOUND.width/2+12) {
-      hunt.hit=true; hurt(game,HOUND.damage,'hunt',hunt);
+    if (Math.hypot(along-nearest,across) <= rule.width/2+12) {
+      hunt.hit=true; hurt(game,rule.damage,'hunt',hunt);
     }
   }
-  if (hunt.age >= HOUND.windup + HOUND.duration + HOUND.recovery) {
-    enemy.hunt=null; enemy.huntClock=HOUND.cooldown;
+  if (hunt.age >= rule.windup + rule.duration + rule.recovery) {
+    enemy.hunt=null; enemy.huntClock=rule.cooldown;
   }
   return true;
 }

@@ -1,3 +1,5 @@
+import { CHAMPIONS, updateChampionBloom } from './champions.js';
+import { createSignature, advanceSignature, chargeBlade, chargeRune, consumeSignature, absorbDamage } from './signature.js';
 import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact } from './impact.js';
 import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy } from './enemies.js';
 import { updateEncounters, curseActive } from './encounters.js';
@@ -8,7 +10,7 @@ import { keepsakeStats, keepsakeXpMultiplier, KEEPSAKES } from './journey.js';
 import { healPlayer, updateField } from './field.js';
 import { EVOLUTION_BREATHER, spawnPlan } from './pacing.js';
 import { validExperiment } from './experiments.js';
-import { vowStats, validGoal } from './progression.js';
+import { vowStats, validGoal, primaryBranches } from './progression.js';
 export const RUN_SECONDS = 300;
 export const LIMITS = {
   enemies: 160,
@@ -175,14 +177,17 @@ export function seededRandom(seed = 1) {
 }
 export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', experiment = null, preparation = {}) {
   const character = getCharacter(characterId);
+  const inheritance = primaryBranches(character.id).includes(preparation.inheritance) ? preparation.inheritance : null;
   keepsake = Object.hasOwn(KEEPSAKES, keepsake) ? keepsake : 'none';
   return {
     vow: preparation.vow === 'mist' ? 'mist' : 'none',
     goal: validGoal(preparation.goal),
     rerolls: preparation.rerolls === 2 ? 2 : 1,
     rerollsUsed: 0,
-    experiment: validExperiment(character.id, experiment),
+    inheritance,
+    experiment: inheritance ? null : validExperiment(character.id, experiment),
     keepsake,
+    signature: createSignature(),
     feedbackAt: {},
     spores: [],
     nextSpore: 0,
@@ -228,7 +233,8 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', exp
       dawn: 0,
       comet: 0,
       lunar: 0,
-      [character.weapon]: 1
+      [character.weapon]: 1,
+      ...(inheritance ? {[inheritance]: 1} : {})
     },
     enemies: [],
     gems: [],
@@ -264,6 +270,8 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', exp
     emberClock: 0.8,
     pulseClock: 1.2,
     spawnClock: 0.4,
+    championBreatherUntil: 0,
+    championsDefeated: [],
     evolutionBreatherUntil: 0,
     nextElite: 60,
     id: 0,
@@ -458,6 +466,19 @@ export function spawnEnemy(game, type = 0, elite = false, position) {
   if (elite) game.events.push('elite');
   return enemy;
 }
+export function spawnChampion(game, index) {
+  const rule = CHAMPIONS[index];
+  if (!rule) return null;
+  // Retry if all slots are already important enemies; never silently skip the minute encounter.
+  if (game.enemies.length >= LIMITS.enemies) {
+    const ordinary = game.enemies.filter(e => !e.elite && !e.boss).sort((a,b) => Math.hypot(b.x-game.player.x,b.y-game.player.y)-Math.hypot(a.x-game.player.x,a.y-game.player.y))[0];
+    if (!ordinary) return null;
+    game.enemies.splice(game.enemies.indexOf(ordinary), 1);
+  }
+  const enemy = spawnEnemy(game, rule.type, true);
+  Object.assign(enemy, {champion: rule.id, name: rule.name, hp: rule.hp * vowStats(game.vow).hp, maxHp: rule.hp * vowStats(game.vow).hp, speed: rule.speed, xp: 48, bloomClock: 2, bloomUntil: 0});
+  return enemy;
+}
 export function spawnBoss(game) {
   if (game.bossSpawned) return null;
   // The final encounter must not be skipped when the normal enemy budget is full.
@@ -502,7 +523,7 @@ function addGem(game, x, y, value) {
   }
 }
 function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false) {
-  if (enemy.hp <= 0 || enemy.boss && enemy.entrance > 0) return;
+  if (enemy.hp <= 0 || enemy.boss && enemy.entrance > 0) return 0;
   if (source === 'sword' && game.relics.includes('fang')) damage *= enemy.elite || enemy.boss ? 1.4 : .9;
   if (!periodic && source === 'ember' && (game.ranks.wildfire || game.relics.includes('coal'))) {
     const burnDamage = game.ranks.wildfire ? (game.ranks.comet ? 22 : 12) * (game.relics.includes('coal') ? 1.5 : 1) : 8;
@@ -568,11 +589,18 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
     }
     if (enemy.elite) {
       game.eliteKills++;
+      if (enemy.champion) {
+        game.championsDefeated.push(enemy.champion);
+        game.championBreatherUntil = Math.min(BOSS.arrival, game.time + 6);
+      }
       // A single slot stays visible even when the decorative effect budget is full.
       game.eliteFinish = { x: enemy.x, y: enemy.y - enemy.size * .45, labelY: enemy.y + 28, at: game.time, life: ELITE_FINISH_LIFE };
       game.events.push('elite-break');
     }
     addGem(game, enemy.x, enemy.y, enemy.xp);
+    if (enemy.champion) {
+      for (const gem of game.gems) if (Math.hypot(gem.x - enemy.x, gem.y - enemy.y) <= 260) gem.recalled = true;
+    }
     effect(game, {
       kind: 'pop',
       x: enemy.x,
@@ -582,6 +610,7 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
     if (enemy.elite) healPlayer(game, 15, 'elite');
     game.events.push('kill');
   }
+  return actual;
 }
 function nearestEnemy(game, maxDistance = Infinity) {
   let nearest = null,
@@ -620,7 +649,8 @@ function updateWeapons(game, dt, s) {
       game.swing = {
         age: 0,
         angle,
-        hit: false
+        hit: false,
+        empowered: game.characterId === 'ash' && game.signature.charge >= 1 - 1e-9
       };
       game.swordClock = s.swordCooldown;
     }
@@ -631,12 +661,16 @@ function updateWeapons(game, dt, s) {
     if (swing.age >= .18 && !swing.hit) {
       swing.hit = true;
       game.events.push('swing');
+      const range = s.swordRange + (swing.empowered ? 25 : 0);
+      const damage = s.swordDamage * (swing.empowered ? 1.6 : 1);
+      let hits = 0;
       effect(game, {
         kind: 'slash',
         x: p.x,
         y: p.y,
         angle: swing.angle,
-        range: s.swordRange,
+        range,
+        empowered: swing.empowered,
         halfAngle: s.swordHalfAngle,
         branch: specializationFor(game, 'sword'),
         evolved: !!game.ranks.dawn,
@@ -647,10 +681,13 @@ function updateWeapons(game, dt, s) {
           dy = enemy.y - p.y,
           d = Math.hypot(dx, dy);
         const angle = Math.atan2(dy, dx) - swing.angle;
-        if (d <= s.swordRange + enemy.radius && Math.cos(angle) > Math.cos(s.swordHalfAngle)) {
-          hitEnemy(game, enemy, s.swordDamage, 'sword', dx / (d || 1), dy / (d || 1));
+        if (d <= range + enemy.radius && Math.cos(angle) > Math.cos(s.swordHalfAngle)) {
+          const push = swing.empowered ? 2 : 1;
+          if (hitEnemy(game, enemy, damage, 'sword', dx / (d || 1) * push, dy / (d || 1) * push) > 0) hits++;
         }
       }
+      if (swing.empowered && hits > 0) consumeSignature(game, 'ash');
+      else if (!swing.empowered) chargeBlade(game, hits);
       if (game.ranks.dawn && game.shots.length < LIMITS.shots) {
         const vx = Math.cos(swing.angle),
           vy = Math.sin(swing.angle);
@@ -672,7 +709,7 @@ function updateWeapons(game, dt, s) {
     game.emberClock -= dt * (game.relics.includes('sail') && p.moving ? 1.35 : 1);
     if (game.emberClock <= 0) {
       const targets = game.enemies.filter(e => e.hp > 0).sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
-      if (targets.length) {
+      if (targets.length && game.shots.length < LIMITS.shots) {
         game.emberClock = game.ranks.detonation ? 1.25 : .9;
         game.events.push('ember-shot');
         p.cast = .4;
@@ -680,16 +717,18 @@ function updateWeapons(game, dt, s) {
         for (let i = 0; i < s.emberCount && game.shots.length < LIMITS.shots; i++) {
           const target = targets[i % targets.length],
             a = Math.atan2(target.y - p.y, target.x - p.x);
+          const empowered = i === 0 && consumeSignature(game, 'ember');
           game.shots.push({
+            empowered,
             x: p.x,
             y: p.y,
             vx: Math.cos(a) * 290,
             vy: Math.sin(a) * 290,
             targetId: target.id,
             life: 2,
-            damage: s.emberDamage,
-            blast: !game.ranks.wildfire && (!!game.ranks.comet || !!game.ranks.detonation),
-            blastRadius: game.ranks.detonation ? (game.ranks.comet ? 90 : 72) : 56
+            damage: s.emberDamage * (empowered ? 1.45 : 1),
+            blast: !game.ranks.wildfire && (empowered || !!game.ranks.comet || !!game.ranks.detonation),
+            blastRadius: (game.ranks.detonation ? (game.ranks.comet ? 90 : 72) : 56) + (empowered ? 18 : 0)
           });
         }
       }
@@ -721,6 +760,14 @@ function updateWeapons(game, dt, s) {
           if (game.ranks.detonation) game.events.push('ember-impact');
           for (const other of game.enemies) if (Math.hypot(other.x - shot.x, other.y - shot.y) <= (shot.blastRadius ?? 56) + other.radius) hitEnemy(game, other, shot.damage, 'ember');
         } else hitEnemy(game, enemy, shot.damage, wave ? 'sword' : 'ember', shot.vx / (wave ? 330 : 290), shot.vy / (wave ? 330 : 290));
+        if (shot.empowered && game.ranks.wildfire) {
+          // Charged wildfire extends its burn; it keeps its damage-over-time identity.
+          for (const other of game.enemies) if (other.hp > 0 && (!other.boss || other.entrance <= 0) && Math.hypot(other.x - shot.x, other.y - shot.y) <= 74 + other.radius) {
+            other.burn = {until: game.time + 3, next: other.burn?.next ?? game.time + .5, damage: (game.ranks.comet ? 22 : 12) * (game.relics.includes('coal') ? 1.5 : 1)};
+            buildFeedback(game, 'fire-link', {x: shot.x, y: shot.y - 18, toX: other.x, toY: other.y - 18, life: .32}, .02);
+          }
+          game.events.push('fire-spread');
+        }
         if (wave) {
           shot.hitIds.push(enemy.id);
           if (shot.hitIds.length < 8) continue;
@@ -737,7 +784,7 @@ function updateWeapons(game, dt, s) {
           dy = enemy.y - p.y,
           d = Math.hypot(dx, dy) || 1;
         enemy.orbAt = game.time;
-        hitEnemy(game, enemy, s.orbitDamage, 'orbit', dx / d * (game.ranks.bulwark ? 3.24 : 1.8), dy / d * (game.ranks.bulwark ? 3.24 : 1.8));
+        if (hitEnemy(game, enemy, s.orbitDamage, 'orbit', dx / d * (game.ranks.bulwark ? 3.24 : 1.8), dy / d * (game.ranks.bulwark ? 3.24 : 1.8)) > 0) chargeRune(game);
         game.events.push('rune-hit');
         if (game.characterId === 'grove' && p.cast <= 0) p.cast = .4;
       }
@@ -781,6 +828,8 @@ function hurtPlayer(game, damage, source = 'contact', origin) {
   const p = game.player;
   if (p.invincible > 0) return;
   damage *= (1 - getCharacter(game.characterId).armor) * (game.ranks.bulwark ? .85 : 1) * vowStats(game.vow).damage;
+  damage = absorbDamage(game, damage);
+  if (damage <= 0) { p.invincible = .85; return; }
   const beforeHp = p.hp;
   p.hurt = .24;
   game.damageTaken[source] += Math.min(p.hp, damage);
@@ -803,7 +852,7 @@ function hurtPlayer(game, damage, source = 'contact', origin) {
   }
 }
 function updateSlam(game, enemy, dt, distance) {
-  if (!enemy.elite && enemy.type !== 2) return false;
+  if (enemy.champion && enemy.champion !== 'root' || !enemy.elite && enemy.type !== 2) return false;
   const rule = enemy.elite ? SLAM : GIANT;
   enemy.attackClock -= dt;
   if (!enemy.slam && enemy.attackClock <= 0 && distance < (enemy.elite ? 220 : 150) && (enemy.elite || activeThreats(game) < 3 && !game.enemies.some(e=>e.hp>0 && !e.elite && e.slam))) {
@@ -857,6 +906,7 @@ export function updateGame(game, dt, input = {
   p.x += ix * s.speed * dt;
   p.y += iy * s.speed * dt;
   p.moving = Math.hypot(ix, iy) > .05;
+  advanceSignature(game, Math.hypot(ix, iy) * s.speed * dt);
   // Animation follows travelled distance, including partial touch-stick input.
   if (p.moving) p.walk += Math.hypot(ix, iy) * s.speed * dt / 168;
   if (Math.abs(ix) > .05 && !game.swing) p.facing = ix > 0 ? 1 : -1;
@@ -873,9 +923,8 @@ export function updateGame(game, dt, input = {
       spawnEnemy(game, enemyTypeAt(game.time, roll));
     }
   }
-  if (game.time >= game.nextElite && !game.bossSpawned) {
-    spawnEnemy(game, 2, true);
-    game.nextElite += 60;
+  if (game.time >= game.nextElite && !game.bossSpawned && game.time >= game.championBreatherUntil && !game.enemies.some(e => e.champion && e.hp > 0)) {
+    if (spawnChampion(game, Math.round(game.nextElite / 60) - 1)) game.nextElite += 60;
   }
   // Repel only neighbors in adjacent spatial buckets; retain individual silhouettes.
   const buckets = new Map();
@@ -897,7 +946,7 @@ export function updateGame(game, dt, input = {
       if (game.phase === 'ended') return;
       continue;
     }
-    const attacking = updateHound(game, e, dt, hurtPlayer) || updateSlam(game, e, dt, d);
+    const attacking = updateChampionBloom(game, e, dt) || updateHound(game, e, dt, hurtPlayer) || updateSlam(game, e, dt, d);
     if (game.phase === 'ended') return;
     const gx = Math.floor(e.x / 56),
       gy = Math.floor(e.y / 56);
@@ -951,8 +1000,8 @@ export function updateGame(game, dt, input = {
     const dx = p.x - gem.x,
       dy = p.y - gem.y,
       d = Math.hypot(dx, dy);
-    if (d < s.magnet) {
-      const step = Math.min(d, (220 + (s.magnet - d) * 5) * dt);
+    if (gem.recalled || d < s.magnet) {
+      const step = Math.min(d, (gem.recalled ? 500 : 220 + (s.magnet - d) * 5) * dt);
       gem.x += dx / (d || 1) * step;
       gem.y += dy / (d || 1) * step;
     }

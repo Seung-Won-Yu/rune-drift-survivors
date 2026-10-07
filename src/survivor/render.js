@@ -1,5 +1,6 @@
+import { SIGNATURES } from './signature.js';
 import { impactPose, attackPose, hurtFeedback } from './impact.js';
-import { HOUND, GIANT } from './enemies.js';
+import { HOUND, GIANT, huntRule } from './enemies.js';
 import { heroGait, enemyMotion } from './motion.js';
 import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
 import { ENCOUNTERS } from './encounters.js';
@@ -417,7 +418,7 @@ export function createRenderer(canvas, art) {
       ctx.strokeStyle = game.ranks.dawn ? '#ffe6a680' : '#dfba7350';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(0, 0, s.swordRange * (.82 + progress * .18), -s.swordHalfAngle, s.swordHalfAngle);
+      ctx.arc(0, 0, (s.swordRange + (game.swing.empowered ? 25 : 0)) * (.82 + progress * .18), -s.swordHalfAngle, s.swordHalfAngle);
       ctx.stroke();
       ctx.restore();
     }
@@ -458,7 +459,7 @@ export function createRenderer(canvas, art) {
         ctx.stroke();
         ctx.setLineDash([]);
       }
-      const frame = a.hunt ? (a.hunt.age < HOUND.windup ? 0 : a.hunt.age < HOUND.windup + HOUND.duration ? 2 : 3) : a.slam ? a.slam.hit ? 2 : 0 : game.phase === 'ready' ? 0 : Math.floor(game.time * (a.type === 1 ? 9 : 5) + a.id) % 4;
+      const frame = a.hunt ? (a.hunt.age < huntRule(a).windup ? 0 : a.hunt.age < huntRule(a).windup + huntRule(a).duration ? 2 : 3) : a.slam ? a.slam.hit ? 2 : 0 : game.phase === 'ready' ? 0 : Math.floor(game.time * (a.type === 1 ? 9 : 5) + a.id) % 4;
       const slamPose = enemyMotion(a, game.time, reduced.matches);
       sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.hunt ? Math.cos(a.hunt.angle) < 0 : a.x > p.x, a.hit > 0, false, { ...slamPose, ...impactPose(a, game.time, reduced.matches) });
       if (a.type === 2 && a.slam && !a.slam.hit) {
@@ -480,7 +481,7 @@ export function createRenderer(canvas, art) {
         ctx.font = 'bold 9px system-ui';
         ctx.textAlign = 'center';
         ctx.fillStyle = '#ffd994';
-        ctx.fillText('정예', a.x, a.y - a.size * .69 - 7);
+        ctx.fillText(a.champion ? a.name : '정예', a.x, a.y - a.size * .69 - 7);
       }
     }
     for (const shot of game.shots) {
@@ -501,7 +502,7 @@ export function createRenderer(canvas, art) {
         continue;
       }
       ctx.strokeStyle = shot.blast ? '#ff9b5677' : '#ffb45e88';
-      ctx.lineWidth = shot.blast ? 9 : 4;
+      ctx.lineWidth = shot.empowered ? 12 : shot.blast ? 9 : 4;
       ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(shot.x - shot.vx * (shot.blast ? .085 : .045), shot.y - shot.vy * (shot.blast ? .085 : .045) - 14);
@@ -509,7 +510,7 @@ export function createRenderer(canvas, art) {
       ctx.stroke();
       ctx.fillStyle = shot.blast ? '#fff1b9' : '#ffda8f';
       ctx.beginPath();
-      ctx.arc(shot.x, shot.y - 14, shot.blast ? 6 : 4.5, 0, 7);
+      ctx.arc(shot.x, shot.y - 14, shot.empowered ? 8 : shot.blast ? 6 : 4.5, 0, 7);
       ctx.fill();
       if (game.ranks.comet) {
         ctx.save(); ctx.translate(shot.x, shot.y - 14); ctx.rotate(Math.atan2(shot.vy, shot.vx));
@@ -609,7 +610,7 @@ export function createRenderer(canvas, art) {
           for(const radius of [.68,.79]) {ctx.beginPath();ctx.arc(0,0,e.range*radius,-e.halfAngle,e.halfAngle);ctx.stroke();}
         }
         ctx.strokeStyle = e.evolved ? '#fff0bb' : '#ffe0a7';
-        ctx.lineWidth = (e.evolved ? 11 : 7) * (1 - progress) + 1;
+        ctx.lineWidth = (e.empowered ? 16 : e.evolved ? 11 : 7) * (1 - progress) + 1;
         ctx.beginPath();
         ctx.arc(0, 0, e.range * (.88 + progress * .12), -e.halfAngle, e.halfAngle);
         ctx.stroke();
@@ -745,6 +746,33 @@ export function createRenderer(canvas, art) {
       ctx.fillStyle = '#192a21ee'; ctx.fillRect(-labelWidth / 2, -87, labelWidth, 25);
       ctx.strokeStyle = celebration.color; ctx.lineWidth = 1; ctx.strokeRect(-labelWidth / 2, -87, labelWidth, 25);
       ctx.fillStyle = '#f8e5be'; ctx.fillText(label, 0, -70); ctx.restore();
+    }
+    // Six small marks communicate readiness independently of color, behind the actor.
+    const ability = game.signature, abilityMeta = SIGNATURES[game.characterId];
+    if (game.phase !== 'ready') {
+      ctx.save(); ctx.translate(p.x, p.y);
+      const filled = Math.floor(ability.charge * 6 + 1e-8);
+      for (let i = 0; i < 6; i++) {
+        const x = (i - 2.5) * 7;
+        ctx.fillStyle = i < filled ? abilityMeta.color : '#10271ed9';
+        ctx.strokeStyle = '#e3ce9970'; ctx.lineWidth = 1;
+        ctx.fillRect(x - 2, 15, 4, 3); ctx.strokeRect(x - 2, 15, 4, 3);
+      }
+      if (ability.guard > 0 && game.time < ability.guardUntil) {
+        ctx.strokeStyle = game.time - ability.blockedAt < .2 ? '#f0ffe9' : '#a1e4ce';
+        ctx.lineWidth = game.time - ability.blockedAt < .2 ? 4 : 2;
+        ctx.beginPath(); ctx.moveTo(0,-83); ctx.lineTo(34,-62);ctx.lineTo(31,-14);ctx.lineTo(0,7);ctx.lineTo(-31,-14);ctx.lineTo(-34,-62);ctx.closePath();ctx.stroke();
+      }
+      const activated = game.time - ability.activatedAt;
+      if (activated >= 0 && activated < .7) {
+        ctx.globalAlpha = 1 - activated / .7;
+        ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
+        ctx.strokeStyle = '#14231c'; ctx.lineWidth = 4;
+        const label = game.characterId === 'ash' ? '결의 검격' : game.characterId === 'ember' ? '강화 불씨' : '보호막 +20';
+        const y = -96 - (reduced.matches ? 0 : activated * 12);
+        ctx.strokeText(label,0,y);ctx.fillStyle = abilityMeta.color;ctx.fillText(label,0,y);
+      }
+      ctx.restore();
     }
     // The companion is drawn once, above friendly effects and front-row enemies.
     drawPlayer(game, hurt);

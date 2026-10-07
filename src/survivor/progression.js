@@ -1,4 +1,4 @@
-import { getCharacter } from './characters.js';
+import { getCharacter, isUnlocked } from './characters.js';
 import { SPECIALIZATIONS, RELICS } from './expansion.js';
 
 export const VOWS = {
@@ -17,8 +17,13 @@ export function masteryProgress(profile, id) {
   ];
 }
 export const masteryCount = (profile, id) => masteryProgress(profile, id).filter(seal => seal.current >= seal.target).length;
+export function validInheritance(profile, id, key) {
+  return isUnlocked(profile, id) && primaryBranches(id).includes(key) && profile.buildDiscoveries?.includes(key) ? key : null;
+}
 export function runPreparation(profile, id = profile.selected) {
-  return {rerolls: masteryCount(profile, id) === 3 ? 2 : 1, vow: canTakeVow(profile, profile.vow) ? profile.vow : 'none', goal: validGoal(profile.goal)};
+  const goal = validGoal(profile.goal);
+  const conflicts = goal?.startsWith('branch:') && primaryBranches(id).includes(goal.slice(7));
+  return {inheritance: conflicts ? null : validInheritance(profile, id, profile.inheritances?.[id]), rerolls: masteryCount(profile, id) === 3 ? 2 : 1, vow: canTakeVow(profile, profile.vow) ? profile.vow : 'none', goal};
 }
 export function validGoal(id) {
   if (typeof id !== 'string') return null;

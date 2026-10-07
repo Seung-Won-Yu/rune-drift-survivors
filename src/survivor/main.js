@@ -1,8 +1,10 @@
+import { CHAMPIONS, championStatus } from './champions.js';
+import { SIGNATURES, signatureState } from './signature.js';
 import { attackPose, isEvolvedWeapon, hurtFeedback } from './impact.js';
 import { GIANT } from './enemies.js';
 import { combatPacing } from './pacing.js';
 import { validExperiment, nextExperiment, experimentProgress } from './experiments.js';
-import { runPreparation, canTakeVow, validGoal, goalFound } from './progression.js';
+import { runPreparation, validInheritance, primaryBranches, canTakeVow, validGoal, goalFound } from './progression.js';
 import { goalProgress, goalRelevant } from './goals.js';
 import { canEquipKeepsake } from './journey.js';
 import { specializationFor, SPECIALIZATIONS, RELICS } from './expansion.js';
@@ -121,6 +123,7 @@ function camp() {
 function selectCharacter(id) {
   if (game.phase !== 'ready' || !isUnlocked(profile, id)) return;
   profile.selected = id;
+  profile.inheritances[id] = runPreparation(profile, id).inheritance;
   profile.experiment = validExperiment(id, profile.experiment);
   persist();
   camp();
@@ -132,6 +135,7 @@ function prepareExperiment(key) {
   if (game.phase !== 'ended' || !isUnlocked(profile, game.characterId) || key !== nextExperiment(game, profile)) return;
   profile.selected = game.characterId;
   profile.experiment = validExperiment(game.characterId, key);
+  profile.inheritances[game.characterId] = null;
   profile.goal = null;
   persist();
   campSection = 'prepare';
@@ -143,6 +147,17 @@ function clearExperiment() {
   profile.experiment = null;
   persist();
   camp();
+}
+function selectInheritance(key, id = game.characterId) {
+  if (game.phase !== 'ready' || key !== 'none' && !validInheritance(profile, id, key)) return;
+  const scroll = $('panel').querySelector('.camp-controls')?.scrollTop ?? 0;
+  profile.selected = id; campView = 'prepare'; campSection = 'prepare';
+  profile.inheritances[id] = key === 'none' ? null : key;
+  profile.experiment = null;
+  if (profile.goal?.startsWith('branch:') && primaryBranches(id).includes(profile.goal.slice(7))) profile.goal = null;
+  persist(); camp();
+  $('panel').querySelector('.camp-controls').scrollTop = scroll;
+  requestAnimationFrame(() => $('panel').querySelector(`[data-inheritance="${key}"]`)?.focus({preventScroll: true}));
 }
 function selectKeepsake(id) {
   if (game.phase !== 'ready' || !canEquipKeepsake(profile, id)) return;
@@ -173,6 +188,7 @@ function selectGoal(id) {
   const scroll = $('panel').scrollTop;
   const codexScroll = ['.codex-grid', '.codex-layout', '.codex-detail'].map(selector => [selector, $('panel').querySelector(selector)?.scrollTop ?? 0]);
   profile.goal = profile.goal === id ? null : id;
+  if (profile.goal?.startsWith('branch:') && primaryBranches(game.characterId).includes(profile.goal.slice(7))) profile.inheritances[game.characterId] = null;
   profile.experiment = null;
   persist();
   game = createGame(++seed, profile.selected, profile.keepsake, null, runPreparation(profile));
@@ -301,6 +317,8 @@ function syncPhase() {
     $('panel').classList.toggle('is-codex', campView === 'codex');
     $('panel').classList.toggle('is-camp', campView === 'prepare');
     for (const button of $('panel').querySelectorAll('[data-camp-section]')) button.onclick = () => changeCampSection(button.dataset.campSection);
+    $('panel').querySelectorAll('[data-inheritance]').forEach(button => button.onclick = () => selectInheritance(button.dataset.inheritance));
+    $('panel').querySelector('[data-prepare-inheritance]')?.addEventListener('click', event => selectInheritance(event.currentTarget.dataset.prepareInheritance, event.currentTarget.dataset.heir));
     $('start-game')?.addEventListener('click', start);
     $('panel').querySelector('[data-open-codex]')?.addEventListener('click', openCodex);
     $('panel').querySelector('[data-close-codex]')?.addEventListener('click', closeCodex);
@@ -390,6 +408,15 @@ function updateHud() {
     heroMark.setAttribute('aria-hidden', 'true');
     heroMark.innerHTML = portrait(game.characterId);
   }
+  const ability = signatureState(game);
+  $('signature').dataset.state = ability.state;
+  $('signature').style.setProperty('--signature-color', ability.color);
+  $('signature-name').textContent = ability.name;
+  $('signature-state').textContent = ability.label;
+  $('signature-meter').firstElementChild.style.width = `${ability.value * 100}%`;
+  $('signature-meter').setAttribute('aria-valuenow', String(Math.round(ability.value * 100)));
+  $('signature-meter').setAttribute('aria-valuetext', `${ability.name} · ${ability.label} · ${ability.action}`);
+  $('signature').title = ability.description;
   const encounter = trackedEncounter(game);
   $('encounter-hud').hidden = !encounter || game.phase !== 'playing';
   if (encounter) {
@@ -432,8 +459,9 @@ function updateHud() {
   $('xp-bar').firstElementChild.style.width = `${Math.min(100, game.xp / game.xpNeed * 100)}%`;
   $('xp-bar').setAttribute('aria-valuenow', String(Math.round(Math.min(100, game.xp / game.xpNeed * 100))));
   const pacing = combatPacing(game);
-  $('phase-label').textContent = ['rest', 'evolution', 'surge'].includes(pacing.kind) ? `${pacing.label} · ${Math.ceil(pacing.remaining)}초` : pacing.label;
+  $('phase-label').textContent = championStatus(game) ?? (['rest', 'evolution', 'surge', 'champion'].includes(pacing.kind) ? `${pacing.label} · ${Math.ceil(pacing.remaining)}초` : pacing.label);
   $('phase-label').dataset.pacing = pacing.kind;
+  $('coach').textContent = `공격은 자동 · ${SIGNATURES[game.characterId].action}`;
   $('coach').style.opacity = game.time < 14 ? '1' : '0';
   const evolution = nextEvolution(game),
     path = evolution ? EVOLUTIONS[evolution] : null;
@@ -471,7 +499,8 @@ function tick(now) {
   }
   if (game.events.length) {
     const events = new Set(game.events);
-    if (events.has('event-ready')) notice('숲의 사건 발견 · 방향 안내를 따라가 보세요');else if (events.has('curse')) notice('저주 시작 · 18초 동안 살아남으세요');else if (events.has('recovery-ready')) notice('숲의 열매가 열렸습니다 · 가까이 가면 체력 +25');else if (events.has('boss-arrival')) notice('재의 군주 출현 · 공격 예고를 보고 빈틈을 노리세요');else if (events.has('elite')) notice('정예 나무 거인 출현 · 처치하면 체력 회복');
+    if (events.has('event-ready')) notice('숲의 사건 발견 · 방향 안내를 따라가 보세요');else if (events.has('curse')) notice('저주 시작 · 18초 동안 살아남으세요');else if (events.has('recovery-ready')) notice('숲의 열매가 열렸습니다 · 가까이 가면 체력 +25');else if (events.has('boss-arrival')) notice('재의 군주 출현 · 공격 예고를 보고 빈틈을 노리세요');else if (events.has('elite')) notice(`${game.enemies.find(e => e.champion && e.hp > 0)?.name ?? '정예'} 출현 · ${CHAMPIONS.find(c => c.id === game.enemies.find(e => e.champion && e.hp > 0)?.champion)?.tip ?? '처치하면 체력 회복'}`);
+    if (events.has('elite-break')) notice('정예 격파 · 체력 +15 · 주변 경험치가 모입니다');
     if (events.has('learn-spore')) notice('버섯의 포자 · 점선 원이 차오르면 밖으로 이동하세요');
     else if (events.has('learn-hound')) notice('사냥개 돌진 · 표시된 길 옆으로 피하세요');
     else if (events.has('learn-giant')) notice('거인의 내려찍기 · 고정된 원 밖으로 이동하세요');
@@ -578,6 +607,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       syncPhase();
     },
     snapshot: () => ({
+      signature: {...game.signature},
+      inheritance: game.inheritance,
       spores: structuredClone(game.spores),
       hunts: game.enemies.filter(e=>e.hunt).map(e=>({...e.hunt, enemyX:e.x, enemyY:e.y})),
       enemyLessons: [...game.enemyLessons],
@@ -611,6 +642,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       pacing: combatPacing(game),
       kills: game.kills,
       eliteKills: game.eliteKills,
+      championsDefeated: [...game.championsDefeated],
       boss: game.enemies.filter(e => e.boss).map(e => ({
         hp: e.hp,
         maxHp: e.maxHp,

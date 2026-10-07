@@ -6,21 +6,22 @@ import {chooseRelic, nearbyChest, openChest, chooseCurse} from '../src/survivor/
 import {createPilot} from '../src/survivor/qa-pilot.js';
 import {goalProgress, goalRelevant} from '../src/survivor/goals.js';
 import {createProfile, recordRun} from '../src/survivor/profile.js';
-import {masteryCount} from '../src/survivor/progression.js';
+import {primaryBranches, masteryCount} from '../src/survivor/progression.js';
 
 const results = [];
 let profile = createProfile();
 for (const [character, base, evolution] of [['ash', 'blade', 'dawn'], ['ember', 'comet', 'comet'], ['grove', 'lunar', 'lunar']]) {
   for (const seed of [7, 42, 101, 333, 2026]) {
     for (const route of [base, `${base}-alternate`]) {
-      for (const mode of ['normal', 'goal', 'mastery', 'mist']) {
-        const preparation = mode === 'normal' ? {} : {goal: `evolution:${evolution}`, rerolls: ['mastery', 'mist'].includes(mode) ? 2 : 1, vow: mode === 'mist' ? 'mist' : 'none'};
+      for (const mode of ['normal', 'goal', 'mastery', 'mist', 'inheritance']) {
+        const preparation = ['normal', 'inheritance'].includes(mode) ? {} : {goal: `evolution:${evolution}`, rerolls: ['mastery', 'mist'].includes(mode) ? 2 : 1, vow: mode === 'mist' ? 'mist' : 'none'};
+        if (mode === 'inheritance') preparation.inheritance = primaryBranches(character)[route.endsWith('-alternate') ? 1 : 0];
         const g = createGame(seed, character, 'none', null, preparation), pilot = createPilot(route);
         g.runId = `${character}:${route}:${seed}:${mode}`; startGame(g);
         let peak = 0, levelAt60 = null;
         for (let frame = 0; frame < 20000 && g.phase !== 'ended'; frame++) {
           if (g.phase === 'upgrade') {
-            if (mode !== 'normal' && goalProgress(g)?.state === 'preparing' && !g.choices.some(key => goalRelevant(g, key)) && canReroll(g)) assert.ok(rerollUpgrades(g));
+            if (['goal', 'mastery', 'mist'].includes(mode) && goalProgress(g)?.state === 'preparing' && !g.choices.some(key => goalRelevant(g, key)) && canReroll(g)) assert.ok(rerollUpgrades(g));
             const target = g.choices.find(key => goalRelevant(g, key));
             const choice = g.player.hp > g.player.maxHp * .4 && target ? target : pilot.choose(g);
             assert.ok(chooseUpgrade(g, choice));
@@ -36,18 +37,18 @@ for (const [character, base, evolution] of [['ash', 'blade', 'dawn'], ['ember', 
         assert.equal(g.phase, 'ended');
         const recorded = recordRun(profile, g); assert.ok(recorded.added); profile = recorded.profile;
         assert.equal(recordRun(profile, g).added, false);
-        results.push({character, route, seed, mode, outcome: g.outcome, time: +g.time.toFixed(2), level: g.level, levelAt60, kills: g.kills, hp: +g.player.hp.toFixed(2), rerollsUsed: g.rerollsUsed, evolved: !!g.ranks[evolution], goal: goalProgress(g)?.state ?? null, relics: g.relics, peak, damageTaken: g.damageTaken});
+        results.push({character, route, seed, mode, outcome: g.outcome, time: +g.time.toFixed(2), level: g.level, levelAt60, kills: g.kills, hp: +g.player.hp.toFixed(2), rerollsUsed: g.rerollsUsed, evolved: !!g.ranks[evolution], goal: goalProgress(g)?.state ?? null, relics: g.relics, peak, damageTaken: g.damageTaken, signature: g.signature, championsDefeated: g.championsDefeated, inheritance: g.inheritance});
       }
     }
   }
 }
-const summary = ['normal', 'goal', 'mastery', 'mist'].map(mode => {
+const summary = ['normal', 'goal', 'mastery', 'mist', 'inheritance'].map(mode => {
   const rows = results.filter(r => r.mode === mode);
   return {mode, runs: rows.length, wins: rows.filter(r => r.outcome === 'victory').length, finalEncounter: rows.filter(r => r.time >= 240).length, evolved: rows.filter(r => r.evolved).length, rerollsUsed: rows.reduce((sum, r) => sum + r.rerollsUsed, 0), averageLevel: +(rows.reduce((sum, r) => sum + r.level, 0) / rows.length).toFixed(2)};
 });
 for (const id of ['ash', 'ember', 'grove']) {
   assert.equal(masteryCount(profile, id), 3, `${id}: both paths, evolution and victory must be achievable under normal rules`);
-  for (const mode of ['normal', 'goal', 'mastery', 'mist']) assert.ok(results.some(r => r.character === id && r.mode === mode && r.outcome === 'victory'), `${id}/${mode}: at least one tested route must be winnable`);
+  for (const mode of ['normal', 'goal', 'mastery', 'mist', 'inheritance']) assert.ok(results.some(r => r.character === id && r.mode === mode && r.outcome === 'victory'), `${id}/${mode}: at least one tested route must be winnable`);
 }
 await mkdir('output/playwright/survivor', {recursive: true});
 await writeFile('output/playwright/survivor/progression-balance.json', JSON.stringify({results, summary, mastery: Object.fromEntries(['ash', 'ember', 'grove'].map(id => [id, masteryCount(profile, id)]))}, null, 2));

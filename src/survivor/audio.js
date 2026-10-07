@@ -1,4 +1,4 @@
-const IMPORTANT = ['hurt', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'elite-break', 'evolve', 'level', 'heal', 'choose', 'slam', 'warning', 'elite'];
+const IMPORTANT = ['hurt', 'guard-block', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'elite-break', 'evolve', 'signature-ash', 'signature-ember', 'signature-grove', 'level', 'heal', 'choose', 'slam', 'warning', 'elite'];
 const IMPACTS = ['blade-impact', 'ember-impact', 'rune-hit', 'pulse'];
 
 export function selectAudioEvents(events) {
@@ -76,6 +76,13 @@ export function createAudio() {
       transient(now, .075, .08, 950);
       note(145, 42, 'triangle', now, .2, .06);
       note(72, 38, 'sine', now + .015, .22, .035);
+    } else if (event === 'guard-block') {
+      note(390, 810, 'sine', now, .13, .03);
+      transient(now, .04, .035, 2400);
+    } else if (event.startsWith('signature-')) {
+      const hz = event === 'signature-ash' ? 180 : event === 'signature-ember' ? 300 : 530;
+      note(hz, hz * 2, 'triangle', now, .16, .035);
+      note(hz * 2, hz * 3, 'sine', now + .05, .16, .022);
     } else if (event === 'elite-break') {
       note(110, 38, 'triangle', now, .18, .045);
       transient(now, .07, .06, 1100);

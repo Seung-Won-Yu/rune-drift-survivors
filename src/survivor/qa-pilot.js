@@ -1,4 +1,4 @@
-import { SPORE, HOUND, GIANT } from './enemies.js';
+import { SPORE, HOUND, GIANT, sporeRule, huntRule } from './enemies.js';
 import { trackedEncounter, encounterDistance } from './encounters.js';
 // Development-only input driver. Uses ordinary upgrades and simulation time; never changes combat stats.
 import { SLAM } from './game.js';
@@ -60,9 +60,24 @@ export function createPilot(route) {
         }
       }
       for (const cloud of game.spores) {
+        const spore = sporeRule(cloud);
         const x=player.x-cloud.x,y=player.y-cloud.y,d=Math.hypot(x,y);
         // Keep crowd avoidance while stepping away from a visible cloud.
-        if(cloud.age>=.2 && d<SPORE.radius+40) {const force=3*(SPORE.radius+40-d)/(SPORE.radius+40);dx+=(x||1)/(d||1)*force;dy+=y/(d||1)*force;}
+        if(cloud.age>=.2 && d<spore.radius+40) {const force=3*(spore.radius+40-d)/(spore.radius+40);dx+=(x||1)/(d||1)*force;dy+=y/(d||1)*force;}
+      }
+      // Urgent floor hazards outrank walking back into poison to collect a gem.
+      // Sample short visible escape steps, retaining the same 200ms reaction delay.
+      const clouds = game.spores.filter(cloud => cloud.age >= .2);
+      if (clouds.some(cloud => Math.hypot(player.x-cloud.x, player.y-cloud.y) < sporeRule(cloud).radius + 24)) {
+        let best = -Infinity, escape = null;
+        for (let i=0;i<16;i++) {
+          const x=Math.cos(i*Math.PI/8),y=Math.sin(i*Math.PI/8),px=player.x+x*70,py=player.y+y*70;
+          const clearance=Math.min(...clouds.map(cloud=>Math.hypot(px-cloud.x,py-cloud.y)-sporeRule(cloud).radius-12));
+          const crowd=game.enemies.reduce((cost,e)=>cost+Math.max(0,e.radius+22-Math.hypot(px-e.x,py-e.y)),0);
+          const score=clearance-crowd*2+(x*dx+y*dy)*2;
+          if(score>best){best=score;escape={x,y};}
+        }
+        dx=escape.x;dy=escape.y;
       }
       // Use only visible warnings, with a 200ms reaction. Never change HP or damage rules.
       // This makes the close-range route comparison include the evasion its role requires.
@@ -80,11 +95,11 @@ export function createPilot(route) {
           dy = y / distance;
           break;
         }
-        const hunt=enemy.hunt;
-        if(hunt && hunt.age>=.2 && hunt.age<HOUND.windup+HOUND.duration) {
+        const hunt=enemy.hunt, rule=huntRule(enemy);
+        if(hunt && hunt.age>=.2 && hunt.age<rule.windup+rule.duration) {
           const x=player.x-hunt.x,y=player.y-hunt.y,c=Math.cos(hunt.angle),s=Math.sin(hunt.angle);
           const along=x*c+y*s,across=-x*s+y*c;
-          if(along>-30 && along<HOUND.length+30 && Math.abs(across)<HOUND.width/2+26) {const side=across<0?-1:1;dx=-s*side;dy=c*side;break;}
+          if(along>-30 && along<rule.length+30 && Math.abs(across)<rule.width/2+26) {const side=across<0?-1:1;dx=-s*side;dy=c*side;break;}
         }
         const pattern = enemy.pattern;
         if (enemy.boss && pattern?.kind === 'charge' && pattern.age >= .2 && pattern.age < BOSS.windup + BOSS.chargeDuration) {
