@@ -13,8 +13,17 @@
     "webkitFocused": 11,
     "firefoxFocused": 11,
     "production": "passed final Pages build",
-    "ci": "pending",
-    "public": "pending",
+    "ci": {
+      "conclusion": "success",
+      "url": "https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/37596399494",
+      "headSha": "80e8cc2349510d85dfad2bfa7384b38134853ad7",
+      "core": 136,
+      "survivorBrowser": 124,
+      "legacyBrowser": 86,
+      "pagesProduction": "passed",
+      "deployment": "success"
+    },
+    "public": "passed three viewports",
     "focusedGoalAndInheritanceFinal": 4
   },
   "baseline": [
@@ -7189,5 +7198,92 @@
       },
       "errors": []
     }
-  ]
+  ],
+  "public": {
+    "url": "https://seung-won-yu.github.io/rune-drift-survivors/survivor/",
+    "parity": [
+      {
+        "path": "/rune-drift-survivors/assets/survivor-CW4jG5TB.js",
+        "bytes": 148295,
+        "sha256": "6df379604957bb025709aa16ac9d87c2276c3343d6ca127f1013c0b89851d0e0"
+      },
+      {
+        "path": "/rune-drift-survivors/assets/modulepreload-polyfill-B5Qt9EMX.js",
+        "bytes": 711,
+        "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0"
+      },
+      {
+        "path": "/rune-drift-survivors/assets/survivor-C0RYQjx6.css",
+        "bytes": 86678,
+        "sha256": "46e8566cdb5eff0c289e8fef28a13a9f2f3f6f9fcb5bd45886801371befc2e95"
+      },
+      {
+        "path": "/rune-drift-survivors/fonts/ash-journal-700.woff2",
+        "bytes": 78148,
+        "sha256": "854348303cfa5e857e41a56e8eb5f6d6efef8407892799a45cb72a5989eb8f58"
+      }
+    ],
+    "checks": [
+      {
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "fixture": "isolated discovered branch profile",
+        "fit": {
+          "overflowX": 0,
+          "overflowY": 0,
+          "startBottom": 646,
+          "height": 720
+        },
+        "initiallyLocked": true,
+        "choicePersisted": true,
+        "codexPreparedCharacter": true,
+        "movementCharge": 28,
+        "pauseFrozen": true,
+        "qaGlobal": "absent",
+        "errors": []
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "fixture": "isolated discovered branch profile",
+        "fit": {
+          "overflowX": 0,
+          "overflowY": 0,
+          "startBottom": 818,
+          "height": 844
+        },
+        "initiallyLocked": true,
+        "choicePersisted": true,
+        "codexPreparedCharacter": true,
+        "movementCharge": 27,
+        "pauseFrozen": true,
+        "qaGlobal": "absent",
+        "errors": []
+      },
+      {
+        "viewport": {
+          "width": 740,
+          "height": 360
+        },
+        "fixture": "isolated discovered branch profile",
+        "fit": {
+          "overflowX": 0,
+          "overflowY": 0,
+          "startBottom": 338,
+          "height": 360
+        },
+        "initiallyLocked": true,
+        "choicePersisted": true,
+        "codexPreparedCharacter": true,
+        "movementCharge": 27,
+        "pauseFrozen": true,
+        "qaGlobal": "absent",
+        "errors": []
+      }
+    ]
+  }
 }

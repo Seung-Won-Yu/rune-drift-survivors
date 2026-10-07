@@ -47,6 +47,8 @@ The first chapter passed its survivor checks and 86 legacy browser regressions, 
 
 The illustrated sanctuary release (`8594996`) passed 127 core tests, 120 survivor browser scenarios, 86 legacy browser regressions and the Pages production check in CI, then deployed successfully. The public JS/CSS, two environment images and Korean font match the verified build. WebKit and Firefox each passed 15 focused UI flows; three real-time normal-rule diagnostic runs also verified results and restart. See the [sanctuary design record](./docs/design/survivor-restart/26-ILLUSTRATED-SANCTUARY.md). Human playtests and physical mobile performance remain separate evaluation steps; the existing character sheets retain their four-pose movement and action art.
 
+The companion-rhythm and inheritance release (`80e8cc2`) passed 136 core tests, 124 survivor browser scenarios, 86 legacy browser regressions and the Pages production check in CI, then deployed successfully. Public assets match the verified build, and three public viewports verified saved inheritance, codex preparation, movement charging and pause. A 150-route diagnostic and three full real-time runs are recorded with the initial failed route and its follow-up corrections in the [character rhythm verification](./docs/design/survivor-restart/27-CHARACTER-RHYTHM-AND-LEGACY.md).
+
 ## Existing Rune Drift prototype
 
 A five-minute browser survival roguelite built with **React, Three.js, React Three Fiber, and Vite**. Guide a hooded Rune Warden through a ruined forest, build an automatic-attack loadout, and connect four seals before the final rift.
