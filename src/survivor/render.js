@@ -7,6 +7,7 @@ import { orbitPositions, stats, SLAM } from './game.js';
 import { BOSS } from './boss.js';
 import { nearestRecovery } from './field.js';
 import { evolutionFeedback, evolutionFrame } from './evolution-feedback.js';
+import { drawWeaponMotif } from './weapon-motifs.js';
 export async function loadArt(base) {
   const load = name => new Promise((resolve, reject) => {
     const image = new Image();
@@ -487,6 +488,7 @@ export function createRenderer(canvas, art) {
         ctx.strokeStyle = '#fff0ba';
         ctx.lineWidth = 4;
         ctx.stroke();
+        drawWeaponMotif(ctx, 'dawn', 16);
         ctx.restore();
         continue;
       }
@@ -501,6 +503,10 @@ export function createRenderer(canvas, art) {
       ctx.beginPath();
       ctx.arc(shot.x, shot.y - 14, shot.blast ? 6 : 4.5, 0, 7);
       ctx.fill();
+      if (game.ranks.comet) {
+        ctx.save(); ctx.translate(shot.x, shot.y - 14); ctx.rotate(Math.atan2(shot.vy, shot.vx));
+        drawWeaponMotif(ctx, 'comet', 12); ctx.restore();
+      }
     }
     for (const orb of orbitPositions(game)) {
       ctx.save();
@@ -520,6 +526,7 @@ export function createRenderer(canvas, art) {
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
+      if (game.ranks.lunar) drawWeaponMotif(ctx, 'lunar', 9);
       ctx.restore();
     }
     for (const e of game.effects) {
@@ -601,6 +608,10 @@ export function createRenderer(canvas, art) {
         ctx.strokeStyle = '#eba45966';
         ctx.lineWidth = 18 * (1 - progress);
         ctx.stroke();
+        if (e.evolved) {
+          ctx.translate(e.range * .65, 0);
+          drawWeaponMotif(ctx, 'dawn', 18);
+        }
         ctx.restore();
       } else if (e.kind === 'fire-link') {
         // A fixed connection identifies the actual transfer; no new particles.
@@ -650,6 +661,10 @@ export function createRenderer(canvas, art) {
         ctx.arc(e.x, e.y, e.range * (.6 + progress * .4), 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
+        if (game.ranks.comet) {
+          ctx.save(); ctx.translate(e.x, e.y);
+          drawWeaponMotif(ctx, 'comet', e.range * .3); ctx.restore();
+        }
         for (let i = 0; i < 7; i++) {
           const a = i * Math.PI * 2 / 7;
           ctx.fillStyle = '#ffc280';
@@ -668,6 +683,10 @@ export function createRenderer(canvas, art) {
         ctx.arc(e.x, e.y, e.range * (.5 + progress * .5) - 12, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
+        if (e.kind === 'lunar-pulse') {
+          ctx.save(); ctx.translate(e.x, e.y - e.range * .42);
+          drawWeaponMotif(ctx, 'lunar', 16); ctx.restore();
+        }
       } else if (e.kind === 'damage') {
         ctx.font = 'bold 13px system-ui';
         ctx.textAlign = 'center';

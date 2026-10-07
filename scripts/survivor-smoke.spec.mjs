@@ -731,6 +731,89 @@ for (const [weapon, first, second] of [['sword','sweep','duelist'],['ember','wil
     await expect(page.locator('.build-summary')).toContainText({duelist:'재사용 +0.12초',detonation:'발사 간격 1.25초',horizon:'회전 반경 +48'}[second]);
   });
 }
+
+for (const [weapon, branch, evolution] of [['sword','duelist','dawn'],['ember','wildfire','comet'],['orbit','horizon','lunar']]) {
+  test(`weapon identity ${weapon} shows a chosen fork, its actual evolution combination and fresh retry`, async ({page}) => {
+    await page.setViewportSize(weapon === 'sword' ? {width:1280,height:720} : weapon === 'ember' ? {width:320,height:640} : {width:740,height:360});
+    await scenario(page, `branch-${weapon}`);
+    await expect(page.locator('.upgrade-commitment')).toContainText('한 갈래');
+    await expect(page.locator('.upgrade-commitment')).toContainText('진화 후에도 유지');
+    await page.locator(`[data-upgrade="${branch}"]`).click();
+    const slot = page.locator(`[data-weapon="${weapon}"]`);
+    await expect(slot).toHaveAttribute('data-weapon-art', branch);
+    await expect(slot).toHaveClass(/is-specialized/);
+    await expect(slot.locator('.collection-illustration')).toHaveCount(1);
+    await expect(slot.locator('.weapon-state')).toHaveText('전문화');
+    await expect(slot).toHaveAttribute('aria-label', new RegExp({duelist:'일점 검법',wildfire:'번지는 불꽃',horizon:'별자리 궤도'}[branch]));
+    const bounds = await slot.boundingBox(), viewport = page.viewportSize();
+    expect(bounds.x).toBeGreaterThanOrEqual(0); expect(bounds.x+bounds.width).toBeLessThanOrEqual(viewport.width);
+    expect(bounds.y+bounds.height).toBeLessThanOrEqual(viewport.height);
+    const stateBounds = await slot.locator('.weapon-state').boundingBox(), rankBounds = await slot.locator('span').boundingBox();
+    expect(stateBounds.x+stateBounds.width).toBeLessThan(rankBounds.x);
+    await page.screenshot({path:`output/playwright/survivor/growth-identity-${weapon}.png`,animations:'disabled'});
+    // A second fixture supplies earned prerequisites while keeping this same branch.
+    // The evolution itself is selected through the real card and chooseUpgrade path.
+    await scenario(page, `evolution-specialized-${branch}`);
+    expect((await snapshot(page)).ranks[branch]).toBe(1);
+    await page.locator(`[data-upgrade="${evolution}"]`).click();
+    await expect(slot).toHaveAttribute('data-weapon-art', evolution);
+    await expect(slot.locator('.weapon-state')).toHaveText('진화');
+    expect((await snapshot(page)).ranks[branch]).toBe(1);
+    await expect(slot).toHaveAttribute('aria-label', new RegExp({duelist:'일점 검법',wildfire:'번지는 불꽃',horizon:'별자리 궤도'}[branch]));
+    await scenario(page, 'defeat');
+    await page.getByRole('button', {name:'다시 숲으로'}).click();
+    await expect(page.locator('#weapons .is-specialized, #weapons .is-evolved')).toHaveCount(0);
+    await expect(page.locator('[data-weapon="sword"]')).toHaveAttribute('data-weapon-art', 'sword');
+  });
+}
+
+for (const [art, family, branch] of [['duelist','sword','일점 검법'],['wildfire','ember','번지는 불꽃'],['horizon','orbit','별자리 궤도'],['dawn','sword','일점 검법'],['comet','ember','번지는 불꽃'],['lunar','orbit','별자리 궤도']]) {
+  test(`growth card ${art} retains chosen art and specialization when strengthening it`, async ({page}) => {
+    await page.setViewportSize(['horizon','lunar'].includes(art) ? {width:740,height:360} : art === 'wildfire' ? {width:320,height:640} : art === 'comet' ? {width:390,height:844} : {width:1280,height:720});
+    await scenario(page, `strengthen-${art}`);
+    const card = page.locator(`[data-upgrade="${family}"]`);
+    await expect(card).toHaveAttribute('data-weapon-art', art);
+    await expect(card.locator('.collection-illustration')).toHaveCount(1);
+    await expect(card.locator('.upgrade-path')).toHaveText(`${branch} 유지`);
+    await expect(card).toContainText('4단계');
+    if (art === 'duelist') await expect(card).toContainText('좁은 방향');
+    if (art === 'comet') { await expect(card).toContainText('지속 피해'); await expect(card).not.toContainText('터져'); }
+    expect(await page.evaluate(()=>document.documentElement.scrollHeight === innerHeight && document.documentElement.scrollWidth === innerWidth)).toBe(true);
+    await card.scrollIntoViewIfNeeded();
+    await page.screenshot({path:`output/playwright/survivor/growth-upgrade-${art}.png`,animations:'disabled'});
+    await page.keyboard.press('1');
+    expect((await snapshot(page)).ranks[family]).toBe(4);
+    await expect(page.locator(`[data-weapon="${family}"]`)).toHaveAttribute('data-weapon-art', art);
+  });
+}
+
+test('evolved attacks carry distinct engravings with no simulation changes and freeze while paused', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'reduce'});
+  const result = await page.evaluate(async () => {
+    const {createRenderer, loadArt} = await import('/src/survivor/render.js');
+    const {createGame} = await import('/src/survivor/game.js');
+    const canvas = document.createElement('canvas'); canvas.style.cssText='width:800px;height:680px;position:absolute;left:0;top:0';
+    document.body.append(canvas);
+    // Repeated pixel reads must not switch Chrome's canvas between GPU and CPU rasterization.
+    const ctx=canvas.getContext('2d',{alpha:false,willReadFrequently:true}), renderer=createRenderer(canvas, await loadArt('/'));
+    const results=[];
+    for (const [key,family,kind] of [['dawn','sword','slash'],['comet','ember','ember-burst'],['lunar','orbit','lunar-pulse']]) {
+      const game=createGame(42); game.phase='paused'; game.time=60; game.ranks[family]=3;
+      game.effects=[{kind,x:130,y:80,range:60,angle:0,halfAngle:1.28,age:.06,life:.3,evolved:false}];
+      // Lunar's pulse only exists after evolution; compare to the same scene without that pulse.
+      if (key==='lunar') game.effects=[];
+      const patch=()=>{const {scale}=renderer.render(game), dpr=canvas.width/800;
+        const x=key==='dawn'?169:130, y=key==='lunar'?55:80;
+        return [...ctx.getImageData(Math.round((400+x*scale)*dpr)-24,Math.round((680*.53+y*scale)*dpr)-24,48,48).data];};
+      const basic=patch(); game.ranks[key]=1;
+      game.effects=[{kind,x:130,y:80,range:60,angle:0,halfAngle:1.28,age:.06,life:.3,evolved:true}];
+      const before=JSON.stringify(game), evolved=patch(), repeat=patch();
+      results.push({key, changed:evolved.some((v,i)=>v!==basic[i]), frozen:JSON.stringify(evolved)===JSON.stringify(repeat), pure:JSON.stringify(game)===before});
+    }
+    canvas.remove(); return results;
+  });
+  for (const row of result) { expect(row.changed,row.key).toBe(true); expect(row.frozen,row.key).toBe(true); expect(row.pure,row.key).toBe(true); }
+});
 test('altar completes through real time, rewards once, and relic choice resumes input',async({page})=>{
   await scenario(page,'event-altar');await expect(page.locator('#encounter-hud')).toContainText('봉인 제단');
   await page.getByRole('button',{name:'보상 후보 살펴보기'}).click();

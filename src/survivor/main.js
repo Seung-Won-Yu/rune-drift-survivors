@@ -5,7 +5,7 @@ import { validExperiment, nextExperiment, experimentProgress } from './experimen
 import { runPreparation, canTakeVow, validGoal, goalFound } from './progression.js';
 import { goalProgress, goalRelevant } from './goals.js';
 import { canEquipKeepsake } from './journey.js';
-import { specializationFor, RELICS } from './expansion.js';
+import { specializationFor, SPECIALIZATIONS, RELICS } from './expansion.js';
 import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, chooseCurse, chooseRelic, inspectEncounter, closeEncounterPreview } from './encounters.js';
 import './style.css';
 import { BOSS, bossAttackLabel } from './boss.js';
@@ -16,6 +16,7 @@ import { loadProfile, saveProfile, recordRun } from './profile.js';
 import { campScreen, resultDetails, formatTime, buildSummary, relicContextMarkup, encounterRewardPreview } from './camp.js';
 import { codexScreen, CODEX_GROUPS, codexEntries } from './codex.js';
 import { collectionArt } from './collection-art.js';
+import { weaponPresentation, weaponLoadout, weaponBeltKey } from './weapon-presentation.js';
 import { createAudio, selectAudioEvents } from './audio.js';
 import { nearestRecovery, RECOVERY } from './field.js';
 const $ = id => document.getElementById(id);
@@ -305,12 +306,16 @@ function syncPhase() {
   } else if (game.phase === 'upgrade') {
     const lowHealth = game.player.hp <= game.player.maxHp * .4;
     const recoveryOffered = game.choices.some(key => key === 'heal' || key === 'vitality');
-    panel(`<div class="upgrade-top"><div><p class="eyebrow">A LITTLE STRONGER</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div><div class="upgrade-grid">${game.choices.map((key, i) => {
+    const choosingBranch = game.choices.some(key => SPECIALIZATIONS[key]);
+    panel(`<div class="upgrade-top"><div><p class="eyebrow">A LITTLE STRONGER</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<div class="upgrade-grid">${game.choices.map((key, i) => {
+      const weapon = weaponPresentation(game, key);
       const m = ['sword', 'ember', 'orbit'].includes(key) ? {
         ...UPGRADE_META[key],
-        name: weaponName(game, key)
+        name: weapon.name,
+        color: weapon.color,
+        description: weapon.description
       } : UPGRADE_META[key];
-      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span><span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
+      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span><span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
     }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button><p role="status">${game.rerollsUsed ? '후보가 바뀌었습니다. ' : ''}진화 후보는 유지 · 선택 전 ${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '다른 힘을 찾아보세요'}</p></div>`);
     $('panel').querySelector('[data-reroll]').onclick = () => {
       if (!rerollUpgrades(game)) return;
@@ -416,10 +421,11 @@ function updateHud() {
   const trackedGoal = goalProgress(game);
   $('evolution-hint').classList.toggle('is-ready', trackedGoal ? trackedGoal.state === 'complete' : !!evolution && canEvolve(game, evolution));
   $('evolution-hint').textContent = trackedGoal ? `목표 · ${trackedGoal.text}` : !path ? '세 무기 진화 완료 · 마지막 대결을 준비하세요' : canEvolve(game, evolution) ? `${UPGRADE_META[evolution].name} 준비 완료 · 다음 강화에서 선택` : `${UPGRADE_META[evolution].name} 진화 · ${UPGRADE_META[path.weapon].name} ${Math.min(3, game.ranks[path.weapon])}/3 · ${UPGRADE_META[path.support].name} ${Math.min(1, game.ranks[path.support])}/1 · 정예 ${Math.min(1, game.eliteKills)}/1`;
-  const signature = ['sword', 'ember', 'orbit', 'dawn', 'comet', 'lunar'].map(k => game.ranks[k]).join(',');
+  const loadout = weaponLoadout(game);
+  const signature = weaponBeltKey(loadout);
   if (signature !== beltKey) {
     beltKey = signature;
-    $('weapons').innerHTML = ['sword', 'ember', 'orbit'].map(k => game.ranks[k] ? `<div class="weapon-slot ${Object.keys(EVOLUTIONS).some(e => EVOLUTIONS[e].weapon === k && game.ranks[e]) ? 'is-evolved' : ''}" style="--tone:${UPGRADE_META[k].color}" aria-label="${weaponName(game, k)} ${game.ranks[k]}단계">${icon(k)}<span>${game.ranks[k]}</span></div>` : `<div class="weapon-slot is-empty" aria-label="빈 무기 슬롯"><span aria-hidden="true">+</span></div>`).join('');
+    $('weapons').innerHTML = loadout.map(w => w.rank ? `<div class="weapon-slot${w.branch ? ' is-specialized' : ''}${w.evolution ? ' is-evolved' : ''}" data-weapon="${w.family}" data-weapon-art="${w.art}" style="--tone:${w.color}" aria-label="${w.label}" title="${w.label}">${collectionArt(w.art)}${w.stageLabel ? `<small class="weapon-state" aria-hidden="true">${w.stageLabel}</small>` : ''}<span aria-hidden="true">${w.rank}</span></div>` : `<div class="weapon-slot is-empty" aria-label="빈 무기 슬롯"><span aria-hidden="true">+</span></div>`).join('');
   }
 }
 function tick(now) {
@@ -682,6 +688,12 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       } else if (name.startsWith('branch-')) {
         const weapon = name.slice(7); game.level = 4; game.ranks[weapon] = 3;
         game.gems.push({x:0,y:0,value:9,age:0}); updateGame(game,1/60);
+      } else if (name.startsWith('strengthen-')) {
+        const key = name.slice(11), weapon = SPECIALIZATIONS[key]?.weapon ?? EVOLUTIONS[key]?.weapon;
+        if (!weapon) return;
+        game.level = 5; game.ranks[weapon] = 3; game.ranks[key] = 1;
+        if (EVOLUTIONS[key]) game.ranks[{dawn:'duelist',comet:'wildfire',lunar:'horizon'}[key]] = 1;
+        game.phase = 'upgrade'; game.choices = [weapon, 'magnet', 'heal'];
       } else if (name === 'event-altar' || name === 'event-chest') {
         const kind = name.slice(6); game.time = kind === 'altar' ? 45 : 135; game.nextElite = 999;
         game.encounters = [{kind, x:35, y:0, state:'available',progress:0}];
@@ -712,6 +724,13 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
             y: Math.sin(a) * (110 + i * 7)
           });
         }
+      } else if (name.startsWith('evolution-specialized-')) {
+        const branch = name.slice(22), weapon = SPECIALIZATIONS[branch]?.weapon;
+        if (!weapon) return;
+        const evolution = Object.keys(EVOLUTIONS).find(key => EVOLUTIONS[key].weapon === weapon);
+        game.level = 4; game.ranks[weapon] = 3; game.ranks[branch] = 1;
+        game.ranks[EVOLUTIONS[evolution].support] = 1; game.eliteKills = 1;
+        game.gems.push({x:0,y:0,value:9,age:0}); updateGame(game,1/60);
       } else if (name === 'evolution') {
         game.ranks.sword = 3;
         game.ranks.orbit = 1;

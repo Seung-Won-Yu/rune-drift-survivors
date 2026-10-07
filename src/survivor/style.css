@@ -236,6 +236,36 @@ button:focus-visible {
   color: #8fa593;
   font-weight: 400;
 }
+.weapon-slot .collection-illustration {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 5px;
+}
+.weapon-slot.is-specialized {
+  border-color: color-mix(in srgb,var(--tone) 60%,var(--line));
+}
+.weapon-slot .weapon-state {
+  position: absolute;
+  left: 4px;
+  bottom: 3px;
+  color: var(--tone);
+  font-size: 8px;
+  font-weight: 700;
+}
+.upgrade-commitment {
+  margin: -6px 0 16px;
+  border-left: 2px solid var(--gold);
+  padding: 5px 10px;
+  color: #e3d7b6;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.upgrade-path {
+  color: var(--tone);
+  font-size: 10px;
+  line-height: 1.5;
+  margin: -3px 0 8px;
+}
 .chapter {
   margin-left: auto;
   white-space: nowrap;
@@ -763,6 +793,10 @@ button:focus-visible {
   .weapon-slot svg {
     width: 24px;
     height: 24px;
+  }
+  .weapon-slot .collection-illustration {
+    width: 32px;
+    height: 32px;
   }
   .chapter {
     display: none;
