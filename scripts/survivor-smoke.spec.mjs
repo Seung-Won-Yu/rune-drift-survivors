@@ -1134,7 +1134,9 @@ for (const [name,key] of [['evolution','dawn'],['evolution-comet','comet'],['evo
     await page.locator('#overlay').evaluate(el=>el.style.visibility='hidden');
     await page.screenshot({path:`output/playwright/survivor/polish-evolution-${key}.png`});
     await page.emulateMedia({reducedMotion:'reduce'});
-    const reduced = await snapshot(page); expect(reduced.celebration.shards).toBe(0); expect(reduced.time).toBe(frozen.time);
+    // MediaQueryList updates may reach existing objects on the next frame (WebKit/Firefox).
+    await expect.poll(async()=>(await snapshot(page)).celebration?.shards).toBe(0);
+    expect((await snapshot(page)).time).toBe(frozen.time);
     await page.locator('#overlay').evaluate(el=>el.style.visibility='');
     await page.getByRole('button',{name:'계속하기'}).click();
     await expect.poll(async()=>(await snapshot(page)).celebration).toBeNull();
