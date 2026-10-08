@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame } from '../src/survivor/game.js';
+import { createGame, spawnEnemy, updateGame, SLAM } from '../src/survivor/game.js';
+import { HOUND, GIANT } from '../src/survivor/enemies.js';
+import { ashFrame, creatureFrame, remnantFrame } from '../src/survivor/actor-animation.js';
+import { ACTOR_ART } from '../src/survivor/actor-art.js';
 import { createProfile } from '../src/survivor/profile.js';
 import { codexEntries } from '../src/survivor/codex.js';
 import { collectionArt } from '../src/survivor/collection-art.js';
@@ -11,6 +14,59 @@ import { evolutionFeedback, evolutionFrame } from '../src/survivor/evolution-fee
 import { weaponPresentation, weaponLoadout, weaponBeltKey } from '../src/survivor/weapon-presentation.js';
 import { SPECIALIZATIONS } from '../src/survivor/expansion.js';
 import { drawWeaponMotif } from '../src/survivor/weapon-motifs.js';
+
+test('authored blade poses reach contact only at the real hit threshold, with hurt and defeat priority', () => {
+  const game = createGame(42); game.swing = { age: .179, angle: 0 };
+  assert.ok(ashFrame(game) < 11); assert.ok(ashFrame(game, true) < 11);
+  game.swing.age = .18; assert.equal(ashFrame(game), 11);
+  for (let age = 0; age <= .55; age += .001) { game.swing.age = age; assert.ok(![12,13].includes(ashFrame(game))); }
+  game.player.hurt = .24; assert.equal(ashFrame(game), 16);
+  game.outcome = 'defeat'; game.player.deathAge = .6; assert.equal(ashFrame(game), 23);
+  const before = JSON.stringify(game); ashFrame(game); assert.equal(JSON.stringify(game), before);
+});
+
+test('authored enemy attacks preserve ordinary and champion windups even while being hit', () => {
+  for (const champion of [undefined, 'fang']) {
+    const rule = champion ? CHAMPION_HUNT : HOUND;
+    const enemy = { type: 1, champion, hunt: { age: rule.windup - .001 }, impact: { at: 0 } };
+    assert.equal(creatureFrame(enemy, 0), 10);
+    enemy.hunt.age = rule.windup; assert.equal(creatureFrame(enemy, 0), 11);
+    enemy.hunt.age = rule.windup + rule.duration; assert.equal(creatureFrame(enemy, 0), 13);
+  }
+  for (const elite of [false, true]) {
+    const rule = elite ? SLAM : GIANT, enemy = { type: 2, elite, slam: { age: rule.windup - .001, hit: false }, impact: { at: 0 } };
+    assert.equal(creatureFrame(enemy, 0), 10);
+    enemy.slam.age = rule.windup; enemy.slam.hit = true; assert.equal(creatureFrame(enemy, 0), 11);
+    const before = JSON.stringify(enemy); creatureFrame(enemy, 0, true); assert.equal(JSON.stringify(enemy), before);
+  }
+});
+
+test('gait follows distance, freezes on pause and slows with the creature body', () => {
+  const run = slowed => {
+    const game = createGame(42); game.phase = 'playing'; game.spawnClock = 999;
+    const enemy = spawnEnemy(game, 1, false, { x: 400, y: 0 }); enemy.huntClock = 999;
+    if (slowed) enemy.slowUntil = 10;
+    updateGame(game, 1 / 30);
+    assert.ok(Math.abs(enemy.walk - (400 - enemy.x)) < .00001);
+    const before = enemy.walk; game.phase = 'paused'; updateGame(game, 1 / 30);
+    assert.equal(enemy.walk, before);
+    const pose = creatureFrame(enemy, game.time); assert.equal(creatureFrame(enemy, game.time + 10), pose);
+    assert.equal(creatureFrame(enemy, game.time, true), 0); return before;
+  };
+  assert.ok(Math.abs(run(true) / run(false) - .7) < .00001);
+});
+
+test('all used pose rectangles fit the source and death finishes before its fade', () => {
+  for (const meta of Object.values(ACTOR_ART)) {
+    assert.equal(meta.rects.length, 24);
+    for (const [x,y,w,h] of meta.rects) {
+      assert.ok(x >= 0 && y >= 0 && w > 0 && h > 0 && x+w <= 1024 && y+h <= 1536);
+    }
+  }
+  assert.equal(remnantFrame({ age: 0, life: .42 }), 20);
+  assert.equal(remnantFrame({ age: .32, life: .42 }), 23);
+  assert.equal(remnantFrame({ age: 0, life: .42 }, true), 23);
+});
 
 test('champion anticipation remains readable until its actual dash starts', () => {
   const enemy = {champion:'fang',hunt:{age:CHAMPION_HUNT.windup-.01}};

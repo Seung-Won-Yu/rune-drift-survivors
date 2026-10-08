@@ -454,6 +454,7 @@ export function spawnEnemy(game, type = 0, elite = false, position) {
     xp: meta.xp * (elite ? 6 : 1),
     damage: meta.damage * (elite ? 1.3 : 1),
     hit: 0,
+    walk: 0,
     orbAt: -100,
     knockX: 0,
     knockY: 0,
@@ -572,7 +573,7 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
       flip: enemy.x > game.player.x,
       age: 0,
       angle: !periodic && enemy.impact?.at === game.time && enemy.impact.source === source ? enemy.impact.angle : undefined,
-      life: enemy.boss ? .7 : .26
+      life: enemy.boss ? .7 : enemy.type === 1 || enemy.type === 2 ? .42 : .26
     });
     if (enemy.burn && enemy.burn.until > game.time && game.ranks.wildfire) {
       const spread = game.enemies.filter(e => e.hp > 0 && e !== enemy && (!e.burn || e.burn.until <= game.time) && Math.hypot(e.x - enemy.x, e.y - enemy.y) <= 90).sort((a, b) => Math.hypot(a.x - enemy.x, a.y - enemy.y) - Math.hypot(b.x - enemy.x, b.y - enemy.y)).slice(0, 2);
@@ -962,8 +963,10 @@ export function updateGame(game, dt, input = {
       }
     }
     if (!attacking) {
+      const fromX = e.x, fromY = e.y;
       e.x += (dx / d * e.speed * danger * (e.slowUntil > game.time ? .7 : 1) + pushX + e.knockX) * dt;
       e.y += (dy / d * e.speed * danger * (e.slowUntil > game.time ? .7 : 1) + pushY + e.knockY) * dt;
+      e.walk = (e.walk ?? 0) + Math.hypot(e.x - fromX, e.y - fromY);
     }
     e.knockX *= Math.exp(-12 * dt);
     e.knockY *= Math.exp(-12 * dt);

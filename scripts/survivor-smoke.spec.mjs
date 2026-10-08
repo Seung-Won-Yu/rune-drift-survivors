@@ -8,6 +8,40 @@ const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenari
 
 test.describe('rendered combat priorities',()=>{
   test.use({deviceScaleFactor:2});
+  test('authored poses decode, keep planted feet and give a distinct leap and grounded death',async({page})=>{
+    const result=await page.evaluate(async()=>{
+      const {loadArt}=await import('/src/survivor/render.js');
+      const {createActorPainter}=await import('/src/survivor/actor-art.js');
+      const progress=[],art=await loadArt('/',(n,total)=>progress.push([n,total])),draw=createActorPainter(art.motion);
+      const canvas=document.createElement('canvas');canvas.width=400;canvas.height=300;const ctx=canvas.getContext('2d',{willReadFrequently:true});
+      const capture=(key,index,flip=false)=>{
+        ctx.clearRect(0,0,400,300);draw(ctx,key,index,200,250,{flip});
+        const data=ctx.getImageData(0,0,400,300).data;let hash=0,bottom=0,top=300,left=400,right=0;
+        for(let y=0;y<300;y++)for(let x=0;x<400;x++){const p=(y*400+x)*4;if(data[p+3]<128)continue;
+          hash=(Math.imul(hash,31)+data[p]+data[p+1]*3+data[p+2]*7)>>>0;bottom=Math.max(bottom,y);top=Math.min(top,y);left=Math.min(left,x);right=Math.max(right,x);}
+        return {hash,bottom,top,left,right};
+      };
+      let allocations=0;const create=document.createElement.bind(document);
+      document.createElement=(...args)=>{allocations++;return create(...args);};
+      try {
+        for(const key of ['ash','hound','giant'])for(let index=0;index<24;index++) {
+          if(key==='ash'&&[12,13].includes(index))continue;
+          draw(ctx,key,index,200,250,{flash:true});
+        }
+      } finally { document.createElement=create; }
+      return {progress,allocations,actors:['ash','hound','giant'].map(key=>({key,walk:Array.from({length:8},(_,i)=>capture(key,i)),death:capture(key,23),ready:capture(key,0),flip:capture(key,0,true)})),leap:capture('hound',12)};
+    });
+    expect(result.progress.at(-1)).toEqual([9,9]);
+    expect(result.allocations,'all pose canvases are ready before combat').toBe(0);
+    for(const actor of result.actors){
+      expect(new Set(actor.walk.map(p=>p.hash)).size,actor.key).toBeGreaterThanOrEqual(6);
+      expect(Math.max(...actor.walk.map(p=>p.bottom))-Math.min(...actor.walk.map(p=>p.bottom)),actor.key).toBeLessThanOrEqual(2);
+      expect(actor.death.bottom-actor.death.top,actor.key).toBeLessThan(actor.ready.bottom-actor.ready.top);
+      expect(Math.abs(actor.ready.left+actor.flip.right-399),actor.key).toBeLessThanOrEqual(1);
+      expect(actor.death.left).toBeGreaterThan(80);expect(actor.death.right).toBeLessThan(320);
+    }
+    expect(result.leap.bottom).toBeLessThan(247);
+  });
   for(const viewport of [{width:1280,height:720},{width:320,height:740}]){
     test(`player body survives front-row enemies and friendly effects at ${viewport.width}px`,async({page})=>{
       await page.setViewportSize(viewport);
@@ -673,14 +707,14 @@ test('failed art loading offers a recoverable reload instead of broken play',asy
   expect((await snapshot(page)).phase).toBe('playing');
 });
 
-test('loading progress waits for the actual forest image before enabling departure', async ({page}) => {
+for (const heldImage of ['forest-ground-v1','hero-ash-motion-v1','hound-motion-v1','giant-motion-v1']) test(`loading progress waits for ${heldImage} before enabling departure`, async ({page}) => {
   let releaseGround;
   const held = new Promise(resolve => { releaseGround = resolve; });
-  await page.route('**/art/survivor/forest-ground-v1.webp', async route => { await held; await route.continue(); });
+  await page.route(`**/art/survivor/${heldImage}.webp`, async route => { await held; await route.continue(); });
   await page.reload({waitUntil:'domcontentloaded'});
   try {
-    await expect(page.locator('#art-progress')).toHaveAttribute('value','5');
-    await expect(page.locator('#art-progress-label')).toHaveText('여정 준비 5 / 6');
+    await expect(page.locator('#art-progress')).toHaveAttribute('value','8');
+    await expect(page.locator('#art-progress-label')).toHaveText('여정 준비 8 / 9');
     await expect(page.locator('#start-game')).toHaveCount(0);
   } finally { releaseGround(); }
   await expect(page.locator('#start-game')).toBeVisible();

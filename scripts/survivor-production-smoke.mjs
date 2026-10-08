@@ -39,7 +39,7 @@ try{
   await page.getByRole('button',{name:'일시정지',exact:true}).click();
   await page.getByRole('button',{name:'전투 계속하기'}).waitFor();
   assert.equal(await page.evaluate(()=>typeof window.__ASH_QA__),'undefined');
-  for(const name of ['hero-ash.png','hero-ember.png','hero-grove.png','enemies.png','ash-sovereign.png','forest-sanctuary-v2.webp','forest-ground-v1.webp'])assert.ok(assets.includes(name),name);
+  for(const name of ['hero-ash.png','hero-ember.png','hero-grove.png','enemies.png','ash-sovereign.png','forest-sanctuary-v2.webp','forest-ground-v1.webp','hero-ash-motion-v1.webp','hound-motion-v1.webp','giant-motion-v1.webp'])assert.ok(assets.includes(name),name);
   await page.evaluate(()=>document.fonts.ready);
   assert.ok(await page.evaluate(()=>document.fonts.check('700 24px "Ash Journal"','잿빛의 숲')),'self-hosted Korean title face loaded');
   assert.deepEqual(failures,[]);assert.deepEqual(errors,[]);

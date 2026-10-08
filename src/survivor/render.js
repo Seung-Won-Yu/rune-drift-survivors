@@ -10,9 +10,11 @@ import { nearestRecovery } from './field.js';
 import { evolutionFeedback, evolutionFrame } from './evolution-feedback.js';
 import { drawWeaponMotif } from './weapon-motifs.js';
 import { drawFootfall, drawHitCut, drawChampionCrest, drawSwordRibbon } from './combat-ink.js';
+import { ashFrame, creatureFrame, remnantFrame } from './actor-animation.js';
+import { createActorPainter } from './actor-art.js';
 export async function loadArt(base, onProgress = () => {}) {
   let loaded = 0;
-  const total = 6;
+  const total = 9;
   onProgress(loaded, total);
   const load = (name, extension = 'png') => new Promise((resolve, reject) => {
     const image = new Image();
@@ -20,7 +22,7 @@ export async function loadArt(base, onProgress = () => {}) {
     image.onerror = () => reject(new Error(`${name} 이미지를 불러오지 못했습니다.`));
     image.src = `${base}art/survivor/${name}.${extension}`;
   });
-  const [ash, ember, grove, enemies, boss, ground] = await Promise.all([load('hero-ash'), load('hero-ember'), load('hero-grove'), load('enemies'), load('ash-sovereign'), load('forest-ground-v1', 'webp')]);
+  const [ash, ember, grove, enemies, boss, ground, ashMotion, houndMotion, giantMotion] = await Promise.all([load('hero-ash'), load('hero-ember'), load('hero-grove'), load('enemies'), load('ash-sovereign'), load('forest-ground-v1', 'webp'), load('hero-ash-motion-v1', 'webp'), load('hound-motion-v1', 'webp'), load('giant-motion-v1', 'webp')]);
   return {
     heroes: {
       ash,
@@ -29,7 +31,8 @@ export async function loadArt(base, onProgress = () => {}) {
     },
     enemies,
     boss,
-    ground
+    ground,
+    motion: { ash: ashMotion, hound: houndMotion, giant: giantMotion }
   };
 }
 const noise = (x, y) => {
@@ -92,6 +95,7 @@ export function createRenderer(canvas, art) {
     dpr = 1,
     scale = 1;
   const ground = makeGround(art.ground);
+  const actor = art.motion ? createActorPainter(art.motion) : null;
   let evolution = null;
   const pattern = ctx.createPattern(ground, 'repeat');
   // Canvas filters can force expensive software raster passes per actor. Bake
@@ -244,7 +248,11 @@ export function createRenderer(canvas, art) {
       ctx.strokeStyle = '#ffe5bd'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, 23, 10, 0, 0, Math.PI * 2); ctx.stroke();
     }
-    sprite(art.heroes[game.characterId], frame, row, 3, p.x, p.y, 88, p.facing < 0, p.hurt > 0, false, {
+    if (actor && game.characterId === 'ash') {
+      const recoil = p.hurt > 0 ? hurt?.pose ?? {} : game.swing ? attackPose(game, reduced.matches) : {};
+      actor(ctx, 'ash', ashFrame(game, reduced.matches), p.x, p.y, { flip: p.facing < 0, flash: p.hurt > .16,
+        pose: { x: (recoil.x ?? 0) * .45, y: (recoil.y ?? 0) * .45 } });
+    } else sprite(art.heroes[game.characterId], frame, row, 3, p.x, p.y, 88, p.facing < 0, p.hurt > 0, false, {
       ...pose,
       ...atlas,
       proportional: true
@@ -400,6 +408,14 @@ export function createRenderer(canvas, art) {
     for (const remnant of game.remnants) {
       const age = remnant.boss && game.outcome === 'victory' ? game.endAge ?? 0 : remnant.age;
       const progress = Math.min(1, age / remnant.life);
+      if (actor && !remnant.boss && (remnant.type === 1 || remnant.type === 2)) {
+        ctx.globalAlpha = Math.min(1, (1 - progress) * 3) * .85;
+        actor(ctx, remnant.type === 1 ? 'hound' : 'giant', remnantFrame(remnant, reduced.matches), remnant.x, remnant.y,
+          { flip: remnant.flip, factor: remnant.size / (remnant.type === 1 ? 72 : 86), pose: {
+            x: reduced.matches || remnant.angle === undefined ? 0 : Math.cos(remnant.angle) * 12 * progress,
+            y: reduced.matches || remnant.angle === undefined ? 0 : Math.sin(remnant.angle) * 8 * progress } });
+        ctx.globalAlpha = 1; continue;
+      }
       ctx.globalAlpha = (1 - progress) * .72;
       sprite(remnant.boss ? art.boss : art.enemies, 2, remnant.boss ? 0 : remnant.type, remnant.boss ? 2 : 3, remnant.x, remnant.y, remnant.size, remnant.flip, false, false, {
         anchor: remnant.boss ? .95 : .89,
@@ -463,9 +479,13 @@ export function createRenderer(canvas, art) {
       }
       const frame = a.hunt ? (a.hunt.age < huntRule(a).windup ? 0 : a.hunt.age < huntRule(a).windup + huntRule(a).duration ? 2 : 3) : a.slam ? a.slam.hit ? 2 : 0 : game.phase === 'ready' ? 0 : Math.floor(game.time * (a.type === 1 ? 9 : 5) + a.id) % 4;
       const slamPose = enemyMotion(a, game.time, reduced.matches);
-      sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.hunt ? Math.cos(a.hunt.angle) < 0 : a.x > p.x, a.hit > 0, false, { ...slamPose, ...impactPose(a, game.time, reduced.matches) });
+      const authored = actor && (a.type === 1 || a.type === 2);
+      if (authored) actor(ctx, a.type === 1 ? 'hound' : 'giant', creatureFrame(a, game.time, reduced.matches), a.x, a.y,
+        { flip: a.hunt ? Math.cos(a.hunt.angle) < 0 : a.slam ? a.slam.x < a.x : a.x > p.x, flash: a.hit > 0,
+          factor: a.size / (a.type === 1 ? 72 : 86), pose: impactPose(a, game.time, reduced.matches) });
+      else sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.hunt ? Math.cos(a.hunt.angle) < 0 : a.x > p.x, a.hit > 0, false, { ...slamPose, ...impactPose(a, game.time, reduced.matches) });
       drawHitCut(ctx, a, game.time, reduced.matches);
-      if (a.type === 2 && a.slam && !a.slam.hit) {
+      if (!authored && a.type === 2 && a.slam && !a.slam.hit) {
         const lift = reduced.matches ? 1 : Math.min(1,a.slam.age/(a.elite ? SLAM.windup : GIANT.windup));
         ctx.lineCap='round';
         for (const side of [-1,1]) {

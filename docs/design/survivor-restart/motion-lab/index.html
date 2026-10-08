@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>전투 동작 연구실 · Ash & Amber</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#142a22;color:#f3e5c6;font:16px system-ui}main{max-width:1000px;margin:auto;padding:28px}small{color:#b6c6b3}h1{font-size:28px;margin:8px 0}header p{color:#b6c6b3;line-height:1.6}nav{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0}button,a{font:inherit;color:inherit;border:1px solid #59684b;border-radius:8px;background:#243b2c;padding:10px 16px;cursor:pointer}button[aria-pressed=true]{background:#e9ba70;color:#193027}button:focus-visible,a:focus-visible{outline:3px solid #f9d899;outline-offset:3px}.actors{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}article{background:#1b3328;border:1px solid #415540;border-radius:14px;text-align:center;padding:14px}h2{font-size:18px}canvas{width:100%;height:250px}output{display:block;font-variant-numeric:tabular-nums;color:#bdcbb5;font-size:14px;min-height:40px}footer{margin-top:24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}label{display:flex;align-items:center;gap:8px}@media(max-width:620px){main{padding:16px}.actors{grid-template-columns:1fr}canvas{height:180px}article{padding:8px}h2{margin:8px}}
+</style><main>
+<header><small>ASH & AMBER / MOTION STUDY</small><h1>몸으로 읽히는 전투</h1><p>개발용 동작 검증 화면입니다. 실제 게임과 같은 그림·포즈 선택기를 사용합니다.<br>공격 준비, 적중, 회복을 비교하고 일시정지하여 발 위치를 살펴보세요.</p></header>
+<nav aria-label="동작 선택"><button data-mode="walk" aria-pressed="true">보행</button><button data-mode="attack" aria-pressed="false">공격</button><button data-mode="hurt" aria-pressed="false">피격</button><button data-mode="death" aria-pressed="false">처치</button></nav>
+<section class="actors"><article><h2>잿빛 검사</h2><canvas id="ash" aria-label="검사 동작"></canvas><output id="ash-state"></output></article><article><h2>숲 사냥개</h2><canvas id="hound" aria-label="사냥개 동작"></canvas><output id="hound-state"></output></article><article><h2>숲거인</h2><canvas id="giant" aria-label="거인 동작"></canvas><output id="giant-state"></output></article></section>
+<footer><button id="pause">일시정지</button><label><input id="reduced" type="checkbox">동작 줄이기</label><label><input id="flip" type="checkbox">왼쪽 보기</label><a href="../../../../survivor/">실제 게임으로 →</a></footer>
+</main><script type="module">
+import {loadArt} from '../../../../src/survivor/render.js';
+import {createActorPainter} from '../../../../src/survivor/actor-art.js';
+import {ashFrame,creatureFrame,remnantFrame} from '../../../../src/survivor/actor-animation.js';
+import {createGame} from '../../../../src/survivor/game.js';
+import {HOUND,GIANT} from '../../../../src/survivor/enemies.js';
+const art=await loadArt(new URL('../../../../',location.href).pathname),draw=createActorPainter(art.motion),game=createGame(42);
+let mode='walk',paused=false,time=0,last=0;
+for(const button of document.querySelectorAll('[data-mode]'))button.onclick=()=>{mode=button.dataset.mode;time=0;for(const item of document.querySelectorAll('[data-mode]'))item.setAttribute('aria-pressed',String(item===button));};
+document.querySelector('#pause').onclick=event=>{paused=!paused;event.target.textContent=paused?'재생':'일시정지';};
+function tick(now){if(last&&!paused)time+=Math.min(.033,(now-last)/1000);last=now;
+ const reduced=document.querySelector('#reduced').checked,flip=document.querySelector('#flip').checked;
+ for(const key of ['ash','hound','giant']){
+  const canvas=document.getElementById(key),ctx=canvas.getContext('2d'),w=canvas.clientWidth,h=canvas.clientHeight;
+  if(canvas.width!==w*2||canvas.height!==h*2){canvas.width=w*2;canvas.height=h*2;}ctx.setTransform(2,0,0,2,0,0);ctx.clearRect(0,0,w,h);
+  const length=key==='ash'?.55:key==='hound'?HOUND.windup+HOUND.duration+HOUND.recovery:GIANT.windup+GIANT.recovery;
+  const age=time%(length+.6),e={type:key==='hound'?1:2,speed:60,walk:time*(key==='hound'?108:55)};
+  game.player.moving=mode==='walk';game.player.walk=time;game.player.hurt=0;game.player.cast=0;game.outcome=null;game.swing=null;
+  let f=0,label='접지 · 이동 거리에 따른 보행';
+  if(mode==='attack'&&age<length){
+   if(key==='ash')game.swing={age,angle:0};else if(key==='hound')e.hunt={age};else e.slam={age,hit:age>=GIANT.windup};
+   const windup=key==='ash'?.18:key==='hound'?HOUND.windup:GIANT.windup;label=age<windup?'공격 준비':age<windup+(key==='hound'?HOUND.duration:.12)?'적중 / 돌진':'회복';
+  }else if(mode==='hurt'){const a=time%.85;if(a<.24)game.player.hurt=.24-a;if(a<.18)e.impact={at:time-a};label='피격 · 복귀';}
+  else if(mode==='death'){const a=time%1.2;game.outcome='defeat';game.player.deathAge=a;f=remnantFrame({age:a,life:.55},reduced);label='무게가 무너지는 처치 포즈';}
+  if(key==='ash')f=ashFrame(game,reduced);else if(mode!=='death')f=creatureFrame(e,time,reduced);
+  const zoom=Math.min(1.65,(w-20)/130,(h-30)/130),x=w/2,y=h-25;
+  ctx.strokeStyle='#81966a55';ctx.beginPath();ctx.moveTo(12,y);ctx.lineTo(w-12,y);ctx.stroke();
+  ctx.fillStyle='#07181080';ctx.beginPath();ctx.ellipse(x,y+1,24*zoom,6*zoom,0,0,7);ctx.fill();
+  draw(ctx,key,f,x,y,{flip,factor:zoom});document.getElementById(key+'-state').textContent=label+' · 포즈 '+(f+1);
+ }requestAnimationFrame(tick);
+}requestAnimationFrame(tick);
+</script></html>
