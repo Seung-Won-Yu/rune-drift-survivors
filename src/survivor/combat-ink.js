@@ -38,24 +38,3 @@ export function drawChampionCrest(ctx, enemy) {
   ctx.fillStyle = tone; ctx.strokeStyle = '#1d3028'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(-10, 3); ctx.lineTo(-12, -4); ctx.lineTo(-5, -1); ctx.lineTo(0, -9); ctx.lineTo(5, -1); ctx.lineTo(12, -4); ctx.lineTo(10, 3); ctx.closePath(); ctx.stroke(); ctx.fill(); ctx.restore();
 }
-
-export function drawSwordRibbon(ctx, effect, progress, reduced) {
-  // Follow the authored slash inside its existing range; no new hit/range signal.
-  const reach = effect.range * (.88 + progress * .12);
-  const edge = effect.halfAngle;
-  ctx.save(); ctx.lineCap = 'round';
-  if (!reduced) {
-    ctx.save();
-    ctx.globalAlpha *= .55 * (1 - progress);
-    ctx.strokeStyle = effect.empowered ? '#ffe5a3' : '#e3b66b'; ctx.lineWidth = effect.empowered ? 5 : 3;
-    ctx.beginPath(); ctx.arc(0, 0, reach * .77, -edge * .82, edge * .86); ctx.stroke();
-    ctx.restore();
-  }
-  // Tapered brush tip gives the ring a visible sweep direction.
-  ctx.fillStyle = '#fff4d6';
-  ctx.beginPath();
-  ctx.moveTo(Math.cos(edge) * reach, Math.sin(edge) * reach);
-  ctx.lineTo(Math.cos(edge - .28) * (reach + 3), Math.sin(edge - .28) * (reach + 3));
-  ctx.lineTo(Math.cos(edge - .22) * (reach - (effect.empowered ? 15 : 9) * (1 - progress)), Math.sin(edge - .22) * (reach - 9 * (1 - progress)));
-  ctx.closePath(); ctx.fill(); ctx.restore();
-}

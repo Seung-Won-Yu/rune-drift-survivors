@@ -2,6 +2,12 @@
 
 Generated with the built-in imagegen tool, transparent RGBA. The existing hero/enemy sheets supplied identity references. Runtime reads measured source rectangles, not an assumed uniform grid. Original assets remain available for the other actors.
 
+Final project assets:
+
+- [Ash motion atlas](./hero-ash-motion-v1.webp)
+- [Forest hound motion atlas](./hound-motion-v1.webp)
+- [Forest giant motion atlas](./giant-motion-v1.webp)
+
 Selected source outputs: Ash `exec-18ce1502-286d-45f9-ad3b-a86fb2f40961.png`, hound `exec-036d1b0b-deb0-4d5b-a2da-511facd55af3.png`, giant `exec-7eb0fd09-96b7-4c05-a30b-babc4a1ffb53.png`. WebP conversion preserves alpha and source dimensions.
 
 Ash frame 13 (zero-based) has an incomplete blade; its rectangle also overlaps frame 12. Both are excluded by the animation resolver; the intact frame 11 holds through contact. The targeted correction produced new missing swords in other frames, so that variant was rejected. Ash uses 22 poses: eight walk, six attack, four hurt and four defeat. The two creatures each use all 24 poses.

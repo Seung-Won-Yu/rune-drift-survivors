@@ -1,17 +1,18 @@
 import { SIGNATURES } from './signature.js';
 import { impactPose, attackPose, hurtFeedback } from './impact.js';
-import { HOUND, GIANT, huntRule } from './enemies.js';
+import { GIANT, huntRule } from './enemies.js';
 import { heroGait, enemyMotion } from './motion.js';
 import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
 import { ENCOUNTERS } from './encounters.js';
-import { orbitPositions, stats, SLAM } from './game.js';
+import { orbitPositions, SLAM } from './game.js';
 import { BOSS } from './boss.js';
 import { nearestRecovery } from './field.js';
 import { evolutionFeedback, evolutionFrame } from './evolution-feedback.js';
 import { drawWeaponMotif } from './weapon-motifs.js';
-import { drawFootfall, drawHitCut, drawChampionCrest, drawSwordRibbon } from './combat-ink.js';
+import { drawFootfall, drawHitCut, drawChampionCrest } from './combat-ink.js';
 import { ashFrame, creatureFrame, remnantFrame } from './actor-animation.js';
 import { createActorPainter } from './actor-art.js';
+import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst } from './combat-vfx.js';
 export async function loadArt(base, onProgress = () => {}) {
   let loaded = 0;
   const total = 9;
@@ -427,19 +428,6 @@ export function createRenderer(canvas, art) {
       });
       ctx.globalAlpha = 1;
     }
-    if (game.swing && !game.swing.hit) {
-      const s = stats(game),
-        progress = game.swing.age / .18;
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(game.swing.angle);
-      ctx.strokeStyle = game.ranks.dawn ? '#ffe6a680' : '#dfba7350';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(0, 0, (s.swordRange + (game.swing.empowered ? 25 : 0)) * (.82 + progress * .18), -s.swordHalfAngle, s.swordHalfAngle);
-      ctx.stroke();
-      ctx.restore();
-    }
     const actors = [...game.enemies].sort((a, b) => a.y - b.y);
     for (const a of actors) {
       if (Math.abs(a.x - p.x) > viewW / 2 + 120 || Math.abs(a.y - p.y) > viewH / 2 + 150) continue;
@@ -508,39 +496,7 @@ export function createRenderer(canvas, art) {
         ctx.fillText(a.champion ? a.name : '정예', a.x, a.y - a.size * .69 - 7);
       }
     }
-    for (const shot of game.shots) {
-      if (shot.kind === 'crescent') {
-        ctx.save();
-        ctx.translate(shot.x, shot.y - 8);
-        ctx.rotate(Math.atan2(shot.vy, shot.vx));
-        ctx.strokeStyle = '#e8b45755';
-        ctx.lineWidth = 13;
-        ctx.beginPath();
-        ctx.arc(-10, 0, 27, -1.35, 1.35);
-        ctx.stroke();
-        ctx.strokeStyle = '#fff0ba';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-        drawWeaponMotif(ctx, 'dawn', 16);
-        ctx.restore();
-        continue;
-      }
-      ctx.strokeStyle = shot.blast ? '#ff9b5677' : '#ffb45e88';
-      ctx.lineWidth = shot.empowered ? 12 : shot.blast ? 9 : 4;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(shot.x - shot.vx * (shot.blast ? .085 : .045), shot.y - shot.vy * (shot.blast ? .085 : .045) - 14);
-      ctx.lineTo(shot.x, shot.y - 14);
-      ctx.stroke();
-      ctx.fillStyle = shot.blast ? '#fff1b9' : '#ffda8f';
-      ctx.beginPath();
-      ctx.arc(shot.x, shot.y - 14, shot.empowered ? 8 : shot.blast ? 6 : 4.5, 0, 7);
-      ctx.fill();
-      if (game.ranks.comet) {
-        ctx.save(); ctx.translate(shot.x, shot.y - 14); ctx.rotate(Math.atan2(shot.vy, shot.vx));
-        drawWeaponMotif(ctx, 'comet', 12); ctx.restore();
-      }
-    }
+    for (const shot of game.shots) drawProjectile(ctx, shot, reduced.matches);
     for (const orb of orbitPositions(game)) {
       ctx.save();
       ctx.translate(orb.x, orb.y - 12);
@@ -622,31 +578,7 @@ export function createRenderer(canvas, art) {
         }
         ctx.restore();
       } else if (e.kind === 'slash') {
-        ctx.save();
-        ctx.translate(e.x, e.y);
-        ctx.rotate(e.angle);
-        if (e.branch === 'duelist') {
-          ctx.fillStyle='#f6b49a';ctx.beginPath();ctx.moveTo(e.range*.2,-4*(1-progress));ctx.lineTo(e.range,0);ctx.lineTo(e.range*.2,4*(1-progress));ctx.closePath();ctx.fill();
-          ctx.strokeStyle='#fff0d9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(e.range*.15,-5);ctx.lineTo(e.range*.95,-5);ctx.stroke();
-        }
-        if (e.branch === 'sweep') {
-          ctx.strokeStyle='#e9bd7370';ctx.lineWidth=3;
-          for(const radius of [.68,.79]) {ctx.beginPath();ctx.arc(0,0,e.range*radius,-e.halfAngle,e.halfAngle);ctx.stroke();}
-        }
-        ctx.strokeStyle = e.evolved ? '#fff0bb' : '#ffe0a7';
-        ctx.lineWidth = (e.empowered ? 16 : e.evolved ? 11 : 7) * (1 - progress) + 1;
-        ctx.beginPath();
-        ctx.arc(0, 0, e.range * (.88 + progress * .12), -e.halfAngle, e.halfAngle);
-        ctx.stroke();
-        ctx.strokeStyle = '#eba45966';
-        ctx.lineWidth = 18 * (1 - progress);
-        ctx.stroke();
-        drawSwordRibbon(ctx, e, progress, reduced.matches);
-        if (e.evolved) {
-          ctx.translate(e.range * .65, 0);
-          drawWeaponMotif(ctx, 'dawn', 18);
-        }
-        ctx.restore();
+        drawSlash(ctx, e, reduced.matches);
       } else if (e.kind === 'fire-link') {
         // A fixed connection identifies the actual transfer; no new particles.
         ctx.strokeStyle='#ffb56f';ctx.lineWidth=3*(1-progress)+1;ctx.beginPath();
@@ -661,22 +593,7 @@ export function createRenderer(canvas, art) {
         else {for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.moveTo(Math.cos(a)*4,Math.sin(a)*4);ctx.lineTo(Math.cos(a)*reach*(i%2? .65:1),Math.sin(a)*reach*(i%2?.65:1));}}
         ctx.stroke();ctx.restore();
       } else if (e.kind === 'slam') {
-        ctx.fillStyle = '#d5834230';
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.range, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#ffbc79';
-        ctx.lineWidth = 5 * (1 - progress) + 1;
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.range * (.5 + progress * .5), 0, Math.PI * 2);
-        ctx.stroke();
-        for (let i = 0; i < 8; i++) {
-          const a = i * Math.PI / 4;
-          ctx.beginPath();
-          ctx.moveTo(e.x + Math.cos(a) * 25, e.y + Math.sin(a) * 25);
-          ctx.lineTo(e.x + Math.cos(a) * e.range * .9, e.y + Math.sin(a) * e.range * .9);
-          ctx.stroke();
-        }
+        drawSlamImpact(ctx, e, reduced.matches);
       } else if (e.kind === 'boss-cast') {
         ctx.strokeStyle = '#edaa82';
         ctx.lineWidth = 3;
@@ -684,39 +601,13 @@ export function createRenderer(canvas, art) {
         ctx.arc(e.x, e.y, 25 + progress * 40, 0, Math.PI * 2);
         ctx.stroke();
       } else if (e.kind === 'ember-burst') {
-        if(e.concentrated) {
-          ctx.strokeStyle='#f9ce9777';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.range*(reduced.matches?.9:.7+progress*.3),0,Math.PI*2);ctx.stroke();
-          ctx.fillStyle='#ffe6ac';ctx.beginPath();ctx.arc(e.x,e.y,12*(1-progress)+2,0,Math.PI*2);ctx.fill();
-        }
-        ctx.fillStyle = '#e9934938';
-        ctx.strokeStyle = '#ffdb9a';
-        ctx.lineWidth = 4 * (1 - progress) + 1;
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.range * (.6 + progress * .4), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        if (game.ranks.comet) {
-          ctx.save(); ctx.translate(e.x, e.y);
-          drawWeaponMotif(ctx, 'comet', e.range * .3); ctx.restore();
-        }
-        for (let i = 0; i < 7; i++) {
-          const a = i * Math.PI * 2 / 7;
-          ctx.fillStyle = '#ffc280';
-          ctx.fillRect(e.x + Math.cos(a) * progress * e.range, e.y + Math.sin(a) * progress * e.range, 4, 4);
-        }
+        drawEmberBurst(ctx, e, reduced.matches);
       } else if (e.kind === 'lunar-pulse' || e.kind === 'briar-pulse') {
         ctx.strokeStyle = e.kind === 'briar-pulse' ? '#edb7d9' : '#b8f6df';
         ctx.lineWidth = 5 * (1 - progress) + 1;
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.range * (.6 + progress * .4), 0, Math.PI * 2);
         ctx.stroke();
-        ctx.setLineDash([6, 12]);
-        ctx.strokeStyle = '#84cbb899';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.range * (.5 + progress * .5) - 12, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
         if (e.kind === 'lunar-pulse') {
           ctx.save(); ctx.translate(e.x, e.y - e.range * .42);
           drawWeaponMotif(ctx, 'lunar', 16); ctx.restore();

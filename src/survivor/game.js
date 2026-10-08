@@ -879,6 +879,8 @@ function updateSlam(game, enemy, dt, distance) {
       kind: 'slam',
       x: slam.x,
       y: slam.y,
+      fromX: enemy.x,
+      fromY: enemy.y,
       range: rule.radius,
       life: .38
     });

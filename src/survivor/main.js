@@ -727,6 +727,19 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       } else if (name === 'enemy-hound' || name === 'enemy-giant') {
         game.ranks.sword=0;game.player.invincible=0;
         const e=spawnEnemy(game,name==='enemy-hound'?1:2,false,{x:-110,y:0});e.huntClock=e.attackClock=0;e.hp=e.maxHp=999;
+      } else if (name === 'action-readability' || name === 'projectile-readability') {
+        game.time = 65; game.phase = 'paused'; game.ranks.sword = 3; game.ranks.sweep = 1;
+        const h = spawnEnemy(game, 1, false, {x:-150,y:-15}); h.hunt = {x:-150,y:-15,angle:.22,age:.55,hit:false};
+        const g = spawnEnemy(game, 2, true, {x:20,y:-115}); g.slam = {x:35,y:70,age:.65,hit:false};
+        game.spores = [{x:-120,y:130,age:1}];
+        game.swing = {age:.24,angle:-.3,hit:true};
+        game.effects.push({kind:'slash',x:0,y:0,angle:-.3,range:175,halfAngle:2.15,branch:'sweep',empowered:true,age:.06,life:.22});
+        if (name === 'projectile-readability') {
+          game.swing = null; game.effects = [];
+          game.shots = [{x:95,y:-50,vx:260,vy:-90,life:1,damage:0},
+            {x:145,y:15,vx:270,vy:45,life:1,damage:0,blast:true,empowered:true},
+            {kind:'crescent',x:95,y:100,vx:310,vy:70,life:1,damage:0,hitIds:[]}];
+        }
       } else if (name === 'enemy-warnings') {
         game.time=100;game.ranks.sword=0;game.nextElite=999;
         game.spores=[{x:0,y:100,age:.35}];
@@ -968,6 +981,13 @@ loadArt(import.meta.env.BASE_URL, (loaded, total) => {
 }).then(art => {
   renderer = createRenderer($('world'), art);
   syncPhase();
+  if (import.meta.env.DEV) {
+    const scene = new URLSearchParams(location.search).get('scene');
+    if (window.__ASH_QA__ && ['action-readability', 'projectile-readability'].includes(scene)) {
+      window.__ASH_QA__.scenario(scene);
+      $('overlay').style.visibility = 'hidden';
+    }
+  }
   requestAnimationFrame(tick);
 }).catch(error => {
   panel(`<p class="eyebrow">잠시 길이 끊겼습니다</p><h1 id="panel-title">숲을 불러오지 못했습니다</h1><p class="panel-lead">이미지 연결을 확인한 뒤 다시 시도하세요.</p><div class="panel-actions"><button id="retry" class="primary">다시 불러오기</button></div>`, true);

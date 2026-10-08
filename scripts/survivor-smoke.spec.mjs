@@ -8,6 +8,23 @@ const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenari
 
 test.describe('rendered combat priorities',()=>{
   test.use({deviceScaleFactor:2});
+  test('a wide sword strike paints a compact weapon stroke rather than a large range diagram',async({page})=>{
+    const result=await page.evaluate(async()=>{
+      const {createRenderer,loadArt}=await import('/src/survivor/render.js'),{createGame}=await import('/src/survivor/game.js');
+      const canvas=document.createElement('canvas');canvas.style.cssText='width:800px;height:680px';document.body.append(canvas);
+      const renderer=createRenderer(canvas,await loadArt('/')),g=createGame(42);g.phase='paused';
+      const ctx=canvas.getContext('2d',{willReadFrequently:true});renderer.render(g);const beforePixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      g.effects=[{kind:'slash',x:0,y:0,angle:0,range:240,halfAngle:2.15,branch:'sweep',empowered:true,life:.22,age:.06}];
+      const before=JSON.stringify(g),{scale}=renderer.render(g),after=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      let radius=0,count=0;const ratio=canvas.width/800;
+      for(let i=0;i<after.length;i+=4)if(Math.abs(after[i]-beforePixels[i])+Math.abs(after[i+1]-beforePixels[i+1])+Math.abs(after[i+2]-beforePixels[i+2])>8){
+        count++;const x=(i/4)%canvas.width,y=Math.floor(i/4/canvas.width);
+        radius=Math.max(radius,Math.hypot((x-canvas.width/2)/ratio/scale,(y-canvas.height*.53)/ratio/scale+28));
+      }
+      canvas.remove();return {radius,count,unchanged:before===JSON.stringify(g)};
+    });
+    expect(result.count).toBeGreaterThan(30);expect(result.radius).toBeLessThan(82);expect(result.unchanged).toBe(true);
+  });
   test('authored poses decode, keep planted feet and give a distinct leap and grounded death',async({page})=>{
     const result=await page.evaluate(async()=>{
       const {loadArt}=await import('/src/survivor/render.js');
@@ -60,24 +77,22 @@ test.describe('rendered combat priorities',()=>{
       });
       expect(result.overlap).toEqual(result.clear);expect(result.unchanged).toBe(true);
     });
-    test(`all danger edges remain above occluding actors and effects at ${viewport.width}px`,async({page})=>{
+    test(`area and boss danger edges remain above occluding actors and effects at ${viewport.width}px`,async({page})=>{
       await page.setViewportSize(viewport);
       const checks=await page.evaluate(async()=>{
         const {createRenderer,loadArt}=await import('/src/survivor/render.js');
         const {createGame,spawnEnemy,spawnBoss,spawnChampion,SLAM}=await import('/src/survivor/game.js');
-        const {CHAMPION_HUNT,CHAMPION_SPORE}=await import('/src/survivor/champions.js');
-        const {GIANT,HOUND,SPORE}=await import('/src/survivor/enemies.js');const {BOSS}=await import('/src/survivor/boss.js');
+        const {CHAMPION_SPORE}=await import('/src/survivor/champions.js');
+        const {GIANT,SPORE}=await import('/src/survivor/enemies.js');const {BOSS}=await import('/src/survivor/boss.js');
         const canvas=document.createElement('canvas');canvas.style.cssText=`width:${innerWidth}px;height:${innerHeight}px;position:absolute;left:0;top:0`;
         document.body.append(canvas);const renderer=createRenderer(canvas,await loadArt('/')),ctx=canvas.getContext('2d'),checks=[];
-        for(const kind of ['giant','elite','spore','royal-spore','hound','champion-hound','charge','thorns']){
+        for(const kind of ['giant','elite','spore','royal-spore','charge','thorns']){
           const g=createGame(42);g.phase='paused';g.player.invincible=0;let point;
           if(kind==='giant'||kind==='elite'){
             const rule=kind==='elite'?SLAM:GIANT,e=spawnEnemy(g,2,kind==='elite',{x:-140,y:-90});
             e.slam={x:0,y:0,age:rule.windup*.65,hit:false};point={x:rule.radius,y:0};
           }else if(kind==='spore'||kind==='royal-spore'){const rule=kind==='spore'?SPORE:CHAMPION_SPORE;g.spores=[{x:90,y:0,age:rule.windup*.65,royal:kind==='royal-spore'}];point={x:90+rule.radius,y:0};}
-          else if(kind==='hound'||kind==='champion-hound'){
-            const e=kind==='hound'?spawnEnemy(g,1,false,{x:-140,y:-90}):spawnChampion(g,1),rule=kind==='hound'?HOUND:CHAMPION_HUNT;Object.assign(e,{x:-140,y:-90,hunt:{x:0,y:0,angle:0,age:rule.windup+.1}});point={x:100,y:rule.width/2};
-          }else{
+          else{
             const boss=spawnBoss(g);Object.assign(boss,{x:-200,y:-150,entrance:0,pattern:{kind,x:0,y:0,angle:0,age:BOSS.windup*.65}});
             point={x:100,y:kind==='charge'?BOSS.chargeWidth/2:0};
           }

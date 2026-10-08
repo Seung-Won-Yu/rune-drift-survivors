@@ -29,6 +29,7 @@ test('lateral escape avoids the fixed dash and slowing affects charge travel',()
 test('ordinary giants lock a visible target and use their own radius and damage',()=>{
  const g=run(),e=spawnEnemy(g,2,false,{x:110,y:0});e.attackClock=0;frames(g,1);assert.equal(e.slam.radius,GIANT.radius);assert.equal(e.slam.windup,GIANT.windup);
  frames(g,64);assert.equal(g.player.hp,100);frames(g,6);assert.equal(g.damageTaken.slam,GIANT.damage);
+ const impact=g.effects.find(effect=>effect.kind==='slam');assert.equal(impact.fromX,110);assert.equal(impact.fromY,0);assert.equal(impact.x,0);assert.equal(impact.y,0);
  const evade=run(),other=spawnEnemy(evade,2,false,{x:110,y:0});other.attackClock=0;frames(evade,1);frames(evade,80,{x:0,y:1});assert.equal(other.slam.y,0);assert.equal(evade.damageTaken.slam,0);
 });
 test('simultaneous threats, pause, death ordering and restart remain bounded',()=>{

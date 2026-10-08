@@ -4,6 +4,8 @@ import { createGame, spawnEnemy, updateGame, SLAM } from '../src/survivor/game.j
 import { HOUND, GIANT } from '../src/survivor/enemies.js';
 import { ashFrame, creatureFrame, remnantFrame } from '../src/survivor/actor-animation.js';
 import { ACTOR_ART } from '../src/survivor/actor-art.js';
+import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst } from '../src/survivor/combat-vfx.js';
+import { drawEnemyGround, drawEnemyWarnings } from '../src/survivor/enemy-render.js';
 import { createProfile } from '../src/survivor/profile.js';
 import { codexEntries } from '../src/survivor/codex.js';
 import { collectionArt } from '../src/survivor/collection-art.js';
@@ -14,6 +16,60 @@ import { evolutionFeedback, evolutionFrame } from '../src/survivor/evolution-fee
 import { weaponPresentation, weaponLoadout, weaponBeltKey } from '../src/survivor/weapon-presentation.js';
 import { SPECIALIZATIONS } from '../src/survivor/expansion.js';
 import { drawWeaponMotif } from '../src/survivor/weapon-motifs.js';
+
+const drawingCalls = draw => {
+  const calls = [], ctx = new Proxy({}, {
+    get: (_, method) => (...args) => calls.push([method, ...args]),
+    set: (_, property, value) => { calls.push([property, value]); return true; }
+  });
+  draw(ctx); return calls;
+};
+
+test('sword strokes stay near the weapon even at evolved range and never draw a full damage sector', () => {
+  for (const branch of [null, 'sweep', 'duelist']) for (const reduced of [false,true]) for (const age of [0,.06,.16,.22]) {
+    const effect={x:10,y:20,angle:.3,range:240,halfAngle:2.15,life:.22,age,branch,empowered:true},before=JSON.stringify(effect);
+    const calls=drawingCalls(ctx=>drawSlash(ctx,effect,reduced));
+    for(const call of calls.filter(c=>c[0]==='arc')) { assert.ok(call[3]<=76);assert.ok(Math.abs(call[5]-call[4])<=1.23); }
+    assert.equal(JSON.stringify(effect),before);
+    assert.deepEqual(calls,drawingCalls(ctx=>drawSlash(ctx,effect,reduced)));
+  }
+});
+
+test('projectile heads use the actual position and travel direction without advancing simulation', () => {
+  for(const kind of [undefined,'crescent']) for(const vx of [-290,290]) {
+    const shot={kind,x:120,y:80,vx,vy:40,life:1,blast:true},before=JSON.stringify(shot);
+    const calls=drawingCalls(ctx=>drawProjectile(ctx,shot));
+    assert.deepEqual(calls.find(c=>c[0]==='translate'),['translate',120,kind==='crescent'?72:66]);
+    assert.deepEqual(calls.find(c=>c[0]==='rotate'),['rotate',Math.atan2(40,vx)]);
+    assert.equal(JSON.stringify(shot),before);
+  }
+});
+
+test('ordinary warnings omit text and target tethers; hound motion follows the actual charging body', () => {
+  const game={time:1,spores:[{x:0,y:100,age:.4}],enemies:[{type:2,x:120,y:50,slam:{x:0,y:0,age:.5,hit:false}},{type:1,x:-100,y:0,hunt:{x:-100,y:0,angle:0,age:.4}}]};
+  const before=JSON.stringify(game),calls=drawingCalls(ctx=>drawEnemyWarnings(ctx,game,false));
+  assert.ok(!calls.some(c=>['fillText','strokeText','moveTo','lineTo','setLineDash'].includes(c[0])));
+  assert.equal(JSON.stringify(game),before);
+  const hound=game.enemies[1];game.enemies=[hound];game.spores=[];
+  const floor=drawingCalls(ctx=>drawEnemyGround(ctx,game));
+  assert.ok(floor.some(c=>c[0]==='lineWidth'&&c[1]===HOUND.width));
+  hound.hunt.age=HOUND.windup+.1;hound.x=-55;
+  assert.ok(!drawingCalls(ctx=>drawEnemyGround(ctx,game)).some(c=>c[0]==='stroke'));
+  const dash=drawingCalls(ctx=>drawEnemyWarnings(ctx,game,false));
+  assert.deepEqual(dash.find(c=>c[0]==='translate'),['translate',-55,-12]);
+  assert.ok(!drawingCalls(ctx=>drawEnemyWarnings(ctx,game,true)).some(c=>c[0]==='lineTo'));
+});
+
+test('ground and fire impacts remain bounded, deterministic and free of full-radius target rings', () => {
+  const effect={x:20,y:70,fromX:0,fromY:-100,range:90,age:.12,life:.38},before=JSON.stringify(effect);
+  for(const draw of [drawSlamImpact,drawEmberBurst]) for(const reduced of [false,true]) {
+    const calls=drawingCalls(ctx=>draw(ctx,effect,reduced));
+    assert.ok(!calls.some(c=>c[0]==='arc'));assert.deepEqual(calls,drawingCalls(ctx=>draw(ctx,effect,reduced)));
+    assert.ok(calls.length<180);
+    for(const call of calls)for(const value of call.slice(1).filter(v=>typeof v==='number'))assert.ok(Number.isFinite(value));
+  }
+  assert.equal(JSON.stringify(effect),before);
+});
 
 test('authored blade poses reach contact only at the real hit threshold, with hurt and defeat priority', () => {
   const game = createGame(42); game.swing = { age: .179, angle: 0 };

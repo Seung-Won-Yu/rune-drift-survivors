@@ -39,7 +39,7 @@
 - Pages 빌드와 production smoke 통과. 새 WebP 세 장 로드, QA API 제거, 도감·시작·일시정지, 폰트와 경로 정상.
 - IAB에서 새 보행/처치 포즈와 실제 게임의 크기·가독성을 확인했다. 모바일 경고 캔버스도 직접 검토했다.
 
-공개 배포 검증은 배포 완료 후 기록한다.
+`a541d82`는 [CI와 Pages 배포](https://github.com/Seung-Won-Yu/rune-drift-survivors/actions/runs/37708540188)를 통과했다. 이후 사용자의 캡처 피드백을 반영해 범위 표시를 줄이고 액션/투사체를 개선한 내용은 [후속 기록](./30-ACTION-BEFORE-MARKERS.md)에 정리한다.
 
 ## 다음 범위
 

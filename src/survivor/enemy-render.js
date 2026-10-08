@@ -1,4 +1,4 @@
-import { SPORE, HOUND, GIANT, sporeRule, huntRule } from './enemies.js';
+import { GIANT, sporeRule, huntRule } from './enemies.js';
 import { BOSS } from './boss.js';
 import { SLAM } from './game.js';
 
@@ -6,25 +6,30 @@ function warningStroke(ctx, color, width = 2) {
   ctx.strokeStyle = '#15231fee'; ctx.lineWidth = width + 4; ctx.stroke();
   ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke();
 }
+function quietBoundary(ctx, color) {
+  ctx.strokeStyle = '#15231f'; ctx.lineWidth = 3.5; ctx.stroke();
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+}
 
 export function drawEnemyGround(ctx, game) {
   ctx.save();
   for (const s of game.spores) {
     const rule = sporeRule(s);
     const active=s.age>=rule.windup;
-    ctx.fillStyle=active?'#ca95512c':'#c2ab6510';
+    ctx.fillStyle=active?'#b8a16b28':'#b6a06d12';
     ctx.beginPath();ctx.arc(s.x,s.y,rule.radius,0,Math.PI*2);ctx.fill();
   }
   for (const enemy of game.enemies) {
     const hunt = huntRule(enemy);
-    if (enemy.hunt && enemy.hunt.age < hunt.windup + hunt.duration) {
+    if (enemy.hunt && enemy.hunt.age < hunt.windup) {
       ctx.save(); ctx.translate(enemy.hunt.x, enemy.hunt.y); ctx.rotate(enemy.hunt.angle);
-      ctx.strokeStyle = '#edaa6340'; ctx.lineWidth = hunt.width; ctx.lineCap = 'butt';
+      ctx.strokeStyle = '#c6a5741c'; ctx.lineWidth = hunt.width; ctx.lineCap = 'butt';
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(hunt.length, 0); ctx.stroke(); ctx.restore();
     }
     if (enemy.slam && !enemy.slam.hit) {
       const rule = enemy.elite ? SLAM : GIANT;
-      ctx.fillStyle = '#d8684430'; ctx.beginPath();
+      const progress = Math.min(1, enemy.slam.age / rule.windup);
+      ctx.fillStyle = `rgba(207, 126, 78, ${.045 + progress * .085})`; ctx.beginPath();
       ctx.arc(enemy.slam.x, enemy.slam.y, rule.radius, 0, Math.PI * 2); ctx.fill();
     }
     const pattern = enemy.boss && enemy.pattern;
@@ -37,7 +42,7 @@ export function drawEnemyGround(ctx, game) {
   ctx.restore();
 }
 // Every damaging warning is above actors and friendly effects. Area fills remain on the floor.
-export function drawEnemyWarnings(ctx, game, reduced, scale = 1) {
+export function drawEnemyWarnings(ctx, game, reduced) {
   ctx.save();
   for (const enemy of game.enemies) {
     const hunt = huntRule(enemy);
@@ -74,36 +79,27 @@ export function drawEnemyWarnings(ctx, game, reduced, scale = 1) {
     }
     if (enemy.slam && !enemy.slam.hit) {
       const slam = enemy.slam, rule = enemy.elite ? SLAM : GIANT;
-      const progress = Math.min(1, slam.age / rule.windup);
-      ctx.beginPath(); ctx.arc(slam.x, slam.y, rule.radius, 0, Math.PI * 2); warningStroke(ctx, '#ffc39b');
-      ctx.beginPath(); ctx.arc(slam.x, slam.y, rule.radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2); warningStroke(ctx, '#ff9869', 4);
-      ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(enemy.x, enemy.y); ctx.lineTo(slam.x, slam.y); warningStroke(ctx, '#eebda280', 1); ctx.setLineDash([]);
-      ctx.font = `bold ${scale < 1 ? 17 : 12}px system-ui`; ctx.textAlign = 'center';
-      ctx.strokeStyle = '#281c18'; ctx.lineWidth = 4; ctx.strokeText('내려찍기', slam.x, slam.y - rule.radius - 12);
-      ctx.fillStyle = '#ffe0c0'; ctx.fillText('내려찍기', slam.x, slam.y - rule.radius - 12);
-      ctx.beginPath(); ctx.moveTo(slam.x - 6, slam.y - 6); ctx.lineTo(slam.x + 6, slam.y + 6);
-      ctx.moveTo(slam.x + 6, slam.y - 6); ctx.lineTo(slam.x - 6, slam.y + 6); warningStroke(ctx, '#ffd5ab');
+      // One honest footprint. The club pose supplies anticipation; the impact
+      // itself supplies the connection, without text, crosshair or tether.
+      ctx.beginPath(); ctx.arc(slam.x, slam.y, rule.radius, 0, Math.PI * 2); quietBoundary(ctx, '#d8ab86');
     }
   }
   for (const s of game.spores) {
     const rule = sporeRule(s);
     const active=s.age>=rule.windup;
-    ctx.setLineDash(active?[]:[4,5]);ctx.beginPath();ctx.arc(s.x,s.y,rule.radius,0,Math.PI*2);warningStroke(ctx,active?'#edc082':'#d7cc96');ctx.setLineDash([]);
-    if (!active) {ctx.beginPath();ctx.arc(s.x,s.y,rule.radius,-Math.PI/2,-Math.PI/2+Math.min(1,s.age/rule.windup)*Math.PI*2);warningStroke(ctx,'#d7cc96',3);}
-    ctx.fillStyle='#edc082';
+    ctx.beginPath();ctx.arc(s.x,s.y,rule.radius,0,Math.PI*2);quietBoundary(ctx,active?'#9cb786':'#9aab7e');
+    ctx.fillStyle=active?'#d3c992':'#9aab7e';
     for(let i=0;i<3;i++){const a=i*Math.PI*2/3;ctx.beginPath();ctx.arc(s.x+Math.cos(a)*12,s.y+Math.sin(a)*9-(active&&!reduced?Math.sin(game.time*3+i)*2:0),2.5,0,7);ctx.fill();}
-    ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#192219';ctx.strokeText(active?'포자':'포자 예고',s.x,s.y-rule.radius-8);ctx.fillText(active?'포자':'포자 예고',s.x,s.y-rule.radius-8);
   }
   for (const enemy of game.enemies) {
     const hunt = huntRule(enemy);
     const h=enemy.hunt;
-    if (!h || h.age>=hunt.windup+hunt.duration) continue;
-    ctx.save();ctx.translate(h.x,h.y);ctx.rotate(h.angle);
-    ctx.lineCap='butt';
-    ctx.setLineDash(h.age<hunt.windup?[7,5]:[]);
-    ctx.beginPath();ctx.moveTo(0,-hunt.width/2);ctx.lineTo(hunt.length,-hunt.width/2);ctx.moveTo(0,hunt.width/2);ctx.lineTo(hunt.length,hunt.width/2);warningStroke(ctx,'#f8c986');ctx.setLineDash([]);
-    const tip=hunt.length*Math.min(1,h.age/hunt.windup);
-    ctx.beginPath();ctx.moveTo(tip-10,-7);ctx.lineTo(tip,0);ctx.lineTo(tip-10,7);warningStroke(ctx,'#f8c986');ctx.restore();
+    if (!h || h.age<hunt.windup || h.age>=hunt.windup+hunt.duration || reduced) continue;
+    // Once launched, a short wake follows the actual hound. The full lane is
+    // no longer painted over the action; its crouch and floor cue warned first.
+    ctx.save();ctx.translate(enemy.x,enemy.y-12);ctx.rotate(h.angle);
+    ctx.strokeStyle='#ddc397a0';ctx.lineWidth=2;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-30,-5);ctx.lineTo(-10,-5);ctx.moveTo(-25,5);ctx.lineTo(-8,5);ctx.stroke();ctx.restore();
   }
   ctx.restore();
 }
