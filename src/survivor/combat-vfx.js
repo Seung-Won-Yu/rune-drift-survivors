@@ -24,7 +24,7 @@ export function drawSlash(ctx, effect, reduced = false) {
   ctx.restore();
 }
 
-export function drawProjectile(ctx, shot, reduced = false) {
+export function drawProjectile(ctx, shot, reduced = false, evolved = false) {
   const angle = Math.atan2(shot.vy, shot.vx), crescent = shot.kind === 'crescent';
   ctx.save(); ctx.translate(shot.x, shot.y - (crescent ? 8 : 14)); ctx.rotate(angle);
   if (crescent) {
@@ -46,7 +46,13 @@ export function drawProjectile(ctx, shot, reduced = false) {
     ctx.lineTo(-tail * .64, 0); ctx.lineTo(-tail, size * .55);
     ctx.quadraticCurveTo(0, size * 1.7, size + 2, 0); ctx.closePath(); ctx.stroke(); ctx.fill();
     ctx.fillStyle = '#ffd587'; ctx.beginPath(); ctx.moveTo(size, 0); ctx.quadraticCurveTo(-1, -size, -tail * .6, 0); ctx.quadraticCurveTo(-1, size, size, 0); ctx.fill();
-    ctx.fillStyle = '#fff5cc'; ctx.beginPath(); ctx.ellipse(1, 0, size * .67, size * .48, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = evolved ? '#fffdf0' : '#fff5cc'; ctx.beginPath();
+    if (evolved) {
+      // The evolved flame has a pointed hot core and a split inner tail.
+      ctx.moveTo(size + 3, 0); ctx.lineTo(-1, -size * .8); ctx.lineTo(-tail * .75, -size * .55);
+      ctx.lineTo(-tail * .34, 0); ctx.lineTo(-tail * .75, size * .55); ctx.lineTo(-1, size * .8); ctx.closePath();
+    } else ctx.ellipse(1, 0, size * .67, size * .48, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
   ctx.restore();
 }
@@ -83,16 +89,27 @@ export function drawSlamImpact(ctx, effect, reduced = false) {
   ctx.restore();
 }
 
-export function drawEmberBurst(ctx, effect, reduced = false) {
+export function drawEmberBurst(ctx, effect, reduced = false, evolved = false) {
   const progress = Math.max(0, Math.min(1, effect.age / effect.life));
   const reach = Math.min(45, effect.range * .55) * (reduced ? .8 : .45 + progress * .55);
   ctx.save(); ctx.translate(effect.x, effect.y - 12);
-  for (let i = 0; i < 6; i++) {
-    ctx.save(); ctx.rotate(i * Math.PI / 3 + .2);
-    ctx.fillStyle = i % 2 ? '#f4b667' : '#dc8250';
+  const petals = evolved ? 8 : 6;
+  for (let i = 0; i < petals; i++) {
+    ctx.save(); ctx.rotate(i * Math.PI * 2 / petals + .2);
+    ctx.fillStyle = evolved ? (i % 2 ? '#fff0b1' : '#f4b667') : (i % 2 ? '#f4b667' : '#dc8250');
     ctx.beginPath(); ctx.moveTo(3, -4); ctx.quadraticCurveTo(reach * .5, -12 * (1 - progress), reach, 0);
     ctx.quadraticCurveTo(reach * .6, 8 * (1 - progress), 3, 4); ctx.closePath(); ctx.fill(); ctx.restore();
   }
-  ctx.fillStyle = '#fff0b1'; ctx.beginPath(); ctx.ellipse(0, 0, 4 + 11 * (1 - progress), 3 + 8 * (1 - progress), 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = evolved ? '#fffdf0' : '#fff0b1'; ctx.beginPath();
+  if (evolved) {
+    const core = 6 + 15 * (1 - progress);
+    for (let i = 0; i < 8; i++) {
+      const angle = i * Math.PI / 4, radius = i % 2 ? core * .35 : core;
+      if (i) ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+      else ctx.moveTo(radius, 0);
+    }
+    ctx.closePath();
+  } else ctx.ellipse(0, 0, 4 + 11 * (1 - progress), 3 + 8 * (1 - progress), 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }

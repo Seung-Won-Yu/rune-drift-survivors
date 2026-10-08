@@ -496,7 +496,7 @@ export function createRenderer(canvas, art) {
         ctx.fillText(a.champion ? a.name : '정예', a.x, a.y - a.size * .69 - 7);
       }
     }
-    for (const shot of game.shots) drawProjectile(ctx, shot, reduced.matches);
+    for (const shot of game.shots) drawProjectile(ctx, shot, reduced.matches, !!game.ranks.comet);
     for (const orb of orbitPositions(game)) {
       ctx.save();
       ctx.translate(orb.x, orb.y - 12);
@@ -601,7 +601,7 @@ export function createRenderer(canvas, art) {
         ctx.arc(e.x, e.y, 25 + progress * 40, 0, Math.PI * 2);
         ctx.stroke();
       } else if (e.kind === 'ember-burst') {
-        drawEmberBurst(ctx, e, reduced.matches);
+        drawEmberBurst(ctx, e, reduced.matches, !!game.ranks.comet);
       } else if (e.kind === 'lunar-pulse' || e.kind === 'briar-pulse') {
         ctx.strokeStyle = e.kind === 'briar-pulse' ? '#edb7d9' : '#b8f6df';
         ctx.lineWidth = 5 * (1 - progress) + 1;

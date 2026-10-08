@@ -905,7 +905,7 @@ for (const [art, family, branch] of [['duelist','sword','일점 검법'],['wildf
   });
 }
 
-test('evolved attacks carry distinct engravings with no simulation changes and freeze while paused', async ({page}) => {
+test('evolved attacks keep distinct flame cores and ornaments without simulation changes and freeze while paused', async ({page}) => {
   await page.emulateMedia({reducedMotion:'reduce'});
   const result = await page.evaluate(async () => {
     const {createRenderer, loadArt} = await import('/src/survivor/render.js');
@@ -915,18 +915,22 @@ test('evolved attacks carry distinct engravings with no simulation changes and f
     // Repeated pixel reads must not switch Chrome's canvas between GPU and CPU rasterization.
     const ctx=canvas.getContext('2d',{alpha:false,willReadFrequently:true}), renderer=createRenderer(canvas, await loadArt('/'));
     const results=[];
-    for (const [key,family,kind] of [['dawn','sword','slash'],['comet','ember','ember-burst'],['lunar','orbit','lunar-pulse']]) {
+    for (const [key,family,kind] of [['dawn','sword','slash'],['comet','ember','ember-burst'],['comet','ember','projectile'],['lunar','orbit','lunar-pulse']]) {
       const game=createGame(42); game.phase='paused'; game.time=60; game.ranks[family]=3;
       game.effects=[{kind,x:130,y:80,range:60,angle:0,halfAngle:1.28,age:.06,life:.3,evolved:false}];
       // Lunar's pulse only exists after evolution; compare to the same scene without that pulse.
       if (key==='lunar') game.effects=[];
+      if (kind==='projectile') {
+        game.effects=[];
+        game.shots=[{x:130,y:80,vx:290,vy:80,life:1,blast:true}];
+      }
       const patch=()=>{const {scale}=renderer.render(game), dpr=canvas.width/800;
         const x=key==='dawn'?169:130, y=key==='lunar'?55:80;
         return [...ctx.getImageData(Math.round((400+x*scale)*dpr)-24,Math.round((680*.53+y*scale)*dpr)-24,48,48).data];};
       const basic=patch(); game.ranks[key]=1;
-      game.effects=[{kind,x:130,y:80,range:60,angle:0,halfAngle:1.28,age:.06,life:.3,evolved:true}];
+      game.effects=kind==='projectile'?[]:[{kind,x:130,y:80,range:60,angle:0,halfAngle:1.28,age:.06,life:.3,evolved:true}];
       const before=JSON.stringify(game), evolved=patch(), repeat=patch();
-      results.push({key, changed:evolved.some((v,i)=>v!==basic[i]), frozen:JSON.stringify(evolved)===JSON.stringify(repeat), pure:JSON.stringify(game)===before});
+      results.push({key:`${key}:${kind}`, changed:evolved.some((v,i)=>v!==basic[i]), frozen:JSON.stringify(evolved)===JSON.stringify(repeat), pure:JSON.stringify(game)===before});
     }
     canvas.remove(); return results;
   });
