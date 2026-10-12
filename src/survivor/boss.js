@@ -53,6 +53,7 @@ export function updateBoss(game, boss, dt, hurt, effect) {
     const speed = distance > 180 ? BOSS.speed : 0;
     boss.x += dx / distance * speed * dt;
     boss.y += dy / distance * speed * dt;
+    boss.walk = (boss.walk ?? 0) + speed * dt;
     return;
   }
   const previousAge = pattern.age;
@@ -85,6 +86,7 @@ export function updateBoss(game, boss, dt, hurt, effect) {
       kind: 'boss-cast',
       x: boss.x,
       y: boss.y,
+      angle: pattern.angle,
       life: .4
     });
     game.events.push('boss-thorns');

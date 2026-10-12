@@ -9,13 +9,14 @@ import { BOSS } from './boss.js';
 import { nearestRecovery } from './field.js';
 import { evolutionFeedback, evolutionFrame } from './evolution-feedback.js';
 import { drawWeaponMotif } from './weapon-motifs.js';
-import { drawFootfall, drawHitCut, drawChampionCrest } from './combat-ink.js';
-import { ashFrame, creatureFrame, remnantFrame } from './actor-animation.js';
+import { drawFootfall, drawMaterialHit, drawChampionCrest } from './combat-ink.js';
+import { companionFrame, creatureFrame, remnantFrame, bossFrame, bossRemnantFrame } from './actor-animation.js';
+import { drawBossThorn, drawBossRelease } from './boss-ink.js';
 import { createActorPainter } from './actor-art.js';
 import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst } from './combat-vfx.js';
 export async function loadArt(base, onProgress = () => {}) {
   let loaded = 0;
-  const total = 9;
+  const total = 12;
   onProgress(loaded, total);
   const load = (name, extension = 'png') => new Promise((resolve, reject) => {
     const image = new Image();
@@ -23,7 +24,7 @@ export async function loadArt(base, onProgress = () => {}) {
     image.onerror = () => reject(new Error(`${name} 이미지를 불러오지 못했습니다.`));
     image.src = `${base}art/survivor/${name}.${extension}`;
   });
-  const [ash, ember, grove, enemies, boss, ground, ashMotion, houndMotion, giantMotion] = await Promise.all([load('hero-ash'), load('hero-ember'), load('hero-grove'), load('enemies'), load('ash-sovereign'), load('forest-ground-v1', 'webp'), load('hero-ash-motion-v1', 'webp'), load('hound-motion-v1', 'webp'), load('giant-motion-v1', 'webp')]);
+  const [ash, ember, grove, enemies, boss, ground, ashMotion, houndMotion, giantMotion, emberMotion, groveMotion, bossMotion] = await Promise.all([load('hero-ash'), load('hero-ember'), load('hero-grove'), load('enemies'), load('ash-sovereign'), load('forest-ground-v1', 'webp'), load('hero-ash-motion-v1', 'webp'), load('hound-motion-v1', 'webp'), load('giant-motion-v1', 'webp'), load('hero-ember-motion-v1', 'webp'), load('hero-grove-motion-v1', 'webp'), load('ash-sovereign-motion-v1', 'webp')]);
   return {
     heroes: {
       ash,
@@ -33,7 +34,7 @@ export async function loadArt(base, onProgress = () => {}) {
     enemies,
     boss,
     ground,
-    motion: { ash: ashMotion, hound: houndMotion, giant: giantMotion }
+    motion: { ash: ashMotion, hound: houndMotion, giant: giantMotion, ember: emberMotion, grove: groveMotion, boss: bossMotion }
   };
 }
 const noise = (x, y) => {
@@ -249,9 +250,9 @@ export function createRenderer(canvas, art) {
       ctx.strokeStyle = '#ffe5bd'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, 23, 10, 0, 0, Math.PI * 2); ctx.stroke();
     }
-    if (actor && game.characterId === 'ash') {
-      const recoil = p.hurt > 0 ? hurt?.pose ?? {} : game.swing ? attackPose(game, reduced.matches) : {};
-      actor(ctx, 'ash', ashFrame(game, reduced.matches), p.x, p.y, { flip: p.facing < 0, flash: p.hurt > .16,
+    if (actor && art.motion[game.characterId]) {
+      const recoil = p.hurt > 0 ? hurt?.pose ?? {} : game.swing || p.cast > 0 ? attackPose(game, reduced.matches) : {};
+      actor(ctx, game.characterId, companionFrame(game, reduced.matches), p.x, p.y, { flip: p.facing < 0, flash: p.hurt > .16,
         pose: { x: (recoil.x ?? 0) * .45, y: (recoil.y ?? 0) * .45 } });
     } else sprite(art.heroes[game.characterId], frame, row, 3, p.x, p.y, 88, p.facing < 0, p.hurt > 0, false, {
       ...pose,
@@ -409,6 +410,12 @@ export function createRenderer(canvas, art) {
     for (const remnant of game.remnants) {
       const age = remnant.boss && game.outcome === 'victory' ? game.endAge ?? 0 : remnant.age;
       const progress = Math.min(1, age / remnant.life);
+      if (actor && remnant.boss && art.motion.boss) {
+        ctx.globalAlpha = Math.min(1, (1 - progress) * 3) * .85;
+        actor(ctx, 'boss', bossRemnantFrame({ ...remnant, age }, reduced.matches), remnant.x, remnant.y,
+          { flip: remnant.flip, factor: remnant.size / BOSS.size });
+        ctx.globalAlpha = 1; continue;
+      }
       if (actor && !remnant.boss && (remnant.type === 1 || remnant.type === 2)) {
         ctx.globalAlpha = Math.min(1, (1 - progress) * 3) * .85;
         actor(ctx, remnant.type === 1 ? 'hound' : 'giant', remnantFrame(remnant, reduced.matches), remnant.x, remnant.y,
@@ -448,11 +455,14 @@ export function createRenderer(canvas, art) {
         ctx.ellipse(a.x, a.y, a.radius + 9, 19, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.globalAlpha = a.entrance > 0 ? .45 + .55 * (1 - a.entrance / BOSS.entrance) : 1;
-        sprite(art.boss, frame, row, 2, a.x, a.y, a.size, pattern ? Math.cos(pattern.angle) < 0 : a.x > p.x, a.hit > 0, false, {
+        if (actor && art.motion.boss) actor(ctx, 'boss', bossFrame(a, game.time, reduced.matches), a.x, a.y,
+          { flip: pattern ? Math.cos(pattern.angle) < 0 : a.x > p.x, flash: a.hit > 0, factor: a.size / BOSS.size });
+        else sprite(art.boss, frame, row, 2, a.x, a.y, a.size, pattern ? Math.cos(pattern.angle) < 0 : a.x > p.x, a.hit > 0, false, {
           anchor: row ? .94 : .95,
           edges: row ? [0, 443.5, 887, 1364, 1774] : undefined
         });
         ctx.globalAlpha = 1;
+        drawMaterialHit(ctx, a, game.time, reduced.matches);
         continue;
       }
       const near = distanceSq < (a.radius + 53) ** 2;
@@ -472,7 +482,7 @@ export function createRenderer(canvas, art) {
         { flip: a.hunt ? Math.cos(a.hunt.angle) < 0 : a.slam ? a.slam.x < a.x : a.x > p.x, flash: a.hit > 0,
           factor: a.size / (a.type === 1 ? 72 : 86), pose: impactPose(a, game.time, reduced.matches) });
       else sprite(art.enemies, frame, a.type, 3, a.x, a.y, a.size, a.hunt ? Math.cos(a.hunt.angle) < 0 : a.x > p.x, a.hit > 0, false, { ...slamPose, ...impactPose(a, game.time, reduced.matches) });
-      drawHitCut(ctx, a, game.time, reduced.matches);
+      drawMaterialHit(ctx, a, game.time, reduced.matches, !crowded || distanceSq < 160 ** 2);
       if (!authored && a.type === 2 && a.slam && !a.slam.hit) {
         const lift = reduced.matches ? 1 : Math.min(1,a.slam.age/(a.elite ? SLAM.windup : GIANT.windup));
         ctx.lineCap='round';
@@ -595,11 +605,7 @@ export function createRenderer(canvas, art) {
       } else if (e.kind === 'slam') {
         drawSlamImpact(ctx, e, reduced.matches);
       } else if (e.kind === 'boss-cast') {
-        ctx.strokeStyle = '#edaa82';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, 25 + progress * 40, 0, Math.PI * 2);
-        ctx.stroke();
+        drawBossRelease(ctx, e, reduced.matches);
       } else if (e.kind === 'ember-burst') {
         drawEmberBurst(ctx, e, reduced.matches, !!game.ranks.comet);
       } else if (e.kind === 'lunar-pulse' || e.kind === 'briar-pulse') {
@@ -708,27 +714,8 @@ export function createRenderer(canvas, art) {
       ctx.restore();
     }
     drawEnemyWarnings(ctx, game, reduced.matches, scale);
-    // Enemy projectiles stay above decorative player effects and have an arrowhead silhouette.
-    for (const thorn of game.thorns) {
-      ctx.save();
-      ctx.translate(thorn.x, thorn.y);
-      ctx.rotate(Math.atan2(thorn.vy, thorn.vx));
-      ctx.strokeStyle = '#28181e';
-      ctx.lineWidth = 4;
-      ctx.fillStyle = '#ff9e82';
-      ctx.beginPath();
-      ctx.moveTo(11, 0);
-      ctx.lineTo(-7, -7);
-      ctx.lineTo(-3, 0);
-      ctx.lineTo(-7, 7);
-      ctx.closePath();
-      ctx.stroke();
-      ctx.fill();
-      ctx.strokeStyle = '#ffead0';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.restore();
-    }
+    // Enemy thorns stay above decorative player effects at their live positions.
+    for (const thorn of game.thorns) drawBossThorn(ctx, thorn, reduced.matches);
     const boss = game.enemies.find(e => e.boss);
     if (boss && (Math.abs(boss.x - p.x) > viewW / 2 - 70 || Math.abs(boss.y - p.y) > viewH / 2 - 90)) {
       const dx = boss.x - p.x,

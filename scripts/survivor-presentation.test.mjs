@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, spawnEnemy, updateGame, SLAM } from '../src/survivor/game.js';
 import { HOUND, GIANT } from '../src/survivor/enemies.js';
-import { ashFrame, creatureFrame, remnantFrame } from '../src/survivor/actor-animation.js';
+import { ashFrame, companionFrame, creatureFrame, remnantFrame, bossFrame, bossRemnantFrame } from '../src/survivor/actor-animation.js';
+import { BOSS } from '../src/survivor/boss.js';
+import { drawBossThorn, drawBossRelease } from '../src/survivor/boss-ink.js';
+import { drawMaterialHit } from '../src/survivor/combat-ink.js';
 import { ACTOR_ART } from '../src/survivor/actor-art.js';
 import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst } from '../src/survivor/combat-vfx.js';
 import { drawEnemyGround, drawEnemyWarnings } from '../src/survivor/enemy-render.js';
@@ -81,6 +84,25 @@ test('authored blade poses reach contact only at the real hit threshold, with hu
   const before = JSON.stringify(game); ashFrame(game); assert.equal(JSON.stringify(game), before);
 });
 
+test('caster poses start at real release and absorption is distinct from HP-loss recoil', () => {
+  for (const id of ['ember','grove']) {
+    const game=createGame(42,id);game.player.cast=.4;
+    assert.equal(companionFrame(game),8);assert.equal(companionFrame(game,true),8);
+    if(id==='ember') {
+      game.signature.activatedAt=game.time;
+      assert.equal(companionFrame(game),12);
+    } else {
+      game.signature.blockedAt=game.time;
+      assert.equal(companionFrame(game),12);
+      game.time+=.31;game.player.cast=0;game.player.moving=true;game.player.walk=.4;
+      assert.ok(companionFrame(game)<8,'absorption returns to ordinary movement');
+    }
+    game.player.hurt=.24;assert.equal(companionFrame(game),16);
+    game.outcome='defeat';game.player.deathAge=.6;assert.equal(companionFrame(game),23);
+    const before=JSON.stringify(game);companionFrame(game);assert.equal(JSON.stringify(game),before);
+  }
+});
+
 test('authored enemy attacks preserve ordinary and champion windups even while being hit', () => {
   for (const champion of [undefined, 'fang']) {
     const rule = champion ? CHAMPION_HUNT : HOUND;
@@ -95,6 +117,56 @@ test('authored enemy attacks preserve ordinary and champion windups even while b
     enemy.slam.age = rule.windup; enemy.slam.hit = true; assert.equal(creatureFrame(enemy, 0), 11);
     const before = JSON.stringify(enemy); creatureFrame(enemy, 0, true); assert.equal(JSON.stringify(enemy), before);
   }
+});
+
+test('boss poses preserve live charge and fired-thorn boundaries through incoming hits', () => {
+  const boss={entrance:BOSS.entrance,walk:0,impact:{at:0}};
+  assert.equal(bossFrame(boss,0),4);boss.entrance=.1;assert.equal(bossFrame(boss,0),5);
+  boss.entrance=0;boss.pattern={kind:'charge',age:BOSS.windup-.001,fired:false};
+  assert.equal(bossFrame(boss,0),7);
+  boss.pattern.age=BOSS.windup;assert.equal(bossFrame(boss,0),8);
+  boss.pattern.age=BOSS.windup+BOSS.chargeDuration;assert.equal(bossFrame(boss,0),10);
+  boss.pattern={kind:'thorns',age:BOSS.windup,fired:false};assert.equal(bossFrame(boss,0),13);
+  boss.pattern.fired=true;assert.equal(bossFrame(boss,0),14);assert.equal(bossFrame(boss,0,true),14);
+  boss.pattern.age=BOSS.windup+.12;assert.equal(bossFrame(boss,0),15);
+  boss.pattern.age=BOSS.windup+BOSS.recovery-.001;assert.equal(bossFrame(boss,0),16);
+  boss.pattern=null;assert.equal(bossFrame(boss,0),19);
+  boss.enraged=true;assert.equal(bossFrame(boss,1,true),17);
+  const before=JSON.stringify(boss);bossFrame(boss,1);assert.equal(JSON.stringify(boss),before);
+  assert.equal(bossRemnantFrame({age:0,life:.7}),21);
+  assert.equal(bossRemnantFrame({age:.53,life:.7}),23);
+  assert.equal(bossRemnantFrame({age:0,life:.7},true),23);
+});
+
+test('boss root shards follow actual velocity and release fragments stay small', () => {
+  const thorn={x:120,y:80,vx:-150,vy:30,age:.1,life:3.7},before=JSON.stringify(thorn);
+  for (const reduced of [false,true]) {
+    const calls=drawingCalls(ctx=>drawBossThorn(ctx,thorn,reduced));
+    assert.deepEqual(calls.find(c=>c[0]==='translate'),['translate',120,80]);
+    assert.deepEqual(calls.find(c=>c[0]==='rotate'),['rotate',Math.atan2(30,-150)]);
+    const release=drawingCalls(ctx=>drawBossRelease(ctx,{x:120,y:80,angle:.3,age:.1,life:.4},reduced));
+    assert.ok(!release.some(c=>c[0]==='arc'));assert.ok(release.length<60);
+  }
+  assert.equal(JSON.stringify(thorn),before);
+});
+
+test('material hit marks distinguish creatures, ignore stale impacts and keep reduced motion static', () => {
+  const marks=[];
+  for (const kind of [0,1,2,3]) {
+    const enemy={x:10,y:20,size:kind===3?174:86,type:kind,boss:kind===3,impact:{at:1,angle:.5}};
+    const before=JSON.stringify(enemy),draw=(time,reduced,detailed=true)=>drawingCalls(ctx=>drawMaterialHit(ctx,enemy,time,reduced,detailed));
+    const calls=draw(1.04,false);marks.push(JSON.stringify(calls));
+    assert.deepEqual(calls,draw(1.04,false));assert.ok(calls.length<100);
+    for(const call of calls)for(const value of call.slice(1).filter(v=>typeof v==='number'))assert.ok(Number.isFinite(value));
+    assert.deepEqual(draw(.99,false),[]);assert.deepEqual(draw(1.2,false),[]);
+    // Opacity may fade; the static geometry and position cannot fly away.
+    const geometry=calls=>calls.filter(c=>c[0]!=='globalAlpha');
+    assert.deepEqual(geometry(draw(1.01,true)),geometry(draw(1.12,true)));
+    assert.ok(draw(1.04,true).length<calls.length);assert.ok(draw(1.04,false,false).length<calls.length);
+    assert.equal(JSON.stringify(enemy),before);
+  }
+  assert.equal(new Set(marks).size,4);
+  assert.deepEqual(drawingCalls(ctx=>drawMaterialHit(ctx,{type:0},1,false)),[]);
 });
 
 test('gait follows distance, freezes on pause and slows with the creature body', () => {
