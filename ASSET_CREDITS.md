@@ -1,5 +1,18 @@
 # Asset credits
 
+## Ash & Amber combat paintings
+
+- `public/art/survivor/hero-ash-motion-v1.webp`
+- `public/art/survivor/hero-ember-motion-v1.webp`
+- `public/art/survivor/hero-grove-motion-v1.webp`
+- `public/art/survivor/hound-motion-v1.webp`
+- `public/art/survivor/giant-motion-v1.webp`
+- `public/art/survivor/ash-sovereign-motion-v1.webp`
+
+These 24-pose sheets were generated for this repository with the built-in OpenAI ImageGen tool using the existing cast as references. Transparent PNG originals were converted to WebP with alpha and source dimensions preserved. Measured extraction rectangles, animation clocks, outlines, root projectiles and material-hit marks are project-authored Canvas 2D code.
+
+The [initial motion prompts](./public/art/survivor/MOTION-PROMPTS.md) and [companion/sovereign prompts](./public/art/survivor/COMPANION-BOSS-PROMPTS.md) record the submitted instructions and saved assets. The latter uses `cwebp -q 92 -alpha_q 100`; its RGB encoding is lossy, its alpha is preserved, and no third-party character art is reused.
+
 ## Project-authored character atlases
 
 - `public/sprites/rune-warden-animation-atlas-v2.webp`
