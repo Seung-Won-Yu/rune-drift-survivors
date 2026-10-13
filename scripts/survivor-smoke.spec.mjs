@@ -1415,7 +1415,7 @@ test('a saved alternate inheritance yields to a branch goal when switching compa
   await expect(page.locator('[data-inheritance="none"]')).toHaveAttribute('aria-pressed','true');
 });
 
-test('actual flame release is visible beside the companion in both directions and stays compact',async({page})=>{
+test('actual flame release is visible while kiting in both directions and stays compact',async({page})=>{
   const result=await page.evaluate(async()=>{
     const {createRenderer,loadArt}=await import('/src/survivor/render.js');
     const {createGame,startGame,spawnEnemy,updateGame}=await import('/src/survivor/game.js');
@@ -1426,7 +1426,7 @@ test('actual flame release is visible beside the companion in both directions an
     for(const facing of [-1,1]) {
       const g=createGame(42,'ember');startGame(g);g.spawnClock=999;g.emberClock=0;
       const e=spawnEnemy(g,0,false,{x:facing*180,y:0});e.speed=0;
-      updateGame(g,1/60);g.phase='paused';
+      updateGame(g,1/60,{x:-facing,y:0});g.phase='paused';
       const launch=g.effects.find(e=>e.kind==='ember-launch');
       const before=JSON.stringify(g),{scale}=renderer.render(g),ratio=canvas.width/800;const lit=ctx.getImageData(0,0,canvas.width,canvas.height).data;
       g.effects=g.effects.filter(e=>e!==launch);renderer.render(g);const base=ctx.getImageData(0,0,canvas.width,canvas.height).data;

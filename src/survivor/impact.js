@@ -34,6 +34,14 @@ export function isEvolvedWeapon(game, weapon) {
   return !!game.ranks[{ sword: 'dawn', ember: 'comet', orbit: 'lunar' }[weapon]];
 }
 
+// While kiting, the caster looks toward the shot without changing movement.
+// Sword, hurt and defeat retain their own presentation priorities.
+export function companionFacing(game) {
+  const p = game.player;
+  return game.characterId === 'ember' && p.cast > 0 && p.castFacing !== null && p.castFacing !== undefined
+    && !game.swing && !p.hurt && game.outcome !== 'defeat' ? p.castFacing : p.facing;
+}
+
 export function attackPose(game, reduced = false) {
   const p = game.player;
   if (reduced || p.hurt > 0 || game.outcome === 'defeat') return {};
@@ -59,7 +67,7 @@ export function attackPose(game, reduced = false) {
     // Casting already emits at the start of this clock; animate the release, not a delayed windup.
     const release = (p.cast / .4) ** 2;
     if (game.characterId === 'grove') return { y: 2 * release, tilt: -.035 * release, sx: 1 + .09 * release, sy: 1 - .065 * release };
-    if (game.characterId === 'ember') return { x: p.facing * 6 * release, y: -4 * release, tilt: .13 * release, sx: 1 - .025 * release, sy: 1 + .065 * release };
+    if (game.characterId === 'ember') return { x: companionFacing(game) * 6 * release, y: -4 * release, tilt: .13 * release, sx: 1 - .025 * release, sy: 1 + .065 * release };
     return { x: p.facing * 4 * release, y: -1.5 * release, tilt: .075 * release, sx: 1 + .02 * release, sy: 1 + .025 * release };
   }
   return {};

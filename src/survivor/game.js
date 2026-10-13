@@ -219,7 +219,8 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', exp
       walk: 0,
       hurt: 0,
       impact: null,
-      cast: 0
+      cast: 0,
+      castFacing: null
     },
     ranks: {
       ...Object.fromEntries(Object.keys(SPECIALIZATIONS).map(key => [key, 0])),
@@ -718,13 +719,14 @@ function updateWeapons(game, dt, s) {
         game.emberClock = game.ranks.detonation ? 1.25 : .9;
         game.events.push('ember-shot');
         p.cast = .4;
-        if (!p.moving) p.facing = targets[0].x < p.x ? -1 : 1;
+        p.castFacing = targets[0].x < p.x ? -1 : 1;
+        if (!p.moving) p.facing = p.castFacing;
         for (let i = 0; i < s.emberCount && game.shots.length < LIMITS.shots; i++) {
           const target = targets[i % targets.length],
             a = Math.atan2(target.y - p.y, target.x - p.x);
           const empowered = i === 0 && consumeSignature(game, 'ember');
           if (i === 0) buildFeedback(game, 'ember-launch', {
-            x: p.x, y: p.y, angle: a, character: game.characterId, facing: p.facing,
+            x: p.x, y: p.y, angle: a, character: game.characterId, facing: p.castFacing,
             empowered, evolved: !!game.ranks.comet, life: .12
           });
           game.shots.push({
@@ -928,6 +930,7 @@ export function updateGame(game, dt, input = {
   p.invincible = Math.max(0, p.invincible - dt);
   p.hurt = Math.max(0, p.hurt - dt);
   p.cast = Math.max(0, p.cast - dt);
+  if (!p.cast) p.castFacing = null;
   game.spawnClock -= dt;
   if (game.time >= BOSS.arrival && !game.bossSpawned) spawnBoss(game);
   if (game.spawnClock <= 0) {

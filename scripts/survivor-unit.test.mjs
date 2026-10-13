@@ -362,3 +362,35 @@ test('terminal weapon marks settle on the victory clock after simulation stops',
   g.endAge=.2;assert.equal(actionEffectFrame(effect,g),null);assert.deepEqual(effect,before);
   for(const kind of ['ember-launch','rune-touch'])assert.equal(actionEffectFrame({...effect,kind,life:.14},g),null);
 });
+
+test('kiting caster faces the shot during release and returns to travel without changing movement',async()=>{
+  const {companionFacing,attackPose}=await import('../src/survivor/impact.js');
+  for(const targetSide of [-1,1]) {
+    const g=createGame(42,'ember');startGame(g);g.spawnClock=999;g.emberClock=0;
+    const e=spawnEnemy(g,0,false,{x:targetSide*180,y:0});e.speed=0;e.hp=999;
+    frames(g,1,{x:-targetSide,y:0});
+    assert.equal(g.player.facing,-targetSide,'input still controls travel direction');
+    assert.ok(g.player.x*-targetSide>0);assert.equal(g.player.castFacing,targetSide);
+    assert.equal(companionFacing(g),targetSide);assert.ok(attackPose(g).x*targetSide>0);
+    assert.equal(g.effects.find(e=>e.kind==='ember-launch').facing,targetSide);
+    assert.ok(g.shots[0].vx*targetSide>0);
+    pauseGame(g);const before=structuredClone(g.player);frames(g,20,{x:targetSide,y:0});assert.deepEqual(g.player,before);
+    resumeGame(g);frames(g,26,{x:-targetSide,y:0});
+    assert.equal(g.player.cast,0);assert.equal(g.player.castFacing,null);assert.equal(companionFacing(g),-targetSide);
+    g.player.cast=.4;g.player.castFacing=targetSide;g.player.hurt=.2;
+    assert.equal(companionFacing(g),-targetSide);g.player.hurt=0;g.swing={angle:0};assert.equal(companionFacing(g),-targetSide);
+    g.swing=null;g.outcome='defeat';assert.equal(companionFacing(g),-targetSide);
+  }
+});
+
+test('a pending flask glint yields when a sword attack or hurt takes over the actor',async()=>{
+  const {actionEffectFrame}=await import('../src/survivor/combat-vfx.js');
+  const g=createGame(42,'ember');startGame(g);g.spawnClock=999;g.emberClock=0;
+  const far=spawnEnemy(g,0,false,{x:-180,y:0});far.speed=0;frames(g,1);
+  const cue=g.effects.find(e=>e.kind==='ember-launch');assert.ok(cue);
+  assert.equal(actionEffectFrame(cue,g).character,'ember');
+  g.ranks.sword=1;g.swordClock=0;const near=spawnEnemy(g,0,false,{x:65,y:0});near.speed=0;frames(g,1);
+  assert.ok(g.swing);assert.equal(actionEffectFrame(cue,g).character,null);
+  g.swing=null;g.player.hurt=.2;assert.equal(actionEffectFrame(cue,g).character,null);
+  assert.equal(cue.character,'ember','reading presentation does not rewrite emission facts');
+});

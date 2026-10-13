@@ -2,7 +2,9 @@
 // deliberately compact; these strokes are not diagrams of damage ranges.
 export function actionEffectFrame(effect, game) {
   const age = effect.age + (game.outcome ? game.endAge ?? 0 : 0);
-  return age >= effect.life ? null : age === effect.age ? effect : { ...effect, age };
+  if (age >= effect.life) return null;
+  const displaced = effect.kind === 'ember-launch' && (game.swing || game.player?.hurt > 0 || game.outcome === 'defeat');
+  return age === effect.age && !displaced ? effect : { ...effect, age, ...(displaced ? { character: null } : {}) };
 }
 
 export function drawLaunch(ctx, effect, reduced = false) {

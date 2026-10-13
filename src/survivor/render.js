@@ -1,5 +1,5 @@
 import { SIGNATURES } from './signature.js';
-import { impactPose, attackPose, hurtFeedback } from './impact.js';
+import { impactPose, attackPose, hurtFeedback, companionFacing } from './impact.js';
 import { GIANT, huntRule } from './enemies.js';
 import { heroGait, enemyMotion } from './motion.js';
 import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
@@ -209,6 +209,7 @@ export function createRenderer(canvas, art) {
   }
   function drawPlayer(game, hurt) {
     const p = game.player;
+    const facing = companionFacing(game);
     shadow(p.x, p.y, 20, 7);
     drawFootfall(ctx, game, reduced.matches);
     ctx.strokeStyle = '#b7e5c887';
@@ -254,9 +255,9 @@ export function createRenderer(canvas, art) {
     }
     if (actor && art.motion[game.characterId]) {
       const recoil = p.hurt > 0 ? hurt?.pose ?? {} : game.swing || p.cast > 0 ? attackPose(game, reduced.matches) : {};
-      actor(ctx, game.characterId, companionFrame(game, reduced.matches), p.x, p.y, { flip: p.facing < 0, flash: p.hurt > .16,
+      actor(ctx, game.characterId, companionFrame(game, reduced.matches), p.x, p.y, { flip: facing < 0, flash: p.hurt > .16,
         pose: { x: (recoil.x ?? 0) * .45, y: (recoil.y ?? 0) * .45 } });
-    } else sprite(art.heroes[game.characterId], frame, row, 3, p.x, p.y, 88, p.facing < 0, p.hurt > 0, false, {
+    } else sprite(art.heroes[game.characterId], frame, row, 3, p.x, p.y, 88, facing < 0, p.hurt > 0, false, {
       ...pose,
       ...atlas,
       proportional: true
