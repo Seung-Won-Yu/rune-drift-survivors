@@ -304,3 +304,61 @@ test('player feedback is bounded, pause-safe, recoverable, reduced-motion aware 
   assert.equal(lethal.player.impact.amount,3);assert.equal(lethal.player.impact.angle,null);
   assert.equal(lethal.outcome,'defeat');assert.deepEqual(hurtFeedback(lethal).pose,{});
 });
+
+
+test('flame release follows the actual emission and the decorative cap never prevents a shot',()=>{
+  for(const full of [false,true]) {
+    const g=playing();g.ranks.sword=0;g.ranks.ember=3;g.emberClock=0;
+    frames(g,1);assert.ok(!g.effects.some(e=>e.kind==='ember-launch'));
+    const e=spawnEnemy(g,0,false,{x:180,y:50});e.speed=0;e.hp=999;
+    if(full)g.effects=Array.from({length:LIMITS.effects},()=>({kind:'pop',x:0,y:0,age:0,life:5}));
+    frames(g,1);
+    assert.ok(g.shots.length>0);assert.equal(g.effects.length<=LIMITS.effects,true);
+    const marks=g.effects.filter(e=>e.kind==='ember-launch');
+    assert.equal(marks.length,full?0:1);
+    if(!full) {
+      assert.equal(marks[0].x,g.player.x);assert.equal(marks[0].y,g.player.y);
+      assert.ok(Math.abs(marks[0].angle-Math.atan2(g.shots[0].vy,g.shots[0].vx))<1e-10);
+      pauseGame(g);const before=structuredClone(g.effects);frames(g,30);assert.deepEqual(g.effects,before);
+    }
+  }
+});
+
+test('rune source mark comes from the real contact point and preserves the per-enemy gate',()=>{
+  const g=playing();g.ranks.sword=0;g.ranks.orbit=1;
+  const angle=1/60*2.8,r=stats(g).orbitRadius;
+  const e=spawnEnemy(g,0,false,{x:Math.cos(angle)*r,y:Math.sin(angle)*r});e.speed=0;e.hp=999;
+  frames(g,1);
+  const mark=g.effects.find(e=>e.kind==='rune-touch');assert.ok(mark);
+  assert.ok(Math.abs(mark.x-Math.cos(angle)*r)<1e-9);assert.ok(Math.abs(mark.y-Math.sin(angle)*r)<1e-9);
+  const at=e.orbAt,damage=g.damageDealt.orbit;
+  frames(g,5);assert.equal(e.orbAt,at);assert.equal(g.damageDealt.orbit,damage);
+});
+
+test('only a direct weapon kill gets its matching finish, while burn deaths remain neutral',()=>{
+  for(const source of ['sword','ember','orbit','burn']) {
+    const g=playing();g.ranks.sword=0;g.xpNeed=99999;
+    if(source!=='burn')g.ranks[source]=1;
+    const a=1/60*2.8,r=stats(g).orbitRadius;
+    const e=spawnEnemy(g,0,false,source==='orbit'?{x:Math.cos(a)*r,y:Math.sin(a)*r}:{x:65,y:0});e.speed=0;e.hp=1;
+    if(source==='burn')e.burn={until:3,next:0,damage:12};
+    for(let i=0;i<120&&!g.kills;i++)frames(g,1);
+    assert.equal(g.kills,1);
+    if(source==='burn') {assert.ok(!g.effects.some(e=>e.kind==='finish'));assert.ok(g.effects.some(e=>e.kind==='pop'));}
+    else assert.equal(g.effects.find(e=>e.kind==='finish')?.source,source);
+    assert.equal(g.remnants.length,1);assert.equal(g.gems[0].value,e.xp);
+  }
+});
+
+test('terminal weapon marks settle on the victory clock after simulation stops',async()=>{
+  const {actionEffectFrame}=await import('../src/survivor/combat-vfx.js');
+  const g=playing();g.xpNeed=99999;
+  const boss=spawnBoss(g);Object.assign(boss,{x:65,y:0,hp:1,entrance:0,attackClock:999});
+  for(let i=0;i<120&&g.phase==='playing';i++)frames(g,1);
+  assert.equal(g.outcome,'victory');assert.equal(g.phase,'ended');
+  const effect=g.effects.find(e=>e.kind==='finish');assert.ok(effect);
+  const before=structuredClone(effect);g.endAge=.08;
+  assert.equal(actionEffectFrame(effect,g).age,effect.age+.08);
+  g.endAge=.2;assert.equal(actionEffectFrame(effect,g),null);assert.deepEqual(effect,before);
+  for(const kind of ['ember-launch','rune-touch'])assert.equal(actionEffectFrame({...effect,kind,life:.14},g),null);
+});

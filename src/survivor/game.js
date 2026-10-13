@@ -562,6 +562,7 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
     life: .55
   });
   if (enemy.hp <= 0) {
+    const directFinish = !periodic && ['sword', 'ember', 'orbit'].includes(source);
     leaveSpores(game, enemy);
     if (game.remnants.length >= LIMITS.remnants) game.remnants.shift();
     game.remnants.push({
@@ -603,9 +604,12 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
       for (const gem of game.gems) if (Math.hypot(gem.x - enemy.x, gem.y - enemy.y) <= 260) gem.recalled = true;
     }
     effect(game, {
-      kind: 'pop',
+      kind: directFinish ? 'finish' : 'pop',
+      source,
+      angle: enemy.impact?.angle ?? 0,
+      life: directFinish ? .18 : .45,
       x: enemy.x,
-      y: enemy.y,
+      y: enemy.y - (directFinish ? enemy.size * .3 : 0),
       tone: enemy.elite || enemy.boss ? '#efba68' : '#b4c990'
     });
     if (enemy.elite) healPlayer(game, 15, 'elite');
@@ -719,6 +723,10 @@ function updateWeapons(game, dt, s) {
           const target = targets[i % targets.length],
             a = Math.atan2(target.y - p.y, target.x - p.x);
           const empowered = i === 0 && consumeSignature(game, 'ember');
+          if (i === 0) buildFeedback(game, 'ember-launch', {
+            x: p.x, y: p.y, angle: a, character: game.characterId, facing: p.facing,
+            empowered, evolved: !!game.ranks.comet, life: .12
+          });
           game.shots.push({
             empowered,
             x: p.x,
@@ -785,7 +793,11 @@ function updateWeapons(game, dt, s) {
           dy = enemy.y - p.y,
           d = Math.hypot(dx, dy) || 1;
         enemy.orbAt = game.time;
-        if (hitEnemy(game, enemy, s.orbitDamage, 'orbit', dx / d * (game.ranks.bulwark ? 3.24 : 1.8), dy / d * (game.ranks.bulwark ? 3.24 : 1.8)) > 0) chargeRune(game);
+        if (hitEnemy(game, enemy, s.orbitDamage, 'orbit', dx / d * (game.ranks.bulwark ? 3.24 : 1.8), dy / d * (game.ranks.bulwark ? 3.24 : 1.8)) > 0) {
+          chargeRune(game);
+          buildFeedback(game, 'rune-touch', { x: orb.x, y: orb.y, angle: Math.atan2(orb.y - p.y, orb.x - p.x) + Math.PI / 2,
+            branch: specializationFor(game, 'orbit'), life: .14 }, .055);
+        }
         game.events.push('rune-hit');
         if (game.characterId === 'grove' && p.cast <= 0) p.cast = .4;
       }

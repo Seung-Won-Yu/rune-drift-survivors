@@ -1,5 +1,60 @@
 // Action marks follow actual attack events and projectile velocities. They are
 // deliberately compact; these strokes are not diagrams of damage ranges.
+export function actionEffectFrame(effect, game) {
+  const age = effect.age + (game.outcome ? game.endAge ?? 0 : 0);
+  return age >= effect.life ? null : age === effect.age ? effect : { ...effect, age };
+}
+
+export function drawLaunch(ctx, effect, reduced = false) {
+  const fade = Math.max(0, 1 - effect.age / effect.life);
+  if (!fade) return;
+  const reach = reduced ? 13 : 12 + fade * (effect.empowered ? 9 : 5);
+  ctx.save(); ctx.globalAlpha = fade;
+  // A small hand-front flash joins the release pose to the already emitted shot.
+  const flask = effect.character === 'ember';
+  ctx.translate(effect.x + (flask ? effect.facing * 35 : Math.cos(effect.angle) * 26), effect.y + (flask ? -46 : -32 + Math.sin(effect.angle) * 12));
+  ctx.rotate(effect.angle);
+  ctx.fillStyle = '#e5a252'; ctx.strokeStyle = '#543723'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(-5, -5); ctx.lineTo(reach, 0); ctx.lineTo(-5, 5); ctx.lineTo(0, 0); ctx.closePath(); ctx.stroke(); ctx.fill();
+  ctx.strokeStyle = '#fff4cf'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(-2, 0); ctx.lineTo(reach - 3, 0);
+  if (effect.evolved) { ctx.moveTo(-3, -7); ctx.lineTo(5, -4); ctx.moveTo(-3, 7); ctx.lineTo(5, 4); }
+  ctx.stroke(); ctx.restore();
+}
+
+export function drawRuneTouch(ctx, effect, reduced = false) {
+  const fade = Math.max(0, 1 - effect.age / effect.life);
+  const reach = reduced ? 10 : 8 + (1 - fade) * 7;
+  ctx.save(); ctx.globalAlpha = fade; ctx.translate(effect.x, effect.y - 12); ctx.rotate(effect.angle);
+  ctx.strokeStyle = effect.branch === 'horizon' ? '#dceaff' : '#d9fff0'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(-reach, -4); ctx.lineTo(-3, -7); ctx.lineTo(4, -4);
+  ctx.moveTo(-reach + 3, 5); ctx.lineTo(-2, 8); ctx.lineTo(6, 4); ctx.stroke();
+  ctx.fillStyle = '#fff6d6'; ctx.fillRect(-2, -2, 4, 4); ctx.restore();
+}
+
+export function drawFinish(ctx, effect, reduced = false) {
+  const progress = Math.max(0, Math.min(1, effect.age / effect.life));
+  const motion = reduced ? .45 : progress;
+  ctx.save(); ctx.translate(effect.x, effect.y); ctx.rotate(effect.angle);
+  ctx.lineCap = 'round'; ctx.lineWidth = 2;
+  if (effect.source === 'sword') {
+    const reach = 18 + motion * 10;
+    ctx.strokeStyle = '#ffe0a0'; ctx.beginPath(); ctx.moveTo(-reach, -reach * .4); ctx.lineTo(reach, reach * .4); ctx.stroke();
+    ctx.strokeStyle = '#fff7dc'; ctx.beginPath(); ctx.moveTo(-7, -10); ctx.lineTo(7, 10); ctx.stroke();
+  } else if (effect.source === 'ember') {
+    for (const sign of [-1, 1]) {
+      const x = sign * (7 + motion * 9), y = -motion * 9;
+      ctx.fillStyle = '#e59a5c'; ctx.beginPath(); ctx.moveTo(x - 3, y + 3); ctx.quadraticCurveTo(x - 7, y, x + sign * 6, y - 8); ctx.quadraticCurveTo(x + 5, y, x + 3, y + 3); ctx.fill();
+      ctx.fillStyle = '#fff0b5'; ctx.fillRect(x - 1, y, 2, 3);
+    }
+  } else if (effect.source === 'orbit') {
+    const r = 16 * (1 - motion * .55);
+    ctx.strokeStyle = '#bbefdc'; ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(0, -r * .7); ctx.lineTo(r, 0); ctx.lineTo(0, r * .7); ctx.closePath(); ctx.stroke();
+    ctx.fillStyle = '#f0ffe6'; ctx.fillRect(-2, -2, 4, 4);
+  }
+  ctx.restore();
+}
+
 export function drawSlash(ctx, effect, reduced = false) {
   const progress = Math.max(0, Math.min(1, effect.age / effect.life));
   const reach = Math.min(effect.branch === 'duelist' ? 88 : 76, 42 + effect.range * .16);

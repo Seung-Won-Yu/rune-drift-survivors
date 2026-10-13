@@ -13,7 +13,8 @@ import { drawFootfall, drawMaterialHit, drawChampionCrest } from './combat-ink.j
 import { companionFrame, creatureFrame, remnantFrame, bossFrame, bossRemnantFrame } from './actor-animation.js';
 import { drawBossThorn, drawBossRelease } from './boss-ink.js';
 import { createActorPainter } from './actor-art.js';
-import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst } from './combat-vfx.js';
+import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst, drawLaunch, drawRuneTouch, drawFinish, actionEffectFrame } from './combat-vfx.js';
+import { createForestLight } from './forest-light.js';
 export async function loadArt(base, onProgress = () => {}) {
   let loaded = 0;
   const total = 12;
@@ -100,6 +101,7 @@ export function createRenderer(canvas, art) {
   const actor = art.motion ? createActorPainter(art.motion) : null;
   let evolution = null;
   const pattern = ctx.createPattern(ground, 'repeat');
+  const forestLight = ctx.createPattern(createForestLight(), 'repeat');
   // Canvas filters can force expensive software raster passes per actor. Bake
   // the identical hit tint once per atlas and keep drawing ordinary sprites.
   const hitArt = new Map();
@@ -282,6 +284,8 @@ export function createRenderer(canvas, art) {
       .sort((a, b) => (a.x - p.x) ** 2 + (a.y - p.y) ** 2 - ((b.x - p.x) ** 2 + (b.y - p.y) ** 2)).slice(0, 8)) : null;
     ctx.fillStyle = pattern;
     ctx.fillRect(left - 50, top - 50, viewW + 100, viewH + 100);
+    ctx.fillStyle = forestLight;
+    ctx.fillRect(left - 50, top - 50, viewW + 100, viewH + 100);
     // Low-contrast stepping stones and flower clusters repeat in world coordinates.
     const spacing = 340;
     for (let gx = Math.floor(left / spacing) - 1; gx <= (left + viewW) / spacing + 1; gx++) for (let gy = Math.floor(top / spacing) - 1; gy <= (top + viewH) / spacing + 1; gy++) {
@@ -309,8 +313,9 @@ export function createRenderer(canvas, art) {
         ctx.lineTo(x + 14, y + 6);
         ctx.lineTo(x - 11, y + 7);
         ctx.closePath();
+        ctx.strokeStyle = '#1d302a'; ctx.lineWidth = 1.5; ctx.stroke();
         ctx.fill();
-        ctx.strokeStyle = '#62715a';
+        ctx.strokeStyle = '#89916a';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x - 10, y - 13);
@@ -528,11 +533,18 @@ export function createRenderer(canvas, art) {
       if (game.ranks.lunar) drawWeaponMotif(ctx, 'lunar', 9);
       ctx.restore();
     }
-    for (const e of game.effects) {
+    for (const effect of game.effects) {
+      const e = ['finish', 'rune-touch'].includes(effect.kind) ? actionEffectFrame(effect, game) : effect;
+      if (!e) continue;
+      if (e.kind === 'ember-launch') continue; // Small release mark sits in front of the hand.
       if (e.kind === 'damage' && damageLabels && !damageLabels.has(e)) continue;
       const progress = e.age / e.life;
       ctx.globalAlpha = 1 - progress;
-      if (['sword-contact', 'ember-contact', 'orbit-contact'].includes(e.kind)) {
+      if (e.kind === 'rune-touch') {
+        drawRuneTouch(ctx, e, reduced.matches);
+      } else if (e.kind === 'finish') {
+        drawFinish(ctx, e, reduced.matches);
+      } else if (['sword-contact', 'ember-contact', 'orbit-contact'].includes(e.kind)) {
         const reach = (e.finishing ? 34 : 25) * (e.evolved ? 1.2 : 1) * (reduced.matches ? .75 : .65 + progress * .7);
         const tone = e.kind === 'sword-contact' ? '#ffd897' : e.kind === 'ember-contact' ? '#ff9b59' : '#98e9d0';
         ctx.save();
@@ -698,6 +710,10 @@ export function createRenderer(canvas, art) {
     }
     // The companion is drawn once, above friendly effects and front-row enemies.
     drawPlayer(game, hurt);
+    for (const e of game.effects) if (e.kind === 'ember-launch') {
+      const frame = actionEffectFrame(e, game);
+      if (frame) drawLaunch(ctx, frame, reduced.matches);
+    }
     if (hurt?.fade > 0) {
       // Broken contact marks point toward the actual source, never a new hazard circle.
       ctx.save(); ctx.translate(p.x, p.y - 27);

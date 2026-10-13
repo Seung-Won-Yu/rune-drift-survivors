@@ -507,12 +507,15 @@ test('grown loadout attacks, victory and defeat restart cleanly', async ({ page 
 
 test('earned evolution changes the weapon belt and produces piercing crescents', async ({ page }) => {
   await scenario(page, 'evolution');
+  await expect(page.locator('#weapons [data-weapon="sword"]')).toHaveClass(/is-ready/);
+  await expect(page.locator('#weapons [data-weapon="sword"] .weapon-state')).toHaveText('진화 가능');
   await expect(page.locator('[data-upgrade]').first()).toHaveAttribute('data-upgrade','dawn');
   await page.screenshot({ path: 'output/playwright/survivor/evolution-choice.png', animations: 'disabled' });
   await page.locator('[data-upgrade="dawn"]').click();
   await expect(page.locator('#phase-label')).toContainText('진화의 여세');
   expect((await snapshot(page)).pacing.kind).toBe('evolution');
   await expect(page.locator('#weapons .is-evolved')).toHaveAttribute('aria-label','여명의 검 3단계');
+  await expect(page.locator('#weapons [data-weapon="sword"]')).not.toHaveClass(/is-ready/);
   await expect(page.locator('#evolution-hint')).toContainText('월광 고리 진화');
   expect((await snapshot(page)).ranks.dawn).toBe(1);
   await scenario(page, 'evolved');
@@ -556,6 +559,10 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740
     await page.screenshot({path:`output/playwright/survivor/boss-charge-${viewport.width}.png`,animations:'disabled'});
     const box=await page.locator('#boss-hud').boundingBox();
     expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(viewport.width);
+    for(const selector of ['.clock-pocket','.health-pocket','.hud-actions']) {
+      const other=await page.locator(selector).boundingBox();
+      expect(box.x>=other.x+other.width || other.x>=box.x+box.width || box.y>=other.y+other.height || other.y>=box.y+box.height,`boss does not overlap ${selector}`).toBe(true);
+    }
     await page.getByRole('button',{name:'일시정지',exact:true}).click();
     const paused=await snapshot(page);await page.waitForTimeout(150);
     expect((await snapshot(page)).boss.pattern).toEqual(paused.boss.pattern);
@@ -1406,4 +1413,33 @@ test('a saved alternate inheritance yields to a branch goal when switching compa
   expect(state.profile.inheritances.ember).toBeNull();
   await page.reload();expect((await snapshot(page)).inheritance).toBeNull();
   await expect(page.locator('[data-inheritance="none"]')).toHaveAttribute('aria-pressed','true');
+});
+
+test('actual flame release is visible beside the companion in both directions and stays compact',async({page})=>{
+  const result=await page.evaluate(async()=>{
+    const {createRenderer,loadArt}=await import('/src/survivor/render.js');
+    const {createGame,startGame,spawnEnemy,updateGame}=await import('/src/survivor/game.js');
+    const canvas=document.createElement('canvas');canvas.style.cssText='width:800px;height:680px';document.body.append(canvas);
+    // Fix the readback backend before renderer creation; repeated pixel reads must not switch rasterizers.
+    const ctx=canvas.getContext('2d',{alpha:false,willReadFrequently:true}),renderer=createRenderer(canvas,await loadArt('/'));
+    const reports=[];
+    for(const facing of [-1,1]) {
+      const g=createGame(42,'ember');startGame(g);g.spawnClock=999;g.emberClock=0;
+      const e=spawnEnemy(g,0,false,{x:facing*180,y:0});e.speed=0;
+      updateGame(g,1/60);g.phase='paused';
+      const launch=g.effects.find(e=>e.kind==='ember-launch');
+      const before=JSON.stringify(g),{scale}=renderer.render(g),ratio=canvas.width/800;const lit=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      g.effects=g.effects.filter(e=>e!==launch);renderer.render(g);const base=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      let count=0,reach=0,meanX=0;
+      // Measure the bright cue, above low-contrast edge rasterization differences.
+      for(let i=0;i<base.length;i+=4)if(Math.abs(lit[i]-base[i])+Math.abs(lit[i+1]-base[i+1])+Math.abs(lit[i+2]-base[i+2])>50){
+        count++;const x=((i/4)%canvas.width-canvas.width/2)/ratio/scale,y=(Math.floor(i/4/canvas.width)-canvas.height*.53)/ratio/scale;
+        meanX+=x;reach=Math.max(reach,Math.hypot(x,y));
+      }
+      g.effects.push(launch);const stable=JSON.stringify(g);renderer.render(g);
+      reports.push({facing,count,reach,meanX:meanX/(count||1),stable:stable===JSON.stringify(g),emitted:JSON.parse(before).shots.length});
+    }
+    canvas.remove();return reports;
+  });
+  for(const r of result){expect(r.emitted).toBeGreaterThan(0);expect(r.count).toBeGreaterThan(15);expect(r.reach).toBeLessThan(76);expect(r.meanX*r.facing).toBeGreaterThan(18);expect(r.stable).toBe(true);}
 });

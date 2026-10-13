@@ -7,7 +7,7 @@ import { BOSS } from '../src/survivor/boss.js';
 import { drawBossThorn, drawBossRelease } from '../src/survivor/boss-ink.js';
 import { drawMaterialHit } from '../src/survivor/combat-ink.js';
 import { ACTOR_ART } from '../src/survivor/actor-art.js';
-import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst } from '../src/survivor/combat-vfx.js';
+import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst, drawLaunch, drawRuneTouch, drawFinish } from '../src/survivor/combat-vfx.js';
 import { drawEnemyGround, drawEnemyWarnings } from '../src/survivor/enemy-render.js';
 import { createProfile } from '../src/survivor/profile.js';
 import { codexEntries } from '../src/survivor/codex.js';
@@ -324,4 +324,34 @@ test('evolution engravings are distinct, deterministic and bounded even with inv
     return JSON.stringify(calls);
   });
   assert.equal(new Set(identities).size, 3); assert.deepEqual(capture('sword', 14), []);
+});
+
+
+test('release, rune source and finish marks are bounded, deterministic and static in reduced motion', () => {
+  const effect={x:10,y:20,angle:.4,age:.03,life:.18,empowered:true,evolved:true};
+  for(const draw of [drawLaunch,drawRuneTouch,drawFinish]) for(const source of ['sword','ember','orbit']) {
+    effect.source=source;
+    const before=JSON.stringify(effect), calls=drawingCalls(ctx=>draw(ctx,effect));
+    assert.deepEqual(calls,drawingCalls(ctx=>draw(ctx,effect)));
+    assert.equal(JSON.stringify(effect),before);
+    assert.ok(calls.length<60);
+    assert.ok(!calls.some(c=>['arc','fillText','strokeText','setLineDash'].includes(c[0])));
+    const geometry=age=>drawingCalls(ctx=>draw(ctx,{...effect,age},true)).filter(c=>c[0]!=='globalAlpha');
+    assert.deepEqual(geometry(.01),geometry(.08),'reduced motion changes opacity only');
+  }
+  const rune=drawingCalls(ctx=>drawRuneTouch(ctx,effect));
+  assert.deepEqual(rune.find(c=>c[0]==='translate'),['translate',10,8]);
+});
+
+test('weapon belt marks evolution readiness even when the weapon rank does not change', () => {
+  const g=createGame(42);g.ranks.sword=3;g.ranks.orbit=1;
+  const before=weaponBeltKey(weaponLoadout(g));
+  assert.equal(weaponPresentation(g,'sword').ready,false);
+  g.eliteKills=1;
+  assert.equal(weaponPresentation(g,'sword').ready,true);
+  assert.equal(weaponPresentation(g,'sword').stageLabel,'진화 가능');
+  assert.notEqual(weaponBeltKey(weaponLoadout(g)),before);
+  g.ranks.dawn=1;
+  assert.equal(weaponPresentation(g,'sword').ready,false);
+  assert.equal(weaponPresentation(g,'sword').stageLabel,'진화');
 });
