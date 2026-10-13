@@ -863,7 +863,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
           });
           enemy.speed = 0;
         }
-      } else if (name === 'boss' || name === 'boss-thorns' || name === 'boss-kill') {
+      } else if (name === 'boss' || name === 'boss-thorns' || name === 'boss-kill' || name === 'boss-practice') {
         game.time = BOSS.arrival;
         game.ranks.sword = 3;
         game.ranks.ember = 2;
@@ -877,6 +877,10 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
           boss.hp = 1;
           boss.x = 62;
           boss.attackClock = 999;
+        } else if (name === 'boss-practice') {
+          // Manual developer playtest: real damage and normal weapon clocks.
+          // Other boss fixtures keep their existing isolated test behavior.
+          game.player.invincible = 0;
         } else game.swordClock = 999;
       } else if (name === 'record-unlock' || name === 'record-journey' || name === 'record-experiment') {
         if (name === 'record-journey') { game.encounters = [{kind:'altar',state:'completed',progress:10,x:0,y:0}]; game.ranks.sweep=1; game.ranks.horizon=1; }
@@ -983,9 +987,9 @@ loadArt(import.meta.env.BASE_URL, (loaded, total) => {
   syncPhase();
   if (import.meta.env.DEV) {
     const scene = new URLSearchParams(location.search).get('scene');
-    if (window.__ASH_QA__ && ['action-readability', 'projectile-readability'].includes(scene)) {
+    if (window.__ASH_QA__ && ['action-readability', 'projectile-readability', 'boss-practice'].includes(scene)) {
       window.__ASH_QA__.scenario(scene);
-      $('overlay').style.visibility = 'hidden';
+      if (scene !== 'boss-practice') $('overlay').style.visibility = 'hidden';
     }
   }
   requestAnimationFrame(tick);

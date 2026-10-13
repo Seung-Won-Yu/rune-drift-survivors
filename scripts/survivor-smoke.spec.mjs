@@ -550,6 +550,21 @@ for(const [key,name,effect] of [['comet','잿불 혜성','ember-burst'],['lunar'
   });
 }
 
+test('manual boss practice keeps real damage, weapon clocks and the pause controls',async({page})=>{
+  await page.goto('/survivor/?qa&scene=boss-practice');
+  await expect(page.locator('#boss-hud')).toBeVisible();
+  await page.waitForFunction(()=>window.__ASH_QA__?.snapshot().hurtFeedback?.source==='charge');
+  await page.getByRole('button',{name:'일시정지',exact:true}).click();
+  const paused=await snapshot(page);
+  expect(paused.player.hp).toBe(72);
+  expect(paused.boss.hp).toBeLessThan(paused.boss.maxHp);
+  expect(paused.phase).toBe('paused');
+  await page.waitForTimeout(150);
+  expect((await snapshot(page)).time).toBe(paused.time);
+  await page.getByRole('button',{name:'전투 계속하기'}).click();
+  expect((await snapshot(page)).phase).toBe('playing');
+});
+
 for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]){
   test(`boss patterns and HUD are readable at ${viewport.width}x${viewport.height}`,async({page})=>{
     const errors=[];page.on('pageerror',e=>errors.push(e.message));

@@ -63,7 +63,7 @@ export function updateBoss(game, boss, dt, hurt, effect) {
     const progress = Math.min(1, (pattern.age - BOSS.windup) / BOSS.chargeDuration);
     boss.x = pattern.x + Math.cos(pattern.angle) * BOSS.chargeLength * progress;
     boss.y = pattern.y + Math.sin(pattern.angle) * BOSS.chargeLength * progress;
-    if (previousAge < BOSS.windup + BOSS.chargeDuration && Math.hypot(p.x - boss.x, p.y - boss.y) < BOSS.chargeWidth / 2 + 12) hurt(game, BOSS.chargeDamage, 'charge', pattern);
+    if (previousAge < BOSS.windup + BOSS.chargeDuration && Math.hypot(p.x - boss.x, p.y - boss.y) < BOSS.chargeWidth / 2 + 12) hurt(game, BOSS.chargeDamage, 'charge', boss);
     if (!pattern.fired) {
       pattern.fired = true;
       game.events.push('boss-charge');

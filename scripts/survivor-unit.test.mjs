@@ -103,6 +103,24 @@ test('a boss charge hits the marked lane and waits before attacking again',()=>{
   frames(g,50);assert.equal(g.player.hp,100-BOSS.chargeDamage);assert.equal(g.damageTaken.charge,BOSS.chargeDamage);
   frames(g,45);assert.equal(boss.pattern,null);assert.ok(boss.attackClock>0);
 });
+test('late charge feedback points at the colliding boss instead of the distant windup origin',async()=>{
+  const {hurtFeedback}=await import('../src/survivor/impact.js');
+  for(const angle of [0,Math.PI]){
+    const g=playing();g.ranks.sword=0;const boss=spawnBoss(g);
+    const travel=BOSS.chargeLength*.5/BOSS.chargeDuration;
+    Object.assign(g.player,{x:Math.cos(angle)*travel,y:30});
+    Object.assign(boss,{entrance:0,pattern:{x:0,y:0,angle,age:BOSS.windup+.5-1/60,kind:'charge',fired:true}});
+    frames(g,1);
+    assert.equal(g.player.hp,100-BOSS.chargeDamage);
+    assert.equal(g.damageTaken.charge,BOSS.chargeDamage);
+    assert.ok(Math.abs(g.player.impact.angle+Math.PI/2)<1e-10,'the boss is directly above the player at contact');
+    const feedback=hurtFeedback(g);
+    assert.ok(feedback.pose.y>0);assert.ok(Math.abs(feedback.pose.x)<1e-10);
+    assert.equal(g.player.x,Math.cos(angle)*travel);assert.equal(g.player.y,30);
+    pauseGame(g);frames(g,30);assert.deepEqual(hurtFeedback(g),feedback);
+    assert.deepEqual(hurtFeedback(g,true).pose,{});
+  }
+});
 test('boss thorns are telegraphed, bounded and stop during an upgrade',()=>{
   const g=playing();g.swordClock=999;const boss=spawnBoss(g);
   Object.assign(boss,{x:180,y:0,entrance:0,attackClock:0,attackIndex:1});
