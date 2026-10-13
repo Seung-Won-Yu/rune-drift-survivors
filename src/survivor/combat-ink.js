@@ -14,7 +14,7 @@ export function drawFootfall(ctx, game, reduced) {
   const step = p.walk * 7, age = step % 1;
   if (age > .55) return;
   const side = Math.floor(step) % 2 ? -1 : 1;
-  ctx.save(); ctx.translate(p.x - p.facing * age * 15, p.y + 2);
+  ctx.save(); ctx.translate(p.x - (p.moveX ?? 0) * age * 15, p.y + 2 - (p.moveY ?? 0) * age * 15);
   ctx.globalAlpha = .48 * (1 - age / .55);
   ctx.strokeStyle = game.characterId === 'grove' ? '#b2c5a0' : '#cbbd87';
   ctx.lineWidth = 2;

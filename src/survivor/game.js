@@ -216,6 +216,8 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', exp
       invincible: 0,
       facing: 1,
       moving: false,
+      moveX: 0,
+      moveY: 0,
       walk: 0,
       hurt: 0,
       impact: null,
@@ -524,7 +526,7 @@ function addGem(game, x, y, value) {
     nearest.value += value;
   }
 }
-function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false) {
+function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false, impactAngle) {
   if (enemy.hp <= 0 || enemy.boss && enemy.entrance > 0) return 0;
   if (source === 'sword' && game.relics.includes('fang')) damage *= enemy.elite || enemy.boss ? 1.4 : .9;
   if (!periodic && source === 'ember' && (game.ranks.wildfire || game.relics.includes('coal'))) {
@@ -534,7 +536,7 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false)
   if (source === 'orbit' && game.relics.includes('bell') && !enemy.boss) enemy.slowUntil = game.time + 1.2;
   const actual = Math.min(enemy.hp, damage);
   if (!periodic && actual > 0) {
-    const angle = nx || ny ? Math.atan2(ny, nx) : Math.atan2(enemy.y - game.player.y, enemy.x - game.player.x);
+    const angle = impactAngle ?? (nx || ny ? Math.atan2(ny, nx) : Math.atan2(enemy.y - game.player.y, enemy.x - game.player.x));
     if (['sword', 'ember', 'orbit'].includes(source)) {
       const evolved = isEvolvedWeapon(game, source);
       enemy.impact = { at: game.time, angle, source, evolved };
@@ -769,7 +771,14 @@ function updateWeapons(game, dt, s) {
             life: .3
           });
           if (game.ranks.detonation) game.events.push('ember-impact');
-          for (const other of game.enemies) if (Math.hypot(other.x - shot.x, other.y - shot.y) <= (shot.blastRadius ?? 56) + other.radius) hitEnemy(game, other, shot.damage, 'ember');
+          for (const other of game.enemies) {
+            const dx = other.x - shot.x, dy = other.y - shot.y, distance = Math.hypot(dx, dy);
+            if (distance > (shot.blastRadius ?? 56) + other.radius) continue;
+            // A blast reacts away from its center. This is visual direction;
+            // the existing area-damage attack still adds no physical knockback.
+            const angle = distance > .01 ? Math.atan2(dy, dx) : Math.atan2(shot.vy, shot.vx);
+            hitEnemy(game, other, shot.damage, 'ember', 0, 0, false, angle);
+          }
         } else hitEnemy(game, enemy, shot.damage, wave ? 'sword' : 'ember', shot.vx / (wave ? 330 : 290), shot.vy / (wave ? 330 : 290));
         if (shot.empowered && game.ranks.wildfire) {
           // Charged wildfire extends its burn; it keeps its damage-over-time identity.
@@ -923,6 +932,9 @@ export function updateGame(game, dt, input = {
   p.x += ix * s.speed * dt;
   p.y += iy * s.speed * dt;
   p.moving = Math.hypot(ix, iy) > .05;
+  // Travel and aim can differ while kiting; ground marks follow travel.
+  p.moveX = ix;
+  p.moveY = iy;
   advanceSignature(game, Math.hypot(ix, iy) * s.speed * dt);
   // Animation follows travelled distance, including partial touch-stick input.
   if (p.moving) p.walk += Math.hypot(ix, iy) * s.speed * dt / 168;

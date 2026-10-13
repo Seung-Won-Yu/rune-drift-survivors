@@ -5,7 +5,7 @@ import { HOUND, GIANT } from '../src/survivor/enemies.js';
 import { ashFrame, companionFrame, creatureFrame, remnantFrame, bossFrame, bossRemnantFrame } from '../src/survivor/actor-animation.js';
 import { BOSS } from '../src/survivor/boss.js';
 import { drawBossThorn, drawBossRelease } from '../src/survivor/boss-ink.js';
-import { drawMaterialHit } from '../src/survivor/combat-ink.js';
+import { drawFootfall, drawMaterialHit } from '../src/survivor/combat-ink.js';
 import { ACTOR_ART } from '../src/survivor/actor-art.js';
 import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst, drawLaunch, drawRuneTouch, drawFinish } from '../src/survivor/combat-vfx.js';
 import { drawEnemyGround, drawEnemyWarnings } from '../src/survivor/enemy-render.js';
@@ -27,6 +27,41 @@ const drawingCalls = draw => {
   });
   draw(ctx); return calls;
 };
+
+test('footfall dust trails travel rather than the direction the companion faces', () => {
+  for (const input of [{x:0,y:1},{x:0,y:-1},{x:-1,y:0},{x:.3,y:.4}]) {
+    const game=createGame(42);game.phase='playing';game.spawnClock=999;
+    game.player.facing=1;
+    updateGame(game,1/30,input);
+    // A cast/attack may leave facing opposite travel. Dust follows the feet.
+    game.player.facing=1;
+    const before=JSON.stringify(game),calls=drawingCalls(ctx=>drawFootfall(ctx,game,false));
+    const position=calls.find(c=>c[0]==='translate');assert.ok(position);
+    const dx=position[1]-game.player.x,dy=position[2]-game.player.y-2;
+    assert.ok(dx*input.x+dy*input.y<0,'dust trails actual motion');
+    assert.ok(Math.abs(dx*input.y-dy*input.x)<1e-8,'trail stays on the travel axis');
+    assert.equal(JSON.stringify(game),before);
+    assert.deepEqual(drawingCalls(ctx=>drawFootfall(ctx,game,true)),[]);
+    game.phase='paused';const paused=JSON.stringify(game);updateGame(game,1/30,{x:1,y:0});
+    assert.equal(JSON.stringify(game),paused);
+    game.phase='playing';updateGame(game,1/30);
+    assert.deepEqual(drawingCalls(ctx=>drawFootfall(ctx,game,false)),[]);
+  }
+});
+
+test('blast hit reactions point away from the explosion without adding physical knockback', () => {
+  const game=createGame(42,'ember');game.phase='playing';game.spawnClock=999;game.emberClock=999;
+  const enemies=[220,185,255].map(x=>{
+    const enemy=spawnEnemy(game,0,false,{x,y:0});enemy.hp=enemy.maxHp=1000;enemy.speed=0;return enemy;
+  });
+  game.shots.push({x:220-290/60,y:0,vx:290,vy:0,life:2,damage:30,blast:true,blastRadius:56});
+  updateGame(game,1/60);
+  for(const [index,enemy] of enemies.entries()) {
+    assert.equal(enemy.hp,970);assert.equal(enemy.knockX,0);assert.equal(enemy.knockY,0);
+    assert.equal(enemy.x,[220,185,255][index]);assert.equal(enemy.y,0);
+    assert.equal(enemy.impact.angle,index===1?Math.PI:0);
+  }
+});
 
 test('sword strokes stay near the weapon even at evolved range and never draw a full damage sector', () => {
   for (const branch of [null, 'sweep', 'duelist']) for (const reduced of [false,true]) for (const age of [0,.06,.16,.22]) {
