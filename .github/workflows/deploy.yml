@@ -50,12 +50,6 @@ jobs:
           CI: 'true'
           GITHUB_PAGES: 'true'
 
-      - name: Run smoke QA
-        run: npm run qa:smoke
-        env:
-          CI: 'true'
-          RUNE_QA_HEADLESS: '1'
-
       - name: Upload failed QA diagnostics
         if: failure()
         uses: actions/upload-artifact@v4

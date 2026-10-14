@@ -6,25 +6,14 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "qa:balance": "playwright test --config scripts/playwright-balance.config.mjs",
-    "qa:smoke": "playwright test --config scripts/playwright-smoke.config.mjs",
     "qa:survivor": "node --test scripts/survivor-unit.test.mjs scripts/survivor-progression.test.mjs scripts/survivor-presentation.test.mjs scripts/survivor-profile.test.mjs scripts/survivor-field.test.mjs scripts/survivor-expansion.test.mjs scripts/survivor-journey.test.mjs scripts/survivor-codex.test.mjs scripts/survivor-enemies.test.mjs scripts/survivor-pacing.test.mjs scripts/survivor-experiments.test.mjs scripts/survivor-rhythm.test.mjs && playwright test --config scripts/playwright-survivor.config.mjs",
     "qa:survivor:production": "node scripts/survivor-production-smoke.mjs",
     "qa:survivor:fullrun": "node scripts/survivor-fullrun.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "qa:survivor:progression": "node scripts/survivor-progression-balance.mjs && playwright test --config scripts/playwright-survivor-progression.config.mjs"
   },
-  "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.4.0",
-    "@react-three/postprocessing": "^3.0.4",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "three": "^0.181.2"
-  },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
-    "@vitejs/plugin-react": "^5.1.2",
     "vite": "^7.2.7"
   }
 }

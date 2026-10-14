@@ -1,4 +1,3 @@
-@import url('../styles/tokens.css');
 :root {
   --ink: #f3ead5;
   --muted: #bac7b9;
@@ -9,14 +8,32 @@
   color: var(--ink);
   font-family: "Avenir Next","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
   background: #253d2d;
+  font-synthesis: none;
+  font-variant-numeric: tabular-nums;
+  text-rendering: geometricPrecision;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
 }
 body {
   margin: 0;
   overflow: hidden;
+  background: #06100e;
 }
 button {
+  color: inherit;
   font: inherit;
   cursor: pointer;
+}
+::selection {
+  color: #06100e;
+  background: #75ddd2;
 }
 button:focus-visible {
   outline: 3px solid #ffe5b3;
@@ -393,6 +410,7 @@ button:focus-visible {
   background: var(--gold);
 }
 .eyebrow {
+  line-height: 1;
   font-size: 10px;
   font-weight: 800;
   color: var(--gold);

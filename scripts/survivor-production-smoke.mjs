@@ -2,21 +2,24 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 import {chromium} from '@playwright/test';
+import {createProfile} from '../src/survivor/profile.js';
 
 // Build first with GITHUB_PAGES=true. An external preview can be provided explicitly.
 const origin=process.env.ASH_PREVIEW_URL??'http://127.0.0.1:4174';
+const repositoryName=process.env.GITHUB_REPOSITORY?.split('/')[1]??'rune-drift-survivors';
+const base=`/${repositoryName}/`;
 const server=process.env.ASH_PREVIEW_URL?null:spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--host','127.0.0.1','--port','4174','--strictPort'],{env:{...process.env,GITHUB_PAGES:'true'},stdio:'ignore'});
 let browser;
 try{
   let ready=false;
-  for(let i=0;i<50;i++){try{if((await fetch(`${origin}/rune-drift-survivors/survivor/`)).ok){ready=true;break;}}catch{}await delay(100);}
+  for(let i=0;i<50;i++){try{if((await fetch(`${origin}${base}`)).ok){ready=true;break;}}catch{}await delay(100);}
   assert.ok(ready,'Pages preview must become ready');
   browser=await chromium.launch({...(process.env.CI==='true'?{}:{channel:'chrome'}),headless:true});
   const page=await browser.newPage({viewport:{width:1280,height:720}});
   const failures=[],errors=[],assets=[];
   page.on('pageerror',error=>errors.push(error.message));
   page.on('response',response=>{if(response.status()>=400)failures.push(`${response.status()} ${response.url()}`);if(response.url().includes('/art/survivor/'))assets.push(response.url().split('/').at(-1));});
-  await page.goto(`${origin}/rune-drift-survivors/survivor/?qa`);
+  await page.goto(`${origin}${base}survivor/?qa`);
   await page.locator('.camp-scene').waitFor();
   assert.ok(await page.locator('#start-game').isVisible());
   await page.locator('.camp-tabs [data-camp-section="journal"]').click();
@@ -42,6 +45,29 @@ try{
   for(const name of ['hero-ash.png','hero-ember.png','hero-grove.png','enemies.png','ash-sovereign.png','forest-sanctuary-v2.webp','forest-ground-v1.webp','hero-ash-motion-v1.webp','hound-motion-v1.webp','giant-motion-v1.webp','hero-ember-motion-v1.webp','hero-grove-motion-v1.webp','ash-sovereign-motion-v1.webp'])assert.ok(assets.includes(name),name);
   await page.evaluate(()=>document.fonts.ready);
   assert.ok(await page.evaluate(()=>document.fonts.check('700 24px "Ash Journal"','잿빛의 숲')),'self-hosted Korean title face loaded');
+  // Model an existing save at the bookmarked entry, then visit the new default.
+  // The isolated browser context never touches a player's real browser profile.
+  const profile={...createProfile(),selected:'ember',runs:3,bestTime:90,totalKills:400,
+    keepsake:'bookmark',buildDiscoveries:['sweep','wildfire'],relicDiscoveries:['dew'],
+    inheritances:{ash:null,ember:'wildfire',grove:null}};
+  await page.evaluate(profile=>localStorage.setItem('ash-profile-v1',JSON.stringify(profile)),profile);
+  const saved=await page.evaluate(()=>localStorage.getItem('ash-profile-v1'));
+  for(const route of ['', 'survivor/']){
+    await page.goto(`${origin}${base}${route}?qa&quality=balanced`);
+    await page.locator('.camp-scene').waitFor();
+    assert.equal(await page.title(),'잿빛의 숲 · Ash & Amber');
+    assert.equal(await page.locator('[data-character="ember"]').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.locator('[data-character="grove"]').isDisabled(),false);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('ash-profile-v1')),saved,'entry must preserve saved progression and loadout');
+    assert.equal(await page.evaluate(()=>typeof window.__ASH_QA__),'undefined');
+    assert.equal(await page.evaluate(()=>typeof window.__RUNE_DRIFT_QA__),'undefined');
+    await page.getByRole('button',{name:'숲에 들어가기'}).click();
+    await page.getByRole('button',{name:'일시정지',exact:true}).click();
+    await page.getByRole('button',{name:'전투 계속하기'}).waitFor();
+    assert.ok((await page.locator('#hero-name').textContent()).includes('불씨술사'));
+    assert.ok((await page.locator('#panel').textContent()).includes('번지는 불꽃'));
+    assert.ok((await page.locator('#panel').textContent()).includes('첫빛의 책갈피'));
+  }
   assert.deepEqual(failures,[]);assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({base:'/rune-drift-survivors/',loadedAssets:[...new Set(assets)],qaGlobal:'absent',codexEntries:22,codexRecipes:'passed',lockedGrowth:'passed',startAndPause:'passed',failures,errors}));
+  console.log(JSON.stringify({base,entries:['/','/survivor/'],savedProgress:'preserved',loadedAssets:[...new Set(assets)],qaGlobal:'absent',codexEntries:22,codexRecipes:'passed',lockedGrowth:'passed',startAndPause:'passed',failures,errors}));
 }finally{await browser?.close();server?.kill();}

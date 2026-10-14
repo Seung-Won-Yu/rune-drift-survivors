@@ -1,10 +1,8 @@
-# Rune Drift Survivors
+# Ash & Amber — 잿빛의 숲
 
-## Ash & Amber — 잿빛의 숲
+A complete five-minute **2D cartoon survivor chapter** for the browser. Choose a companion, gather XP, evolve an automatic weapon and face the Ash Sovereign. The game uses Canvas 2D and Vite.
 
-A complete five-minute **2D cartoon survivor chapter** for the browser. Choose a companion, gather XP, evolve an automatic weapon and face the Ash Sovereign. The new game uses Canvas 2D; its entry does not load React or Three.js.
-
-**[Play Ash & Amber](https://seung-won-yu.github.io/rune-drift-survivors/survivor/)** · [Play / development guide](./docs/survivor.md) · [Enemy design and verification](./docs/design/survivor-restart/12-ENEMY-ROLES.md)
+**[Play Ash & Amber](https://seung-won-yu.github.io/rune-drift-survivors/)** · [Play / development guide](./docs/survivor.md) · [Enemy design and verification](./docs/design/survivor-restart/12-ENEMY-ROLES.md)
 
 ![Ash & Amber illustrated companions and preparation journal](./docs/design/survivor-restart/images/illustrated-camp-1280.png)
 
@@ -46,180 +44,39 @@ The combat image uses a development-only boss scenario to show the warning clear
 - **Visible weapon growth:** the selected specialization and evolution keep their collection artwork in the HUD and later upgrades. Small fixed sword, comet and crescent engravings distinguish evolved attacks; the chosen branch remains visible. See the [growth presentation record](./docs/design/survivor-restart/25-GROWTH-VISUAL-IDENTITY.md).
 - **Readable feedback:** three optional healing fruits, separate weapon sounds, enemy defeat reactions, keyboard/touch controls, pause, mute and reduced-motion support.
 
-Run `npm ci` and `npm run dev`, then open **[the local game](http://127.0.0.1:5173/survivor/)**. Move with WASD/arrows or the touch stick. Attacks are automatic; use Escape/P to pause and 1–3 or a card to choose an upgrade.
-
-Verification covers 160 core tests, 136 browser scenarios, capped-load checks, normal-rule route diagnostics, full real-time browser runs and the Pages build path. The [companion/boss motion record](./docs/design/survivor-restart/31-COMPANION-BOSS-MATERIAL-MOTION.md) covers the latest six-actor rendering, material hits, source-resolution cache budget and release checks. The [action and forest record](./docs/design/survivor-restart/32-ACTION-CAUSALITY-AND-FOREST.md) documents the latest verified main/Pages release, matching public JS/CSS and preserved lobby progress. Earlier four-pose artwork and untested physical mobile hardware are documented in the [release record](./docs/design/survivor-restart/09-RELEASE.md). The [first expansion record](./docs/design/survivor-restart/10-EXPANSION.md) covers the new choices and their validation. The [journey and combat-feel record](./docs/design/survivor-restart/11-JOURNEY-FEEL.md) covers starting keepsakes, challenge rewards and specialization feedback. The [enemy-role record](./docs/design/survivor-restart/12-ENEMY-ROLES.md) records warning timings, spawn composition and diagnostic limits. The [design history](./docs/design/survivor-restart/00-RELEASE-PLAN.md) retains the earlier style experiments and implementation decisions.
-
-The first chapter passed its survivor checks and 86 legacy browser regressions, deployed to Pages, and matched the verified public JS/CSS bytes. See the [final chapter audit](./docs/design/survivor-restart/20-CHAPTER-FINAL-AUDIT.md) for that release. The [readability and motion pass](./docs/design/survivor-restart/21-COMBAT-READABILITY-MOTION.md) retains that earlier implementation record. The [presentation development record](./docs/design/survivor-restart/24-PRESENTATION-DEVELOPMENT.md) tracks the camp, collection artwork and motion; the [growth presentation record](./docs/design/survivor-restart/25-GROWTH-VISUAL-IDENTITY.md) records the latest weapon identity and delivery evidence.
-
-The illustrated sanctuary release (`8594996`) passed 127 core tests, 120 survivor browser scenarios, 86 legacy browser regressions and the Pages production check in CI, then deployed successfully. The public JS/CSS, two environment images and Korean font match the verified build. WebKit and Firefox each passed 15 focused UI flows; three real-time normal-rule diagnostic runs also verified results and restart. See the [sanctuary design record](./docs/design/survivor-restart/26-ILLUSTRATED-SANCTUARY.md). Human playtests and physical mobile performance remain separate evaluation steps; the existing character sheets retain their four-pose movement and action art.
-
-The companion-rhythm and inheritance release (`80e8cc2`) passed 136 core tests, 124 survivor browser scenarios, 86 legacy browser regressions and the Pages production check in CI, then deployed successfully. Public assets match the verified build, and three public viewports verified saved inheritance, codex preparation, movement charging and pause. A 150-route diagnostic and three full real-time runs are recorded with the initial failed route and its follow-up corrections in the [character rhythm verification](./docs/design/survivor-restart/27-CHARACTER-RHYTHM-AND-LEGACY.md).
-
-The companion-presentation release (`c0afd96`, visual changes in `f063321`) passed 137 core tests, 126 survivor browser scenarios, 87 legacy regressions and the Pages production check, then deployed successfully. Public JS/CSS, the Korean font and all three new portraits match the verified build. Four public viewport checks verified internal scrolling, fixed departure, inheritance persistence, codex preparation and movement/pause. See the [illustrated companion release record](./docs/design/survivor-restart/28-COMPANION-PRESENTATION.md) for the initial legacy QA reset failure, its fix, cross-engine checks and three full real-time runs.
-
-## Existing Rune Drift prototype
-
-A five-minute browser survival roguelite built with **React, Three.js, React Three Fiber, and Vite**. Guide a hooded Rune Warden through a ruined forest, build an automatic-attack loadout, and connect four seals before the final rift.
-
-**[Play on GitHub Pages](https://seung-won-yu.github.io/rune-drift-survivors/)** · [Development guide](./docs/project-structure.md) · [QA guide](./docs/qa.md)
-
-![Desktop gameplay with health, four-seal navigation, and the Rune Warden](./docs/images/gameplay-desktop.png)
-
-<details>
-<summary>Mobile portrait gameplay</summary>
-
-<img src="./docs/images/gameplay-mobile.png" width="320" alt="Mobile gameplay with the character visible between navigation and contextual guidance, above the touch controls">
-
-</details>
-
-## How to play
-
-1. Move with the keyboard or touch stick; your weapons attack automatically.
-2. Collect XP and choose upgrades that strengthen your build.
-3. Follow the arrow, distance, and opening time to the next seal. Stay in its activation area to connect it.
-4. Read attack warnings, dash through pressure, and survive for five minutes.
-
-Connecting all four seals completes the Rune Circuit and strengthens the final fight. The result screen distinguishes a completed circuit, survival with an incomplete circuit, and defeat.
-
-## Features
-
-| Area | What is playable |
-| --- | --- |
-| Weapons | Rune orb, storm brand, orbit blade, chain lightning, and solar nova |
-| Builds | Storm + lightning, blade + nova, and orb + pierce synergy paths |
-| Progression | XP drafts, sequential seal rewards, optional field pickups, and guided replay routes |
-| Enemies | Runner, golem, brute, three elite roles, and the Rift Warden boss |
-| Combat feedback | Contact windup, reach/countdown rings, charge warnings, hit reactions, and boss patterns |
-| Controls | Keyboard, touch movement/dash, pause, sound settings, and persisted visual quality |
-| Results | Damage contribution, DPS, damage taken, healing, circuit progress, and replay choices |
-
-## Latest improvements
-
-- **First-session flow:** movement, XP, and the first seal form one clear route. Early upgrade cards explain immediate effects and show concrete numeric changes; keyboard activation works alongside `1`–`3` shortcuts.
-- **Build continuity:** armory rewards follow the active weapon build. A timed, optional reward after the first seal gives a short detour without blocking the next objective or duplicating its scheduled pickup.
-- **HUD and upgrade design:** stable health/XP positions, four distinct seal states, readable direction/distance/opening time, explicit recommendations, larger rune illustrations, and clear selection actions.
-- **Character and world readability:** an 18% larger player, color-preserving sprite treatment, smoother atlas minification, fewer body decorations, a stable player marker, quieter terrain, and action-focused effects.
-- **Mobile layout:** 44px-or-larger HUD actions, compact landscape navigation, readable low-health feedback, and contextual guidance above the sticks on short portrait screens so the character stays visible.
-- **Mobile results and controls:** circuit progress remains visible in a compact result row, and brighter touch labels keep MOVE readable above the joystick thumb.
-- **Consistent combat:** rendering quality changes presentation budgets while preserving simulation limits, collision rules, and progression.
-
-The [design records](./docs/design/gameplay-reframe/) document implementation decisions and verification. The screenshots above are captured from the local development build; GitHub Pages updates after the deployment workflow succeeds.
-
-## Controls
-
-| Action | Keyboard / pointer | Touch |
-| --- | --- | --- |
-| Move | `WASD` or arrow keys | Left stick |
-| Dash | `Space` | Dash button |
-| Choose an upgrade | Click, `1`–`3`, or `Tab` then `Enter` / `Space` | Tap a card |
-| Pause / resume | `P`, `Esc`, or pause button | Pause / resume button |
-| Restart | Restart button, then confirm | Restart button, then confirm |
-| Sound | HUD sound button | HUD sound button |
-
 ## Run locally
 
 Use **Node.js 22** (the version used by CI) and npm.
 
-```bash
+```sh
 npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite, normally `http://localhost:5173`.
+Open **[the local game](http://127.0.0.1:5173/)**. Move with WASD/arrows or the touch stick. Attacks are automatic; use Escape/P to pause and 1–3 or a card to choose an upgrade. No backend, account, or environment secrets are required.
 
-```bash
-npm run build
-npm run preview
-```
+## Verify and deploy
 
-The production build is written to `dist/`. No backend, account, or environment secrets are required.
+```sh
+# Core rules and browser scenarios (installed Chrome locally)
+npm run qa:survivor
 
-## Test
-
-```bash
-# Full browser, gameplay, layout, and stress suite
-npm run qa:smoke
-
-# Three guided five-minute build routes with a fixed seed
-npm run qa:balance
-```
-
-The smoke suite currently contains **87 cases**. It covers movement/dash, all 80 authored character animation cells, opening progression, seal rewards, optional detours, keyboard/dialog behavior, mobile layouts, damage feedback, results, and performance budgets. Viewport checks include 320×568, 360×740, 568×320, 740×360, tablet, and desktop layouts.
-
-Local tests run headlessly with installed Google Chrome and enforce the real-time stress threshold. CI installs Playwright Chromium and uses software WebGL to check behavior and budgets without imposing the local FPS threshold. See [docs/qa.md](./docs/qa.md) for setup details and shorter balance runs.
-
-Screenshots and measurements are written to `output/playwright/`; failure artifacts go to `test-results/`. These generated directories are ignored by Git. The two README screenshots are curated copies under `docs/images/`.
-
-Physical-phone touch/audio latency, browser chrome, and low-end cold-load memory still need device testing. Browser QA does not establish those hardware results.
-
-### Development scenes
-
-Run `npm run dev` and append a scene query to the local URL:
-
-| Query | Scene |
-| --- | --- |
-| `?qa=circuit&quality=balanced` | First-seal approach and navigation |
-| `?qa=seal&quality=balanced` | Seal completion feedback |
-| `?qa=starter-upgrade&quality=balanced` | Opening upgrade choices |
-| `?qa=contact&quality=balanced` | Enemy contact windup, hit, and recovery |
-| `?qa=threats&quality=balanced` | Elite/boss silhouettes and attack warnings |
-| `?qa=stress&quality=balanced` | Dense combat and runtime budgets |
-| `?qa=victory&quality=balanced` | Completed-run result |
-
-These fixtures and `window.__RUNE_DRIFT_QA__` are development-only. Scene commands return a promise after React commits and the world is initialized; await the command or check `ready()` before inspecting it. Paused/result screens render on demand, while the stress fixture continuously renders for frame measurements. The [QA guide](./docs/qa.md) lists all scenes and controls.
-
-## Visual quality
-
-Use the pause menu to select **Auto, Performance, Balanced, or Quality**. The choice persists locally; Auto selects a presentation tier based on device and display conditions.
-
-For a fixed mode, use `?quality=low`, `?quality=balanced`, or `?quality=high`. An explicit URL mode takes precedence over the menu. `?quality=high&fx=on`, `env=on`, and `?quality=cinematic` opt into more expensive presentation layers.
-
-All modes use the same authored 2.5D character cast. Higher quality adds lighting, shadows, and effect detail. Enemy, projectile, and XP simulation limits remain identical.
-
-## Project structure
-
-```text
-src/
-  audio/      Web Audio cues
-  config/     asset manifest, tuning, metadata, upgrades
-  hooks/      React runtime lifecycle
-  qa/         deterministic development scenes
-  styles/     tokens, HUD, overlays, responsive layouts
-  systems/    gameplay and frame-level runtime logic
-  ui/         HUD, overlays, cards, touch controls
-  world/      Three.js terrain, characters, effects, and atlas textures
-public/
-  sprites/    project-authored character atlases
-  art/        project-authored upgrade icons
-scripts/      Playwright smoke and balance checks
-docs/         architecture, assets, QA, design records, and screenshots
-```
-
-Facade modules such as `gameState.js`, `runProgress.js`, and `weaponRuntime.js` keep their public imports stable while implementation lives in focused modules. See the [repository map and ownership boundaries](./docs/project-structure.md).
-
-## Assets
-
-Character and upgrade atlases are project-authored images. Terrain, foliage, landmarks, weapons, and effects use code-built geometry and textures; the runtime has no GLB or Blender dependency.
-
-Character atlases use a shared cached RGBA conversion before mipmap filtering. Deterministic frame selection remains separate from rendering. See [asset sources and processing](./docs/assets.md) and [ASSET_CREDITS.md](./ASSET_CREDITS.md).
-
-## Deployment
-
-Pushes to `main` run [Deploy web game](./.github/workflows/deploy.yml): install dependencies, build, run the smoke suite, and deploy `dist/` to GitHub Pages. A failing build or smoke check prevents deployment.
-
-Assets use `import.meta.env.BASE_URL` so the game works under the `/rune-drift-survivors/` Pages subpath. To reproduce that build locally:
-
-```bash
+# GitHub Pages build, both entry URLs and saved-progress continuity
 GITHUB_PAGES=true npm run build
+npm run qa:survivor:production
 ```
 
-## Design and engineering notes
+For CI-style browser checks, run `npx playwright install chromium` and prefix the QA commands with `CI=true`. Optional real-time runs and balance diagnostics are documented in the [development guide](./docs/survivor.md). Generated screenshots and diagnostics stay in ignored `output/` and `test-results/` directories. Browser checks do not establish physical-phone performance or human playtest results.
 
-- [First-seal experience](./docs/design/gameplay-reframe/FIRST_SEAL_EXPERIENCE.md)
-- [Build continuity and optional detour](./docs/design/gameplay-reframe/BUILD_AND_DETOUR_SLICE.md)
-- [HUD and upgrade readability](./docs/design/gameplay-reframe/UI_READABILITY_PASS.md)
-- [Character and world readability](./docs/design/gameplay-reframe/CHARACTER_AND_WORLD_PASS.md)
-- [Material-first visual foundation](./docs/design/gameplay-reframe/VISUAL_FOUNDATION.md)
-- [Balance: saturation and pursuit](./docs/design/gameplay-reframe/BALANCE_PASS_02.md)
-- [Balance: opening pressure and hit feedback](./docs/design/gameplay-reframe/BALANCE_PASS_03.md)
+Pushes to `main` run survivor QA and the Pages production checks before publishing `dist/` through GitHub Actions. Both the root URL and the existing `/survivor/` URL load the same game module. Keep both HTML shells in sync when changing the static HUD. The `ash-profile-v1` storage key and origin are unchanged, so existing companion unlocks, discoveries, records and preparation choices remain available.
+
+## Repository
+
+- `src/survivor/`: game rules, Canvas rendering, controls, audio and interface.
+- `index.html` and `survivor/index.html`: current game and compatible existing entry.
+- `public/art/survivor/` and `public/fonts/`: game artwork and self-hosted Korean font.
+- `scripts/survivor-*`: unit, browser, production and balance checks.
+- `docs/survivor.md`: play and development guide.
+- `docs/design/survivor-restart/`: current chapter design and historical verification records.
+
+The former React/Three.js Rune Drift prototype has been removed from the active source, dependencies, tests and deployment. It remains recoverable from Git history before the retirement commit; no separate legacy game is published. Older design records describe their original release checks and are historical evidence, not current setup instructions. See the [retirement record](./docs/design/survivor-restart/33-LEGACY-RETIREMENT.md) and [asset credits](./ASSET_CREDITS.md).

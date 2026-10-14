@@ -23,8 +23,8 @@
 
 - `folio.css`는 기존 기능 레이아웃 위의 시각 계층이다. 화면 상태는 overlay의 `data-screen`, panel의 `phase-*`로 명시한다.
 - `ui-art.js`의 문장과 `collection-art.js`의 네 일반 성장 그림은 원본 SVG다. 기존 19개 수집품, 무기·전문화·진화 그림과 동일한 색과 외곽선 원칙을 사용한다.
-- 새 숲 그림 335,312바이트와 바닥 239,638바이트는 생성 결과의 크기/구도를 유지한 WebP다. [프롬프트와 출처](../../../../public/art/survivor/SANCTUARY-PROMPT.md).
-- 한글 제목 글꼴은 Noto Serif KR 700을 현재 UI 문자로 서브셋한 자체 WOFF2다. 외부 폰트 서비스 없이 제공하고 OFL을 함께 배포한다. [출처·라이선스·재생성](../../../../public/fonts/README.md).
+- 새 숲 그림 335,312바이트와 바닥 239,638바이트는 생성 결과의 크기/구도를 유지한 WebP다. [프롬프트와 출처](../../../public/art/survivor/SANCTUARY-PROMPT.md).
+- 한글 제목 글꼴은 Noto Serif KR 700을 현재 UI 문자로 서브셋한 자체 WOFF2다. 외부 폰트 서비스 없이 제공하고 OFL을 함께 배포한다. [출처·라이선스·재생성](../../../public/fonts/README.md).
 - 바닥은 초기화 때 한 번 512px 캔버스에 캐시하고 패턴으로 그린다. 전투 상태, 난수, 적/입자 수, 저장 스키마를 변경하지 않는다.
 - HUD의 장식 초상은 `data-portrait`를 사용한다. 출발 선택 버튼의 `data-character`와 충돌하지 않도록 분리한다.
 
