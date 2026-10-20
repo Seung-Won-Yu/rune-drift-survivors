@@ -165,11 +165,22 @@
 }
 @media (max-height:570px) and (orientation:landscape) {
   .panel:is(.phase-upgrade,.phase-relic) { padding: 14px 18px; }
-  .panel .choice-list .upgrade-card { padding: 12px; }
-  .panel .choice-list .upgrade-icon { position: static; width: 100%; height: 40px; margin: 4px 0; }
-  .panel .choice-list .upgrade-icon svg { width: 40px; height: 40px; }
-  .panel .choice-list .upgrade-card > strong { font-size: 18px; }
-  .choice-instruction { margin-bottom: 8px; font-size: 10px; }
+  .phase-upgrade .upgrade-top .eyebrow { display: none; }
+  .phase-upgrade .upgrade-top h1 { font-size: 20px; margin: 0; }
+  .phase-upgrade .upgrade-health { margin: 4px 0 0; }
+  .phase-upgrade .level-medal { width: 44px; height: 44px; }
+  .phase-upgrade .level-medal b { font-size: 20px; }
+  .phase-upgrade .growth-context { padding-block: 2px; margin-bottom: 6px; }
+  .panel .choice-list .upgrade-card { padding: 10px; }
+  .panel .choice-list .upgrade-icon { position: absolute; top: 42px; right: 10px; left: auto; width: 28px; height: 28px; margin: 0; background: none; }
+  .panel .choice-list .is-experiment .upgrade-icon { top: 60px; }
+  .panel .choice-list .upgrade-icon svg { width: 28px; height: 28px; }
+  .panel .choice-list .upgrade-card > strong { font-size: 17px; padding-right: 30px; margin-top: 4px; }
+  .panel .choice-list .upgrade-change { padding-block: 6px; font-size: 11px; line-height: 1.5; }
+  .panel .choice-list .upgrade-change > small { display: none; }
+  .panel .choice-list .upgrade-card > p { font-size: 10px; line-height: 1.5; margin-block: 6px; }
+  .panel .choice-list .recipe-link { font-size: 9px; margin-bottom: 6px; }
+  .choice-instruction { margin-bottom: 6px; font-size: 10px; }
   .choice-shortcuts { display: none; }
   .is-result .result-body { display: grid; grid-template-columns: minmax(0,.65fr) minmax(0,1.35fr); }
   .result-summary { position: sticky; padding: 18px; }
