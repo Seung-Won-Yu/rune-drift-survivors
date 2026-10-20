@@ -393,12 +393,12 @@ function panel(html, compact = false) {
   if (actions && ['paused', 'preview', 'event'].includes(game.phase)) {
     $('panel').classList.add('has-folio-body');
     if (!$('panel').querySelector(':scope > .folio-body')) {
-    const body = document.createElement('div');
-    body.className = 'folio-body';
-    body.tabIndex = 0;
-    body.setAttribute('aria-label', '여정 안내');
-    while ($('panel').firstElementChild !== actions) body.append($('panel').firstElementChild);
-    $('panel').prepend(body);
+      const body = document.createElement('div');
+      body.className = 'folio-body';
+      body.tabIndex = 0;
+      body.setAttribute('aria-label', '여정 안내');
+      while ($('panel').firstElementChild !== actions) body.append($('panel').firstElementChild);
+      $('panel').prepend(body);
     }
   }
   $('panel').scrollTop = 0;

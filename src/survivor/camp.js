@@ -86,7 +86,7 @@ export function journeyScreen(profile) {
   return `<details class="journey-board"><summary>숲의 도전 <span>${completed.length}/${CHALLENGES.length} 완료 · 기념품 해금</span></summary><p class="record-line">여정을 마치면 도전이 기록됩니다. 해금한 기념품은 출발 준비에서 선택하세요.</p><div class="challenge-list">${CHALLENGES.map(c => {
     const progress = challengeProgress(profile, c), done = progress === c.target;
     return `<article class="challenge-row ${done ? 'complete' : ''}" data-challenge="${c.id}"><strong>${c.name} <span>${done ? '완료' : `${progress}/${c.target}`}</span></strong><p>${c.description}</p><small>보상 · ${KEEPSAKES[c.reward].name}</small><progress value="${progress}" max="${c.target}" aria-label="${c.name} 진행도"></progress></article>`;
-  }).join('')}</div></details><p class="journey-preview">${next ? `다음 도전 · ${next.name} ${challengeProgress(profile, next)}/${next.target}` : `숲의 도전 ${CHALLENGES.length}개 완료`} · 기념품: ${keepsakeStats(profile.keepsake).name}</p>`;
+  }).join('')}</div></details><p class="journey-preview">${next ? `다음 도전 · ${next.name} ${challengeProgress(profile, next)}/${next.target} · 보상: ${KEEPSAKES[next.reward].name}` : `숲의 도전 ${CHALLENGES.length}개 완료 · 해금한 기념품은 출발 준비에서 선택하세요.`}</p>`;
 }
 function inheritanceSelection(game, profile) {
   const branches = primaryBranches(game.characterId);
