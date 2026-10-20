@@ -432,3 +432,26 @@ test('closing a chest offer preserves its rewards and allows a later deliberate 
   assert.ok(chooseCurse(g, true)); assert.ok(curseActive(g));
   assert.equal(closeChest(g), false);
 });
+
+test('the displayed encounter deadline matches expiry and accepted curses keep their promise', async () => {
+  const {ENCOUNTER_DEADLINE, encounterTimeLeft, encounterDeadline} = await import('../src/survivor/encounters.js');
+  for (const kind of ['altar', 'chest']) {
+    const g = playing(); g.time = ENCOUNTER_DEADLINE - .01;
+    const event = {kind, x:999, y:0, state:kind === 'altar' ? 'active' : 'available', progress:4};
+    g.encounters = [{kind:kind === 'altar' ? 'chest' : 'altar',state:'completed'}, event];
+    assert.equal(encounterTimeLeft(g), 1);
+    assert.match(encounterDeadline(g,event), /1초 남음/);
+    updateEncounters(g, .01); assert.notEqual(event.state, 'expired');
+    g.time = ENCOUNTER_DEADLINE; updateEncounters(g, .01);
+    assert.equal(event.state, 'expired'); assert.equal(encounterTimeLeft(g), 0);
+    updateEncounters(g, .01);
+    assert.equal(g.events.filter(e=>e==='event-expired').length, 1);
+  }
+  const g = playing(); g.time = ENCOUNTER_DEADLINE;
+  const chest = {kind:'chest',x:0,y:0,state:'active',progress:17.5};
+  g.encounters = [{kind:'altar',state:'completed'},chest];
+  assert.match(encounterDeadline(g,chest), /계속됩니다/);
+  updateEncounters(g, .5);
+  assert.equal(chest.state, 'completed'); assert.equal(g.phase, 'relic');
+  assert.equal(g.relicChoices.length, 3); assert.ok(!g.events.includes('event-expired'));
+});

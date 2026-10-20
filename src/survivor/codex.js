@@ -58,13 +58,13 @@ function art(entry) {
   if (!entry.art) return collectionArt(entry.id, !entry.found) || codexIcon(entry.icon);
   return `<span class="codex-portrait${entry.found ? '' : ' is-silhouette'}" aria-hidden="true" style="background-image:url('${import.meta.env.BASE_URL}art/survivor/${entry.art}');--atlas-height:${entry.id === 'companion:grove' ? 261.25 : 285}%;--portrait-ratio:${313.5 / (entry.id === 'companion:grove' ? 480 : 440)}"></span>`;
 }
-export function codexScreen(profile, filter = 'all', selected = null) {
+export function codexScreen(profile, filter = 'all', selected = null, fromResult = false) {
   const entries = codexEntries(profile), found = entries.filter(e => e.found).length;
   const visible = entries.filter(e => filter === 'all' || e.group === filter);
   const current = visible.find(e => e.id === selected) ?? visible[0];
   const inheritanceKey = current.id.startsWith('branch:') ? current.id.slice(7) : null;
   const heir = inheritanceKey ? Object.values(CHARACTERS).find(c => c.weapon === current.weapon && validInheritance(profile, c.id, inheritanceKey)) : null;
-  return `<div class="codex-heading"><div><p class="eyebrow">숲에서 발견한 것들</p><h1 id="panel-title">숲의 도감</h1></div><button class="secondary codex-back" data-close-codex>← 출발 준비</button></div>
+  return `<div class="codex-heading"><div><p class="eyebrow">숲에서 발견한 것들</p><h1 id="panel-title">숲의 도감</h1></div><button class="secondary codex-back" data-close-codex>← ${fromResult ? '결과로 돌아가기' : '출발 준비'}</button></div>
     <div class="codex-progress"><div><strong>${found}<span> / ${entries.length}</span></strong><span>발견과 해금</span></div><progress value="${found}" max="${entries.length}" aria-label="도감 수집 진행도"></progress><p>쓰러져도 발견은 남습니다. 한 장씩 채우며 다음 여정을 준비하세요.</p></div>
     <div class="codex-filters" role="group" aria-label="도감 분류">${Object.entries(CODEX_GROUPS).map(([key, label]) => {
       const group = entries.filter(e => key === 'all' || e.group === key);

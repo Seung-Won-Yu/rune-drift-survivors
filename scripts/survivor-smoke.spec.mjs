@@ -1410,7 +1410,7 @@ test('original collection art reveals real discoveries and the result links to t
   await expect(page.locator('.codex-detail .collection-illustration')).not.toHaveClass(/is-silhouette/);
   expect((await snapshot(page)).profile.runs).toBe(1);
   await page.screenshot({path:'output/playwright/survivor/polish-codex-discovered.png',animations:'disabled'});
-  await page.keyboard.press('Escape'); await page.locator('#start-game').click();
+  await page.keyboard.press('Escape'); await page.locator('#restart-game').click();
   expect((await snapshot(page)).ranks.sweep).toBe(0);
 });
 
@@ -1447,7 +1447,7 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
   await page.locator('[data-review-discoveries]').click();
   if(viewport.width<=680) await expect(page.locator('.codex-detail h2')).toBeFocused();
   else await expect(page.locator('[data-codex-entry="branch:sweep"]')).toBeFocused();
-  await page.keyboard.press('Escape'); await page.locator('#start-game').click();
+  await page.keyboard.press('Escape'); await page.locator('#restart-game').click();
   expect((await snapshot(page)).phase).toBe('playing'); expect((await snapshot(page)).ranks.sweep).toBe(0);
  });
 }
@@ -1489,7 +1489,7 @@ test('result companion shortcut opens its actual codex group without selecting o
  await expect(page.locator('.codex-detail h2')).toHaveText('불씨술사');
  expect((await snapshot(page)).profile.runs).toBe(before.profile.runs);
  expect((await snapshot(page)).characterId).toBe('ash');
- await page.keyboard.press('Escape'); await page.locator('#start-game').click();
+ await page.keyboard.press('Escape'); await page.locator('#restart-game').click();
  expect((await snapshot(page)).phase).toBe('playing');
 });
 
@@ -1503,7 +1503,7 @@ test('no new rewards honestly show a next goal and keep detailed battle records 
  await page.locator('[data-result-entry]').click();
  await expect(page.locator('.codex-detail h2')).toBeFocused();
  await expect(page.locator('.codex-detail h2')).toHaveText('불씨술사');
- await page.keyboard.press('Escape'); await expect(page.locator('[data-open-codex]')).toBeFocused();
+ await page.keyboard.press('Escape'); await expect(page.locator('[data-result-entry]')).toBeFocused();
 });
 
 test('starting another journey clears the previous combat announcement',async({page})=>{
@@ -1582,7 +1582,7 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:32
     await page.locator('[data-inspect-weapon="sword"]').click();
     await expect(page.locator('[data-build-weapon="sword"]')).toBeFocused();
     const before=await snapshot(page);
-    await page.locator('.play-preferences summary').click();
+    await page.locator('[data-pause-tab="settings"]').click();
     await page.locator('[data-preference="damageNumbers"]').uncheck();
     await page.locator('[data-preference="motion"]').selectOption('reduced');
     await page.locator('[data-preference="motion"]').press('p');
@@ -1730,4 +1730,76 @@ test.describe('combined combat HUD priorities', () => {
       expect((await snapshot(page)).time).toBe(paused.time);
     });
   }
+});
+
+for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+ test(`result codex returns to the same expanded result without another reward at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport); await scenario(page,'record-experiment');
+  await page.locator('.battle-record summary').click();
+  const before=await snapshot(page);
+  await page.locator('[data-review-discoveries]').scrollIntoViewIfNeeded();
+  const scroll=await page.locator('.result-body').evaluate(el=>el.scrollTop);
+  for(let i=0;i<2;i++) {
+   await page.locator('[data-review-discoveries]').click();
+   await expect(page.locator('[data-close-codex]')).toContainText('결과로 돌아가기');
+   if(i===0) await page.keyboard.press('Escape'); else await page.locator('[data-close-codex]').click();
+   await expect(page.locator('[data-review-discoveries]')).toBeFocused();
+   await expect(page.locator('.battle-record')).toHaveAttribute('open','');
+   expect(Math.abs(await page.locator('.result-body').evaluate(el=>el.scrollTop)-scroll)).toBeLessThan(2);
+   const after=await snapshot(page);
+   expect(after.profile).toEqual(before.profile); expect(after.ranks).toEqual(before.ranks);
+   expect(after.time).toBe(before.time); expect(after.phase).toBe('ended');
+   await expect(page.locator('#restart-game')).toBeInViewport({ratio:1});
+  }
+  await page.locator('#camp-game').click(); await page.locator('[data-open-codex]').click();
+  await expect(page.locator('[data-close-codex]')).toContainText('출발 준비');
+ });
+ test(`camp remembers opened records and reading position at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport); await scenario(page,'record-experiment');
+  await page.locator('#camp-game').click();
+  await page.locator('.camp-tabs [data-camp-section="journal"]').click();
+  await page.locator('.mastery-board summary').click(); await page.locator('.journey-board summary').click();
+  await page.locator('.camp-records summary').click();
+  await page.locator('.run-history').scrollIntoViewIfNeeded();
+  const before=await snapshot(page), scroll=await page.locator('.camp-journal').evaluate(el=>el.scrollTop);
+  expect(scroll).toBeGreaterThan(0);
+  await page.locator('.camp-tabs [data-camp-section="prepare"]').click();
+  await page.locator('.camp-tabs [data-camp-section="journal"]').click();
+  for(const selector of ['.mastery-board','.journey-board','.camp-records']) await expect(page.locator(selector)).toHaveAttribute('open','');
+  expect(Math.abs(await page.locator('.camp-journal').evaluate(el=>el.scrollTop)-scroll)).toBeLessThan(2);
+  await page.locator('[data-open-codex]').click(); await page.keyboard.press('Escape');
+  expect(Math.abs(await page.locator('.camp-journal').evaluate(el=>el.scrollTop)-scroll)).toBeLessThan(2);
+  expect((await snapshot(page)).profile).toEqual(before.profile);
+  expect(await page.evaluate(()=>document.documentElement.scrollHeight-innerHeight)).toBe(0);
+ });
+}
+
+test('deferred chest explains the actual deadline and announces expiry once',async({page})=>{
+ await scenario(page,'event-deadline');
+ await expect(page.locator('.encounter-deadline')).toHaveText('상자 수락까지 1초 남음 · 전투 경과 3:45에 사라집니다.');
+ const before=await snapshot(page); await page.waitForTimeout(150);
+ expect((await snapshot(page)).time).toBe(before.time);
+ await page.locator('#close-chest').click();
+ await expect(page.locator('#encounter-copy')).toContainText('마감 1초');
+ await expect.poll(async()=>(await snapshot(page)).encounters.find(e=>e.kind==='chest').state).toBe('expired');
+ await expect(page.locator('#notice')).toHaveText('미완료 사건이 사라졌습니다 · 다음 대결을 준비하세요');
+ await expect(page.locator('#open-chest')).toBeHidden(); await expect(page.locator('#encounter-hud')).toBeHidden();
+ expect((await snapshot(page)).relics).toEqual([]);
+});
+
+test('pause tabs are keyboard operable and sound reports unavailable persistence',async({page})=>{
+ await page.addInitScript(()=>{ const original=Storage.prototype.setItem; Storage.prototype.setItem=function(k,v){ if(k==='ash-sound')throw new Error('storage unavailable');return original.call(this,k,v); }; });
+ await page.reload(); await page.locator('#start-game').click(); await page.keyboard.press('Escape');
+ await page.locator('[data-pause-tab="equipment"]').focus(); await page.keyboard.press('ArrowRight');
+ await expect(page.locator('[data-pause-tab="settings"]')).toBeFocused();
+ await expect(page.locator('#pause-settings')).toBeVisible(); await expect(page.locator('#pause-equipment')).toBeHidden();
+ const before=await snapshot(page);
+ await page.locator('[data-preference="sound"]').uncheck();
+ await expect(page.locator('[data-preference-status]')).toContainText('브라우저 저장은 사용할 수 없습니다');
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','false');
+ expect((await snapshot(page)).time).toBe(before.time); expect((await snapshot(page)).profile).toEqual(before.profile);
+ await page.locator('[data-pause-tab="settings"]').press('Home');
+ await expect(page.locator('#pause-equipment')).toBeVisible();
+ await page.locator('#resume-game').click(); await page.locator('[data-inspect-weapon="sword"]').click();
+ await expect(page.locator('[data-build-weapon="sword"]')).toBeFocused();
 });

@@ -1,4 +1,10 @@
 import { RELICS, relicContext } from './expansion.js';
+export const ENCOUNTER_DEADLINE = 225;
+export const encounterTimeLeft = game => Math.max(0, Math.ceil(ENCOUNTER_DEADLINE - game.time));
+export function encounterDeadline(game, event) {
+  if (event?.kind === 'chest' && event.state === 'active') return '수락한 저주는 마감과 관계없이 계속됩니다.';
+  return `${event?.kind === 'altar' ? '봉인 완료' : '상자 수락'}까지 ${encounterTimeLeft(game)}초 남음 · 전투 경과 3:45에 사라집니다.`;
+}
 export const ENCOUNTERS = {
   altar: {
     name: '봉인 제단',
@@ -110,8 +116,9 @@ export function updateEncounters(game, dt) {
     prepareEncounterRewards(game, event);
     const meta = ENCOUNTERS[event.kind];
     // Unaccepted choices expire before the boss; active challenges keep their contract.
-    if (game.time >= 225 && (event.state === 'available' || event.kind === 'altar')) {
+    if (game.time >= ENCOUNTER_DEADLINE && (event.state === 'available' || event.kind === 'altar')) {
       event.state = 'expired';
+      game.events.push('event-expired');
       continue;
     }
     const inside = encounterDistance(game, event) <= meta.radius;

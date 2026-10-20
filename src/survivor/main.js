@@ -9,8 +9,8 @@ import { validExperiment, nextExperiment, experimentProgress } from './experimen
 import { runPreparation, validInheritance, primaryBranches, canTakeVow, validGoal, goalFound } from './progression.js';
 import { goalProgress, goalRelevant } from './goals.js';
 import { canEquipKeepsake } from './journey.js';
-import { specializationFor, SPECIALIZATIONS, RELICS } from './expansion.js';
-import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, closeChest, chooseCurse, chooseRelic, inspectEncounter, closeEncounterPreview } from './encounters.js';
+import { specializationFor, SPECIALIZATIONS, RELICS, relicContext } from './expansion.js';
+import { ENCOUNTERS, encounterDeadline, encounterTimeLeft, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, closeChest, chooseCurse, chooseRelic, inspectEncounter, closeEncounterPreview } from './encounters.js';
 import './style.css';
 import './folio.css';
 import './journey-ui.css';
@@ -73,7 +73,22 @@ let stick = {
   sound = true;
 const audio = createAudio();
 const keys = new Set();
-let campView = 'prepare', campSection = 'prepare', codexFilter = 'all', codexSelection = null, campScroll = 0, preparation = 'inheritance';
+let campView = 'prepare', campSection = 'prepare', codexFilter = 'all', codexSelection = null, preparation = 'inheritance';
+let resultReturn = null, pauseSection = 'equipment';
+const campMemory = {scroll: {}, details: []};
+const campDetailSelectors = ['.companion-guide', '.mastery-board', '.journey-board', '.camp-records'];
+function rememberCamp() {
+  if (game.phase !== 'ready' || campView !== 'prepare') return;
+  const key = campSection === 'journal' ? 'journal' : preparation;
+  campMemory.scroll[key] = $('panel').querySelector(campSection === 'journal' ? '.camp-journal' : '.preparation-editor')?.scrollTop ?? 0;
+  campMemory.details = campDetailSelectors.filter(selector => $('panel').querySelector(selector)?.open);
+}
+function restoreCamp() {
+  for (const selector of campMemory.details) { const detail = $('panel').querySelector(selector); if (detail) detail.open = true; }
+  const key = campSection === 'journal' ? 'journal' : preparation;
+  const scroller = $('panel').querySelector(campSection === 'journal' ? '.camp-journal' : '.preparation-editor');
+  if (scroller) scroller.scrollTop = campMemory.scroll[key] ?? 0;
+}
 let qaPilot = null;
 try {
   sound = localStorage.getItem('ash-sound') !== 'off';
@@ -109,6 +124,7 @@ function notice(text) {
   $('notice').classList.add('show');
 }
 function start() {
+  resultReturn = null; pauseSection = 'equipment';
   game.runId ??= crypto.randomUUID();
   noticeUntil = 0;
   $('notice').textContent = '';
@@ -127,6 +143,8 @@ function restart() {
   lastHud = 0;
 }
 function camp() {
+  rememberCamp();
+  resultReturn = null;
   campView = 'prepare';
   game = createGame(++seed, profile.selected, profile.keepsake, profile.experiment, runPreparation(profile));
   lastPhase = null;
@@ -187,7 +205,7 @@ function selectKeepsake(id) {
 }
 function openCodex() {
   if (game.phase !== 'ready') return;
-  campScroll = $('panel').querySelector(campSection === 'journal' ? '.camp-journal' : '.preparation-editor')?.scrollTop ?? 0;
+  rememberCamp();
   campView = 'codex';
   lastPhase = null; syncPhase();
 }
@@ -196,12 +214,14 @@ function openCodexEntry(id) {
   if (!entry || game.phase !== 'ready') return;
   codexFilter = entry.group; codexSelection = id; openCodex();
   requestAnimationFrame(() => {
+    if (game.phase !== 'ready' || campView !== 'codex') return;
     if (matchMedia('(max-width:680px)').matches) $('panel').querySelector('.codex-detail h2')?.focus({preventScroll:true});
     else { const card=$('panel').querySelector(`[data-codex-entry="${id}"]`); card?.scrollIntoView({block:'nearest'}); card?.focus({preventScroll:true}); }
   });
 }
 function changePreparation(section) {
   if (game.phase !== 'ready' || !['inheritance','keepsake','vow'].includes(section)) return;
+  rememberCamp();
   preparation = section;
   lastPhase = null; syncPhase();
   requestAnimationFrame(() => $('panel').querySelector(`[data-preparation-tab="${section}"]`)?.focus({preventScroll:true}));
@@ -220,20 +240,49 @@ function bindPreparation() {
 }
 function setSound(enabled) {
   sound=enabled;
-  try { storage?.setItem('ash-sound', sound ? 'on' : 'off'); } catch {}
+  let saved = false;
+  try { storage.setItem('ash-sound', sound ? 'on' : 'off'); saved = true; } catch {}
   if (sound) initAudio(); else audio.suspend();
   updateSound();
+  return saved;
 }
 function bindPreferences() {
   for (const control of $('panel').querySelectorAll('[data-preference]')) control.onchange=()=>{
     const key=control.dataset.preference;
-    if(key==='sound') { setSound(control.checked); control.checked=sound; }
+    let saved;
+    if(key==='sound') { saved=setSound(control.checked); control.checked=sound; }
     else {
       preferences[key]=key==='motion' ? control.value : control.checked;
-      const saved=savePreferences(storage,preferences); applyPreferences();
-      $('panel').querySelector('[data-preference-status]').textContent=saved ? '설정을 기억했어요. 다음 여정에도 적용됩니다.' : '이 창에 적용했어요. 브라우저 저장은 사용할 수 없습니다.';
+      saved=savePreferences(storage,preferences); applyPreferences();
     }
+    $('panel').querySelector('[data-preference-status]').textContent=saved ? '설정을 기억했어요. 다음 여정에도 적용됩니다.' : '이 창에 적용했어요. 브라우저 저장은 사용할 수 없습니다.';
   };
+}
+function bindPauseTabs() {
+  const tabs = [...$('panel').querySelectorAll('[data-pause-tab]')];
+  const scroller = $('panel').querySelector('.folio-body'), positions = {};
+  const select = tab => {
+    positions[pauseSection] = scroller.scrollTop;
+    pauseSection = tab.dataset.pauseTab;
+    for (const button of tabs) {
+      const selected = button === tab;
+      button.setAttribute('aria-selected', String(selected));
+      button.tabIndex = selected ? 0 : -1;
+      $(button.getAttribute('aria-controls')).hidden = !selected;
+    }
+    scroller.scrollTop = positions[pauseSection] ?? 0;
+    tab.focus({preventScroll: true});
+  };
+  tabs.forEach((tab, index) => {
+    tab.onclick = () => select(tab);
+    tab.onkeydown = event => {
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+        : event.key === 'ArrowRight' ? (index + 1) % tabs.length
+        : event.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length : null;
+      if (next === null) return;
+      event.preventDefault(); event.stopPropagation(); select(tabs[next]);
+    };
+  });
 }
 function selectVow(id) {
   if (game.phase !== 'ready' || !canTakeVow(profile, id)) return;
@@ -258,13 +307,22 @@ function selectGoal(id) {
 }
 function closeCodex() {
   if (game.phase !== 'ready' || campView !== 'codex') return;
+  if (resultReturn) {
+    const previous = resultReturn;
+    resultReturn = null; game = previous.game; campView = 'prepare';
+    lastPhase = null; syncPhase();
+    for (const selector of previous.details) $('panel').querySelector(selector)?.setAttribute('open', '');
+    $('panel').querySelector('.result-body').scrollTop = previous.scroll;
+    requestAnimationFrame(() => $('panel').querySelector(previous.focus)?.focus({preventScroll: true}));
+    return;
+  }
   campView = 'prepare';
   lastPhase = null; syncPhase();
-  $('panel').querySelector(campSection === 'journal' ? '.camp-journal' : '.preparation-editor').scrollTop = campScroll;
   requestAnimationFrame(() => $('panel').querySelector('[data-open-codex]')?.focus({preventScroll: true}));
 }
 function changeCampSection(section) {
   if (game.phase !== 'ready' || campView !== 'prepare' || !['prepare', 'journal'].includes(section)) return;
+  rememberCamp();
   campSection = section;
   lastPhase = null; syncPhase();
   requestAnimationFrame(() => $('panel').querySelector(`.camp-tabs [data-camp-section="${section}"]`)?.focus({preventScroll: true}));
@@ -281,6 +339,7 @@ function updateCodex(filter, entry) {
   $('panel').querySelector('.codex-grid').scrollTop = filter ? 0 : gridScroll;
   $('panel').querySelector('.codex-layout').scrollTop = filter ? 0 : bodyScroll;
   requestAnimationFrame(() => {
+    if (game.phase !== 'ready' || campView !== 'codex') return;
     if (entry && matchMedia('(max-width:680px)').matches) {
       $('panel').querySelector('.codex-detail h2')?.focus({preventScroll: true});
       $('panel').querySelector('.codex-layout').scrollTop = 0;
@@ -333,12 +392,14 @@ function panel(html, compact = false) {
   const actions = $('panel').querySelector(':scope > .panel-actions');
   if (actions && ['paused', 'preview', 'event'].includes(game.phase)) {
     $('panel').classList.add('has-folio-body');
+    if (!$('panel').querySelector(':scope > .folio-body')) {
     const body = document.createElement('div');
     body.className = 'folio-body';
     body.tabIndex = 0;
     body.setAttribute('aria-label', '여정 안내');
     while ($('panel').firstElementChild !== actions) body.append($('panel').firstElementChild);
     $('panel').prepend(body);
+    }
   }
   $('panel').scrollTop = 0;
   requestAnimationFrame(() => {
@@ -377,12 +438,13 @@ function syncPhase() {
     return;
   }
   if (game.phase === 'ready') {
-    panel(campView === 'codex' ? codexScreen(profile, codexFilter, codexSelection) : campScreen(game, profile, storageWarning, campSection, preparation));
+    panel(campView === 'codex' ? codexScreen(profile, codexFilter, codexSelection, !!resultReturn) : campScreen(game, profile, storageWarning, campSection, preparation));
     $('panel').classList.toggle('is-codex', campView === 'codex');
     $('panel').classList.toggle('is-camp', campView === 'prepare');
     for (const button of $('panel').querySelectorAll('[data-camp-section]')) button.onclick = () => changeCampSection(button.dataset.campSection);
     $('panel').querySelectorAll('[data-inheritance]').forEach(button => button.onclick = () => selectInheritance(button.dataset.inheritance));
     $('panel').querySelector('[data-prepare-inheritance]')?.addEventListener('click', event => selectInheritance(event.currentTarget.dataset.prepareInheritance, event.currentTarget.dataset.heir));
+    if (campView === 'prepare') restoreCamp();
     bindPreparation();
     $('panel').querySelector('[data-open-entry]')?.addEventListener('click',event=>openCodexEntry(event.currentTarget.dataset.openEntry));
     $('start-game')?.addEventListener('click', start);
@@ -423,20 +485,23 @@ function syncPhase() {
     };
     for (const button of document.querySelectorAll('[data-upgrade]')) button.onclick = () => choose(button.dataset.upgrade);
   } else if (game.phase === 'relic') {
-    panel(`<p class="eyebrow">숲이 남긴 선물</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><p class="choice-pause-note">전투가 멈춰 있습니다. 선택하면 이어집니다.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key]; return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>숲의 유물 · 이번 판 유지</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${m.change}</span>${relicContextMarkup(game, key)}<span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
+    panel(`<p class="eyebrow">숲이 남긴 선물</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><p class="choice-pause-note">전투가 멈춰 있습니다. 선택하면 이어집니다.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key], context = relicContext(game, key); return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small class="relic-fit is-${context.kind}">${context.label}</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${m.change}</span>${relicContextMarkup(game, key, false)}<span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
     for (const button of document.querySelectorAll('[data-relic]')) button.onclick = () => choose(button.dataset.relic);
   } else if (game.phase === 'preview') {
     const event = game.encounters.find(event => event.kind === game.previewEncounter);
-    panel(`<p class="eyebrow">선택할 수 있는 보상</p><h1 id="panel-title">${ENCOUNTERS[event.kind].name}의 보상</h1><p class="panel-lead">${event.kind === 'altar' ? '원 안에서 총 10초 버티면 보상을 얻습니다. 범위 밖에서는 진행이 멈춥니다.' : '상자에 접근해 저주를 수락하면 18초간 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.'}</p>${encounterRewardPreview(game, event)}<div class="panel-actions"><button id="close-preview" class="primary">전장으로 돌아가기</button></div><p class="controls-note">살펴보는 동안 전투와 사건의 시간이 멈춥니다.</p>`);
+    panel(`<p class="eyebrow">선택할 수 있는 보상</p><h1 id="panel-title">${ENCOUNTERS[event.kind].name}의 보상</h1><p class="panel-lead">${event.kind === 'altar' ? '원 안에서 총 10초 버티면 보상을 얻습니다. 범위 밖에서는 진행이 멈춥니다.' : '상자에 접근해 저주를 수락하면 18초간 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.'}</p><p class="encounter-deadline">${encounterDeadline(game, event)}</p>${encounterRewardPreview(game, event)}<div class="panel-actions"><button id="close-preview" class="primary">전장으로 돌아가기</button></div><p class="controls-note">살펴보는 동안 전투와 사건의 시간이 멈춥니다.</p>`);
     $('close-preview').onclick = closePreview;
   } else if (game.phase === 'event') {
-    panel(`<p class="eyebrow">저주 상자의 계약</p><h1 id="panel-title">저주를 받아들이겠습니까?</h1><p class="panel-lead">18초 동안 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.</p><div class="curse-contract"><strong>살아남으면 아래 유물 중 하나 선택</strong><p>지금은 시간이 멈춰 있습니다. 도전을 수락한 뒤부터 저주가 시작됩니다.</p></div>${encounterRewardPreview(game, nearbyChest(game))}<div class="panel-actions"><button id="accept-curse" class="primary">저주를 받아들인다</button><button id="close-chest" class="secondary">나중에 결정하기</button></div><button id="decline-curse" class="decline-contract">이번 판의 상자 포기</button>`);
+    panel(`<p class="eyebrow">저주 상자의 계약</p><h1 id="panel-title">저주를 받아들이겠습니까?</h1><p class="panel-lead">18초 동안 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.</p><div class="curse-contract"><strong>살아남으면 아래 유물 중 하나 선택</strong><p>지금은 시간이 멈춰 있습니다. 도전을 수락한 뒤부터 저주가 시작됩니다.</p></div><p class="encounter-deadline">${encounterDeadline(game, nearbyChest(game))}</p>${encounterRewardPreview(game, nearbyChest(game))}<div class="panel-actions"><button id="accept-curse" class="primary">저주를 받아들인다</button><button id="close-chest" class="secondary">나중에 결정하기</button></div><button id="decline-curse" class="decline-contract">이번 판의 상자 포기</button>`);
     $('close-chest').onclick = leaveChest;
     for (const [id, accept] of [['accept-curse',true],['decline-curse',false]]) $(id).onclick = () => { if (chooseCurse(game,accept)) { resetInput(); lastPhase=null; syncPhase(); } };
   } else if (game.phase === 'paused') {
-    panel(`<p class="eyebrow">여정의 쉼표</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">숲도 함께 멈췄습니다.<br>${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p>${fieldLoadout(game)}<details class="run-notes"><summary>이번 판의 효과와 성장 기록</summary>${buildSummary(game)}${buildGuide()}</details>${preferenceControls(preferences,sound)}<div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
+    panel(`<header class="pause-heading"><p class="eyebrow">여정의 쉼표</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p></header>
+      <div class="pause-tabs" role="tablist" aria-label="일시정지 메뉴">${[['equipment','장비와 효과'],['settings','화면·소리']].map(([id, label]) => `<button id="pause-tab-${id}" role="tab" data-pause-tab="${id}" aria-controls="pause-${id}" aria-selected="${pauseSection === id}" tabindex="${pauseSection === id ? 0 : -1}">${label}</button>`).join('')}</div>
+      <div class="folio-body" tabindex="0" aria-label="여정 안내"><section id="pause-equipment" role="tabpanel" aria-labelledby="pause-tab-equipment" ${pauseSection === 'equipment' ? '' : 'hidden'}>${fieldLoadout(game)}<details class="run-notes"><summary>이번 판의 효과와 성장 기록</summary>${buildSummary(game)}${buildGuide()}</details></section><section id="pause-settings" role="tabpanel" aria-labelledby="pause-tab-settings" ${pauseSection === 'settings' ? '' : 'hidden'}>${preferenceControls(preferences,sound)}</section></div>
+      <div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
     $('resume-game').onclick = resume;
-    bindPreferences();
+    bindPauseTabs(); bindPreferences();
   } else if (game.phase === 'ended') {
     const win = game.outcome === 'victory',
       survived = game.outcome === 'survived',
@@ -455,12 +520,15 @@ function syncPhase() {
     </div><div class="panel-actions"><button id="restart-game" class="primary" title="현재 선택한 동료와 출발 준비로 다시 시작">다시 숲으로 <span aria-hidden="true">→</span></button><button id="camp-game" class="secondary">출발 준비</button></div>`, true);
     $('panel').classList.add('is-result');
     $('restart-game').onclick = restart;
-    const reviewEntry = id => {
+    const reviewEntry = (id, focus) => {
       const entry = codexEntries(profile).find(e => e.id === id);
       if (!entry) return;
+      const previous = {game, focus, scroll: $('panel').querySelector('.result-body').scrollTop,
+        details: ['.run-notes', '.battle-record'].filter(selector => $('panel').querySelector(selector)?.open)};
       campSection = 'prepare'; codexFilter = entry.group; codexSelection = id;
-      camp(); openCodex();
+      camp(); resultReturn = previous; openCodex();
       requestAnimationFrame(() => {
+        if (game.phase !== 'ready' || campView !== 'codex') return;
         if (matchMedia('(max-width:680px)').matches) {
           $('panel').querySelector('.codex-detail h2')?.focus({preventScroll: true});
           $('panel').querySelector('.codex-layout').scrollTop = 0;
@@ -470,8 +538,8 @@ function syncPhase() {
         }
       });
     };
-    $('panel').querySelector('[data-review-discoveries]')?.addEventListener('click', event => reviewEntry(event.currentTarget.dataset.reviewDiscoveries));
-    $('panel').querySelector('[data-result-entry]')?.addEventListener('click', event => reviewEntry(event.currentTarget.dataset.resultEntry));
+    $('panel').querySelector('[data-review-discoveries]')?.addEventListener('click', event => reviewEntry(event.currentTarget.dataset.reviewDiscoveries, '[data-review-discoveries]'));
+    $('panel').querySelector('[data-result-entry]')?.addEventListener('click', event => reviewEntry(event.currentTarget.dataset.resultEntry, '[data-result-entry]'));
     $('panel').querySelector('[data-result-preparation]')?.addEventListener('click', event => {
       const {resultPreparation: target, resultKeepsake: keepsake} = event.currentTarget.dataset;
       campSection = target === 'journal' ? 'journal' : 'prepare';
@@ -510,7 +578,8 @@ function updateHud() {
     const meta = ENCOUNTERS[encounter.kind], distance = encounterDistance(game, encounter);
     $('encounter-name').textContent = `${encounterDirection(game, encounter)} ${meta.name}`;
     $('encounter-hud').classList.toggle('is-cursed', encounter.kind === 'chest' && encounter.state === 'active');
-    $('encounter-copy').textContent = encounter.kind === 'chest' && encounter.state === 'active' ? `저주 ${Math.ceil(meta.duration-encounter.progress)}초 · 일반 적 속도·접촉 피해 +25%` : encounter.kind === 'altar' && encounter.state === 'active' ? `봉인 ${Math.min(10,Math.floor(encounter.progress))}/10초 · ${distance <= meta.radius ? '범위 안에서 버티세요' : '제단으로 돌아가면 계속 진행'}` : encounter.kind === 'altar' ? `${Math.round(distance)} 거리 · 원 안에서 10초 버티면 유물` : `${Math.round(distance)} 거리 · 저주를 견디면 유물`;
+    const deadline = encounter.kind === 'chest' && encounter.state === 'active' ? '' : ` · 마감 ${encounterTimeLeft(game)}초`;
+    $('encounter-copy').textContent = ( encounter.kind === 'chest' && encounter.state === 'active' ? `저주 ${Math.ceil(meta.duration-encounter.progress)}초 · 일반 적 속도·접촉 피해 +25%` : encounter.kind === 'altar' && encounter.state === 'active' ? `봉인 ${Math.min(10,Math.floor(encounter.progress))}/10초 · ${distance <= meta.radius ? '범위 안에서 버티세요' : '제단으로 돌아가면 계속 진행'}` : encounter.kind === 'altar' ? `${Math.round(distance)} 거리 · 원 안에서 10초 버티면 유물` : `${Math.round(distance)} 거리 · 저주를 견디면 유물`) + deadline;
   }
   $('open-chest').hidden = !nearbyChest(game);
   $('preview-rewards').hidden = !encounter || !!nearbyChest(game) || (encounter.kind === 'chest' && encounter.state === 'active');
@@ -527,7 +596,7 @@ function updateHud() {
   const recovery = nearestRecovery(game),
     needsRecovery = game.player.hp / game.player.maxHp < .6;
   $('recovery-hint').hidden = !needsRecovery || game.phase !== 'playing';
-  $('recovery-hint').textContent = recovery ? `회복 열매 +${RECOVERY.amount} · ${recovery.direction}으로 이동` : '체력 위험 · 무리의 가장자리로 빠져나오세요';
+  $('recovery-hint').textContent = recovery ? `회복 열매 +${RECOVERY.amount} · ${recovery.direction} 방향으로 이동` : '체력 위험 · 무리의 가장자리로 빠져나오세요';
   const p = game.player;
   const hurt = hurtFeedback(game, reduceMotion(preferences, systemMotion.matches));
   const damage = hurt ? Math.round(hurt.amount * 10) / 10 : 0;
@@ -589,7 +658,7 @@ function tick(now) {
   }
   if (game.events.length) {
     const events = new Set(game.events);
-    if (events.has('event-ready')) notice('숲의 사건 발견 · 방향 안내를 따라가 보세요');else if (events.has('curse')) notice('저주 시작 · 18초 동안 살아남으세요');else if (events.has('recovery-ready')) notice('숲의 열매가 열렸습니다 · 가까이 가면 체력 +25');else if (events.has('boss-arrival')) notice('재의 군주 출현 · 공격 예고를 보고 빈틈을 노리세요');else if (events.has('elite')) notice(`${game.enemies.find(e => e.champion && e.hp > 0)?.name ?? '정예'} 출현 · ${CHAMPIONS.find(c => c.id === game.enemies.find(e => e.champion && e.hp > 0)?.champion)?.tip ?? '처치하면 체력 회복'}`);
+    if (events.has('event-ready')) notice('숲의 사건 발견 · 방향 안내를 따라가 보세요');else if (events.has('event-expired')) notice('미완료 사건이 사라졌습니다 · 다음 대결을 준비하세요');else if (events.has('curse')) notice('저주 시작 · 18초 동안 살아남으세요');else if (events.has('recovery-ready')) notice('숲의 열매가 열렸습니다 · 가까이 가면 체력 +25');else if (events.has('boss-arrival')) notice('재의 군주 출현 · 공격 예고를 보고 빈틈을 노리세요');else if (events.has('elite')) notice(`${game.enemies.find(e => e.champion && e.hp > 0)?.name ?? '정예'} 출현 · ${CHAMPIONS.find(c => c.id === game.enemies.find(e => e.champion && e.hp > 0)?.champion)?.tip ?? '처치하면 체력 회복'}`);
     if (events.has('elite-break')) notice('정예 격파 · 체력 +15 · 주변 경험치가 모입니다');
     if (events.has('learn-spore')) notice('버섯의 포자 · 점선 원이 차오르면 밖으로 이동하세요');
     else if (events.has('learn-hound')) notice('사냥개 돌진 · 달려오는 방향 옆으로 피하세요');
@@ -662,6 +731,7 @@ $('sound').onclick = () => setSound(!sound);
 $('weapons').onclick = event => {
   const button=event.target.closest('[data-inspect-weapon]');
   if(!button || game.phase!=='playing') return;
+  pauseSection = 'equipment';
   pause();
   requestAnimationFrame(()=>{ const card=$('panel').querySelector(`[data-build-weapon="${button.dataset.inspectWeapon}"]`); card?.scrollIntoView({block:'nearest'}); card?.focus({preventScroll:true}); });
 };
@@ -854,10 +924,11 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
         game.level = 5; game.ranks[weapon] = 3; game.ranks[key] = 1;
         if (EVOLUTIONS[key]) game.ranks[{dawn:'duelist',comet:'wildfire',lunar:'horizon'}[key]] = 1;
         game.phase = 'upgrade'; game.choices = [weapon, 'magnet', 'heal'];
-      } else if (name === 'event-altar' || name === 'event-chest') {
-        const kind = name.slice(6); game.time = kind === 'altar' ? 45 : 135; game.nextElite = 999;
+      } else if (name === 'event-altar' || name === 'event-chest' || name === 'event-deadline') {
+        const kind = name === 'event-altar' ? 'altar' : 'chest'; game.time = name === 'event-deadline' ? 224 : kind === 'altar' ? 45 : 135; game.nextElite = 999;
         game.encounters = [{kind, x:35, y:0, state:'available',progress:0}];
         if (kind === 'chest') game.encounters.unshift({kind:'altar',x:0,y:0,state:'completed',progress:10});
+        if (name === 'event-deadline') openChest(game);
       } else if (name === 'upgrade' || name === 'overflow') {
         game.gems.push({
           x: 0,

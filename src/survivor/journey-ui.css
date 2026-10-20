@@ -67,26 +67,33 @@
 .rank-marks { display: flex; gap: 4px; margin-top: 14px; }
 .rank-marks i { height: 4px; flex: 1; background: #9d916638; }
 .rank-marks .is-filled { background: #8b8050; }
-.play-preferences { margin: 18px 0; border-block: 1px solid #a6956859; }
-.play-preferences summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; color: #48583e; }
-.play-preferences summary strong { font-size: 12px; }
-.play-preferences summary strong::before { content: '+ '; color: #8e784c; }
-.play-preferences[open] summary strong::before { content: '− '; }
-.play-preferences summary > span { font-size: 10px; color: #72684b; }
+.phase-paused.has-folio-body { height: min(680px,100%); }
+.phase-paused > .folio-body { flex: 1; }
+.pause-heading,.pause-tabs { flex-shrink: 0; }
+.pause-heading .panel-lead { margin-bottom: 12px; }
+.pause-tabs { display: flex; border-bottom: 1px solid #9a885966; gap: 8px; }
+.pause-tabs button { min-height: 44px; padding: 10px 18px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: #5c644a; font: inherit; font-size: 13px; cursor: pointer; }
+.pause-tabs button[aria-selected='true'] { border-bottom-color: #715b31; background: #d8cfac60; color: #354d39; font-weight: 700; }
+.play-preferences { padding-top: 14px; }
+.preference-intro { margin: 0 0 14px; font-size: 12px; color: #5b6349; line-height: 1.6; }
 .preference-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 5px; }
 .preference-options label { min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 8px 12px; border: 1px solid #ab9b6d50; background: #fff8df45; color: #40523a; font-size: 12px; cursor: pointer; }
 .preference-options small { display: block; color: #74684b; font-size: 10px; margin-top: 4px; line-height: 1.6; }
 .preference-options input { width: 22px; height: 22px; flex-shrink: 0; accent-color: #506b43; cursor: pointer; }
 .preference-options .motion-preference { grid-column: 1 / -1; }
 .preference-options select { max-width: 55%; min-height: 40px; border: 1px solid #9e8d5f; background: #f8edcf; color: #3f543b; padding: 4px 8px; font: inherit; }
-.preference-options :is(input,select):focus-visible,.play-preferences summary:focus-visible { outline: 2px solid #586e43; outline-offset: 3px; }
+.preference-options :is(input,select):focus-visible { outline: 2px solid #586e43; outline-offset: 3px; }
 .preference-note { font-size: 11px; color: #696246; margin: 12px 0; line-height: 1.7; }
 .weapon-belt button { pointer-events: auto; cursor: pointer; padding: 0; font: inherit; }
 .weapon-belt button:hover { border-color: #f6d990; background: #294a38; }
 .signature-pocket[data-state='ready'] .meter,.signature-pocket[data-state='guard'] .meter { box-shadow: 0 0 0 1px #d7d5a933,0 0 12px #e4d18e2c; height: 4px; }
 .signature-pocket[data-state='ready'] #signature-state,.signature-pocket[data-state='guard'] #signature-state { color: #fff1be; font-weight: 700; }
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { animation: none!important; transition: none!important; scroll-behavior: auto!important; }
+.encounter-deadline { padding: 9px 12px; border-left: 3px solid #96703a; background: #b18d4320; color: #684a29; font-size: 12px; line-height: 1.65; }
+.upgrade-card > .relic-fit { display: inline-block; align-self: flex-start; padding: 5px 8px; color: #325444; background: #577e4420; font-size: 11px; font-weight: 700; }
+.upgrade-card > .relic-fit.is-future { color: #765331; background: #a57b3820; }
 @media(max-width:680px) {
+  .pause-tabs button { flex: 1; padding-inline: 8px; }
   .preparation-links strong { font-size: 11px; }
   .camp-mission { padding: 6px 8px; gap: 7px; }
   .camp-mission strong { font-size: 11px; }
@@ -106,6 +113,15 @@
   .field-section-heading > span { display: none; }
   .phase-paused h1 { font-size: 26px; }
   .preference-options { grid-template-columns: 1fr; }
+}
+@media(max-height:570px) and (orientation:landscape) {
+  .pause-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+  .pause-heading .eyebrow { display: none; }
+  .pause-heading h1 { margin: 0; }
+  .pause-heading .panel-lead { margin: 0 0 6px; }
+  .pause-tabs button { padding-block: 7px; }
+  .play-preferences { padding-top: 8px; }
+  .preference-intro { margin-bottom: 6px; font-size: 11px; }
 }
 @media(max-height:570px) and (orientation:landscape) {
   .camp-mission { min-height: 44px; padding: 4px 7px; }
