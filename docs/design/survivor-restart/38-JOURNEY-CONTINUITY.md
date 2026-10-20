@@ -22,6 +22,8 @@ Browser checks exercise result/codex round trips at 1280×720, 320×568 and 740�
 
 Local verification passed: 171 unit tests, 171 browser tests, the Pages build and both production entry checks. Independent static review found no further actionable regression. A fast mobile result/codex round trip exposed a delayed focus callback after its screen had closed; a screen guard fixed it and the repeated round-trip test now passes.
 
+The final next-challenge copy correction exposed three stale browser assertions in CI: the keepsake persistence test still expected the equipped keepsake in the next-reward summary. The test now checks the equipped keepsake in its preparation tab and the actual future reward in the challenge summary, retaining its existing reload and next-run stat checks.
+
 An ordinary caster run reached the altar and earned its three offered relics at about 1:09 / 90 kills / level 3. It continued through the first champion, low-health growth, fruit recovery and evolution, ending in defeat at 2:08 / 233 kills / level 9. Its new discovery was opened in the codex and the same result was restored through the visible return control. No scenario or time skip was used for the screenshots below. The local profile already had unlocked companions and the first-light bookmark. These observations do not establish game balance, audio quality or physical-phone performance.
 
 ![Relics earned through ordinary play](./images/journey-relic-normal-play.png)

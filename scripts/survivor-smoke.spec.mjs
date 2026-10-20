@@ -1060,7 +1060,9 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
   await expect(page.locator('[data-keepsake="seed"]')).toHaveAttribute('aria-pressed','true');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:`output/playwright/survivor/journey-${viewport.width}.png`,animations:'disabled'});
-  await page.reload();await expect(page.locator('.journey-preview')).toContainText('제단의 씨앗');
+  await page.reload();
+  await expect(page.locator('[data-preparation-tab="keepsake"]')).toContainText('제단의 씨앗');
+  await expect(page.locator('.journey-preview')).toContainText('보상: 재의 왕관 조각');
   expect((await snapshot(page)).profile.runs).toBe(1);
   await page.getByRole('button',{name:'숲에 들어가기'}).click();
   expect((await snapshot(page)).keepsake).toBe('seed');expect((await snapshot(page)).player.maxHp).toBe(90);
