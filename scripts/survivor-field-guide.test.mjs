@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/survivor/game.js';
-import { createProfile } from '../src/survivor/profile.js';
-import { campMission, nextGoal } from '../src/survivor/camp.js';
+import { createProfile, recordRun } from '../src/survivor/profile.js';
+import { campMission, nextGoal, resultTakeaway } from '../src/survivor/camp.js';
 import { evolutionProgress, upgradeRecipeHint, growthContext, fieldLoadout, growthChoice } from '../src/survivor/field-guide.js';
 import { loadPreferences, savePreferences, reduceMotion, PREFERENCES_KEY } from '../src/survivor/preferences.js';
 
@@ -78,4 +78,51 @@ test('growth decisions distinguish acquisition, commitment, evolution and real r
   Object.assign(g.ranks,{sword:3,orbit:1});g.eliteKills=1;g.choices=['dawn','might','heal'];
   assert.match(growthContext(g),/조건 완성 · 아래에서 진화하세요/);
   assert.doesNotMatch(growthContext(g),/recipe-parts/);
+});
+
+test('result takeaway uses earned deltas and keeps reward viewing separate from equipping', () => {
+  const game=createGame(42);game.runId='earned-result';game.phase='ended';game.outcome='defeat';game.time=65;game.kills=200;
+  Object.assign(game.ranks,{sweep:1,dawn:1});game.relics=['fang'];game.damageTaken.contact=100;
+  const saved=recordRun(createProfile(),game),before=JSON.stringify([game,saved.profile]);
+  const result=resultTakeaway(game,saved.profile,saved);
+  assert.deepEqual(result.counts.map(c=>[c.label,c.value]),[['새 발견',3],['동료 합류',2],['기념품 해금',1],['숙련 인장',1]]);
+  assert.equal(result.feature.id,'keepsake:bookmark');
+  assert.equal(result.feature.preparation,'keepsake');
+  assert.match(result.feature.detail,/20%/);
+  assert.match(result.tip,/가장자리/);
+  assert.equal(saved.profile.keepsake,'none');
+  assert.equal(JSON.stringify([game,saved.profile]),before);
+  const repeated=recordRun(saved.profile,game);
+  assert.equal(repeated.added,false);
+  assert.deepEqual(resultTakeaway(game,repeated.profile,repeated).counts,[]);
+});
+
+test('a no-reward result gives the real pending goal without inventing grants or a damage cause', () => {
+  const game=createGame(42),profile=createProfile();game.phase='ended';game.outcome='defeat';
+  profile.goal='evolution:dawn';
+  const result=resultTakeaway(game,profile);
+  assert.deepEqual(result.counts,[]);
+  assert.equal(result.feature.id,profile.goal);
+  assert.equal(result.tip,null);
+  game.damageTaken.thorns=12;game.damageTaken.contact=4;
+  assert.match(resultTakeaway(game,profile).tip,/가시/);
+  game.outcome='victory';
+  assert.equal(resultTakeaway(game,profile).tip,null);
+});
+
+test('earned companion and discovery links resolve to the correct codex group', () => {
+  const game=createGame(42),profile=createProfile();profile.bestTime=65;
+  assert.equal(resultTakeaway(game,profile,{unlocked:['ember']}).feature.id,'companion:ember');
+  profile.buildDiscoveries=['duelist'];
+  assert.equal(resultTakeaway(game,profile,{discoveries:{branches:['duelist']}}).feature.id,'branch:duelist');
+  assert.equal(resultTakeaway(game,profile,{discoveries:{relics:['fang']}}).feature.id,'relic:fang');
+});
+
+test('mastery-only reward directs to the journal and accurately reports the completed reroll benefit', () => {
+  const game=createGame(42),profile=createProfile();
+  Object.assign(profile.characters.ash,{branches:['sweep','duelist'],evolved:true,wins:1});
+  const result=resultTakeaway(game,profile,{mastery:['branches']});
+  assert.equal(result.feature.preparation,'journal');
+  assert.match(result.feature.detail,/다시 뽑기 2회/);
+  assert.deepEqual(result.counts,[{label:'숙련 인장',value:1}]);
 });

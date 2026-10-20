@@ -109,6 +109,9 @@ function notice(text) {
 }
 function start() {
   game.runId ??= crypto.randomUUID();
+  noticeUntil = 0;
+  $('notice').textContent = '';
+  $('notice').classList.remove('show');
   renderer?.clearCelebration();
   initAudio();
   resetInput();
@@ -432,25 +435,42 @@ function syncPhase() {
     const saved = recordRun(profile, game);
     profile = saved.profile;
     if (saved.added) {
-      game.resultRewards = { discoveries: saved.discoveries, unlocked: saved.unlocked, challenges: saved.challenges, mastery: saved.mastery };
+      game.resultRewards = { discoveries: saved.discoveries, unlocked: saved.unlocked, challenges: saved.challenges, mastery: saved.mastery, record };
       persist();
     }
     const rewards = game.resultRewards ?? saved;
-    panel(`<div class="result-body" tabindex="0" aria-label="이번 여정의 결과"><div class="result-portrait" aria-hidden="true">${portrait(game.characterId, true)}</div><div class="result-mark">${icon(win ? 'star' : 'heart')}</div><p class="eyebrow">${win ? '숲이 기억할 이름' : '다음 장을 향해'}</p><h1 id="panel-title">${win ? '재의 군주를 쓰러뜨렸습니다' : survived ? '살아 돌아왔습니다' : '잠시 쓰러졌을 뿐'}</h1><p class="panel-lead">${win ? '당신의 선택으로 자라난 힘이 숲의 왕관을 깨뜨렸습니다.' : survived ? '5분을 버텼지만 재의 군주는 남아 있습니다. 다음 도전에서 마무리해 보세요.' : '모은 경험과 선택은 다음 도전의 실마리가 됩니다.'}</p><div class="result-stats"><div><small>생존 시간</small><strong>${formatTime(game.time)}</strong></div><div><small>쓰러뜨린 적</small><strong>${game.kills}</strong></div><div><small>도달 레벨</small><strong>${game.level}</strong></div></div><div class="result-build">${['sword', 'ember', 'orbit'].filter(k => game.ranks[k] > 0).map(k => `<span>${weaponName(game, k)} ${game.ranks[k]}단계</span>`).join('')}</div><p class="result-best">${record ? '새로운 처치 기록! · ' : ''}최고 기록 ${profile.bestKills} 처치</p>${resultDetails(game, profile, rewards.unlocked, storageWarning, rewards.challenges, rewards.discoveries, rewards.mastery)}</div><div class="panel-actions"><button id="restart-game" class="primary">다시 숲으로 <span aria-hidden="true">→</span></button><button id="camp-game" class="secondary">동료 선택</button></div>`, true);
+    panel(`<div class="result-body" tabindex="0" aria-label="이번 여정의 결과">
+      <header class="result-heading"><div><p class="eyebrow">${win ? '숲이 기억할 이름' : '다음 장을 향해'} · ${getCharacter(game.characterId).name}</p><h1 id="panel-title">${win ? '재의 군주를 쓰러뜨렸습니다' : survived ? '살아 돌아왔습니다' : '잠시 쓰러졌을 뿐'}</h1><p class="panel-lead">${win ? '숲의 왕관을 깨뜨린 여정이 기록되었습니다.' : survived ? '5분 생존 완료 · 다음에는 남은 군주를 쓰러뜨려 보세요.' : '전투의 성장은 초기화되어도, 발견과 해금은 남습니다.'}</p></div><div class="result-portrait" aria-hidden="true">${portrait(game.characterId, true)}</div></header>
+      <div class="result-stats"><div><small>생존 시간</small><strong>${formatTime(game.time)}</strong></div><div><small>쓰러뜨린 적</small><strong>${game.kills}</strong></div><div><small>도달 레벨</small><strong>${game.level}</strong></div></div>
+      ${resultDetails(game, profile, rewards.unlocked, storageWarning, rewards.challenges, rewards.discoveries, rewards.mastery)}<p class="result-best">${rewards.record ? '새로운 처치 기록! · ' : ''}최고 기록 ${profile.bestKills} 처치</p>
+    </div><div class="panel-actions"><button id="restart-game" class="primary" title="현재 선택한 동료와 출발 준비로 다시 시작">다시 숲으로 <span aria-hidden="true">→</span></button><button id="camp-game" class="secondary">출발 준비</button></div>`, true);
     $('panel').classList.add('is-result');
     $('restart-game').onclick = restart;
-    $('panel').querySelector('[data-review-discoveries]')?.addEventListener('click', event => {
-      const id = event.currentTarget.dataset.reviewDiscoveries;
-      campSection = 'prepare'; codexFilter = id.startsWith('relic:') ? 'relics' : 'weapons'; codexSelection = id;
+    const reviewEntry = id => {
+      const entry = codexEntries(profile).find(e => e.id === id);
+      if (!entry) return;
+      campSection = 'prepare'; codexFilter = entry.group; codexSelection = id;
       camp(); openCodex();
       requestAnimationFrame(() => {
         if (matchMedia('(max-width:680px)').matches) {
           $('panel').querySelector('.codex-detail h2')?.focus({preventScroll: true});
           $('panel').querySelector('.codex-layout').scrollTop = 0;
         } else {
-          const entry = $('panel').querySelector(`[data-codex-entry="${id}"]`);
-          entry?.scrollIntoView({block: 'nearest'}); entry?.focus({preventScroll: true});
+          const card = $('panel').querySelector(`[data-codex-entry="${id}"]`);
+          card?.scrollIntoView({block: 'nearest'}); card?.focus({preventScroll: true});
         }
+      });
+    };
+    $('panel').querySelector('[data-review-discoveries]')?.addEventListener('click', event => reviewEntry(event.currentTarget.dataset.reviewDiscoveries));
+    $('panel').querySelector('[data-result-entry]')?.addEventListener('click', event => reviewEntry(event.currentTarget.dataset.resultEntry));
+    $('panel').querySelector('[data-result-preparation]')?.addEventListener('click', event => {
+      const {resultPreparation: target, resultKeepsake: keepsake} = event.currentTarget.dataset;
+      campSection = target === 'journal' ? 'journal' : 'prepare';
+      if (target === 'keepsake') preparation = 'keepsake';
+      camp();
+      requestAnimationFrame(() => {
+        const control = $('panel').querySelector(keepsake ? `[data-keepsake="${keepsake}"]` : '.camp-tabs [data-camp-section="journal"]');
+        control?.scrollIntoView({block: 'nearest'}); control?.focus({preventScroll: true});
       });
     });
     $('camp-game').onclick = () => { campSection = 'prepare'; camp(); };

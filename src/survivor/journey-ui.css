@@ -192,3 +192,87 @@
 .camp-controls .keepsake-card:first-child { min-height: 48px; padding-block: 7px; }
 .camp-controls .keepsake-card:last-child { grid-column: auto; }
 .camp-controls .keepsake-card:disabled small { color: #686447; }
+@media (max-width:360px) {
+  .camp-controls .keepsake-grid { grid-template-columns: minmax(0,1fr); }
+}
+
+/* A completed journey: earned progress first, optional battle notes below. */
+.result-heading { display: grid; grid-template-columns: minmax(0,1fr) 92px; align-items: center; gap: 18px; }
+.result-heading .eyebrow { margin: 0 0 8px; }
+.result-heading h1 { margin: 0; font-size: 27px; line-height: 1.4; text-wrap: balance; }
+.result-heading .panel-lead { margin: 9px 0 0; font-size: 12px; line-height: 1.65; }
+.result-heading .result-portrait { height: 108px; margin: 0; border-radius: 48px 48px 3px 3px; }
+.result-heading .hero-art { width: 72px; }
+.is-result .result-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 17px 0; padding-block: 10px; }
+.is-result .result-stats > div { display: flex; align-items: baseline; justify-content: center; gap: 9px; }
+.is-result .result-stats small { font-size: 10px; }
+.is-result .result-stats strong { font-size: 23px; line-height: 1.3; }
+.result-takeaway { margin-block: 0 20px; }
+.result-earned { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 7px 15px; margin-bottom: 12px; }
+.result-earned h2 { margin: 0; font: 600 17px var(--display); color: #364c39; }
+.result-earned ul { display: flex; gap: 6px 12px; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
+.result-earned li { color: #65583d; font-size: 11px; white-space: nowrap; }
+.result-earned b { color: #315139; font-size: 15px; margin-left: 2px; }
+.result-earned > p { margin: 0; font-size: 11px; color: #6a5e45; line-height: 1.6; }
+.result-next-step { display: grid; grid-template-columns: 100px minmax(0,1fr); align-items: center; gap: 22px; padding: 18px 22px; border: 1px solid #a2a278; border-left: 3px solid #718363; background: linear-gradient(110deg,#cbd0ac80,#ece2c345); }
+.result-next-step small { color: #526448; font-size: 11px; }
+.result-next-step h3 { margin: 6px 0; color: #304936; font: 600 23px var(--display); }
+.result-next-step p { margin: 0 0 12px; font-size: 12px; line-height: 1.65; color: #62573d; }
+.result-next-step .secondary { min-height: 44px; padding: 9px 14px; color: #35523e; border-color: #7c8c627d; background: #f6edcf88; font-size: 12px; }
+.result-next-step .secondary:hover { background: #fff4d5; border-color: #657c50; }
+.result-reward-art { display: grid; place-items: center; min-width: 0; }
+.result-reward-art > svg { width: 96px; height: 96px; }
+.result-reward-art .companion-art { width: 80px; height: auto; aspect-ratio: var(--portrait-ratio); }
+.result-coaching { margin: 10px 0 0; color: #6b563c; font-size: 11px; line-height: 1.8; }
+.result-coaching strong { color: #5d492e; margin-right: 6px; }
+.is-result .run-notes { margin-top: 16px; }
+.is-result .run-notes > summary,.is-result .battle-record > summary { min-height: 44px; padding-block: 12px; }
+.is-result .result-best { font-size: 11px; color: #796748; margin-top: 16px; }
+.is-result .unlock-reward { background: #d6d6ad44; border-color: #b1a575; border-radius: 2px; color: #3f5138; }
+.is-result .unlock-reward :is(span,p) { color: #5f5a3d; }
+@media (max-width:680px) {
+  .result-heading { grid-template-columns: minmax(0,1fr) 55px; gap: 9px; }
+  .result-heading .eyebrow { font-size: 8px; letter-spacing: .08em; margin-bottom: 5px; }
+  .result-heading h1 { font-size: 22px; }
+  .result-heading .panel-lead { font-size: 10px; margin-top: 6px; }
+  .result-heading .result-portrait { height: 72px; }
+  .result-heading .hero-art { width: 48px; }
+  .is-result .result-stats { margin-block: 12px; padding-block: 8px; }
+  .is-result .result-stats > div { flex-direction: column; align-items: center; gap: 3px; }
+  .is-result .result-stats strong { font-size: 21px; }
+  .result-earned { gap: 5px; margin-bottom: 9px; }
+  .result-earned h2 { font-size: 15px; }
+  .result-earned ul { gap: 4px 10px; }
+  .result-earned li { font-size: 10px; }
+  .result-earned b { font-size: 13px; }
+  .result-next-step { grid-template-columns: 46px minmax(0,1fr); gap: 10px; padding: 12px 10px; }
+  .result-reward-art { align-self: start; padding-top: 17px; }
+  .result-reward-art > svg { width: 46px; height: 46px; }
+  .result-reward-art .companion-art { width: 46px; }
+  .result-next-step small { font-size: 9px; }
+  .result-next-step h3 { font-size: 19px; margin: 4px 0; }
+  .result-next-step p { font-size: 11px; margin-bottom: 8px; }
+  .result-next-step .secondary { width: 100%; font-size: 11px; padding: 9px 6px; }
+  .result-coaching { font-size: 10px; }
+}
+@media (max-height:570px) and (orientation:landscape) {
+  .result-heading { grid-template-columns: minmax(0,1fr); }
+  .result-heading .result-portrait,.result-heading .panel-lead { display: none; }
+  .result-heading h1 { font-size: 18px; }
+  .result-heading .eyebrow { margin-bottom: 3px; font-size: 8px; }
+  .is-result .result-stats { margin-block: 6px; padding-block: 4px; }
+  .is-result .result-stats > div { flex-direction: row; }
+  .is-result .result-stats strong { font-size: 18px; }
+  .result-earned { margin-bottom: 6px; }
+  .result-earned h2 { font-size: 14px; }
+  .result-next-step { padding: 8px 12px; gap: 12px; grid-template-columns: 42px minmax(0,1fr); }
+  .result-reward-art { padding: 0; align-self: center; }
+  .result-reward-art > svg { width: 42px; height: 42px; }
+  .result-reward-art .companion-art { width: 40px; }
+  .result-next-step > div:last-child { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 12px; align-items: center; }
+  .result-next-step :is(small,h3,p) { grid-column: 1; }
+  .result-next-step small { font-size: 9px; }
+  .result-next-step h3 { font-size: 18px; margin: 3px 0; }
+  .result-next-step p { font-size: 10px; margin: 0; line-height: 1.5; }
+  .result-next-step .secondary { grid-column: 2; grid-row: 1 / 4; width: auto; font-size: 11px; }
+}
