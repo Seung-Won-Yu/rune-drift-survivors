@@ -1200,15 +1200,15 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
   await expect(page.locator('.upgrade-health')).toContainText('회복 선택 가능');
   await expect(page.locator('.upgrade-card')).toHaveCount(3);await expect(page.locator('.is-recovery')).toHaveCount(2);
   await expect(page.locator('[data-upgrade="sword"]')).toBeFocused();
-  await expect(page.locator('[data-upgrade="vitality"] .upgrade-change')).toHaveText('최대 체력 100 → 120 · 현재 체력 27 → 57');
-  await expect(page.locator('[data-upgrade="heal"] .upgrade-change')).toHaveText('체력 27 → 67 / 100');
+  await expect(page.locator('[data-upgrade="vitality"] .upgrade-change')).toContainText('최대 체력 100 → 120 · 현재 체력 27 → 57');
+  await expect(page.locator('[data-upgrade="heal"] .upgrade-change')).toContainText('체력 27 → 67 / 100');
   const before=await snapshot(page);await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(before.time);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:`output/playwright/survivor/recovery-choice-${viewport.width}.png`,animations:'disabled'});
   await page.locator('[data-upgrade="vitality"]').click();const result=await snapshot(page);expect(result.player.hp).toBe(57);expect(result.player.maxHp).toBe(120);expect(result.phase).toBe('playing');
   await scenario(page,'recovery-choice');await page.keyboard.press('3');expect((await snapshot(page)).player.hp).toBe(67);
   await scenario(page,'recovery-choice-full');await expect(page.locator('.upgrade-health')).toContainText('100 / 100');
-  await expect(page.locator('.is-recovery')).toHaveCount(0);await expect(page.locator('[data-upgrade="heal"] .upgrade-change')).toHaveText('체력 100 → 100 / 100');
+  await expect(page.locator('.is-recovery')).toHaveCount(0);await expect(page.locator('[data-upgrade="heal"] .upgrade-change')).toContainText('체력 100 → 100 / 100');
  });
 }
 
@@ -1519,7 +1519,11 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
  test(`new discovery results keep retry and preparation visible at ${viewport.width}px`, async ({page}) => {
   await page.setViewportSize(viewport); await scenario(page,'record-experiment');
   await expect(page.locator('#restart-game')).toBeInViewport(); await expect(page.locator('#camp-game')).toBeInViewport();
-  if(viewport.width===1280) expect(await page.locator('#panel').evaluate(el=>el.getBoundingClientRect().width)).toBe(760);
+  if(viewport.width===1280) {
+    const summary=await page.locator('.result-summary').boundingBox(), ledger=await page.locator('.result-ledger').boundingBox();
+    expect(summary.x+summary.width).toBeLessThanOrEqual(ledger.x+1);
+    expect(Math.abs(summary.y-ledger.y)).toBeLessThan(2);
+  }
   await page.locator('.battle-record summary').scrollIntoViewIfNeeded();
   await expect(page.locator('#restart-game')).toBeInViewport(); await expect(page.locator('#camp-game')).toBeInViewport();
   expect(await page.locator('#panel').evaluate(el=>el.scrollTop)).toBe(0);
@@ -1603,6 +1607,9 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:32
  test(`choice list scrolls internally and keeps reroll reachable at ${viewport.width}px`,async({page})=>{
   await page.setViewportSize(viewport);await scenario(page,'branch-sword');
   const frozen=await snapshot(page);
+  for (const card of await page.locator('[data-upgrade]').all()) {
+    expect(await card.evaluate(el=>el.scrollHeight-el.clientHeight), 'choice content must not be clipped').toBeLessThanOrEqual(2);
+  }
   await expect(page.locator('[data-reroll]')).toBeInViewport({ratio:1});
   await page.locator('[data-upgrade]').last().scrollIntoViewIfNeeded();
   await expect(page.locator('[data-reroll]')).toBeInViewport({ratio:1});
@@ -1933,3 +1940,16 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:32
   }
  });
 }
+
+
+test('visual result previews leave the saved profile untouched',async({page})=>{
+  const saved={version:1,bestTime:91,totalKills:245,selected:'ember'};
+  await page.evaluate(data=>localStorage.setItem('ash-profile-v1',JSON.stringify(data)),saved);
+  await page.goto('/?preview=record-experiment');
+  await expect(page.locator('.result-earned')).toContainText(' 새 발견 3'.trim());
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('ash-profile-v1')))).toEqual(saved);
+  await page.locator('#camp-game').click();
+  await page.goto('/?qa');await page.locator('#start-game').waitFor();
+  expect((await snapshot(page)).profile.selected).toBe('ember');
+  expect((await snapshot(page)).profile.runs).toBe(0);
+});

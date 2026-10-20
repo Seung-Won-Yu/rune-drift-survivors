@@ -1,0 +1,207 @@
+/* The decision and the return: quieter paper, a clear effect, one next action. */
+.panel:is(.phase-upgrade,.phase-relic) {
+  border: 1px solid #b0a17c;
+  box-shadow: 0 24px 80px #0007;
+  padding: 24px;
+}
+.panel:is(.phase-upgrade,.phase-relic)::before { display: none; }
+.phase-upgrade .upgrade-top .panel-lead { display: none; }
+.phase-upgrade .growth-context { padding-block: 5px; margin-bottom: 8px; }
+.phase-upgrade .growth-loadout svg { width: 22px; height: 22px; }
+.phase-upgrade .growth-recipe { margin-top: 4px; }
+.choice-instruction {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  margin: 0 0 12px; color: var(--paper-muted); font-size: 11px; line-height: 1.5;
+}
+.choice-shortcuts { display: flex; align-items: center; gap: 4px; }
+.choice-shortcuts kbd { font-family: inherit; font-size: 10px; padding: 2px 5px; border: 1px solid #9a8a5d66; border-radius: 2px; }
+.panel .choice-list { gap: 12px; scroll-padding-block: 8px; grid-auto-rows: max-content; align-content: start; }
+.panel .choice-list .upgrade-card {
+  border: 1px solid #ab9c7370; border-top: 2px solid var(--decision-ink,#678064);
+  border-radius: 3px; padding: 16px; box-shadow: none; background: #fff9e94d;
+  transition: background .15s, border-color .15s, transform .15s;
+}
+.panel .choice-list .upgrade-card::before { display: none; }
+.panel .choice-list .upgrade-card:is(:hover,:focus-visible) {
+  background: #fff9e3; border-color: #53704c; box-shadow: 0 5px 16px #27381c12;
+}
+.panel .choice-list .upgrade-card:focus-visible { outline: 2px solid #53704c; outline-offset: 2px; }
+.panel .choice-list .upgrade-card:active { transform: translateY(1px); }
+.panel .choice-list .upgrade-card.is-experiment { padding-top: 30px; }
+.panel .choice-list .upgrade-icon {
+  width: 100%; height: 60px; margin: 4px 0; border: 0; border-radius: 0;
+  background: radial-gradient(ellipse at center,color-mix(in srgb,var(--tone) 14%,transparent),transparent 62%);
+}
+.panel .choice-list .upgrade-icon svg { width: 60px; height: 60px; }
+.panel .choice-list .upgrade-card > strong { font-size: 23px; margin-bottom: 0; }
+.panel .choice-list .upgrade-card > p { order: 2; margin: 9px 0; color: #626549; font-size: 11px; }
+.panel .choice-list .upgrade-change {
+  order: 1; margin-top: 8px; padding: 7px 0; border: 0; border-block: 1px solid #a4996b40;
+  color: #314f3e; background: none; font-size: 13px; font-weight: 650; line-height: 1.65;
+}
+.upgrade-change > small { display: block; font-size: 9px; font-weight: 400; color: #777252; margin-bottom: 3px; }
+.panel .choice-list .recipe-link { order: 3; margin: 0 0 12px; border: 0; padding: 0; font-size: 10px; color: #626549; }
+.panel .choice-list .pick-label {
+  order: 4; padding-top: 10px; color: #385742; border-color: #a4996b40; font-weight: 650;
+}
+.panel .choice-list .upgrade-card[data-choice-kind='evolution'] {
+  border-color: #aa8748; background: #f4e5b5; box-shadow: inset 0 3px #aa8748;
+}
+.panel .choice-list .upgrade-card[data-choice-kind='evolution'] .upgrade-change { color: #735019; }
+.panel .choice-list .upgrade-card[data-choice-kind='evolution']:is(:hover,:focus-visible) { background: #fff0c2; }
+.panel .choice-list .relic-fit { background: none; padding: 0; font-size: 10px; }
+.panel .choice-list .relic-decision { order: 2; }
+.previous-choice {
+  display: grid; grid-template-columns: 32px minmax(0,1fr) 18px; gap: 10px; align-items: center;
+  padding: 8px 12px; border-left: 2px solid #678064; background: #7c966511;
+}
+.previous-choice .receipt-art svg { width: 32px; height: 32px; }
+.previous-choice small { font-size: 9px; color: #5d6e4f; }
+.previous-choice strong { display: inline; margin-left: 8px; color: #34513c; font-size: 12px; }
+.previous-choice > span > span { display: block; font-size: 10px; color: #5d6e4f; }
+.receipt-check { color: #567444; font-size: 18px; }
+.reward-notice[data-kind='recovery'] { border-left-color: #d7a08a; }
+.reward-notice[data-kind='specialization'] { border-left-color: #dbac71; }
+.reward-notice[data-kind='new'] { border-left-color: #9acbbb; }
+
+/* A completed run reads as a portrait beside an earned field journal. */
+.panel.is-result { width: min(1040px,100%); height: min(740px,100%); padding: 0; box-shadow: 0 24px 80px #0007; }
+.panel.is-result::before { display: none; }
+.is-result .result-body {
+  display: grid; grid-template-columns: minmax(0,.82fr) minmax(0,1.18fr);
+  align-items: start; padding: 0; scrollbar-gutter: auto; background: #17352e;
+}
+.result-summary {
+  position: sticky; top: 0; padding: 28px 28px 24px; color: #f3e7c9; min-width: 0;
+  background: linear-gradient(#132c2590,#17352ef2 80%),url('/art/survivor/forest-sanctuary-v2.webp') 33% center / cover;
+}
+.result-outcome { color: #dcc68b; font-size: 10px; letter-spacing: .16em; margin: 0 0 24px; }
+.result-summary .result-heading { display: flex; flex-direction: column-reverse; align-items: stretch; gap: 20px; }
+.result-summary .result-heading .result-portrait {
+  height: 176px; border: 0; border-radius: 0; overflow: visible;
+  background: radial-gradient(ellipse at 50% 80%,#b3b17625,transparent 65%);
+}
+.result-summary .result-heading .hero-art { width: 112px; filter: drop-shadow(0 10px 7px #081c1966); }
+.result-summary .result-heading .eyebrow { color: #c2c6a9; font-size: 10px; letter-spacing: 0; }
+.panel .result-summary h1 { font-size: 28px; color: #f5e7c3; line-height: 1.45; text-wrap: balance; }
+.panel .result-summary .panel-lead { color: #bbc8b5; font-size: 11px; line-height: 1.8; }
+.result-summary .result-stats {
+  margin: 20px 0 0; padding: 14px 0 0; background: none; border: 0; border-top: 1px solid #c6d1ac33;
+}
+.result-summary .result-stats > div { flex-direction: column; align-items: flex-start; gap: 5px; }
+.result-summary .result-stats small { color: #b4c1ab; font-size: 10px; }
+.result-summary .result-stats strong { color: #f4e5ba; font: 26px Georgia,serif; }
+.result-body[data-outcome='victory'] .result-outcome { color: #f2cd79; }
+.result-body[data-outcome='defeat'] .result-outcome { color: #c1c7b8; }
+.result-ledger { min-width: 0; min-height: 100%; padding: 28px; background: var(--paper); }
+.result-ledger .result-earned { gap: 12px; margin-bottom: 20px; }
+.result-ledger .result-earned h2 { font-size: 19px; }
+.result-ledger .earned-tokens { gap: 0; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.result-ledger .earned-tokens li { background: none; border: 0; border-bottom: 1px solid #a3936440; padding: 10px 12px 10px 0; }
+.result-ledger .earned-tokens small { font-size: 10px; }
+.result-ledger .earned-tokens b { font-size: 17px; }
+.result-ledger .earned-tokens li > strong { margin-top: 4px; font-size: 12px; }
+.result-ledger .result-next-step { border: 0; padding: 20px 16px; background: #cbd1ad55; grid-template-columns: 64px minmax(0,1fr); gap: 16px; }
+.result-ledger .result-reward-art > svg { width: 64px; height: 64px; }
+.result-ledger .result-reward-art .companion-art { width: 60px; }
+.result-ledger .result-next-step h3 { font-size: 24px; }
+.result-ledger .result-next-step .secondary { background: #315443; color: #f2e6c7; border: 1px solid #315443; padding-inline: 16px; }
+.result-ledger .result-next-step .secondary:hover { background: #42664e; }
+.result-ledger :is(.run-discoveries,.mastery-reward,.challenge-reward,.unlock-reward,.next-experiment) {
+  border: 0; border-top: 1px solid #a3936440; border-radius: 0; padding: 16px 0; margin-block: 0; background: none;
+}
+.result-ledger .discovery-trophy { background: #fff8de4d; border: 0; }
+.result-ledger .discovery-trophy strong { word-break: keep-all; overflow-wrap: anywhere; }
+.is-result > .panel-actions {
+  margin: 0; padding: 16px 24px; border-top: 1px solid #a3936455; background: var(--paper);
+  grid-template-columns: 1fr auto; gap: 16px;
+}
+.is-result > .panel-actions .primary { background: #244a3a; color: #f2e5bf; border-color: #244a3a; box-shadow: none; }
+.is-result > .panel-actions .primary:hover { background: #365c46; }
+.is-result > .panel-actions .secondary { min-width: 140px; }
+
+@media (max-width:680px) {
+  .panel:is(.phase-upgrade,.phase-relic) { padding: 16px 12px; }
+  .choice-instruction { margin-bottom: 10px; font-size: 10px; }
+  .choice-shortcuts { display: none; }
+  .panel .choice-list .upgrade-card { padding: 12px 12px 10px 68px; }
+  .panel .choice-list .upgrade-card.is-experiment { padding-top: 28px; }
+  .panel .choice-list .upgrade-icon { position: absolute; top: 40px; left: 8px; width: 48px; height: 48px; margin: 0; background: none; }
+  .panel .choice-list .upgrade-icon svg { width: 48px; height: 48px; }
+  .panel .choice-list .upgrade-card > strong { font-size: 19px; }
+  .panel .choice-list .upgrade-card > p { font-size: 10px; margin: 7px 0; }
+  .panel .choice-list .upgrade-change { font-size: 12px; margin-top: 6px; padding: 7px 0; }
+  .panel .choice-list .recipe-link { font-size: 10px; margin-bottom: 8px; }
+  .panel .choice-list .pick-label { padding-top: 7px; }
+  .previous-choice { gap: 7px; padding: 7px 9px; }
+  .previous-choice strong { margin-left: 5px; }
+  .panel.is-result { height: 100%; }
+  .is-result .result-body { display: block; background: var(--paper); }
+  .result-summary { position: static; padding: 16px; }
+  .result-outcome { margin-bottom: 8px; font-size: 9px; }
+  .result-summary .result-heading { display: grid; grid-template-columns: minmax(0,1fr) 52px; gap: 10px; }
+  .result-summary .result-heading .result-portrait { height: 76px; }
+  .result-summary .result-heading .hero-art { width: 50px; }
+  .result-summary .result-heading .eyebrow { font-size: 8px; margin-bottom: 4px; }
+  .panel .result-summary h1 { font-size: 21px; line-height: 1.35; text-wrap: initial; }
+  .panel .result-summary .panel-lead { font-size: 10px; margin-top: 5px; line-height: 1.55; }
+  .result-summary .result-stats { margin-top: 10px; padding-top: 8px; }
+  .result-summary .result-stats > div { flex-direction: row; gap: 7px; align-items: baseline; }
+  .result-summary .result-stats small { font-size: 9px; }
+  .result-summary .result-stats strong { font-size: 19px; }
+  .result-ledger { padding: 16px; min-height: 0; }
+  .result-ledger .result-earned { margin-bottom: 12px; gap: 6px; }
+  .result-ledger .result-earned h2 { font-size: 16px; }
+  .result-ledger .earned-tokens li { padding-block: 6px; }
+  .result-ledger .earned-tokens b { font-size: 13px; }
+  .result-ledger .earned-tokens li > strong { margin-top: 2px; font-size: 10px; }
+  .result-ledger .result-next-step { padding: 12px; gap: 10px; grid-template-columns: 42px minmax(0,1fr); }
+  .result-ledger .result-reward-art > svg { width: 42px; height: 42px; }
+  .result-ledger .result-reward-art .companion-art { width: 42px; }
+  .result-ledger .result-next-step h3 { font-size: 19px; }
+  .result-ledger .result-next-step p { font-size: 10px; }
+  .is-result > .panel-actions { padding: 12px; gap: 10px; }
+  .is-result > .panel-actions .secondary { min-width: 94px; }
+}
+@media (max-height:570px) and (orientation:landscape) {
+  .panel:is(.phase-upgrade,.phase-relic) { padding: 14px 18px; }
+  .panel .choice-list .upgrade-card { padding: 12px; }
+  .panel .choice-list .upgrade-icon { position: static; width: 100%; height: 40px; margin: 4px 0; }
+  .panel .choice-list .upgrade-icon svg { width: 40px; height: 40px; }
+  .panel .choice-list .upgrade-card > strong { font-size: 18px; }
+  .choice-instruction { margin-bottom: 8px; font-size: 10px; }
+  .choice-shortcuts { display: none; }
+  .is-result .result-body { display: grid; grid-template-columns: minmax(0,.65fr) minmax(0,1.35fr); }
+  .result-summary { position: sticky; padding: 18px; }
+  .result-outcome { margin-bottom: 12px; }
+  .result-summary .result-heading { display: block; }
+  .result-summary .result-heading .result-portrait { display: none; }
+  .panel .result-summary h1 { font-size: 20px; }
+  .result-summary .result-stats { margin-top: 14px; }
+  .result-summary .result-stats > div { flex-direction: column; gap: 4px; }
+  .result-summary .result-stats strong { font-size: 21px; }
+  .result-ledger { padding: 14px 18px; }
+  .result-ledger .result-earned { margin-bottom: 8px; gap: 5px; }
+  .result-ledger .result-earned h2 { font-size: 15px; }
+  .result-ledger .earned-tokens { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .result-ledger .earned-tokens li { padding-block: 2px; }
+  .result-ledger .earned-tokens b { font-size: 12px; }
+  .result-ledger .earned-tokens li > strong { font-size: 10px; margin-top: 0; }
+  .result-ledger .result-next-step { padding: 8px; gap: 10px; grid-template-columns: 36px minmax(0,1fr); }
+  .result-ledger .result-reward-art > svg { width: 36px; height: 36px; }
+  .result-ledger .result-next-step > div:last-child { display: block; }
+  .result-ledger .result-next-step h3 { font-size: 18px; }
+  .result-ledger .result-next-step p { display: block; font-size: 10px; line-height: 1.5; margin: 0; }
+  .result-ledger .result-next-step .secondary { margin-top: 4px; padding: 8px; }
+  .is-result > .panel-actions { padding: 10px 16px; }
+}
+@media (max-width:360px) and (orientation:portrait) {
+  .result-summary { padding: 12px; }
+  .result-summary .result-heading .panel-lead { display: none; }
+  .result-ledger { padding: 12px; }
+  .result-ledger .result-earned { margin-bottom: 8px; }
+  .result-ledger .result-next-step { padding: 10px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .panel .choice-list .upgrade-card { transition: none; }
+}
