@@ -54,6 +54,14 @@ export function drawFinish(ctx, effect, reduced = false) {
     ctx.strokeStyle = '#bbefdc'; ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(0, -r * .7); ctx.lineTo(r, 0); ctx.lineTo(0, r * .7); ctx.closePath(); ctx.stroke();
     ctx.fillStyle = '#f0ffe6'; ctx.fillRect(-2, -2, 4, 4);
   }
+  // Three directional chips punctuate a confirmed kill; no extra effect slots.
+  if (['sword', 'ember', 'orbit'].includes(effect.source)) {
+    ctx.fillStyle = effect.source === 'orbit' ? '#c9f7df' : '#ffe0a0';
+    for (let i = -1; i <= 1; i++) {
+      const x = 12 + motion * (18 - Math.abs(i) * 4), y = i * (8 + motion * 13);
+      ctx.beginPath(); ctx.moveTo(x - 5, y); ctx.lineTo(x + 3, y - 2); ctx.lineTo(x, y + 2); ctx.closePath(); ctx.fill();
+    }
+  }
   ctx.restore();
 }
 
@@ -77,13 +85,34 @@ export function drawSlash(ctx, effect, reduced = false) {
     ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#fff8df'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(0, 0, reach - 1, head - .42, head); ctx.stroke();
+    if (!reduced) {
+      // Separated cut ribbons have air between them instead of a filled sector.
+      ctx.strokeStyle = '#dba655a0'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, reach - 13, tail - .12, head - .24); ctx.stroke();
+      ctx.strokeStyle = '#fff2c5'; ctx.lineWidth = 3 * (1 - progress) + .5;
+      ctx.beginPath(); ctx.arc(0, 0, reach - 7, head - .24, head - .06); ctx.stroke();
+    }
   }
   ctx.restore();
 }
 
 export function drawProjectile(ctx, shot, reduced = false, evolved = false) {
   const angle = Math.atan2(shot.vy, shot.vx), crescent = shot.kind === 'crescent';
+  const age = Math.max(0, (crescent ? .85 : 2) - shot.life);
+  const speed = Math.hypot(shot.vx, shot.vy);
+  const wake = Math.min(48, speed * .15, speed * age);
   ctx.save(); ctx.translate(shot.x, shot.y - (crescent ? 8 : 14)); ctx.rotate(angle);
+  if (!reduced && wake > 12) {
+    ctx.strokeStyle = crescent ? '#e9c17c70' : evolved ? '#ffb767b0' : '#edac607d';
+    ctx.lineCap = 'round';
+    // The shot clock freezes with gameplay. Only the trailing edge flickers.
+    for (let i = 0; i < 2; i++) {
+      const x = -wake * (1 + i * .32), side = i ? 1 : -1;
+      const y = side * (crescent ? 12 : 4) + Math.sin(age * 44 + i * 2) * 1.4;
+      ctx.lineWidth = i ? 1.5 : 2.5;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + wake * .38, y - side * 2); ctx.stroke();
+    }
+  }
   if (crescent) {
     if (!reduced) {
       ctx.strokeStyle = '#d9b27190'; ctx.lineWidth = 2; ctx.lineCap = 'round';
@@ -95,7 +124,7 @@ export function drawProjectile(ctx, shot, reduced = false, evolved = false) {
     ctx.strokeStyle = '#fff8de'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(1, -17); ctx.quadraticCurveTo(22, 0, 1, 17); ctx.stroke();
   } else {
     const size = shot.empowered ? 8 : shot.blast ? 7 : 5;
-    const tail = reduced ? 12 : shot.blast ? 34 : 24;
+    const tail = reduced ? 12 : (shot.blast ? 34 : 24) + Math.sin(age * 44) * 2;
     // A tapered flame, bright leading core and dark rim survive grass/crowds.
     ctx.fillStyle = shot.blast ? '#ed824b' : '#df9c50'; ctx.strokeStyle = '#583222'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(size + 2, 0);
@@ -110,6 +139,26 @@ export function drawProjectile(ctx, shot, reduced = false, evolved = false) {
       ctx.lineTo(-tail * .34, 0); ctx.lineTo(-tail * .75, size * .55); ctx.lineTo(-1, size * .8); ctx.closePath();
     } else ctx.ellipse(1, 0, size * .67, size * .48, 0, 0, Math.PI * 2);
     ctx.fill();
+  }
+  ctx.restore();
+}
+
+// Follow a short section of the actual orbit, always behind its moving head.
+// This is a wake for each rune, never a ring around the character.
+export function drawOrbitWake(ctx, orb, player, reduced = false, evolved = false, horizon = false) {
+  if (reduced) return;
+  const dx = orb.x - player.x, dy = orb.y - player.y, radius = Math.hypot(dx, dy);
+  if (radius < 1) return;
+  const angle = Math.atan2(dy, dx), span = Math.min(.48, (evolved ? 38 : 29) / radius);
+  ctx.save(); ctx.translate(player.x, player.y - 12);
+  ctx.strokeStyle = horizon ? '#b8daff80' : '#a9eed780'; ctx.lineCap = 'round';
+  for (let i = 0; i < 2; i++) {
+    const from = angle - span * (1 + i * .9), to = from + span * .68;
+    ctx.lineWidth = (evolved ? 4 : 3) - i * 1.5;
+    ctx.beginPath(); ctx.moveTo(Math.cos(from) * radius, Math.sin(from) * radius);
+    const middle = (from + to) / 2;
+    ctx.quadraticCurveTo(Math.cos(middle) * radius, Math.sin(middle) * radius, Math.cos(to) * radius, Math.sin(to) * radius);
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -148,25 +197,35 @@ export function drawSlamImpact(ctx, effect, reduced = false) {
 
 export function drawEmberBurst(ctx, effect, reduced = false, evolved = false) {
   const progress = Math.max(0, Math.min(1, effect.age / effect.life));
-  const reach = Math.min(45, effect.range * .55) * (reduced ? .8 : .45 + progress * .55);
+  const motion = reduced ? .45 : progress;
+  const expansion = 1 - (1 - motion) ** 3;
+  const reach = Math.min(45, effect.range * .55) * (.4 + expansion * .6);
   ctx.save(); ctx.translate(effect.x, effect.y - 12);
   const petals = evolved ? 8 : 6;
   for (let i = 0; i < petals; i++) {
     ctx.save(); ctx.rotate(i * Math.PI * 2 / petals + .2);
     ctx.fillStyle = evolved ? (i % 2 ? '#fff0b1' : '#f4b667') : (i % 2 ? '#f4b667' : '#dc8250');
-    ctx.beginPath(); ctx.moveTo(3, -4); ctx.quadraticCurveTo(reach * .5, -12 * (1 - progress), reach, 0);
-    ctx.quadraticCurveTo(reach * .6, 8 * (1 - progress), 3, 4); ctx.closePath(); ctx.fill(); ctx.restore();
+    const tip = reach * (i % 2 ? .78 : 1);
+    ctx.beginPath(); ctx.moveTo(3, -4); ctx.quadraticCurveTo(tip * .5, -12 * (1 - motion), tip, 0);
+    ctx.quadraticCurveTo(tip * .6, 8 * (1 - motion), 3, 4); ctx.closePath(); ctx.fill(); ctx.restore();
   }
   ctx.fillStyle = evolved ? '#fffdf0' : '#fff0b1'; ctx.beginPath();
   if (evolved) {
-    const core = 6 + 15 * (1 - progress);
+    const core = 4 + 17 * (1 - expansion);
     for (let i = 0; i < 8; i++) {
       const angle = i * Math.PI / 4, radius = i % 2 ? core * .35 : core;
       if (i) ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
       else ctx.moveTo(radius, 0);
     }
     ctx.closePath();
-  } else ctx.ellipse(0, 0, 4 + 11 * (1 - progress), 3 + 8 * (1 - progress), 0, 0, Math.PI * 2);
+  } else ctx.ellipse(0, 0, 3 + 12 * (1 - expansion), 2 + 9 * (1 - expansion), 0, 0, Math.PI * 2);
   ctx.fill();
+  // Hot chips outlive the core for a brief burst → breakup rhythm.
+  ctx.fillStyle = '#ffd890';
+  for (let i = 0; i < 3; i++) {
+    const angle = i * Math.PI * 2 / 3 + .4, distance = reach + 5 + motion * 12;
+    const x = Math.cos(angle) * distance, y = Math.sin(angle) * distance - Math.sin(motion * Math.PI) * 10;
+    ctx.beginPath(); ctx.moveTo(x - 3, y); ctx.lineTo(x, y - 4); ctx.lineTo(x + 2, y + 2); ctx.closePath(); ctx.fill();
+  }
   ctx.restore();
 }

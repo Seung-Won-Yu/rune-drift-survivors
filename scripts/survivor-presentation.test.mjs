@@ -7,12 +7,12 @@ import { BOSS } from '../src/survivor/boss.js';
 import { drawBossThorn, drawBossRelease } from '../src/survivor/boss-ink.js';
 import { drawFootfall, drawMaterialHit } from '../src/survivor/combat-ink.js';
 import { ACTOR_ART } from '../src/survivor/actor-art.js';
-import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst, drawLaunch, drawRuneTouch, drawFinish } from '../src/survivor/combat-vfx.js';
+import { drawSlash, drawProjectile, drawOrbitWake, drawSlamImpact, drawEmberBurst, drawLaunch, drawRuneTouch, drawFinish } from '../src/survivor/combat-vfx.js';
 import { drawEnemyGround, drawEnemyWarnings } from '../src/survivor/enemy-render.js';
 import { createProfile } from '../src/survivor/profile.js';
 import { codexEntries } from '../src/survivor/codex.js';
 import { collectionArt } from '../src/survivor/collection-art.js';
-import { attackPose } from '../src/survivor/impact.js';
+import { attackPose, companionActionPose } from '../src/survivor/impact.js';
 import { heroGait, enemyMotion } from '../src/survivor/motion.js';
 import { CHAMPION_HUNT } from '../src/survivor/champions.js';
 import { evolutionFeedback, evolutionFrame } from '../src/survivor/evolution-feedback.js';
@@ -83,6 +83,54 @@ test('projectile heads use the actual position and travel direction without adva
   }
 });
 
+test('projectile wakes stay behind travel, stop fluttering in reduced motion and freeze with the shot clock', () => {
+  for (const kind of [undefined, 'crescent']) {
+    const shot = {kind, x:0, y:0, vx:290, vy:0, life:kind ? .6 : 1.6, blast:true};
+    const before = JSON.stringify(shot), calls = drawingCalls(ctx => drawProjectile(ctx, shot));
+    assert.deepEqual(calls, drawingCalls(ctx => drawProjectile(ctx, shot)));
+    assert.equal(JSON.stringify(shot), before);
+    assert.ok(calls.length < 100);
+    const firstMove = calls.find(c => c[0] === 'moveTo');
+    assert.ok(firstMove[1] < -12 && firstMove[1] >= -64, 'wake is short and behind the head');
+    const calm = life => drawingCalls(ctx => drawProjectile(ctx, {...shot, life}, true));
+    assert.deepEqual(calm(.3), calm(.5));
+    for (const c of calls) for (const n of c.slice(1).filter(v => typeof v === 'number')) assert.ok(Number.isFinite(n));
+  }
+});
+
+test('rune wakes follow the rear of the actual orbit without becoming a range ring', () => {
+  const player = {x:15,y:-30};
+  for (const angle of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) for (const radius of [45, 110]) {
+    const orb = {x:player.x + Math.cos(angle)*radius, y:player.y + Math.sin(angle)*radius};
+    const before = JSON.stringify({orb,player}), calls = drawingCalls(ctx => drawOrbitWake(ctx, orb, player));
+    assert.equal(JSON.stringify({orb,player}),before);
+    assert.deepEqual(calls, drawingCalls(ctx => drawOrbitWake(ctx, orb, player)));
+    assert.ok(!calls.some(c => c[0] === 'arc')); assert.ok(calls.length < 25);
+    for (const c of calls.filter(c => c[0] === 'moveTo')) {
+      assert.ok(Math.cos(angle)*c[2] - Math.sin(angle)*c[1] < 0, 'ribbon stays behind counterclockwise travel');
+      assert.ok(Math.abs(Math.hypot(c[1],c[2])-radius) < 1e-8);
+    }
+    assert.deepEqual(drawingCalls(ctx => drawOrbitWake(ctx,orb,player,true)),[]);
+  }
+  assert.deepEqual(drawingCalls(ctx => drawOrbitWake(ctx,player,player)),[]);
+});
+
+test('painted companions carry bounded body weight at the real strike and settle without moving gameplay', () => {
+  for (const id of ['ash','ember','grove']) {
+    const game=createGame(42,id);game.swing={age:.16,angle:0};
+    assert.ok(companionActionPose(game).x < 0);
+    game.swing.age=.18;
+    const before=JSON.stringify(game), hit=companionActionPose(game);
+    assert.ok(hit.x > 9 && hit.x < 14); assert.ok(Math.abs(hit.tilt) <= .06);
+    assert.ok(hit.sx >= .94 && hit.sy <= 1.06); assert.equal(JSON.stringify(game), before);
+    assert.deepEqual(companionActionPose(game),hit);
+    game.swing.age=.54;assert.ok(Math.abs(companionActionPose(game).x) < .05);
+    assert.deepEqual(companionActionPose(game,true),{});
+    game.player.hurt=.1;assert.deepEqual(companionActionPose(game),{});
+    game.player.hurt=0;game.outcome='defeat';assert.deepEqual(companionActionPose(game),{});
+  }
+});
+
 test('ordinary warnings omit text and target tethers; hound motion follows the actual charging body', () => {
   const game={time:1,spores:[{x:0,y:100,age:.4}],enemies:[{type:2,x:120,y:50,slam:{x:0,y:0,age:.5,hit:false}},{type:1,x:-100,y:0,hunt:{x:-100,y:0,angle:0,age:.4}}]};
   const before=JSON.stringify(game),calls=drawingCalls(ctx=>drawEnemyWarnings(ctx,game,false));
@@ -107,6 +155,8 @@ test('ground and fire impacts remain bounded, deterministic and free of full-rad
     for(const call of calls)for(const value of call.slice(1).filter(v=>typeof v==='number'))assert.ok(Number.isFinite(value));
   }
   assert.equal(JSON.stringify(effect),before);
+  const calmBurst = age => drawingCalls(ctx => drawEmberBurst(ctx, {...effect,age}, true, true));
+  assert.deepEqual(calmBurst(.02), calmBurst(.28), 'reduced fire breakup keeps fixed geometry');
 });
 
 test('authored blade poses reach contact only at the real hit threshold, with hurt and defeat priority', () => {

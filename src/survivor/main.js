@@ -47,7 +47,10 @@ const icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 let storage;
 // Local visual previews use a disposable profile, never the player's saved journey.
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
-const visualPreview = ['upgrade', 'overflow', 'branch-sword', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar'].includes(previewScene);
+const visualPreview = [
+  'upgrade', 'overflow', 'branch-sword', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice'
+].includes(previewScene);
 try {
   storage = visualPreview ? { getItem: () => null, setItem: () => {} } : window.localStorage;
 } catch {}
@@ -1001,7 +1004,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
           game.swing = null; game.effects = [];
           game.shots = [{x:95,y:-50,vx:260,vy:-90,life:1,damage:0},
             {x:145,y:15,vx:270,vy:45,life:1,damage:0,blast:true,empowered:true},
-            {kind:'crescent',x:95,y:100,vx:310,vy:70,life:1,damage:0,hitIds:[]}];
+            {kind:'crescent',x:95,y:100,vx:310,vy:70,life:.65,damage:0,hitIds:[]}];
         }
       } else if (name === 'enemy-warnings') {
         game.time=100;game.ranks.sword=0;game.nextElite=999;
@@ -1257,7 +1260,10 @@ loadArt(import.meta.env.BASE_URL, (loaded, total) => {
   renderer = createRenderer($('world'), art, preferences);
   syncPhase();
   if (import.meta.env.DEV) {
-    if (visualPreview) window.__ASH_QA__.scenario(previewScene);
+    if (visualPreview) {
+      window.__ASH_QA__.scenario(previewScene);
+      if (['action-readability', 'projectile-readability'].includes(previewScene)) $('overlay').style.visibility = 'hidden';
+    }
     const scene = new URLSearchParams(location.search).get('scene');
     if (window.__ASH_QA__ && ['action-readability', 'projectile-readability', 'boss-practice'].includes(scene)) {
       window.__ASH_QA__.scenario(scene);

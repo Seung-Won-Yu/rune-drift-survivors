@@ -1,6 +1,6 @@
 import { reduceMotion } from './preferences.js';
 import { SIGNATURES } from './signature.js';
-import { impactPose, attackPose, hurtFeedback, companionFacing } from './impact.js';
+import { impactPose, attackPose, companionActionPose, hurtFeedback, companionFacing } from './impact.js';
 import { GIANT, huntRule } from './enemies.js';
 import { heroGait, enemyMotion } from './motion.js';
 import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
@@ -14,7 +14,7 @@ import { drawFootfall, drawMaterialHit, drawChampionCrest } from './combat-ink.j
 import { companionFrame, creatureFrame, remnantFrame, bossFrame, bossRemnantFrame } from './actor-animation.js';
 import { drawBossThorn, drawBossRelease } from './boss-ink.js';
 import { createActorPainter } from './actor-art.js';
-import { drawSlash, drawProjectile, drawSlamImpact, drawEmberBurst, drawLaunch, drawRuneTouch, drawFinish, actionEffectFrame } from './combat-vfx.js';
+import { drawSlash, drawProjectile, drawOrbitWake, drawSlamImpact, drawEmberBurst, drawLaunch, drawRuneTouch, drawFinish, actionEffectFrame } from './combat-vfx.js';
 import { createForestLight } from './forest-light.js';
 export async function loadArt(base, onProgress = () => {}) {
   let loaded = 0;
@@ -256,9 +256,11 @@ export function createRenderer(canvas, art, preferences = {motion: 'system', dam
       ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, 23, 10, 0, 0, Math.PI * 2); ctx.stroke();
     }
     if (actor && art.motion[game.characterId]) {
-      const recoil = p.hurt > 0 ? hurt?.pose ?? {} : game.swing || p.cast > 0 ? attackPose(game, reduced.matches) : {};
+      const recoil = hurt?.pose ?? {};
+      const action = p.hurt > 0 ? { x: (recoil.x ?? 0) * .45, y: (recoil.y ?? 0) * .45 }
+        : companionActionPose(game, reduced.matches);
       actor(ctx, game.characterId, companionFrame(game, reduced.matches), p.x, p.y, { flip: facing < 0, flash: p.hurt > .16,
-        pose: { x: (recoil.x ?? 0) * .45, y: (recoil.y ?? 0) * .45 } });
+        pose: action });
     } else sprite(art.heroes[game.characterId], frame, row, 3, p.x, p.y, 88, facing < 0, p.hurt > 0, false, {
       ...pose,
       ...atlas,
@@ -516,6 +518,7 @@ export function createRenderer(canvas, art, preferences = {motion: 'system', dam
     }
     for (const shot of game.shots) drawProjectile(ctx, shot, reduced.matches, !!game.ranks.comet);
     for (const orb of orbitPositions(game)) {
+      drawOrbitWake(ctx, orb, p, reduced.matches, !!game.ranks.lunar, !!game.ranks.horizon);
       ctx.save();
       ctx.translate(orb.x, orb.y - 12);
       ctx.rotate(game.ranks.bulwark ? Math.atan2(orb.y-p.y,orb.x-p.x) : game.time * 2);

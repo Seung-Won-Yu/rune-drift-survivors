@@ -101,7 +101,10 @@ export function createActorPainter(images) {
     const f = frame(key, index);
     ctx.save(); ctx.translate(x + (pose.x || 0), y + (pose.y || 0));
     ctx.scale((flip ? -1 : 1) * factor, factor);
-    // Authored limb movement supplies the pose; only directional recoil remains.
+    // Keep the painted limbs intact. A small, foot-anchored weight shift joins
+    // the release/hit pose to its contact; never stretch the whole illustration.
+    ctx.rotate(Math.max(-.06, Math.min(.06, pose.tilt || 0)));
+    ctx.scale(Math.max(.94, Math.min(1.06, pose.sx ?? 1)), Math.max(.94, Math.min(1.06, pose.sy ?? 1)));
     ctx.drawImage(flash ? f.bright : f.canvas, f.x, f.y, f.canvas.width / f.density, f.canvas.height / f.density);
     ctx.restore();
   };

@@ -50,7 +50,7 @@ export function attackPose(game, reduced = false) {
     const weight = (game.ranks.dawn ? 1.15 : 1) * (game.characterId === 'grove' ? .9 : game.characterId === 'ember' ? .92 : 1);
     if (age < .18) {
       const tension = (age / .18) ** 2;
-      return { x: -Math.cos(angle) * 6 * tension, y: -Math.sin(angle) * 4 * tension,
+      return { x: -Math.cos(angle) * 8 * tension, y: -Math.sin(angle) * 5 * tension + 2 * tension,
         tilt: -.14 * tension, sx: 1 + .06 * tension, sy: 1 - .07 * tension };
     }
     // Four authored poses: impact at .18, follow-through at .26, settle at .40.
@@ -60,7 +60,7 @@ export function attackPose(game, reduced = false) {
     const release = contact ? 1 - .07 * smooth((age - .18) / .08)
       : age < .4 ? .93 - .77 * smooth((age - .26) / .14)
       : .16 * (1 - smooth((age - .4) / .15));
-    return { x: Math.cos(angle) * 11 * release * weight, y: Math.sin(angle) * 7 * release * weight,
+    return { x: Math.cos(angle) * 14 * release * weight, y: Math.sin(angle) * 8 * release * weight,
       tilt: (contact ? .19 : .16) * release, sx: 1 - .05 * release, sy: 1 + .05 * release };
   }
   if (p.cast > 0) {
@@ -71,6 +71,15 @@ export function attackPose(game, reduced = false) {
     return { x: p.facing * 4 * release, y: -1.5 * release, tilt: .075 * release, sx: 1 + .02 * release, sy: 1 + .025 * release };
   }
   return {};
+}
+
+// Authored frames already move the limbs; add body weight, not a second gait.
+export function companionActionPose(game, reduced = false) {
+  const pose = attackPose(game, reduced);
+  if (!Object.keys(pose).length) return {};
+  return { x: (pose.x ?? 0) * .8, y: (pose.y ?? 0) * .7,
+    tilt: (pose.tilt ?? 0) * .3,
+    sx: 1 + ((pose.sx ?? 1) - 1) * .5, sy: 1 + ((pose.sy ?? 1) - 1) * .5 };
 }
 
 export function impactPose(enemy, time, reduced = false) {
