@@ -158,6 +158,7 @@
 .has-folio-body > .panel-actions { padding-top: 14px; margin-top: 14px; border-top: 1px solid #a4936642; }
 .phase-paused h1,.phase-preview h1,.phase-event h1 { font-size: 34px; }
 .panel :is(.build-summary,.curse-contract) { color: var(--paper-note); background: #d4ceb04f; border-color: #a69a6642; border-radius: 2px; }
+.panel .curse-contract p { color: var(--paper-note); }
 .panel .build-summary strong,.panel .build-guide summary { color: var(--paper-note); }
 .panel .build-guide { border-color: #ad9f714a; }
 .panel .build-guide strong { color: var(--paper-note); }
