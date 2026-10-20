@@ -205,7 +205,7 @@ test('briar retaliates once per cooldown and never resurrects lethal contact', (
   assert.equal(Object.keys(RELICS).length, 6);
   assert.deepEqual(createGame().relics, []);
 });
-import { updateEncounters, openChest, chooseCurse, chooseRelic, curseActive, prepareEncounterRewards, inspectEncounter, closeEncounterPreview } from '../src/survivor/encounters.js';
+import { updateEncounters, openChest, closeChest, chooseCurse, chooseRelic, curseActive, prepareEncounterRewards, inspectEncounter, closeEncounterPreview } from '../src/survivor/encounters.js';
 test('altar requires ten seconds inside, pauses outside, and rewards once', () => {
   const g = playing();
   g.time = 45;
@@ -414,4 +414,21 @@ test('relic context states real weapon requirements and specialization synergy',
   g.ranks.wildfire=1;assert.equal(relicContext(g,'coal').kind,'synergy');
   assert.match(relicContext(g,'coal').detail,/50%/);
   g.ranks.orbit=1;assert.equal(relicContext(g,'bell').kind,'ready');
+});
+
+
+test('closing a chest offer preserves its rewards and allows a later deliberate choice', () => {
+  const g = playing(); g.time = 135; updateEncounters(g, 0);
+  const chest = g.encounters.find(e => e.kind === 'chest');
+  g.player.x = chest.x; g.player.y = chest.y;
+  assert.equal(closeChest(g), false);
+  assert.ok(openChest(g));
+  const rewards = [...chest.rewards], time = g.time;
+  frames(g, 60); assert.equal(g.time, time);
+  assert.ok(closeChest(g)); assert.equal(g.phase, 'playing');
+  assert.equal(chest.state, 'available'); assert.equal(chest.progress, 0);
+  assert.deepEqual(chest.rewards, rewards);
+  assert.ok(openChest(g)); assert.deepEqual(chest.rewards, rewards);
+  assert.ok(chooseCurse(g, true)); assert.ok(curseActive(g));
+  assert.equal(closeChest(g), false);
 });

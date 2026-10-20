@@ -27,6 +27,12 @@ export function openChest(game) {
   game.player.moving = false;
   return true;
 }
+export function closeChest(game) {
+  if (game.phase !== 'event') return false;
+  // Dismissing the offer preserves both the available chest and its promised rewards.
+  game.phase = 'playing';
+  return true;
+}
 export function chooseCurse(game, accept) {
   const event = nearbyChest(game);
   if (game.phase !== 'event' || !event || typeof accept !== 'boolean') return false;

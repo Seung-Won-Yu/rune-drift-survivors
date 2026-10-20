@@ -232,6 +232,8 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:74
     expect(after.choices.some(key => !before.choices.includes(key))).toBe(true);
     expect(after.phase).toBe('upgrade'); expect(after.time).toBe(before.time); expect(after.player.hp).toBe(before.player.hp); expect(after.ranks).toEqual(before.ranks);
     expect(after.rerolls).toBe(0); await expect(page.locator('[data-reroll]')).toBeDisabled();
+    await expect(page.locator(`[data-upgrade="${after.choices.find(key => !before.choices.includes(key))}"]`)).toBeFocused();
+    await expect(page.locator(`[data-upgrade="${after.choices.find(key => !before.choices.includes(key))}"]`)).toBeInViewport({ratio:.5});
     await expect(page.locator('.reroll-row [role="status"]')).toContainText('후보가 바뀌었습니다');
     const bounds = await page.evaluate(() => {const p=document.querySelector('#panel').getBoundingClientRect();return {outer:document.documentElement.scrollHeight-innerHeight, horizontal:document.documentElement.scrollWidth-innerWidth, top:p.top,bottom:p.bottom,height:innerHeight};});
     expect(bounds.outer).toBeLessThanOrEqual(1); expect(bounds.horizontal).toBeLessThanOrEqual(1); expect(bounds.top).toBeGreaterThanOrEqual(0); expect(bounds.bottom).toBeLessThanOrEqual(bounds.height);
@@ -239,6 +241,22 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:74
     expect((await snapshot(page)).phase).toBe('playing');
   });
 }
+
+test('reroll focuses a genuinely changed candidate while preserving ready evolution', async ({page}) => {
+  await scenario(page, 'evolution');
+  const before = await snapshot(page);
+  expect(before.choices).toContain('dawn');
+  await page.locator('[data-reroll]').click();
+  const after = await snapshot(page);
+  expect(after.choices).toContain('dawn');
+  const fresh = after.choices.find(key => !before.choices.includes(key));
+  expect(fresh).toBeTruthy();
+  await expect(page.locator(`[data-upgrade="${fresh}"]`)).toBeFocused();
+  expect(after.ranks).toEqual(before.ranks); expect(after.time).toBe(before.time);
+  await page.keyboard.press('Enter');
+  expect((await snapshot(page)).phase).toBe('playing');
+  expect((await snapshot(page)).ranks.dawn).toBe(before.ranks.dawn);
+});
 
 test('fresh lobby codex shows collection goals without writing records and Escape restores preparation', async ({page}) => {
   const raw=await page.evaluate(()=>localStorage.getItem('ash-profile-v1'));
@@ -985,7 +1003,18 @@ test('chest consent can be declined and accepted curse completes in ordinary tim
   await expect(page.getByRole('heading',{name:'저주를 받아들이겠습니까?'})).toBeVisible();
   await expect(page.locator('[data-preview-relic]')).toHaveCount(3);
   const time=(await snapshot(page)).time;await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(time);
-  await page.keyboard.press('Escape');expect((await snapshot(page)).encounters.find(e=>e.kind==='chest').state).toBe('declined');
+  const heldOffer=(await snapshot(page)).encounters.find(e=>e.kind==='chest').rewards;
+  for (const key of ['Escape', 'p']) {
+    await page.keyboard.press(key);
+    expect((await snapshot(page)).phase).toBe('playing');
+    expect((await snapshot(page)).encounters.find(e=>e.kind==='chest').state).toBe('available');
+    await page.locator('#open-chest').click();
+    expect((await snapshot(page)).encounters.find(e=>e.kind==='chest').rewards).toEqual(heldOffer);
+  }
+  await page.getByRole('button',{name:'나중에 결정하기'}).click();
+  await page.locator('#open-chest').click();
+  await page.getByRole('button',{name:'이번 판의 상자 포기'}).click();
+  expect((await snapshot(page)).encounters.find(e=>e.kind==='chest').state).toBe('declined');
   await scenario(page,'event-chest');await page.getByRole('button',{name:'저주 상자 살펴보기'}).click();
   const promised=(await snapshot(page)).encounters.find(e=>e.kind==='chest').rewards;
   await page.getByRole('button',{name:'저주를 받아들인다'}).click();await expect(page.locator('#encounter-hud')).toContainText('접촉 피해 +25%');
@@ -1002,7 +1031,7 @@ for(const viewport of [{width:390,height:844},{width:320,height:568},{width:740,
     expect(hud.x).toBeGreaterThanOrEqual(0);expect(hud.x+hud.width).toBeLessThanOrEqual(viewport.width);
     if(touch)expect(hud.y+hud.height).toBeLessThan(touch.y);
     await page.screenshot({path:`output/playwright/survivor/event-${viewport.width}.png`});
-    await page.getByRole('button',{name:'저주 상자 살펴보기'}).click();await page.getByRole('button',{name:'상자를 두고 간다'}).click();
+    await page.getByRole('button',{name:'저주 상자 살펴보기'}).click();await page.getByRole('button',{name:'이번 판의 상자 포기'}).click();
     await scenario(page,'branch-ember');await page.locator('[data-upgrade="wildfire"]').scrollIntoViewIfNeeded();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.screenshot({path:`output/playwright/survivor/branch-${viewport.width}.png`});
@@ -1660,4 +1689,45 @@ test('keyboard can scroll locked preparation choices without moving the page',as
   await expect(page.locator('[data-keepsake="bookmark"]')).toBeInViewport();
   await expect(page.locator('#start-game')).toBeInViewport({ratio:1});
   expect(await page.evaluate(()=>document.documentElement.scrollTop)).toBe(0);
+});
+
+
+test.describe('combined combat HUD priorities', () => {
+  test.use({hasTouch: true});
+  for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
+    test(`boss, curse, notice and recovery remain distinct at ${viewport.width}px`, async ({page}) => {
+      await page.setViewportSize(viewport); await scenario(page, 'boss-hud-stack');
+      await expect(page.locator('#encounter-hud')).toContainText('접촉 피해 +25%');
+      if (viewport.width === 320) await expect(page.locator('#notice')).toBeHidden();
+      else await expect(page.locator('#notice')).toBeVisible();
+      await expect(page.locator('#recovery-hint')).toBeVisible();
+      await expect(page.locator('#evolution-hint')).toBeHidden();
+      await expect(page.locator('#coach')).toBeHidden();
+      await expect(page.locator('#preview-rewards')).toBeHidden();
+      // Read geometry atomically before the brief notice expires.
+      const boxes = await page.evaluate(() => {
+        const selectors = ['.health-pocket','.clock-pocket','.hud-actions','.xp-pocket','#boss-hud','#encounter-hud','#notice','#recovery-hint','#weapons','#touch'];
+        return selectors.flatMap(selector => {
+          const e=document.querySelector(selector), b=e.getBoundingClientRect();
+          return b.width && b.height ? [{selector,x:b.x,y:b.y,right:b.right,bottom:b.bottom}] : [];
+        });
+      });
+      for (let i=0;i<boxes.length;i++) {
+        const a=boxes[i];
+        expect(a.x,a.selector).toBeGreaterThanOrEqual(0);expect(a.right,a.selector).toBeLessThanOrEqual(viewport.width);
+        expect(a.y,a.selector).toBeGreaterThanOrEqual(0);expect(a.bottom,a.selector).toBeLessThanOrEqual(viewport.height);
+        for (const b of boxes.slice(i+1)) expect(a.x>=b.right || b.x>=a.right || a.y>=b.bottom || b.y>=a.bottom,`${a.selector} vs ${b.selector}`).toBe(true);
+      }
+      const progress = await snapshot(page);
+      await expect(page.locator('#xp-label')).toHaveText(`다음 성장 · LV ${progress.level + 1}`);
+      if (viewport.width === 320) {
+        const messages = await page.locator('.combat-messages').boundingBox();
+        expect(messages.y + messages.height, 'warnings leave the central player visible').toBeLessThan(viewport.height * .43);
+      }
+      await page.screenshot({path:`output/playwright/survivor/hud-stack-${viewport.width}.png`});
+      await page.locator('#pause').click();
+      const paused=await snapshot(page);await page.waitForTimeout(150);
+      expect((await snapshot(page)).time).toBe(paused.time);
+    });
+  }
 });
