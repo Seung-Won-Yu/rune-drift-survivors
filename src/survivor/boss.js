@@ -18,9 +18,12 @@ export const BOSS = {
   thornRadius: 8,
   maxThorns: 96
 };
-export function bossAttackLabel(boss) {
+export function bossAttackLabel(boss, thornsActive = false) {
   if (!boss) return '';
   if (boss.entrance > 0) return '재의 군주가 깨어납니다';
+  // Recovery of the caster does not make its travelling projectiles safe.
+  if ((!boss.pattern || boss.pattern.age >= BOSS.windup) && thornsActive &&
+    !(boss.pattern?.kind === 'charge' && boss.pattern.age < BOSS.windup + BOSS.chargeDuration)) return '가시 잔류 · 탄 사이로 이동하세요';
   if (!boss.pattern) return boss.hp <= boss.maxHp / 2 ? '격노 · 다음 공격 대비' : '다음 공격 대비';
   if (boss.pattern.age >= BOSS.windup) return boss.pattern.kind === 'charge' && boss.pattern.age < BOSS.windup + BOSS.chargeDuration ? '돌진 중 · 경로에서 벗어나세요' : '공격 후 빈틈';
   return boss.pattern.kind === 'charge' ? '돌진 예고 · 선 옆으로 피하세요' : '가시 예고 · 탄 사이로 이동하세요';

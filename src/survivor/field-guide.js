@@ -23,8 +23,15 @@ export function growthChoice(game, key) {
 }
 export function upgradeRecipeHint(game, key) {
   if (EVOLUTIONS[key]) return '';
-  const next = nextEvolution(game), path = EVOLUTIONS[next];
-  return path && (path.weapon === key && game.ranks[key] < 3 || path.support === key && game.ranks[key] < 1) ? `${UPGRADE_META[next].name} 진화 재료` : '';
+  // A card can help a second weapon even when the overview follows another route.
+  return Object.entries(EVOLUTIONS).filter(([id, path]) => !game.ranks[id] &&
+    (path.weapon === key && game.ranks[key] < 3 || path.support === key && game.ranks[key] < 1))
+    .map(([id, path]) => {
+      const target = path.weapon === key ? 3 : 1;
+      const ready = (path.weapon === key ? game.ranks[key] + 1 >= 3 : game.ranks[path.weapon] >= 3) &&
+        (path.support === key ? game.ranks[key] + 1 >= 1 : game.ranks[path.support] >= 1) && game.eliteKills >= 1;
+      return `${UPGRADE_META[id].name} 진화 재료 · ${game.ranks[key]} → ${game.ranks[key] + 1}/${target}${ready ? ' · 다음 성장에 진화 가능' : ''}`;
+    }).join(' / ');
 }
 const recipeMarkup = progress => progress.complete ? '<span class="recipe-complete">진화 완료</span>' : `<span class="recipe-parts">${progress.parts.map(part => `<span class="${part.done ? 'is-met' : ''}">${part.done ? '✓ ' : ''}${part.name} <b>${part.value}/${part.target}</b></span>`).join('')}</span>`;
 export function growthContext(game) {

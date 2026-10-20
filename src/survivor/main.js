@@ -1,3 +1,4 @@
+import { choiceReceipt } from './choice-feedback.js';
 import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice } from './field-guide.js';
 import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
@@ -15,12 +16,13 @@ import './style.css';
 import './folio.css';
 import './journey-ui.css';
 import './combat-ui.css';
+import './choice-ui.css';
 import { BOSS, bossAttackLabel } from './boss.js';
 import { createGame, startGame, updateGame, chooseUpgrade, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, nextEvolution, RUN_SECONDS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
 import { getCharacter, isUnlocked } from './characters.js';
 import { loadProfile, saveProfile, recordRun } from './profile.js';
-import { campScreen, resultDetails, formatTime, buildSummary, relicContextMarkup, encounterRewardPreview, portrait } from './camp.js';
+import { campScreen, resultDetails, formatTime, buildSummary, encounterRewardPreview, portrait } from './camp.js';
 import { codexScreen, CODEX_GROUPS, codexEntries } from './codex.js';
 import { collectionArt } from './collection-art.js';
 import { weaponPresentation, weaponLoadout, weaponBeltKey } from './weapon-presentation.js';
@@ -74,6 +76,7 @@ let stick = {
 const audio = createAudio();
 const keys = new Set();
 let campView = 'prepare', campSection = 'prepare', codexFilter = 'all', codexSelection = null, preparation = 'inheritance';
+let earnedReceipt = null, rerollFeedback = false;
 let resultReturn = null, pauseSection = 'equipment';
 const campMemory = {scroll: {}, details: []};
 const campDetailSelectors = ['.companion-guide', '.mastery-board', '.journey-board', '.camp-records'];
@@ -123,7 +126,17 @@ function notice(text) {
   noticeUntil = performance.now() + 2600;
   $('notice').classList.add('show');
 }
+function showReceipt(receipt) {
+  if (!receipt) return;
+  earnedReceipt = {game, receipt, pendingChoice: game.phase === 'upgrade', until: game.time + (receipt.kind === 'evolution' || receipt.kind === 'relic' ? 4.5 : 3.2)};
+  const node = $('reward-notice');
+  node.dataset.kind = receipt.kind;
+  node.innerHTML = `<span class="receipt-art" aria-hidden="true">${collectionArt(receipt.art)}</span><span><small>${receipt.label}</small><strong>${receipt.name}</strong><span>${receipt.detail}</span></span>`;
+}
 function start() {
+  earnedReceipt = null; rerollFeedback = false;
+  $('reward-notice').hidden = true;
+  $('reward-notice').textContent = '';
   resultReturn = null; pauseSection = 'equipment';
   game.runId ??= crypto.randomUUID();
   noticeUntil = 0;
@@ -373,14 +386,15 @@ function leaveChest() {
 }
 function choose(key) {
   initAudio();
+  const receipt = choiceReceipt(game, key);
   if (game.phase === 'relic') {
-    if (chooseRelic(game, key)) { resetInput(); notice(`${RELICS[key].name} 획득`); lastPhase = null; syncPhase(); }
+    if (chooseRelic(game, key)) { resetInput(); showReceipt(receipt); lastPhase = null; syncPhase(); }
     return;
   }
   if (chooseUpgrade(game, key)) {
     if (EVOLUTIONS[key]) renderer?.celebrateEvolution(key, game.time);
-    resetInput();
-    notice(EVOLUTIONS[key] ? `${UPGRADE_META[key].name} 진화 · 새로운 공격이 깨어났습니다` : `${['sword', 'ember', 'orbit'].includes(key) ? weaponName(game, key) : UPGRADE_META[key].name} · ${game.ranks[key]}단계`);
+    resetInput(); rerollFeedback = false;
+    showReceipt(receipt);
     lastPhase = null;
     syncPhase();
   }
@@ -400,6 +414,13 @@ function panel(html, compact = false) {
       while ($('panel').firstElementChild !== actions) body.append($('panel').firstElementChild);
       $('panel').prepend(body);
     }
+  }
+  if (['upgrade', 'relic'].includes(game.phase)) {
+    // Cards scroll as one region; the decision header and reroll stay reachable.
+    const grid = $('panel').querySelector('.upgrade-grid');
+    grid.classList.add('choice-list');
+    grid.tabIndex = 0;
+    grid.setAttribute('aria-label', game.phase === 'upgrade' ? '성장 선택 목록' : '유물 선택 목록');
   }
   $('panel').scrollTop = 0;
   requestAnimationFrame(() => {
@@ -466,26 +487,28 @@ function syncPhase() {
     const lowHealth = game.player.hp <= game.player.maxHp * .4;
     const recoveryOffered = game.choices.some(key => key === 'heal' || key === 'vitality');
     const choosingBranch = game.choices.some(key => SPECIALIZATIONS[key]);
-    panel(`<div class="upgrade-top"><div><p class="eyebrow">성장의 갈림길</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${growthContext(game)}${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<div class="upgrade-grid">${game.choices.map((key, i) => {
-      const weapon = weaponPresentation(game, key), choice = growthChoice(game, key);
+    const previous = earnedReceipt?.game === game && earnedReceipt.pendingChoice ? earnedReceipt.receipt : null;
+    panel(`<div class="upgrade-top"><div><p class="eyebrow">성장의 갈림길</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${growthContext(game)}${previous ? `<p class="previous-choice" role="status"><strong>방금 선택 · ${previous.name}</strong><span>${previous.detail}</span></p>` : ''}${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<div class="upgrade-grid">${game.choices.map((key, i) => {
+      const weapon = weaponPresentation(game, key), choice = growthChoice(game, key), recipe = upgradeRecipeHint(game, key);
       const m = ['sword', 'ember', 'orbit'].includes(key) ? {
         ...UPGRADE_META[key],
         name: weapon.name,
         color: weapon.color,
         description: weapon.description
       } : UPGRADE_META[key];
-      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-choice-kind="${choice.kind}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<span class="choice-heading"><b>${choice.label}</b><small>${choice.step}</small></span><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span>${upgradeRecipeHint(game,key) ? `<span class="recipe-link">${upgradeRecipeHint(game,key)}</span>` : ''}<span class="pick-label">${choice.action} <kbd>${i + 1}</kbd></span></button>`;
-    }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button><p role="status">${game.rerollsUsed ? '후보가 바뀌었습니다. ' : ''}진화 후보는 유지 · 선택 전 ${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '다른 힘을 찾아보세요'}</p></div>`);
+      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-choice-kind="${choice.kind}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<span class="choice-heading"><b>${choice.label}</b><small>${choice.step}</small></span><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span>${recipe ? `<span class="recipe-link">${recipe}</span>` : ''}<span class="pick-label">${choice.action} <kbd>${i + 1}</kbd></span></button>`;
+    }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button><p role="status">${rerollFeedback ? '후보가 바뀌었습니다. ' : ''}${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '진화 후보는 유지됩니다.'}</p></div>`);
     $('panel').querySelector('[data-reroll]').onclick = () => {
       const previous = new Set(game.choices);
       if (!rerollUpgrades(game)) return;
+      rerollFeedback = true;
       const freshChoice = game.choices.find(key => !previous.has(key)) ?? game.choices[0];
       lastPhase = null; syncPhase();
       requestAnimationFrame(() => $('panel').querySelector(`[data-upgrade="${freshChoice}"]`)?.focus());
     };
     for (const button of document.querySelectorAll('[data-upgrade]')) button.onclick = () => choose(button.dataset.upgrade);
   } else if (game.phase === 'relic') {
-    panel(`<p class="eyebrow">숲이 남긴 선물</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><p class="choice-pause-note">전투가 멈춰 있습니다. 선택하면 이어집니다.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key], context = relicContext(game, key); return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small class="relic-fit is-${context.kind}">${context.label}</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p>${m.description}</p><span class="upgrade-change">${m.change}</span>${relicContextMarkup(game, key, false)}<span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
+    panel(`<p class="eyebrow">숲이 남긴 선물</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><p class="choice-pause-note">전투가 멈춰 있습니다. 선택하면 이어집니다.</p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key], context = relicContext(game, key); return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small class="relic-fit is-${context.kind}">${context.label}</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p class="relic-decision">${context.detail}</p><span class="upgrade-change">${m.change}</span><span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
     for (const button of document.querySelectorAll('[data-relic]')) button.onclick = () => choose(button.dataset.relic);
   } else if (game.phase === 'preview') {
     const event = game.encounters.find(event => event.kind === game.previewEncounter);
@@ -588,7 +611,7 @@ function updateHud() {
   document.body.classList.toggle('has-boss', !!boss);
   if (boss) {
     $('boss-name').textContent = boss.enraged ? '재의 군주 · 격노' : '재의 군주';
-    $('boss-caption').textContent = bossAttackLabel(boss);
+    $('boss-caption').textContent = bossAttackLabel(boss, game.thorns.some(t => t.life > 0));
     $('boss-health').firstElementChild.style.width = `${boss.hp / boss.maxHp * 100}%`;
     $('boss-health').setAttribute('aria-valuenow', String(Math.round(boss.hp / boss.maxHp * 100)));
     $('boss-health').setAttribute('aria-valuetext', `${Math.ceil(boss.hp)} / ${boss.maxHp}`);
@@ -673,6 +696,7 @@ function tick(now) {
     updateHud();
     lastHud = now;
   }
+  $('reward-notice').hidden = !earnedReceipt || earnedReceipt.game !== game || game.phase !== 'playing' || game.time >= earnedReceipt.until;
   if (now > noticeUntil) $('notice').classList.remove('show');
   requestAnimationFrame(tick);
 }
@@ -1029,7 +1053,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
           });
           enemy.speed = 0;
         }
-      } else if (name === 'boss' || name === 'boss-thorns' || name === 'boss-kill' || name === 'boss-practice' || name === 'boss-hud-stack') {
+      } else if (name === 'boss' || name === 'boss-thorns' || name === 'boss-kill' || name === 'boss-practice' || name === 'boss-hud-stack' || name === 'boss-hud-reward') {
         game.time = BOSS.arrival;
         game.ranks.sword = 3;
         game.ranks.ember = 2;
@@ -1038,11 +1062,12 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
         boss.y = 0;
         boss.entrance = 0;
         boss.attackClock = 0;
-        if (name === 'boss-hud-stack') {
+        if (name === 'boss-hud-stack' || name === 'boss-hud-reward') {
           // Layout fixture: simultaneous boss, accepted contract, damage and notice.
           game.player.hp = 25;
           game.encounters = [{kind:'altar',x:0,y:0,state:'completed',progress:10}, {kind:'chest',x:35,y:0,state:'active',progress:0}];
           notice('재의 군주가 깨어났습니다');
+          if (name === 'boss-hud-reward') { game.phase='upgrade'; game.choices=['sword','vitality','heal']; }
         }
         if (name === 'boss-thorns') boss.attackIndex = 1;
         if (name === 'boss-kill') {

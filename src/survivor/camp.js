@@ -191,13 +191,23 @@ export function resultTakeaway(game, profile, rewards = {}) {
   };
   const dominant = Object.entries(game.damageTaken).sort((a, b) => b[1] - a[1])[0];
   const tip = game.outcome === 'defeat' && dominant?.[1] > 0 ? tips[dominant[0]] : null;
-  return {counts, feature, tip};
+  const names = [
+    [...(discoveries.branches ?? []).map(k => SPECIALIZATIONS[k].name),
+      ...(discoveries.evolutions ?? []).map(k => UPGRADE_META[k].name),
+      ...(discoveries.relics ?? []).map(k => RELICS[k].name)],
+    (rewards.unlocked ?? []).map(k => CHARACTERS[k].name),
+    (rewards.challenges ?? []).map(k => KEEPSAKES[CHALLENGES.find(c => c.id === k).reward].name),
+    masteryProgress(profile, game.characterId).filter(s => rewards.mastery?.includes(s.id)).map(s => s.name)
+  ];
+  const earned = ['새 발견', '동료 합류', '기념품 해금', '숙련 인장']
+    .map((label, i) => ({label, names: names[i]})).filter(row => row.names.length);
+  return {counts, feature, tip, earned};
 }
 export function resultOverview(game, profile, rewards) {
-  const {counts, feature, tip} = resultTakeaway(game, profile, rewards);
+  const {counts, feature, tip, earned} = resultTakeaway(game, profile, rewards);
   const art = feature.id?.startsWith('companion:') ? portrait(feature.id.split(':')[1]) : collectionArt(feature.id) || codexIcon('book');
   const action = feature.preparation ? `data-result-preparation="${feature.preparation}"${feature.keepsake ? ` data-result-keepsake="${feature.keepsake}"` : ''}` : `data-result-entry="${feature.id}"`;
-  return `<section class="result-takeaway" aria-label="이번 여정에 남은 것"><div class="result-earned"><h2>${counts.length ? '이번 여정에 남은 것' : '다음 장을 준비하세요'}</h2>${counts.length ? `<ul>${counts.map(row => `<li>${row.label} <b>${row.value}</b></li>`).join('')}</ul>` : '<p>새 발견은 없지만, 여정 기록은 남았습니다.</p>'}</div><div class="result-next-step"><div class="result-reward-art" aria-hidden="true">${art}</div><div><small>${feature.label}</small><h3>${feature.title}</h3><p>${feature.detail}</p><button class="secondary" ${action}>${feature.action} <span aria-hidden="true">→</span></button></div></div>${tip ? `<p class="result-coaching"><strong>다음엔 이렇게</strong> ${tip}</p>` : ''}</section>`;
+  return `<section class="result-takeaway" aria-label="이번 여정에 남은 것"><div class="result-earned"><h2>${counts.length ? '이번 여정에 남은 것' : '다음 장을 준비하세요'}</h2>${counts.length ? `<ul class="earned-tokens">${earned.map((row,i) => `<li style="--reveal:${i * 70}ms"><small>${row.label} <b>${row.names.length}</b></small><strong title="${row.names.join(' · ')}">${row.names[0]}${row.names.length > 1 ? ` <span>외 ${row.names.length - 1}개</span>` : ''}</strong></li>`).join('')}</ul>` : '<p>새 발견은 없지만, 여정 기록은 남았습니다.</p>'}</div><div class="result-next-step"><div class="result-reward-art" aria-hidden="true">${art}</div><div><small>${feature.label}</small><h3>${feature.title}</h3><p>${feature.detail}</p><button class="secondary" ${action}>${feature.action} <span aria-hidden="true">→</span></button></div></div>${tip ? `<p class="result-coaching"><strong>다음엔 이렇게</strong> ${tip}</p>` : ''}</section>`;
 }
 export function resultDetails(game, profile, unlocked, warning, challenges = [], discoveries = null, mastery = []) {
   const total = Object.values(game.damageDealt).reduce((sum, n) => sum + n, 0);

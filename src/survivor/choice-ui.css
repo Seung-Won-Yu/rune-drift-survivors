@@ -1,0 +1,122 @@
+/* A decision fits its folio: compare the change, then return to the field. */
+.panel.phase-upgrade, .panel.phase-relic {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 100%;
+  padding: 24px;
+}
+.phase-upgrade > :not(.choice-list), .phase-relic > :not(.choice-list) { flex-shrink: 0; }
+.panel .choice-list {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  margin: -6px;
+  gap: 12px;
+  scrollbar-color: #938e6b77 transparent;
+}
+.previous-choice { margin: 0 0 10px; padding: 7px 10px; background: #6c895c18; border-left: 2px solid #789866; color: #3b5338; font-size: 11px; line-height: 1.5; }
+.previous-choice strong, .previous-choice span { display: block; }
+.choice-list:focus-visible { outline: 2px solid #885327; outline-offset: -2px; }
+.phase-upgrade .upgrade-top { margin-bottom: 8px; }
+.phase-upgrade .upgrade-top .panel-lead { margin: 5px 0; }
+.phase-upgrade .growth-context { padding: 8px 0; margin-bottom: 12px; }
+.panel .choice-list .upgrade-card { min-height: 0; padding: 14px 16px; gap: 0; }
+.panel .choice-list .upgrade-card:hover { transform: translateY(-2px); }
+.panel .choice-list .upgrade-icon { height: 58px; margin: 5px 0; }
+.panel .choice-list .upgrade-icon svg { width: 55px; height: 55px; }
+.panel .choice-list .upgrade-card > strong { font-size: 21px; }
+.panel .choice-list .upgrade-card > p { min-height: 0; margin: 6px 0 10px; font-size: 12px; line-height: 1.65; }
+.panel .choice-list .upgrade-change { margin-top: 0; font-size: 12px; line-height: 1.65; }
+.panel .choice-list .recipe-link { margin: 7px 0 0; padding-left: 8px; border-left: 2px solid #6f8555; color: #43613e; font-size: 11px; line-height: 1.5; }
+.panel .choice-list .pick-label { padding-top: 12px; min-height: 30px; }
+.panel .choice-list .is-experiment { padding-top: 28px; }
+.phase-upgrade .reroll-row { flex-shrink: 0; border-top: 1px solid #a4936642; margin: 12px 0 0; padding-top: 10px; gap: 5px 12px; }
+.phase-upgrade .reroll-row .secondary { min-height: 44px; padding: 8px 14px; font-size: 12px; }
+.phase-upgrade .reroll-row p { font-size: 11px; line-height: 1.4; }
+.phase-relic h1 { font-size: 31px; margin-bottom: 8px; }
+.phase-relic .panel-lead { margin: 0 0 8px; font-size: 12px; }
+.phase-relic .choice-pause-note { margin: 0 0 16px; }
+.panel .relic-card .relic-fit { margin-bottom: 0; }
+
+/* Earned feedback has its own small place; danger messages cannot replace it. */
+.reward-notice {
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid #b7aa6a80;
+  border-left: 3px solid #d9be7b;
+  border-radius: 3px;
+  background: #17362ff5;
+  color: #f6e5b9;
+  animation: reward-arrive .24s ease-out;
+}
+.reward-notice[hidden] { display: none; }
+.receipt-art svg { width: 40px; height: 40px; display: block; }
+.reward-notice small, .reward-notice strong, .reward-notice > span > span { display: block; }
+.reward-notice small { color: #cbceae; font-size: 10px; margin-bottom: 2px; }
+.reward-notice strong { font: 700 15px var(--display); line-height: 1.5; }
+.reward-notice > span > span { color: #d9dfc6; font-size: 11px; line-height: 1.55; margin-top: 3px; }
+.reward-notice[data-kind='evolution'] { border-color: #e0bd68; background: linear-gradient(110deg,#3c482b,#1c382c); }
+.reward-notice[data-kind='relic'] { border-left-color: #a8cbae; }
+.result-earned .earned-tokens { width: 100%; display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 6px; margin-top: 2px; }
+.earned-tokens li { min-width: 0; white-space: normal; border-left: 2px solid #9a8451; padding: 7px 9px; background: #b5b98820; animation: reward-arrive .28s ease-out backwards; animation-delay: var(--reveal); }
+.earned-tokens small { display: block; color: #695b40; font-size: 10px; }
+.earned-tokens li > strong { display: block; color: #36503b; font-size: 12px; line-height: 1.6; }
+.earned-tokens strong span { white-space: nowrap; color: #6b624a; font-size: 10px; font-weight: 400; }
+@keyframes reward-arrive { from { opacity: .3; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+@media (max-width:680px) {
+  .panel.phase-upgrade, .panel.phase-relic { padding: 16px 12px; }
+  .phase-upgrade .upgrade-top h1, .phase-relic h1 { font-size: 23px; }
+  .phase-upgrade .upgrade-top .panel-lead { display: block; font-size: 10px; line-height: 1.5; }
+  .phase-upgrade .upgrade-top .eyebrow, .phase-relic > .eyebrow { margin: 0 0 3px; }
+  .phase-upgrade .upgrade-health { margin-top: 5px; }
+  .phase-upgrade .growth-context { padding: 6px 0; margin-bottom: 9px; }
+  .panel .choice-list { grid-template-columns: 1fr; gap: 8px; }
+  .panel .choice-list .upgrade-card { padding: 12px 12px 10px 64px; }
+  .panel .choice-list .upgrade-card.is-experiment { padding-top: 25px; }
+  .panel .choice-list .upgrade-card > strong { font-size: 17px; }
+  .panel .choice-list .upgrade-icon { position: absolute; top: 39px; left: 8px; width: 46px; height: 46px; margin: 0; }
+  .panel .choice-list .upgrade-icon svg { width: 44px; height: 44px; }
+  .panel .choice-list .upgrade-card > p, .panel .choice-list .upgrade-change { font-size: 11px; }
+  .panel .choice-list .recipe-link { font-size: 10px; }
+  .panel .choice-list .pick-label { min-height: 0; padding-top: 8px; }
+  .phase-upgrade .reroll-row { margin-top: 9px; padding-top: 8px; }
+  .phase-upgrade .reroll-row p { font-size: 10px; }
+  .phase-relic .panel-lead, .phase-relic .choice-pause-note { font-size: 10px; }
+  .reward-notice { grid-template-columns: 32px minmax(0,1fr); padding: 7px 9px; gap: 7px; }
+  .receipt-art svg { width: 31px; height: 31px; }
+  .reward-notice strong { font-size: 13px; }
+  .reward-notice > span > span { font-size: 10px; }
+  .result-earned .earned-tokens { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .earned-tokens li { padding: 5px 7px; }
+  .earned-tokens li > strong { font-size: 11px; }
+}
+@media (max-height:570px) and (orientation:landscape) {
+  .panel.phase-upgrade, .panel.phase-relic { padding: 14px 18px; }
+  .panel .choice-list { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .panel .choice-list .upgrade-card { padding: 12px; }
+  .panel .choice-list .upgrade-icon { position: static; width: 100%; height: 40px; margin: 4px 0; }
+  .panel .choice-list .upgrade-icon svg { width: 40px; height: 40px; }
+  .phase-relic > .eyebrow { display: none; }
+  .phase-relic h1 { margin: 0 0 4px; font-size: 23px; }
+  .phase-relic .choice-pause-note { margin-bottom: 8px; }
+  .phase-upgrade .reroll-row { margin-top: 8px; padding-top: 6px; }
+  .reward-notice { padding: 6px 8px; grid-template-columns: 28px minmax(0,1fr); }
+  .receipt-art svg { width: 27px; height: 27px; }
+  .reward-notice strong { font-size: 12px; }
+  .reward-notice small, .reward-notice > span > span { font-size: 9px; }
+}
+@media (max-width:680px) and (max-height:650px) {
+  /* Immediate boss and contract warnings take priority on short phones. */
+  .has-boss .combat-messages:has(.encounter-hud:not([hidden])) .reward-notice { display: none; }
+  .is-result .result-stats { margin-block: 8px; padding-block: 6px; }
+  .result-next-step { padding-block: 8px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .reward-notice, .earned-tokens li { animation: none; }
+}

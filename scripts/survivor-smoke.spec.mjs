@@ -497,6 +497,8 @@ test('upgrade pauses combat and chained levels show fresh choices', async ({ pag
   await expect(page.locator('[data-upgrade="ember"]')).toHaveAttribute('data-choice-kind','new');
   await page.locator('[data-upgrade="ember"]').click();
   await expect(page.locator('.level-medal b')).toHaveText('3');
+  await expect(page.locator('.previous-choice')).toContainText('추적 불씨');
+  await expect(page.locator('#reward-notice')).toBeHidden();
   await expect(page.locator('[data-upgrade="orbit"]')).toBeVisible();
   await page.screenshot({ path: 'output/playwright/survivor/upgrade-desktop.png', animations: 'disabled' });
   await page.keyboard.press('1');
@@ -606,6 +608,7 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740
     await page.getByRole('button',{name:'전투 계속하기'}).click();
     await scenario(page,'boss-thorns');
     await expect.poll(async()=>(await snapshot(page)).thorns).toBeGreaterThan(0);
+    await expect(page.locator('#boss-caption')).toContainText('가시 잔류');
     await page.screenshot({path:`output/playwright/survivor/boss-thorns-${viewport.width}.png`,animations:'disabled'});
     await scenario(page,'boss-kill');
     await expect(page.getByRole('heading',{name:'재의 군주를 쓰러뜨렸습니다'})).toBeVisible();
@@ -1461,6 +1464,8 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:32
   await expect(page.locator('.result-earned')).toContainText('동료 합류 2');
   await expect(page.locator('.result-earned')).toContainText('기념품 해금 1');
   await expect(page.locator('.result-earned')).toContainText('숙련 인장 1');
+  await expect(page.locator('.earned-tokens')).toContainText('반월 검법');
+  await expect(page.locator('.earned-tokens')).toContainText('불씨술사');
   await expect(page.locator('[data-result-preparation]')).toBeInViewport({ratio:1});
   await expect(page.locator('#restart-game')).toBeInViewport({ratio:1});
   await expect(page.locator('#camp-game')).toBeInViewport({ratio:1});
@@ -1510,10 +1515,42 @@ test('no new rewards honestly show a next goal and keep detailed battle records 
 
 test('starting another journey clears the previous combat announcement',async({page})=>{
  await scenario(page,'recovery-choice'); await page.locator('[data-upgrade="vitality"]').click();
- await expect(page.locator('#notice')).not.toHaveText('');
+ await expect(page.locator('#reward-notice')).toBeVisible();
+ await expect(page.locator('#reward-notice')).toContainText('27 → 57');
  await scenario(page,'defeat'); await page.locator('#restart-game').click();
  await expect(page.locator('#notice')).toHaveText('');
  await expect(page.locator('#notice')).not.toHaveClass(/show/);
+ await expect(page.locator('#reward-notice')).toBeHidden();
+ await expect(page.locator('#reward-notice')).toHaveText('');
+});
+
+for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
+ test(`choice list scrolls internally and keeps reroll reachable at ${viewport.width}px`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'branch-sword');
+  const frozen=await snapshot(page);
+  await expect(page.locator('[data-reroll]')).toBeInViewport({ratio:1});
+  await page.locator('[data-upgrade]').last().scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-reroll]')).toBeInViewport({ratio:1});
+  expect(await page.locator('#panel').evaluate(el=>el.scrollTop)).toBe(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollHeight-innerHeight)).toBe(0);
+  expect((await snapshot(page)).time).toBe(frozen.time);
+  await page.screenshot({path:`output/playwright/survivor/choices-polish-${viewport.width}.png`,animations:'disabled'});
+  await page.locator('[data-reroll]').click();
+  await expect(page.locator('.reroll-row')).toContainText('후보가 바뀌었습니다.');
+ });
+}
+
+test('reward feedback survives a pause and leaves the field after active play',async({page})=>{
+ await scenario(page,'recovery-choice');await page.locator('[data-upgrade="vitality"]').click();
+ await expect(page.locator('#reward-notice')).toBeVisible();
+ await expect(page.locator('#reward-notice')).toContainText('27 → 57');
+ await page.getByRole('button',{name:'일시정지',exact:true}).click();
+ const paused=await snapshot(page);await page.waitForTimeout(3300);
+ expect((await snapshot(page)).time).toBe(paused.time);
+ await expect(page.locator('#reward-notice')).toBeHidden();
+ await page.locator('#resume-game').click();
+ await expect(page.locator('#reward-notice')).toBeVisible();
+ await expect(page.locator('#reward-notice')).toBeHidden({timeout:5000});
 });
 
 
@@ -1805,3 +1842,19 @@ test('pause tabs are keyboard operable and sound reports unavailable persistence
  await page.locator('#resume-game').click(); await page.locator('[data-inspect-weapon="sword"]').click();
  await expect(page.locator('[data-build-weapon="sword"]')).toBeFocused();
 });
+
+for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
+ test(`earned feedback respects simultaneous boss and contract warnings at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'boss-hud-reward');
+  await page.locator('[data-upgrade="vitality"]').click();
+  await expect(page.locator('#boss-hud')).toBeVisible();await expect(page.locator('#encounter-hud')).toBeVisible();
+  if(viewport.width===320) await expect(page.locator('#reward-notice')).toBeHidden();
+  else {
+   await expect(page.locator('#reward-notice')).toBeVisible();
+   const boxes=await page.locator('#reward-notice, #boss-hud, #encounter-hud, #notice.show, #weapons, #recovery-hint').evaluateAll(elements=>elements.map(el=>el.getBoundingClientRect().toJSON()).filter(b=>b.width&&b.height));
+   for(let i=0;i<boxes.length;i++) for(const b of boxes.slice(i+1)){
+    const a=boxes[i];expect(a.x>=b.right||b.x>=a.right||a.y>=b.bottom||b.y>=a.bottom).toBe(true);
+   }
+  }
+ });
+}

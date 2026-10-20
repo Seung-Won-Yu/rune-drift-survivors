@@ -5,6 +5,44 @@ import { createProfile, recordRun } from '../src/survivor/profile.js';
 import { campMission, nextGoal, resultTakeaway } from '../src/survivor/camp.js';
 import { evolutionProgress, upgradeRecipeHint, growthContext, fieldLoadout, growthChoice } from '../src/survivor/field-guide.js';
 import { loadPreferences, savePreferences, reduceMotion, PREFERENCES_KEY } from '../src/survivor/preferences.js';
+import { choiceReceipt } from '../src/survivor/choice-feedback.js';
+import { bossAttackLabel, BOSS } from '../src/survivor/boss.js';
+
+test('choice feedback captures the real comparison before applying an offered reward', () => {
+  const g=createGame(42); g.phase='upgrade'; g.choices=['vitality','ember','sword'];g.player.hp=27;
+  const before=JSON.stringify(g);
+  assert.match(choiceReceipt(g,'vitality').detail,/27 → 57/);
+  assert.equal(choiceReceipt(g,'ember').kind,'new');
+  assert.equal(choiceReceipt(g,'heal'),null);
+  assert.equal(JSON.stringify(g),before);
+  g.ranks.dawn=1;
+  assert.equal(choiceReceipt(g,'sword').name,'여명의 검');
+  assert.equal(choiceReceipt(g,'sword').art,'dawn');
+  g.phase='relic';g.relicChoices=['bell'];
+  assert.equal(choiceReceipt(g,'bell').kind,'relic');
+  assert.equal(choiceReceipt(g,'sail'),null);
+  g.phase='playing';assert.equal(choiceReceipt(g,'bell'),null);
+});
+
+test('recipe hints cover secondary weapons and only promise evolution after all requirements', () => {
+  const g=createGame(42);
+  assert.match(upgradeRecipeHint(g,'ember'),/잿불 혜성/);
+  g.ranks.sword=2;g.ranks.orbit=1;
+  assert.doesNotMatch(upgradeRecipeHint(g,'sword'),/다음 성장/);
+  g.eliteKills=1;
+  assert.match(upgradeRecipeHint(g,'sword'),/2 → 3\/3 · 다음 성장에 진화 가능/);
+  g.ranks.dawn=1;assert.equal(upgradeRecipeHint(g,'sword'),'');
+});
+
+test('boss captions keep travelling thorns dangerous without hiding the next charge', () => {
+  const boss={entrance:0,hp:100,maxHp:100,pattern:{kind:'thorns',age:BOSS.windup+.1}};
+  assert.match(bossAttackLabel(boss,true),/가시 잔류/);
+  assert.equal(bossAttackLabel(boss,false),'공격 후 빈틈');
+  boss.pattern=null;assert.match(bossAttackLabel(boss,true),/가시 잔류/);
+  boss.pattern={kind:'charge',age:.1};assert.match(bossAttackLabel(boss,true),/돌진 예고/);
+  boss.pattern.age=BOSS.windup+.1;assert.match(bossAttackLabel(boss,true),/돌진 중/);
+  boss.pattern.age=BOSS.windup+BOSS.chargeDuration+.1;assert.match(bossAttackLabel(boss,true),/가시 잔류/);
+});
 
 test('field notes track real evolution requirements without changing the run', () => {
   const game = createGame(42), before = JSON.stringify(game);
@@ -86,6 +124,8 @@ test('result takeaway uses earned deltas and keeps reward viewing separate from 
   const saved=recordRun(createProfile(),game),before=JSON.stringify([game,saved.profile]);
   const result=resultTakeaway(game,saved.profile,saved);
   assert.deepEqual(result.counts.map(c=>[c.label,c.value]),[['새 발견',3],['동료 합류',2],['기념품 해금',1],['숙련 인장',1]]);
+  assert.deepEqual(result.earned[0].names,['반월 검법','여명의 검','왕을 노리는 송곳니']);
+  assert.deepEqual(result.earned[1].names,['불씨술사','룬 수호자']);
   assert.equal(result.feature.id,'keepsake:bookmark');
   assert.equal(result.feature.preparation,'keepsake');
   assert.match(result.feature.detail,/20%/);
@@ -95,6 +135,7 @@ test('result takeaway uses earned deltas and keeps reward viewing separate from 
   const repeated=recordRun(saved.profile,game);
   assert.equal(repeated.added,false);
   assert.deepEqual(resultTakeaway(game,repeated.profile,repeated).counts,[]);
+  assert.deepEqual(resultTakeaway(game,repeated.profile,repeated).earned,[]);
 });
 
 test('a no-reward result gives the real pending goal without inventing grants or a damage cause', () => {
