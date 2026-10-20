@@ -1,3 +1,4 @@
+import { reduceMotion } from './preferences.js';
 import { SIGNATURES } from './signature.js';
 import { impactPose, attackPose, hurtFeedback, companionFacing } from './impact.js';
 import { GIANT, huntRule } from './enemies.js';
@@ -89,7 +90,7 @@ function makeGround(image) {
   }
   return tile;
 }
-export function createRenderer(canvas, art) {
+export function createRenderer(canvas, art, preferences = {motion: 'system', damageNumbers: true}) {
   const ctx = canvas.getContext('2d', {
     alpha: false
   });
@@ -128,7 +129,8 @@ export function createRenderer(canvas, art) {
     enemyFrames.set(`${row}:${col}:${size}:${flash}`, frame);
   }
   const vignette = document.createElement('canvas');
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const systemMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const reduced = {get matches() { return reduceMotion(preferences, systemMotion.matches); }};
   function resize() {
     width = canvas.clientWidth;
     height = canvas.clientHeight;
@@ -538,7 +540,7 @@ export function createRenderer(canvas, art) {
       const e = ['finish', 'rune-touch'].includes(effect.kind) ? actionEffectFrame(effect, game) : effect;
       if (!e) continue;
       if (e.kind === 'ember-launch') continue; // Small release mark sits in front of the hand.
-      if (e.kind === 'damage' && damageLabels && !damageLabels.has(e)) continue;
+      if (e.kind === 'damage' && (!preferences.damageNumbers || damageLabels && !damageLabels.has(e))) continue;
       const progress = e.age / e.life;
       ctx.globalAlpha = 1 - progress;
       if (e.kind === 'rune-touch') {

@@ -1,3 +1,5 @@
+import { growthContext, fieldLoadout, upgradeRecipeHint } from './field-guide.js';
+import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
 import { SIGNATURES, signatureState } from './signature.js';
 import { attackPose, isEvolvedWeapon, hurtFeedback } from './impact.js';
@@ -11,6 +13,7 @@ import { specializationFor, SPECIALIZATIONS, RELICS } from './expansion.js';
 import { ENCOUNTERS, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, chooseCurse, chooseRelic, inspectEncounter, closeEncounterPreview } from './encounters.js';
 import './style.css';
 import './folio.css';
+import './journey-ui.css';
 import { BOSS, bossAttackLabel } from './boss.js';
 import { createGame, startGame, updateGame, chooseUpgrade, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, nextEvolution, RUN_SECONDS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
@@ -41,6 +44,13 @@ try {
   storage = window.localStorage;
 } catch {}
 const loaded = loadProfile(storage);
+const preferences = loadPreferences(storage);
+const systemMotion = matchMedia('(prefers-reduced-motion: reduce)');
+function applyPreferences() {
+  document.body.classList.toggle('reduce-motion', reduceMotion(preferences, systemMotion.matches));
+}
+applyPreferences();
+systemMotion.addEventListener('change', applyPreferences);
 let profile = loaded.profile,
   storageWarning = loaded.warning;
 function persist() {
@@ -177,6 +187,40 @@ function openCodex() {
   campView = 'codex';
   lastPhase = null; syncPhase();
 }
+function openCodexEntry(id) {
+  const entry = codexEntries(profile).find(entry => entry.id === id);
+  if (!entry || game.phase !== 'ready') return;
+  codexFilter = entry.group; codexSelection = id; openCodex();
+  requestAnimationFrame(() => {
+    if (matchMedia('(max-width:680px)').matches) $('panel').querySelector('.codex-detail h2')?.focus({preventScroll:true});
+    else { const card=$('panel').querySelector(`[data-codex-entry="${id}"]`); card?.scrollIntoView({block:'nearest'}); card?.focus({preventScroll:true}); }
+  });
+}
+function jumpPreparation(section) {
+  const container=$('panel').querySelector('.camp-controls');
+  const target=container?.querySelector(`[data-preparation-section="${section}"]`);
+  if (!target) return;
+  const inset=container.querySelector('.preparation-links').getBoundingClientRect().height+12;
+  container.scrollTop+=target.getBoundingClientRect().top-container.getBoundingClientRect().top-inset;
+  const heading=target.querySelector('h2'); heading.tabIndex=-1; heading.focus({preventScroll:true});
+}
+function setSound(enabled) {
+  sound=enabled;
+  try { storage?.setItem('ash-sound', sound ? 'on' : 'off'); } catch {}
+  if (sound) initAudio(); else audio.suspend();
+  updateSound();
+}
+function bindPreferences() {
+  for (const control of $('panel').querySelectorAll('[data-preference]')) control.onchange=()=>{
+    const key=control.dataset.preference;
+    if(key==='sound') { setSound(control.checked); control.checked=sound; }
+    else {
+      preferences[key]=key==='motion' ? control.value : control.checked;
+      const saved=savePreferences(storage,preferences); applyPreferences();
+      $('panel').querySelector('[data-preference-status]').textContent=saved ? '설정을 기억했어요. 다음 여정에도 적용됩니다.' : '이 창에 적용했어요. 브라우저 저장은 사용할 수 없습니다.';
+    }
+  };
+}
 function selectVow(id) {
   if (game.phase !== 'ready' || !canTakeVow(profile, id)) return;
   const scroll = $('panel').querySelector('.camp-controls')?.scrollTop ?? 0;
@@ -279,7 +323,7 @@ function panel(html, compact = false) {
   }
   $('panel').scrollTop = 0;
   requestAnimationFrame(() => {
-    ($('panel').querySelector('#start-game, #restart-game') ?? $('panel').querySelector('button:not(:disabled)'))?.focus({
+    ($('panel').querySelector('#start-game, #restart-game, #resume-game') ?? $('panel').querySelector('button:not(:disabled)'))?.focus({
       preventScroll: true
     });
   });
@@ -320,6 +364,8 @@ function syncPhase() {
     for (const button of $('panel').querySelectorAll('[data-camp-section]')) button.onclick = () => changeCampSection(button.dataset.campSection);
     $('panel').querySelectorAll('[data-inheritance]').forEach(button => button.onclick = () => selectInheritance(button.dataset.inheritance));
     $('panel').querySelector('[data-prepare-inheritance]')?.addEventListener('click', event => selectInheritance(event.currentTarget.dataset.prepareInheritance, event.currentTarget.dataset.heir));
+    for (const button of $('panel').querySelectorAll('[data-preparation-jump]')) button.onclick=()=>jumpPreparation(button.dataset.preparationJump);
+    $('panel').querySelector('[data-open-entry]')?.addEventListener('click',event=>openCodexEntry(event.currentTarget.dataset.openEntry));
     $('start-game')?.addEventListener('click', start);
     $('panel').querySelector('[data-open-codex]')?.addEventListener('click', openCodex);
     $('panel').querySelector('[data-close-codex]')?.addEventListener('click', closeCodex);
@@ -339,7 +385,7 @@ function syncPhase() {
     const lowHealth = game.player.hp <= game.player.maxHp * .4;
     const recoveryOffered = game.choices.some(key => key === 'heal' || key === 'vitality');
     const choosingBranch = game.choices.some(key => SPECIALIZATIONS[key]);
-    panel(`<div class="upgrade-top"><div><p class="eyebrow">성장의 갈림길</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<div class="upgrade-grid">${game.choices.map((key, i) => {
+    panel(`<div class="upgrade-top"><div><p class="eyebrow">성장의 갈림길</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${growthContext(game)}${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<div class="upgrade-grid">${game.choices.map((key, i) => {
       const weapon = weaponPresentation(game, key);
       const m = ['sword', 'ember', 'orbit'].includes(key) ? {
         ...UPGRADE_META[key],
@@ -347,7 +393,7 @@ function syncPhase() {
         color: weapon.color,
         description: weapon.description
       } : UPGRADE_META[key];
-      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span><span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
+      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span>${upgradeRecipeHint(game,key) ? `<span class="recipe-link">${upgradeRecipeHint(game,key)}</span>` : ''}<span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
     }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button><p role="status">${game.rerollsUsed ? '후보가 바뀌었습니다. ' : ''}진화 후보는 유지 · 선택 전 ${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '다른 힘을 찾아보세요'}</p></div>`);
     $('panel').querySelector('[data-reroll]').onclick = () => {
       if (!rerollUpgrades(game)) return;
@@ -366,8 +412,9 @@ function syncPhase() {
     panel(`<p class="eyebrow">저주 상자의 계약</p><h1 id="panel-title">저주를 받아들이겠습니까?</h1><p class="panel-lead">18초 동안 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.</p><div class="curse-contract"><strong>살아남으면 아래 유물 중 하나 선택</strong><p>지금은 시간이 멈춰 있습니다. 도전을 수락한 뒤부터 저주가 시작됩니다.</p></div>${encounterRewardPreview(game, nearbyChest(game))}<div class="panel-actions"><button id="accept-curse" class="primary">저주를 받아들인다</button><button id="decline-curse" class="secondary">상자를 두고 간다</button></div>`);
     for (const [id, accept] of [['accept-curse',true],['decline-curse',false]]) $(id).onclick = () => { if (chooseCurse(game,accept)) { resetInput(); lastPhase=null; syncPhase(); } };
   } else if (game.phase === 'paused') {
-    panel(`<p class="eyebrow">여정의 쉼표</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">숲도 함께 멈췄습니다.<br>${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p>${buildSummary(game)}${buildGuide()}<div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
+    panel(`<p class="eyebrow">여정의 쉼표</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">숲도 함께 멈췄습니다.<br>${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p>${preferenceControls(preferences,sound)}${fieldLoadout(game)}${buildSummary(game)}${buildGuide()}<div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
     $('resume-game').onclick = resume;
+    bindPreferences();
   } else if (game.phase === 'ended') {
     const win = game.outcome === 'victory',
       survived = game.outcome === 'survived',
@@ -443,7 +490,7 @@ function updateHud() {
   $('recovery-hint').hidden = !needsRecovery || game.phase !== 'playing';
   $('recovery-hint').textContent = recovery ? `회복 열매 +${RECOVERY.amount} · ${recovery.direction}으로 이동` : '체력 위험 · 무리의 가장자리로 빠져나오세요';
   const p = game.player;
-  const hurt = hurtFeedback(game, matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const hurt = hurtFeedback(game, reduceMotion(preferences, systemMotion.matches));
   const damage = hurt ? Math.round(hurt.amount * 10) / 10 : 0;
   $('hero-name').textContent = hurt ? `−${damage} · ${hurt.label}` : getCharacter(game.characterId).name;
   $('hero-name').classList.toggle('is-hurt', !!hurt);
@@ -462,7 +509,7 @@ function updateHud() {
   const pacing = combatPacing(game);
   $('phase-label').textContent = championStatus(game) ?? (['rest', 'evolution', 'surge', 'champion'].includes(pacing.kind) ? `${pacing.label} · ${Math.ceil(pacing.remaining)}초` : pacing.label);
   $('phase-label').dataset.pacing = pacing.kind;
-  $('coach').textContent = `공격은 자동 · ${SIGNATURES[game.characterId].action}`;
+  $('coach').textContent = game.time < 5 ? (matchMedia('(pointer:coarse)').matches ? '왼쪽 스틱으로 이동 · 공격은 자동' : 'WASD / 방향키 이동 · Esc / P 일시정지') : `공격은 자동 · ${SIGNATURES[game.characterId].action}`;
   $('coach').style.opacity = game.time < 14 ? '1' : '0';
   const evolution = nextEvolution(game),
     path = evolution ? EVOLUTIONS[evolution] : null;
@@ -473,7 +520,7 @@ function updateHud() {
   const signature = weaponBeltKey(loadout);
   if (signature !== beltKey) {
     beltKey = signature;
-    $('weapons').innerHTML = loadout.map(w => w.rank ? `<div class="weapon-slot${w.branch ? ' is-specialized' : ''}${w.evolution ? ' is-evolved' : ''}${w.ready ? ' is-ready' : ''}" data-weapon="${w.family}" data-weapon-art="${w.art}" style="--tone:${w.color}" aria-label="${w.label}" title="${w.label}">${collectionArt(w.art)}${w.stageLabel ? `<small class="weapon-state" aria-hidden="true">${w.stageLabel}</small>` : ''}<span aria-hidden="true">${w.rank}</span></div>` : `<div class="weapon-slot is-empty" aria-label="빈 무기 슬롯"><span aria-hidden="true">+</span></div>`).join('');
+    $('weapons').innerHTML = loadout.map(w => w.rank ? `<button type="button" data-inspect-weapon="${w.family}" class="weapon-slot${w.branch ? ' is-specialized' : ''}${w.evolution ? ' is-evolved' : ''}${w.ready ? ' is-ready' : ''}" data-weapon="${w.family}" data-weapon-art="${w.art}" style="--tone:${w.color}" aria-label="${w.label}" title="${w.label} · 장비 살펴보기">${collectionArt(w.art)}${w.stageLabel ? `<small class="weapon-state" aria-hidden="true">${w.stageLabel}</small>` : ''}<span aria-hidden="true">${w.rank}</span></button>` : `<div class="weapon-slot is-empty" aria-label="빈 무기 슬롯"><span aria-hidden="true">+</span></div>`).join('');
   }
 }
 function tick(now) {
@@ -521,7 +568,7 @@ function tick(now) {
 document.addEventListener('keydown', event => {
   const key = event.key.toLowerCase();
   if (key === 'tab' && !$('overlay').hidden) {
-    const buttons = [...$('panel').querySelectorAll('button,summary,a[href],input,[tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length > 0);
+    const buttons = [...$('panel').querySelectorAll('button,summary,a[href],input,select,[tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length > 0);
     if (buttons.length) {
       const first = buttons[0],
         end = buttons.at(-1);
@@ -535,6 +582,8 @@ document.addEventListener('keydown', event => {
     }
     return;
   }
+  // Native dropdown dismissal/typeahead must not resume the battlefield.
+  if (event.target.closest?.('select,textarea,input:not([type="checkbox"])')) return;
   if ((key === 'escape' || key === 'p') && !event.repeat) {
     event.preventDefault();
     if (game.phase === 'ready' && campView === 'codex') { closeCodex(); return; }
@@ -567,13 +616,12 @@ $('open-chest').onclick = () => { if (openChest(game)) { resetInput(); lastPhase
 $('preview-rewards').onclick = () => { if (inspectEncounter(game)) { audio.suspend(); resetInput(); lastPhase=null; syncPhase(); } };
 $('pause').onclick = pause;
 $('pause').innerHTML = icon('pause');
-$('sound').onclick = () => {
-  sound = !sound;
-  try {
-    localStorage.setItem('ash-sound', sound ? 'on' : 'off');
-  } catch {}
-  if (sound) initAudio();else audio.suspend();
-  updateSound();
+$('sound').onclick = () => setSound(!sound);
+$('weapons').onclick = event => {
+  const button=event.target.closest('[data-inspect-weapon]');
+  if(!button || game.phase!=='playing') return;
+  pause();
+  requestAnimationFrame(()=>{ const card=$('panel').querySelector(`[data-build-weapon="${button.dataset.inspectWeapon}"]`); card?.scrollIntoView({block:'nearest'}); card?.focus({preventScroll:true}); });
 };
 updateSound();
 function moveStick(event) {
@@ -608,6 +656,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       syncPhase();
     },
     snapshot: () => ({
+      preferences: {...preferences},
+      reducedMotion: reduceMotion(preferences, systemMotion.matches),
       signature: {...game.signature},
       inheritance: game.inheritance,
       spores: structuredClone(game.spores),
@@ -660,9 +710,9 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       crescents: game.shots.filter(s => s.kind === 'crescent').length,
       effects: game.effects.map(e => e.kind),
       eliteFinish: game.eliteFinish ? { ...game.eliteFinish } : null,
-      attackPose: attackPose(game, matchMedia('(prefers-reduced-motion: reduce)').matches),
+      attackPose: attackPose(game, reduceMotion(preferences, systemMotion.matches)),
       celebration: renderer?.celebration(game.time) ?? null,
-      hurtFeedback: hurtFeedback(game, matchMedia('(prefers-reduced-motion: reduce)').matches),
+      hurtFeedback: hurtFeedback(game, reduceMotion(preferences, systemMotion.matches)),
       impacts: game.enemies.filter(e => e.impact && game.time - e.impact.at < .18).map(e => ({ id: e.id, ...e.impact })),
       level: game.level,
       xp: game.xp,
@@ -983,7 +1033,7 @@ loadArt(import.meta.env.BASE_URL, (loaded, total) => {
   progress.value = loaded;
   $('art-progress-label').textContent = `여정 준비 ${loaded} / ${total}`;
 }).then(art => {
-  renderer = createRenderer($('world'), art);
+  renderer = createRenderer($('world'), art, preferences);
   syncPhase();
   if (import.meta.env.DEV) {
     const scene = new URLSearchParams(location.search).get('scene');

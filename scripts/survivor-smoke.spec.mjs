@@ -1458,3 +1458,80 @@ test('actual flame release is visible while kiting in both directions and stays 
   });
   for(const r of result){expect(r.emitted).toBeGreaterThan(0);expect(r.count).toBeGreaterThan(15);expect(r.reach).toBeLessThan(76);expect(r.meanX*r.facing).toBeGreaterThan(18);expect(r.stable).toBe(true);}
 });
+
+for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
+  test(`journey preparation links and next mission stay reachable at ${viewport.width}`,async({page})=>{
+    await page.setViewportSize(viewport);
+    const before=(await snapshot(page)).profile;
+    for(const section of ['keepsake','vow','inheritance']) {
+      await page.locator(`[data-preparation-jump="${section}"]`).click();
+      await expect(page.locator(`[data-preparation-section="${section}"] h2`)).toBeFocused();
+      await expect(page.locator(`[data-preparation-section="${section}"] h2`)).toBeInViewport();
+      await expect(page.locator('#start-game')).toBeInViewport({ratio:1});
+      await expect(page.locator('.camp-mission')).toBeInViewport({ratio:1});
+    }
+    await page.locator('.camp-mission').click();
+    await expect(page.locator('.codex-detail h2')).toHaveText('불씨술사');
+    if(viewport.width<=680) await expect(page.locator('.codex-detail h2')).toBeFocused();
+    expect((await snapshot(page)).profile).toEqual(before);
+    await page.keyboard.press('Escape');
+    expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+    await expect(page.locator('#start-game')).toBeInViewport({ratio:1});
+  });
+  test(`journey equipment inspection freezes the run and keeps resume visible at ${viewport.width}`,async({page})=>{
+    await page.setViewportSize(viewport);
+    await page.locator('#start-game').click();
+    await page.locator('[data-inspect-weapon="sword"]').click();
+    await expect(page.locator('[data-build-weapon="sword"]')).toBeFocused();
+    const before=await snapshot(page);
+    await page.locator('.play-preferences summary').click();
+    await page.locator('[data-preference="damageNumbers"]').uncheck();
+    await page.locator('[data-preference="motion"]').selectOption('reduced');
+    await page.locator('[data-preference="motion"]').press('p');
+    await page.locator('[data-preference="motion"]').press('Escape');
+    expect((await snapshot(page)).phase).toBe('paused');
+    await expect(page.locator('body')).toHaveClass(/reduce-motion/);
+    await expect(page.locator('#resume-game')).toBeInViewport({ratio:1});
+    const after=await snapshot(page);
+    expect(after.time).toBe(before.time); expect(after.ranks).toEqual(before.ranks); expect(after.profile).toEqual(before.profile);
+    expect(after.phase).toBe('paused');
+    await page.screenshot({path:`output/playwright/survivor/journey-settings-${viewport.width}.png`});
+    await page.locator('#resume-game').click();
+    await expect.poll(async()=>(await snapshot(page)).time).toBeGreaterThan(before.time);
+    await page.reload();
+    expect((await snapshot(page)).preferences).toEqual({motion:'reduced',damageNumbers:false});
+    expect((await snapshot(page)).profile).toEqual(before.profile);
+  });
+}
+
+test('journey growth context reflects current ranks and a ready evolution',async({page})=>{
+  await scenario(page,'recovery-choice');
+  await expect(page.locator('.growth-recipe')).toContainText('황동 검 1/3');
+  await expect(page.locator('[data-upgrade="sword"] .recipe-link')).toContainText('여명의 검');
+  await scenario(page,'evolution');
+  await expect(page.locator('.growth-recipe')).toContainText('황동 검 3/3');
+  await expect(page.locator('.growth-recipe')).toContainText('정예 처치 1/1');
+  await expect(page.locator('[data-upgrade="dawn"] .recipe-link')).toHaveText('조건 완성 · 지금 진화');
+  await page.screenshot({path:'output/playwright/survivor/journey-growth.png'});
+  await page.locator('[data-upgrade="dawn"]').click();
+  await page.locator('[data-inspect-weapon="sword"]').click();
+  await expect(page.locator('[data-build-weapon="sword"]')).toContainText('진화 완료');
+});
+
+test('journey damage-number preference keeps impact rendering and the simulation intact',async({page})=>{
+  const result=await page.evaluate(async()=>{
+    const {createRenderer,loadArt}=await import('/src/survivor/render.js'),{createGame}=await import('/src/survivor/game.js');
+    const canvas=document.createElement('canvas');canvas.style.cssText='width:800px;height:680px';document.body.append(canvas);
+    const preferences={damageNumbers:true,motion:'system'},renderer=createRenderer(canvas,await loadArt('/'),preferences),g=createGame(42);
+    g.phase='paused';g.effects=[{kind:'damage',x:160,y:0,text:42,tone:'#ffe0a0',age:.1,life:.55},{kind:'slash',x:0,y:0,angle:0,range:130,halfAngle:1.2,life:.22,age:.06}];
+    const ctx=canvas.getContext('2d'),draw=ctx.fillText.bind(ctx);let numbers=[];
+    ctx.fillText=(text,...args)=>{if(String(text)==='42')numbers.push(text);return draw(text,...args);};
+    const before=JSON.stringify(g); renderer.render(g);const withNumbers=numbers.length;numbers=[];
+    preferences.damageNumbers=false;renderer.render(g);const withoutNumbers=numbers.length;
+    const impacted=ctx.getImageData(0,0,canvas.width,canvas.height).data.slice();const unchanged=before===JSON.stringify(g);
+    g.effects=[];renderer.render(g);const clear=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    const visibleImpact=impacted.some((v,i)=>v!==clear[i]);canvas.remove();return {withNumbers,withoutNumbers,unchanged,visibleImpact};
+  });
+  expect(result.withNumbers).toBeGreaterThan(0);expect(result.withoutNumbers).toBe(0);
+  expect(result.unchanged).toBe(true);expect(result.visibleImpact).toBe(true);
+});
