@@ -4,14 +4,15 @@ A complete five-minute **2D cartoon survivor chapter** for the browser. Choose a
 
 **[Play Ash & Amber](https://seung-won-yu.github.io/rune-drift-survivors/)** · [Play / development guide](./docs/survivor.md) · [Enemy design and verification](./docs/design/survivor-restart/12-ENEMY-ROLES.md)
 
-![Ash & Amber illustrated companions and preparation journal](./docs/design/survivor-restart/images/benchmark-camp-live.png)
+![Ash & Amber game lobby with persistent navigation](./docs/design/survivor-restart/images/app-shell-desktop.png)
 
-The lobby image uses a previously earned test save to show companion selection and the focused keepsake editor. New players unlock these through play.
+The lobby image uses previously earned local progress to show companion and combat-style selection. New players unlock these through play.
 
 ![Ash & Amber painted combat ground and the sovereign’s attack warning](./docs/design/survivor-restart/images/sanctuary-boss.png)
 
 The combat image uses a development-only boss scenario to show the warning clearly; ordinary runs reach the sovereign after four minutes.
 
+- **An app-oriented game frame:** a compact header, desktop navigation rail and mobile bottom bar connect preparation, collection and records. The companion owns the stage; equipment scrolls internally above a fixed departure button. Mobile collection uses index/detail navigation, and settings/fullscreen are available before play. [Design and verification](./docs/design/survivor-restart/40-GAME-APP-SHELL.md).
 - **A companion-led departure:** three new painted character portraits share the forest’s texture and lighting. Companion selection stays beside the character; the folio concentrates on combat style and keepsake choices, with readable ability summaries and a fixed departure button. [Design and verification](./docs/design/survivor-restart/28-COMPANION-PRESENTATION.md).
 - **Focused preparation and readable growth:** combat style, keepsake and vow each open one bounded editor while their selected values stay visible. The next reward or pinned goal links directly to its codex conditions. Growth cards distinguish new weapons, upgrades, specializations, evolution and healing with explicit labels and real before/after values. The pause journal puts equipped weapons first and folds secondary records. [Benchmarks and implementation](./docs/design/survivor-restart/35-FOCUSED-PREPARATION.md).
 - **Choices that fit and rewards you can read:** compact growth/relic cards scroll internally while reroll stays reachable. Cards show relevant evolution progress; earned feedback shows the real stat change, survives pause and carries the previous choice into chained levels. Results name newly earned items, and live boss thorns no longer show a safe recovery caption. [Ordinary boss victory and verification](./docs/design/survivor-restart/39-CHOICES-AND-EARNED-REWARDS.md).

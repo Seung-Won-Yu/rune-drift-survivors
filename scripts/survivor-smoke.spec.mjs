@@ -6,6 +6,76 @@ test.afterEach(async({page})=>{expect(pageErrors.get(page)??[], 'browser runtime
 const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
+for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:640,height:360}]) {
+  test(`app settings stay modal, persistent and separate from progression at ${viewport.width}`, async ({page}) => {
+    await page.setViewportSize(viewport);
+    const before = await snapshot(page);
+    await page.locator('[data-app-settings]').click();
+    const dialog = page.getByRole('dialog', {name:'게임 설정'});
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('button',{name:'설정 닫기'})).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    expect(await page.evaluate(()=>!!document.activeElement.closest('dialog'))).toBe(true);
+    await dialog.locator('[data-preference="damageNumbers"]').uncheck();
+    await dialog.locator('[data-preference="motion"]').selectOption('reduced');
+    await expect(dialog.locator('[data-preference-status]')).toContainText('기억했어요');
+    await expect(page.locator('body')).toHaveClass(/reduce-motion/);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(page.locator('[data-app-settings]')).toBeFocused();
+    expect((await snapshot(page)).profile).toEqual(before.profile);
+    expect((await snapshot(page)).phase).toBe('ready');
+    await page.locator('[data-open-codex]').click();
+    await page.locator('[data-app-settings]').click();
+    await expect(dialog.locator('[data-preference="damageNumbers"]')).not.toBeChecked();
+    await dialog.getByRole('button',{name:'설정 닫기'}).click();
+    await expect(page.locator('.is-codex')).toBeVisible();
+    await page.locator('.camp-tabs [data-camp-section="prepare"]').click();
+    await page.locator('#start-game').click();
+    await page.keyboard.press('Escape');
+    await page.locator('[data-pause-tab="settings"]').click();
+    await expect(page.locator('[data-preference="damageNumbers"]')).not.toBeChecked();
+    await expect(page.locator('[data-preference="motion"]')).toHaveValue('reduced');
+    expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  });
+}
+test('app navigation preserves mission focus and distinct editor disclosure state', async ({page}) => {
+  await page.locator('.companion-guide summary').click();
+  await page.locator('[data-preparation-tab="keepsake"]').click();
+  await page.locator('.camp-tabs [data-camp-section="journal"]').click();
+  await page.locator('.mastery-board summary').click();
+  await page.locator('[data-open-codex]').click();
+  await page.locator('.camp-tabs [data-camp-section="prepare"]').click();
+  await expect(page.locator('#prepare-keepsake')).toBeVisible();
+  await page.locator('[data-preparation-tab="inheritance"]').click();
+  await expect(page.locator('.companion-guide')).toHaveAttribute('open','');
+  await page.locator('.camp-mission').click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.camp-mission')).toBeFocused();
+  await page.locator('.camp-tabs [data-camp-section="journal"]').click();
+  await expect(page.locator('.mastery-board')).toHaveAttribute('open','');
+});
+test('app fullscreen reflects browser state and handles a rejected request', async ({page}) => {
+  const button=page.locator('[data-app-fullscreen]');
+  test.skip(!await button.isVisible(), 'Fullscreen is unavailable in this browser.');
+  await button.click();
+  await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(true);
+  await expect(button).toHaveAttribute('aria-label','전체 화면 종료');
+  await button.click();
+  await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(false);
+  await expect(button).toHaveAttribute('aria-pressed','false');
+  await page.locator('[data-open-codex]').click();
+  await button.click();
+  await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(false);
+  await expect(page.locator('.is-codex')).toBeVisible();
+  await page.evaluate(()=>{ document.documentElement.requestFullscreen=()=>Promise.reject(new Error('Unavailable')); });
+  await button.click();
+  await expect(page.locator('[data-app-status]')).toContainText('열 수 없습니다');
+  await expect(button).toHaveAttribute('aria-pressed','false');
+});
+
 test.describe('rendered combat priorities',()=>{
   test.use({deviceScaleFactor:2});
   test('a wide sword strike paints a compact weapon stroke rather than a large range diagram',async({page})=>{
@@ -312,9 +382,11 @@ for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740
     await page.screenshot({path:`output/playwright/survivor/preparation-${viewport.width}.png`,animations:'disabled'});
     await page.setViewportSize(viewport);
     await page.locator('[data-open-codex]').click();
+    if(viewport.width<=680) await expect(page.locator('.codex-detail')).toBeHidden();
     const headingBefore=await page.locator('.codex-heading').boundingBox();
     // Inspect the final collection card: only the internal body may scroll.
     await page.locator('[data-codex-entry="keepsake:bookmark"]').click();
+    await expect(page.locator('.codex-detail')).toBeVisible();
     await expect(page.locator('.codex-detail')).toContainText('첫 60초 획득 경험치 +20%');
     if(viewport.width<=680) await page.locator('[data-codex-list]').click();
     await expect(page.locator('[data-codex-entry="keepsake:bookmark"]')).toBeInViewport();
@@ -1373,6 +1445,9 @@ for (const viewport of [{width:1280,height:720},{width:1280,height:600},{width:3
     if(viewport.width>680) {
       const hero=await page.locator('.camp-scene .hero-art').boundingBox(),caption=await page.locator('.camp-stage-caption').boundingBox();
       expect(hero.y+hero.height).toBeLessThanOrEqual(caption.y);
+    } else if(viewport.height>viewport.width) {
+      const caption=await page.locator('.camp-stage-caption').boundingBox(), rosterBox=await roster.boundingBox();
+      expect(caption.y+caption.height).toBeLessThanOrEqual(rosterBox.y+1);
     }
     await page.screenshot({path:`output/playwright/survivor/polish-preparation-${viewport.width}x${viewport.height}.png`,animations:'disabled'});
     await page.locator('#start-game').click(); expect((await snapshot(page)).phase).toBe('playing');

@@ -1,0 +1,295 @@
+/* A permanent game frame: navigation, companion stage, one equipment surface. */
+.overlay:is([data-screen="prepare"],[data-screen="codex"]) { padding: 24px; }
+.overlay:is([data-screen="prepare"],[data-screen="codex"])::before { display: none; }
+.panel:is(.is-camp,.is-codex) {
+  --app-paper: #e4d7b7;
+  width: min(1440px,100%); height: 100%; max-height: 920px; min-height: 0;
+  display: grid; grid-template-columns: 88px minmax(0,1fr) minmax(340px,390px);
+  grid-template-rows: 74px minmax(0,1fr) auto; gap: 18px 28px;
+  margin: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; overflow: hidden;
+}
+.panel:is(.is-camp,.is-codex)::before { display: none; }
+.app-header.camp-heading {
+  grid-column: 1 / -1; grid-row: 1; display: flex; justify-content: space-between; align-items: center;
+  padding: 0 0 16px; margin: 0; border-bottom: 1px solid #b7c5a52b;
+}
+.app-header .camp-brand { gap: 12px; }
+.app-header .forest-crest { width: 29px; height: 38px; }
+.app-header .eyebrow { font: 9px Georgia,serif; letter-spacing: .2em; color: #cfbe91; margin: 0 0 4px; }
+.app-header h1 { font-size: 26px; line-height: 1.25; margin: 0; color: #f3e8ce; text-shadow: none; }
+.app-tools { display: flex; align-items: center; gap: 8px; }
+.app-chapter { display: flex; align-items: center; gap: 12px; margin-right: 22px; color: #ced1b9; font-size: 11px; letter-spacing: .04em; }
+.app-chapter i { width: 3px; height: 3px; border-radius: 50%; background: #e2c082; }
+.app-tool { display: grid; place-items: center; width: 44px; height: 44px; padding: 10px; border: 1px solid #c4c7aa30; border-radius: 50%; color: #e9dfc1; background: #172f26a1; cursor: pointer; }
+.app-tool:hover { background: #36513b; border-color: #d5c496; }
+.app-tool[hidden] { display: none; }
+.app-tool svg { width: 21px; height: 21px; }
+.app-status:empty { display: none; }
+.app-status { position: absolute; right: 8px; top: 68px; z-index: 3; padding: 9px 12px; color: #fff0cf; background: #273d2c; font-size: 12px; }
+.app-navigation.camp-navigation {
+  grid-column: 1; grid-row: 2 / -1; display: flex; flex-direction: column; align-items: stretch;
+  gap: 8px; margin: 0; padding: 12px 0; border: 0; background: none; box-shadow: none; min-height: 0;
+}
+.app-navigation.camp-tabs button,.app-navigation.camp-tabs .codex-door {
+  position: relative; display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; justify-content: center;
+  gap: 7px; width: 100%; max-width: none; min-height: 84px; margin: 0; padding: 12px 4px;
+  border: 0; border-radius: 8px; color: #bcc7ad; background: none; box-shadow: none;
+  font: inherit; font-size: 11px; line-height: 1.5; cursor: pointer; transition: background .16s,color .16s;
+}
+.app-navigation.camp-tabs button svg { width: 25px; height: 25px; }
+.app-navigation.camp-tabs button > span { display: block; }
+.app-navigation.camp-tabs button b { position: absolute; top: 8px; right: 4px; padding: 1px 4px; color: #d6c8a2; background: #243c2a; font: 9px system-ui,sans-serif; border-radius: 4px; margin: 0; }
+.app-navigation.camp-tabs .codex-door small { display: block; color: #c5cfab; font-size: 9px; line-height: 1.3; }
+.app-navigation.camp-tabs button[aria-pressed="true"] { color: #f5dba3; background: #b9ba7930; border: 0; box-shadow: inset 2px 0 #dbba7b; }
+.app-navigation.camp-tabs button:hover { color: #fff0c7; background: #b9ba791a; }
+.app-nav-foot { margin-top: auto; text-align: center; color: #a9b29988; font: 10px Georgia,serif; letter-spacing: .18em; padding: 20px 0 0; }
+.is-camp .camp-content { display: contents; }
+.is-camp .camp-stage { grid-column: 2; grid-row: 2 / 4; padding: 0 0 6px; overflow: hidden; }
+.is-camp .camp-scene { display: flex; flex: 1 1 auto; min-height: 70px; width: 100%; }
+.is-camp .camp-scene .camp-portrait { max-height: 540px; }
+.is-camp .camp-stage-caption { display: grid; margin: 2px 0 18px; gap: 5px; }
+.is-camp .camp-stage-caption strong { font-size: clamp(28px,3vw,40px); letter-spacing: -.04em; }
+.is-camp .camp-stage-caption small { display: block; order: 3; color: #d1d6bb; font-size: 11px; margin-top: 5px; }
+.is-camp .camp-stage-caption > span { font-size: 12px; color: #cdd2ba; }
+.is-camp .companion-roster { max-width: 450px; padding: 0; background: none; border: 0; box-shadow: none; }
+.is-camp .companion-roster .companion-heading { display: none; }
+.is-camp .companion-roster .companion-grid { gap: 8px; }
+.is-camp .companion-roster .companion-card { min-height: 76px; padding: 8px; border: 1px solid #a0b19140; border-radius: 5px; background: #10281fe0; gap: 8px; }
+.is-camp .companion-roster .companion-card[aria-pressed="true"] { background: #5b6240e0; border-color: #d4bb7e; box-shadow: inset 0 -2px #d4bb7e; }
+.is-camp .companion-roster .companion-card:disabled { background: #10271fba; }
+.is-camp .companion-roster .companion-art { width: 38px; height: auto; }
+.is-camp .companion-copy strong { font-size: 12px; }
+.is-camp .companion-copy > span { font-size: 10px; }
+.is-camp .camp-mastery-link { width: min(450px,100%); padding: 9px 3px; min-height: 40px; border: 0; font-size: 11px; }
+.is-camp .camp-stage-note { display: block; max-width: 450px; padding: 0; margin: 0; border: 0; }
+.is-camp .camp-stage-note p { margin: 0; font-size: 11px; color: #ced4bb; }
+.is-camp :is(.camp-controls,.camp-journal) {
+  grid-column: 3; grid-row: 2; min-height: 0; padding: 0; border: 0; border-radius: 8px 8px 0 0;
+  background: var(--app-paper); box-shadow: none; margin-bottom: -18px; overflow: hidden;
+}
+.is-camp .camp-journal { padding: 22px; overflow-y: auto; }
+.is-camp .camp-section[hidden] { display: none; }
+.is-camp .preparation-links { padding: 0 12px; background: #d9cba7; border: 0; border-radius: 8px 8px 0 0; }
+.is-camp .preparation-links button { min-height: 68px; padding: 10px 9px; border-bottom-width: 2px; }
+.is-camp .preparation-links button[aria-selected="true"] { background: #e4d7b7; border-color: #697348; }
+.is-camp .preparation-links small { font-size: 11px; }
+.is-camp .preparation-links strong { font-size: 11px; }
+.is-camp .preparation-editor { padding: 20px; }
+.is-camp .preparation-editor .companion-heading { align-items: start; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.is-camp .preparation-editor .companion-heading h2 { font-size: 20px; letter-spacing: -.04em; }
+.is-camp .preparation-editor .companion-heading > span { font-size: 11px; }
+.is-camp .inheritance-grid,.is-camp .keepsake-grid { grid-template-columns: 1fr; gap: 0; margin-top: 0; }
+.is-camp .inheritance-card,.is-camp .keepsake-card {
+  min-height: 86px; padding: 13px 10px; border: 0; border-bottom: 1px solid #90825d40;
+  border-radius: 0; background: none; gap: 12px; box-shadow: none;
+}
+.is-camp .inheritance-card:first-child { min-height: 60px; flex-wrap: wrap; padding-right: 25px; gap: 4px; }
+.is-camp .inheritance-card:first-child > span { flex-basis: 100%; margin: 0; font-size: 11px; }
+.is-camp .inheritance-card[aria-pressed="true"],.is-camp .keepsake-card[aria-pressed="true"] { background: #78874e18; box-shadow: inset 2px 0 #73804e; border-bottom-color: #a0a079; }
+.is-camp .inheritance-card:disabled,.is-camp .keepsake-card:disabled { background: none; border-style: solid; }
+.is-camp .inheritance-card strong { font-size: 14px; }
+.is-camp .inheritance-card :is(span,small) { font-size: 11px; }
+.is-camp .inheritance-card svg { width: 40px; height: 40px; flex-basis: 40px; }
+.is-camp .inheritance-card .inheritance-copy { gap: 4px; padding-right: 8px; }
+.is-camp .inheritance-selection > .record-line { font-size: 11px; margin-top: 12px; }
+.is-camp .companion-guide { margin-top: 10px; }
+.is-camp .camp-controls .keepsake-card:first-child { min-height: 58px; }
+.is-camp .camp-controls .vow-options { grid-template-columns: 1fr; gap: 8px; }
+.is-camp .camp-controls .vow-options button { background: #fff7de30; border: 1px solid #8c8b5f55; box-shadow: none; }
+.is-camp .camp-controls .vow-options button[aria-pressed="true"] { background: #78874e18; border-color: #73804e; }
+.is-camp .camp-departure { grid-column: 3; grid-row: 3; background: var(--app-paper); border: 0; border-radius: 0 0 8px 8px; padding: 0 20px 18px; gap: 10px; box-shadow: 0 12px 20px #07180b22; }
+.is-camp .camp-mission { display: grid; grid-template-columns: auto 1fr auto; gap: 3px 8px; padding: 10px 0; min-height: 56px; border-top: 1px solid #a38c5638; border-bottom: 0; }
+.is-camp .camp-mission > span { display: block; font-size: 10px; }
+.is-camp .camp-mission strong { font-size: 11px; }
+.is-camp .camp-mission small { grid-row: 2; grid-column: 1 / 3; font-size: 10px; }
+.is-camp .camp-mission b { grid-column: 3; grid-row: 1 / 3; }
+.is-camp .departure-summary { display: none; } /* Stats live beside the companion; selected equipment is in the tabs. */
+.is-camp .camp-departure .primary { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; min-height: 56px; border: 1px solid #234b37; border-radius: 4px; color: #f2e3bb; background: #294d38; box-shadow: 0 3px 0 #193a2a; font-size: 17px; }
+.is-camp .camp-departure .primary:hover { background: #365e44; }
+.is-camp .camp-departure .primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #193a2a; }
+.is-camp .storage-note { position: absolute; top: 74px; left: 0; right: 0; z-index: 4; margin: 0; font-size: 11px; }
+
+/* Collection uses the same frame, with a quiet index and an illustrated detail page. */
+.panel.is-codex { grid-template-columns: 88px minmax(0,1fr); grid-template-rows: 74px minmax(0,1fr); }
+.codex-workspace { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; gap: 0; min-width: 0; min-height: 0; padding: 24px; border-radius: 8px; background: var(--app-paper); overflow: hidden; }
+.is-codex .codex-heading { margin: 0; padding: 0 0 18px; border: 0; }
+.is-codex .codex-heading .eyebrow { font-size: 9px; letter-spacing: .16em; margin-bottom: 6px; }
+.is-codex .codex-heading h2 { margin: 0; font-size: 25px; color: #3e533c; }
+.is-codex .codex-back { min-height: 44px; border: 0; background: none; box-shadow: none; font-size: 12px; }
+.is-codex .codex-progress { display: flex; align-items: center; gap: 18px; margin: 0 0 18px; padding: 0 0 18px; border-bottom: 1px solid #9f947044; }
+.is-codex .codex-progress > div { flex-shrink: 0; gap: 12px; }
+.is-codex .codex-progress strong { font-size: 28px; line-height: 1; }
+.is-codex .codex-progress strong span { font-size: 15px; }
+.is-codex .codex-progress > div > span { font-size: 11px; }
+.is-codex .codex-progress progress { margin: 0; height: 3px; max-width: 220px; flex: 1; }
+.is-codex .codex-progress > p { margin: 0 0 0 auto; max-width: 270px; font-size: 11px; }
+.collection-reward-hint { display: flex; flex-wrap: wrap; flex-shrink: 0; gap: 4px 12px; margin: -6px 0 10px; color: #58623e; font-size: 11px; }
+.collection-reward-hint strong { font-weight: 600; color: #3e573a; }
+.is-codex .codex-filters { gap: 5px; padding-bottom: 14px; margin: 0; border: 0; }
+.is-codex .codex-filters button { min-height: 44px; padding: 8px 14px; background: none; border: 0; border-radius: 4px; box-shadow: none; font-size: 12px; }
+.is-codex .codex-filters button[aria-pressed="true"] { background: #456044; color: #f7e9c9; box-shadow: none; }
+.is-codex .codex-filters button[aria-pressed="true"] span { color: #d4dfba; }
+.is-codex .codex-layout { min-height: 0; flex: 1; gap: 24px; margin-top: 0; grid-template-columns: minmax(0,1fr) 280px; }
+.is-codex .codex-grid { gap: 8px; grid-template-columns: repeat(4,minmax(0,1fr)); }
+.is-codex .codex-card { min-height: 156px; padding: 12px 6px; border: 1px solid transparent; border-bottom-color: #a59b7044; border-radius: 4px; box-shadow: none; background: #fff4d52a; }
+.is-codex .codex-art { height: 64px; flex-shrink: 0; }
+.is-codex .codex-art .collection-illustration { width: 60px; height: 60px; }
+.is-codex .codex-card.is-missing { background: none; border-style: solid; }
+.is-codex .codex-card[aria-pressed="true"] { border-color: #6d8050; background: #a7b67b38; box-shadow: none; }
+.is-codex .codex-card::before { display: none; }
+.is-codex .codex-detail { padding: 20px; border: 0; border-left: 1px solid #9b95704d; border-radius: 0; background: #fff3d82b; box-shadow: none; }
+.is-codex .codex-detail::before { display: none; }
+.is-codex .codex-detail h2 { font-size: 24px; }
+.is-codex .codex-detail-art { height: 120px; }
+.is-codex .codex-hint { border-top-color: #9b95704d; }
+
+/* Native modal focus, Escape and inert background come from <dialog>. */
+.app-settings { box-sizing: border-box; width: min(440px,calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 24px; color: #3e533c; background: #e4d7b7; border: 1px solid #c7b78f; border-radius: 10px; box-shadow: 0 24px 100px #071b16a0; font-family: inherit; overflow-y: auto; }
+.app-settings::backdrop { background: #071a18b8; backdrop-filter: blur(5px); }
+.app-settings > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.app-settings h2 { font: 26px var(--display); margin: 3px 0 0; }
+.app-settings .eyebrow { color: #736343; font-size: 9px; margin: 0; letter-spacing: .16em; }
+.app-settings-close { width: 44px; height: 44px; padding: 0; font: 26px system-ui,sans-serif; color: #40523a; border: 1px solid #9b926044; border-radius: 50%; background: #fff7de50; cursor: pointer; }
+.app-settings .preference-options { grid-template-columns: 1fr; gap: 0; }
+.app-settings .preference-options label { border: 0; border-bottom: 1px solid #a99a6f45; background: none; min-height: 64px; padding-inline: 0; font-size: 13px; }
+.app-settings .preference-options input { appearance: none; width: 40px; height: 24px; border: 1px solid #8c8c68; border-radius: 15px; background: #b8b59b; position: relative; transition: background .15s; }
+.app-settings .preference-options input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff5d9; transition: transform .15s; }
+.app-settings .preference-options input:checked { background: #49683c; border-color: #49683c; }
+.app-settings .preference-options input:checked::after { transform: translateX(16px); }
+.app-settings-hint { margin: 18px 0 0; font-size: 11px; color: #73694e; }
+.app-settings :is(button,input,select):focus-visible { outline: 2px solid #526b40; outline-offset: 3px; }
+.panel:is(.is-camp,.is-codex) :is(button,summary):focus-visible { outline: 2px solid #b18a48; outline-offset: 3px; }
+.panel:is(.is-camp,.is-codex) :is(.app-navigation button,.app-tool,.companion-card):focus-visible { outline-color: #f0d598; }
+.panel.is-entering:is(.is-camp,.is-codex) :is(.camp-stage,.camp-controls,.camp-journal,.codex-layout) { animation: app-arrive .18s ease-out both; }
+@keyframes app-arrive { from { opacity: .35; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+@media (max-width:1100px) and (min-width:681px) {
+  .panel:is(.is-camp,.is-codex) { column-gap: 18px; grid-template-columns: 72px minmax(0,1fr) minmax(320px,360px); }
+  .panel.is-codex { grid-template-columns: 72px minmax(0,1fr); }
+  .app-navigation.camp-tabs button { font-size: 10px; }
+  .is-camp .companion-roster .companion-card { flex-direction: column; gap: 3px; padding: 5px 2px; }
+  .is-camp .companion-roster .companion-copy { text-align: center; }
+  .is-camp .companion-roster .companion-art { width: 30px; }
+  .is-codex .codex-layout { grid-template-columns: minmax(0,1fr) 230px; gap: 14px; }
+  .is-codex .codex-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .is-codex .codex-progress > p { display: none; }
+}
+@media (max-width:680px) {
+  .overlay:is([data-screen="prepare"],[data-screen="codex"]) { padding: max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); }
+  .panel:is(.is-camp,.is-codex) { display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: 52px 180px minmax(0,1fr) auto 60px; gap: 8px; max-height: none; }
+  .app-header.camp-heading { grid-column: 1; grid-row: 1; padding: 0 0 8px; }
+  .app-header .camp-brand { gap: 8px; }
+  .app-header .forest-crest { width: 22px; height: 30px; }
+  .app-header h1 { font-size: 21px; }
+  .app-header .eyebrow { font-size: 8px; }
+  .app-chapter { display: none; }
+  .app-tools { gap: 4px; }
+  .app-tool { width: 44px; height: 44px; border: 0; background: none; }
+  .app-navigation.camp-navigation { grid-column: 1; grid-row: 5; flex-direction: row; padding: 0; gap: 6px; border-top: 1px solid #b3c7a52b; }
+  .app-navigation.camp-tabs button,.app-navigation.camp-tabs .codex-door { flex: 1; flex-direction: row; gap: 7px; min-height: 56px; padding: 8px 2px; font-size: 11px; border-radius: 0; }
+  .app-navigation.camp-tabs button svg { width: 20px; height: 20px; }
+  .app-navigation.camp-tabs button[aria-pressed="true"] { box-shadow: inset 0 2px #dabb81; background: none; }
+  .app-navigation.camp-tabs button b { top: 2px; right: 2px; font-size: 8px; background: #293f2c; }
+  .app-navigation.camp-tabs .codex-door small { position: absolute; bottom: 2px; font-size: 8px; }
+  .app-nav-foot { display: none; }
+  .is-camp .camp-stage { grid-column: 1; grid-row: 2; display: grid; grid-template-columns: 110px minmax(0,1fr); grid-template-rows: minmax(0,1fr) auto; gap: 0 10px; height: auto; padding: 0; }
+  .is-camp .camp-scene { grid-column: 1; grid-row: 1 / 3; min-height: 0; height: 100%; display: flex; }
+  .is-camp .camp-stage-caption { grid-column: 2; grid-row: 1; justify-items: start; align-self: center; text-align: left; margin: 0; gap: 3px; padding-bottom: 6px; }
+  .is-camp .camp-stage-caption strong { font-size: 25px; }
+  .is-camp .camp-stage-caption > span { font-size: 10px; }
+  .is-camp .camp-stage-caption small { font-size: 9px; margin-top: 3px; line-height: 1.5; }
+  .is-camp .companion-roster { grid-column: 2; grid-row: 2; }
+  .is-camp .companion-roster .companion-grid { gap: 5px; }
+  .is-camp .companion-roster .companion-card { flex-direction: column; gap: 4px; min-height: 64px; padding: 6px 2px; }
+  .is-camp .companion-roster .companion-art { width: 28px; height: 36px; }
+  .is-camp .companion-roster .companion-copy { text-align: center; }
+  .is-camp .companion-copy strong { font-size: 10px; }
+  .is-camp .companion-copy > span { display: none; }
+  .is-camp .companion-card:disabled .companion-copy > span { display: block; font-size: 9px; line-height: 1.3; }
+  .is-camp .camp-mastery-link,.is-camp .camp-stage-note { display: none; }
+  .is-camp :is(.camp-controls,.camp-journal) { grid-column: 1; grid-row: 3; margin-bottom: -8px; }
+  .is-camp .preparation-links { padding-inline: 5px; }
+  .is-camp .preparation-links button { min-height: 55px; padding: 7px 8px; gap: 3px; }
+  .is-camp .preparation-links strong { font-size: 10px; }
+  .is-camp .preparation-editor,.is-camp .camp-journal { padding: 14px; }
+  .is-camp .preparation-editor .companion-heading { margin-bottom: 9px; }
+  .is-camp .preparation-editor .companion-heading h2 { font-size: 17px; }
+  .is-camp .camp-departure { grid-column: 1; grid-row: 4; padding: 0 14px 12px; gap: 6px; }
+  .is-camp .camp-mission { min-height: 44px; padding: 7px 0; }
+  .is-camp .camp-mission small { display: none; }
+  .is-camp .camp-departure .primary { min-height: 50px; padding: 11px 16px; font-size: 16px; }
+  .panel.is-codex { grid-template-rows: 52px minmax(0,1fr) 60px; }
+  .is-codex .app-navigation { grid-row: 3; }
+  .codex-workspace { grid-column: 1; grid-row: 2; padding: 14px; }
+  .is-codex .codex-heading { padding-bottom: 9px; gap: 8px; }
+  .is-codex .codex-heading h2 { font-size: 17px; }
+  .is-codex .codex-heading .eyebrow { display: none; }
+  .is-codex .codex-back { padding: 4px 0 4px 8px; font-size: 11px; }
+  .is-codex .codex-progress { margin-bottom: 8px; padding-bottom: 9px; gap: 12px; }
+  .is-codex .codex-progress strong { font-size: 22px; }
+  .is-codex .codex-progress > p { display: none; }
+  .collection-reward-hint { margin: 0 0 8px; font-size: 10px; gap: 3px 8px; }
+  .is-codex .codex-filters { gap: 2px; padding-bottom: 8px; flex-wrap: nowrap; }
+  .is-codex .codex-filters button { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 5px 3px; font-size: 11px; min-height: 44px; }
+  .is-codex .codex-filters button span { font-size: 9px; margin: 0; }
+  .is-codex .codex-layout { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+  .is-codex .codex-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .is-codex .codex-detail { border: 0; border-bottom: 1px solid #a69a7244; padding: 12px; flex-shrink: 0; }
+  .is-codex .codex-workspace[data-detail-open="false"] .codex-detail { display: none; }
+  .is-codex .codex-workspace[data-detail-open="true"] .codex-list { display: none; }
+  .is-codex .codex-return { margin: 0 0 14px; padding: 8px 0; min-height: 44px; text-align: left; border: 0; border-bottom: 1px solid #a69a7244; background: none; box-shadow: none; }
+  .is-codex .codex-detail-art { width: 88px; height: 110px; }
+  .is-codex .codex-detail-art .codex-portrait { width: 76px; }
+  .is-codex .codex-detail-art .collection-illustration { width: 80px; height: 80px; }
+  .is-codex .codex-detail h2 { font-size: 22px; }
+}
+@media (max-width:680px) and (max-height:700px) {
+  .panel.is-camp { grid-template-rows: 48px 128px minmax(0,1fr) auto 52px; gap: 6px; }
+  .is-camp .camp-stage { grid-template-columns: 80px minmax(0,1fr); }
+  .is-camp .camp-stage-caption { gap: 2px; padding-bottom: 4px; }
+  .is-camp .camp-stage-caption strong { font-size: 21px; line-height: 1.2; }
+  .is-camp .camp-stage-caption small,.is-camp .camp-stage-caption > span { display: none; }
+  .is-camp .companion-roster .companion-card { min-height: 62px; }
+  .is-camp .preparation-links button { min-height: 49px; }
+  .is-camp :is(.camp-controls,.camp-journal) { margin-bottom: -6px; }
+  .app-navigation.camp-tabs button,.app-navigation.camp-tabs .codex-door { min-height: 50px; }
+}
+@media (min-width:540px) and (max-height:570px) {
+  .overlay:is([data-screen="prepare"],[data-screen="codex"]) { padding: 10px 16px; }
+  .panel:is(.is-camp,.is-codex) { grid-template-rows: 46px minmax(0,1fr) auto; grid-template-columns: 64px minmax(0,1fr) minmax(270px,340px); gap: 10px 16px; }
+  .app-header.camp-heading { grid-column: 1 / -1; padding-bottom: 6px; }
+  .app-header h1 { font-size: 21px; }
+  .app-header .forest-crest { height: 29px; }
+  .app-header .eyebrow,.app-chapter { display: none; }
+  .app-navigation.camp-navigation { grid-column: 1; grid-row: 2 / 4; flex-direction: column; padding: 0; gap: 4px; border: 0; }
+  .app-navigation.camp-tabs button,.app-navigation.camp-tabs .codex-door { flex: 0 0 auto; flex-direction: column; min-height: 65px; padding: 8px 2px; gap: 4px; font-size: 10px; }
+  .app-navigation.camp-tabs button[aria-pressed="true"] { background: #b9ba7930; box-shadow: inset 2px 0 #dbba7b; }
+  .app-navigation.camp-tabs .codex-door small { position: static; font-size: 8px; }
+  .app-navigation.camp-tabs button svg { width: 20px; height: 20px; }
+  .is-camp .camp-stage { grid-column: 2; grid-row: 2 / 4; display: flex; flex-direction: column; }
+  .is-camp .camp-scene { flex: 1; height: auto; min-height: 35px; }
+  .is-camp .camp-stage-caption { align-self: center; justify-items: center; margin: 2px 0 7px; padding: 0; }
+  .is-camp .camp-stage-caption strong { font-size: 22px; }
+  .is-camp .camp-stage-caption small,.is-camp .camp-stage-caption > span,.is-camp .camp-stage-note,.is-camp .camp-mastery-link { display: none; }
+  .is-camp .companion-roster .companion-card { flex-direction: column; min-height: 54px; padding: 4px 2px; gap: 2px; }
+  .is-camp .companion-roster .companion-art { width: 23px; }
+  .is-camp .companion-copy strong { font-size: 9px; }
+  .is-camp .companion-copy > span { display: none; }
+  .is-camp :is(.camp-controls,.camp-journal) { grid-column: 3; grid-row: 2; margin-bottom: -10px; }
+  .is-camp .preparation-links button { min-height: 49px; padding: 6px; }
+  .is-camp .preparation-editor { padding: 12px 16px; }
+  .is-camp .camp-departure { grid-column: 3; grid-row: 3; padding: 0 16px 10px; gap: 4px; }
+  .is-camp .camp-mission { min-height: 44px; padding: 7px 0; }
+  .is-camp .camp-mission small { display: none; }
+  .is-camp .camp-departure .primary { min-height: 46px; padding: 10px 14px; font-size: 16px; }
+  .panel.is-codex { grid-template-columns: 64px minmax(0,1fr); grid-template-rows: 46px minmax(0,1fr); }
+  .codex-workspace { grid-column: 2; grid-row: 2; padding: 12px 16px; }
+  .is-codex .app-navigation { grid-row: 2; }
+  .is-codex .codex-heading { padding: 0; }
+  .is-codex .codex-heading .eyebrow,.is-codex .codex-progress { display: none; }
+  .is-codex .codex-heading h2 { font-size: 20px; }
+  .is-codex .codex-filters { padding-bottom: 6px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .panel.is-entering:is(.is-camp,.is-codex) :is(.camp-stage,.camp-controls,.camp-journal,.codex-layout) { animation: none; }
+}

@@ -17,6 +17,7 @@ import './folio.css';
 import './journey-ui.css';
 import './combat-ui.css';
 import './choice-ui.css';
+import './app-shell.css';
 import { BOSS, bossAttackLabel } from './boss.js';
 import { createGame, startGame, updateGame, chooseUpgrade, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, nextEvolution, RUN_SECONDS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
@@ -76,19 +77,21 @@ let stick = {
 const audio = createAudio();
 const keys = new Set();
 let campView = 'prepare', campSection = 'prepare', codexFilter = 'all', codexSelection = null, preparation = 'inheritance';
-let earnedReceipt = null, rerollFeedback = false;
+let earnedReceipt = null, rerollFeedback = false, codexDetailOpen = false;
 let resultReturn = null, pauseSection = 'equipment';
-const campMemory = {scroll: {}, details: []};
+const campMemory = {scroll: {}, details: {}, returnFocus: '[data-open-codex]'};
+let panelRoute = '';
+let appDialog = null;
 const campDetailSelectors = ['.companion-guide', '.mastery-board', '.journey-board', '.camp-records'];
 function rememberCamp() {
   if (game.phase !== 'ready' || campView !== 'prepare') return;
   const key = campSection === 'journal' ? 'journal' : preparation;
   campMemory.scroll[key] = $('panel').querySelector(campSection === 'journal' ? '.camp-journal' : '.preparation-editor')?.scrollTop ?? 0;
-  campMemory.details = campDetailSelectors.filter(selector => $('panel').querySelector(selector)?.open);
+  campMemory.details[key] = campDetailSelectors.filter(selector => $('panel').querySelector(selector)?.open);
 }
 function restoreCamp() {
-  for (const selector of campMemory.details) { const detail = $('panel').querySelector(selector); if (detail) detail.open = true; }
   const key = campSection === 'journal' ? 'journal' : preparation;
+  for (const selector of campMemory.details[key] ?? []) { const detail = $('panel').querySelector(selector); if (detail) detail.open = true; }
   const scroller = $('panel').querySelector(campSection === 'journal' ? '.camp-journal' : '.preparation-editor');
   if (scroller) scroller.scrollTop = campMemory.scroll[key] ?? 0;
 }
@@ -217,6 +220,8 @@ function selectKeepsake(id) {
   requestAnimationFrame(() => $('panel').querySelector(`[data-keepsake="${id}"]`)?.focus({preventScroll:true}));
 }
 function openCodex() {
+  if (campView === 'codex') return;
+  campMemory.returnFocus = document.activeElement?.matches('[data-open-entry]') ? '[data-open-entry]' : '[data-open-codex]';
   if (game.phase !== 'ready') return;
   rememberCamp();
   campView = 'codex';
@@ -225,7 +230,7 @@ function openCodex() {
 function openCodexEntry(id) {
   const entry = codexEntries(profile).find(entry => entry.id === id);
   if (!entry || game.phase !== 'ready') return;
-  codexFilter = entry.group; codexSelection = id; openCodex();
+  codexFilter = entry.group; codexSelection = id; codexDetailOpen = true; openCodex();
   requestAnimationFrame(() => {
     if (game.phase !== 'ready' || campView !== 'codex') return;
     if (matchMedia('(max-width:680px)').matches) $('panel').querySelector('.codex-detail h2')?.focus({preventScroll:true});
@@ -259,8 +264,8 @@ function setSound(enabled) {
   updateSound();
   return saved;
 }
-function bindPreferences() {
-  for (const control of $('panel').querySelectorAll('[data-preference]')) control.onchange=()=>{
+function bindPreferences(root = $('panel')) {
+  for (const control of root.querySelectorAll('[data-preference]')) control.onchange=()=>{
     const key=control.dataset.preference;
     let saved;
     if(key==='sound') { saved=setSound(control.checked); control.checked=sound; }
@@ -268,7 +273,53 @@ function bindPreferences() {
       preferences[key]=key==='motion' ? control.value : control.checked;
       saved=savePreferences(storage,preferences); applyPreferences();
     }
-    $('panel').querySelector('[data-preference-status]').textContent=saved ? '설정을 기억했어요. 다음 여정에도 적용됩니다.' : '이 창에 적용했어요. 브라우저 저장은 사용할 수 없습니다.';
+    root.querySelector('[data-preference-status]').textContent=saved ? '설정을 기억했어요. 다음 여정에도 적용됩니다.' : '이 창에 적용했어요. 브라우저 저장은 사용할 수 없습니다.';
+  };
+}
+function syncFullscreenControl() {
+  const button = $('panel').querySelector('[data-app-fullscreen]');
+  if (!button) return;
+  button.hidden = !document.fullscreenEnabled;
+  const active = !!document.fullscreenElement;
+  button.setAttribute('aria-pressed', String(active));
+  button.setAttribute('aria-label', active ? '전체 화면 종료' : '전체 화면');
+  button.title = button.getAttribute('aria-label');
+}
+document.addEventListener('fullscreenchange', syncFullscreenControl);
+function bindAppTools() {
+  syncFullscreenControl();
+  $('panel').querySelector('[data-app-fullscreen]').onclick = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch {
+      const status = $('panel').querySelector('[data-app-status]');
+      if (status) status.textContent = '이 브라우저에서 전체 화면을 열 수 없습니다.';
+    }
+  };
+  $('panel').querySelector('[data-app-settings]').onclick = event => {
+    if (appDialog?.open) return;
+    const trigger = event.currentTarget;
+    appDialog = document.createElement('dialog');
+    appDialog.className = 'app-settings';
+    appDialog.setAttribute('aria-labelledby', 'app-settings-title');
+    appDialog.innerHTML = `<header><div><p class="eyebrow">PREFERENCES</p><h2 id="app-settings-title">게임 설정</h2></div><button class="app-settings-close" aria-label="설정 닫기" autofocus>×</button></header>${preferenceControls(preferences, sound)}<p class="app-settings-hint">설정을 바꿔도 여정 기록은 그대로 유지됩니다.</p>`;
+    appDialog.querySelector('[data-preference-status]').textContent = '효과음과 화면 표현을 편하게 맞춰보세요.';
+    document.body.append(appDialog);
+    bindPreferences(appDialog);
+    appDialog.querySelector('.app-settings-close').onclick = () => appDialog.close();
+    appDialog.addEventListener('keydown', event => {
+      if (event.key !== 'Tab') return;
+      const controls = [...appDialog.querySelectorAll('button,input,select')];
+      const first = controls[0], last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
+    appDialog.addEventListener('close', () => {
+      appDialog.remove(); appDialog = null;
+      if (trigger.isConnected) trigger.focus({preventScroll: true});
+    }, {once: true});
+    appDialog.showModal();
   };
 }
 function bindPauseTabs() {
@@ -331,12 +382,12 @@ function closeCodex() {
   }
   campView = 'prepare';
   lastPhase = null; syncPhase();
-  requestAnimationFrame(() => $('panel').querySelector('[data-open-codex]')?.focus({preventScroll: true}));
+  requestAnimationFrame(() => $('panel').querySelector(campMemory.returnFocus)?.focus({preventScroll: true}));
 }
 function changeCampSection(section) {
-  if (game.phase !== 'ready' || campView !== 'prepare' || !['prepare', 'journal'].includes(section)) return;
+  if (game.phase !== 'ready' || !['prepare', 'journal'].includes(section)) return;
   rememberCamp();
-  campSection = section;
+  campView = 'prepare'; resultReturn = null; campSection = section;
   lastPhase = null; syncPhase();
   requestAnimationFrame(() => $('panel').querySelector(`.camp-tabs [data-camp-section="${section}"]`)?.focus({preventScroll: true}));
 }
@@ -346,8 +397,8 @@ function updateCodex(filter, entry) {
   if (entry && !codexEntries(profile).some(e => e.id === entry)) return;
   const gridScroll = $('panel').querySelector('.codex-grid').scrollTop;
   const bodyScroll = $('panel').querySelector('.codex-layout').scrollTop;
-  if (filter) { codexFilter = filter; codexSelection = null; }
-  if (entry) codexSelection = entry;
+  if (filter) { codexFilter = filter; codexSelection = null; codexDetailOpen = false; }
+  if (entry) { codexSelection = entry; codexDetailOpen = true; }
   lastPhase = null; syncPhase();
   $('panel').querySelector('.codex-grid').scrollTop = filter ? 0 : gridScroll;
   $('panel').querySelector('.codex-layout').scrollTop = filter ? 0 : bodyScroll;
@@ -402,6 +453,9 @@ function choose(key) {
 function panel(html, compact = false) {
   $('panel').className = `panel phase-${game.phase}${compact ? ' is-compact' : ''}`;
   $('panel').innerHTML = html;
+  const route = game.phase === 'ready' ? `${campView}:${campView === 'prepare' ? campSection : ''}` : game.phase;
+  if (route !== panelRoute) $('panel').classList.add('is-entering');
+  panelRoute = route;
   // Keep returning to combat reachable while long field notes scroll inside.
   const actions = $('panel').querySelector(':scope > .panel-actions');
   if (actions && ['paused', 'preview', 'event'].includes(game.phase)) {
@@ -424,7 +478,9 @@ function panel(html, compact = false) {
   }
   $('panel').scrollTop = 0;
   requestAnimationFrame(() => {
-    ($('panel').querySelector('#start-game, #restart-game, #resume-game') ?? $('panel').querySelector('button:not(:disabled)'))?.focus({
+    // An early keyboard/tab action takes precedence over the default entry focus.
+    if ($('panel').contains(document.activeElement)) return;
+    ($('panel').querySelector('#start-game, #restart-game, #resume-game') ?? $('panel').querySelector('[data-codex-filter][aria-pressed="true"]') ?? $('panel').querySelector('button:not(:disabled)'))?.focus({
       preventScroll: true
     });
   });
@@ -459,7 +515,7 @@ function syncPhase() {
     return;
   }
   if (game.phase === 'ready') {
-    panel(campView === 'codex' ? codexScreen(profile, codexFilter, codexSelection, !!resultReturn) : campScreen(game, profile, storageWarning, campSection, preparation));
+    panel(campView === 'codex' ? codexScreen(profile, codexFilter, codexSelection, !!resultReturn, codexDetailOpen) : campScreen(game, profile, storageWarning, campSection, preparation));
     $('panel').classList.toggle('is-codex', campView === 'codex');
     $('panel').classList.toggle('is-camp', campView === 'prepare');
     for (const button of $('panel').querySelectorAll('[data-camp-section]')) button.onclick = () => changeCampSection(button.dataset.campSection);
@@ -467,15 +523,23 @@ function syncPhase() {
     $('panel').querySelector('[data-prepare-inheritance]')?.addEventListener('click', event => selectInheritance(event.currentTarget.dataset.prepareInheritance, event.currentTarget.dataset.heir));
     if (campView === 'prepare') restoreCamp();
     bindPreparation();
+    bindAppTools();
     $('panel').querySelector('[data-open-entry]')?.addEventListener('click',event=>openCodexEntry(event.currentTarget.dataset.openEntry));
     $('start-game')?.addEventListener('click', start);
-    $('panel').querySelector('[data-open-codex]')?.addEventListener('click', openCodex);
+    $('panel').querySelector('[data-open-codex]')?.addEventListener('click', () => {
+      codexDetailOpen = false;
+      if (campView === 'codex') { lastPhase = null; syncPhase(); }
+      else openCodex();
+    });
     $('panel').querySelector('[data-close-codex]')?.addEventListener('click', closeCodex);
     for (const button of $('panel').querySelectorAll('[data-codex-filter]')) button.onclick = () => updateCodex(button.dataset.codexFilter);
     for (const button of $('panel').querySelectorAll('[data-codex-entry]')) button.onclick = () => updateCodex(null, button.dataset.codexEntry);
     $('panel').querySelector('[data-codex-list]')?.addEventListener('click', () => {
-      const entry = $('panel').querySelector('[data-codex-entry][aria-pressed="true"]');
-      entry?.scrollIntoView({block: 'center'}); entry?.focus({preventScroll: true});
+      codexDetailOpen = false; lastPhase = null; syncPhase();
+      requestAnimationFrame(() => {
+        const entry = $('panel').querySelector('[data-codex-entry][aria-pressed="true"]');
+        entry?.scrollIntoView({block: 'center'}); entry?.focus({preventScroll: true});
+      });
     });
     for (const button of document.querySelectorAll('[data-keepsake]')) button.onclick = () => selectKeepsake(button.dataset.keepsake);
     for (const button of $('panel').querySelectorAll('[data-vow]')) button.onclick = () => selectVow(button.dataset.vow);
@@ -548,7 +612,7 @@ function syncPhase() {
       if (!entry) return;
       const previous = {game, focus, scroll: $('panel').querySelector('.result-body').scrollTop,
         details: ['.run-notes', '.battle-record'].filter(selector => $('panel').querySelector(selector)?.open)};
-      campSection = 'prepare'; codexFilter = entry.group; codexSelection = id;
+      campSection = 'prepare'; codexFilter = entry.group; codexSelection = id; codexDetailOpen = true;
       camp(); resultReturn = previous; openCodex();
       requestAnimationFrame(() => {
         if (game.phase !== 'ready' || campView !== 'codex') return;
@@ -701,6 +765,7 @@ function tick(now) {
   requestAnimationFrame(tick);
 }
 document.addEventListener('keydown', event => {
+  if (appDialog?.open) return; // The settings dialog owns Escape and its focus loop.
   const key = event.key.toLowerCase();
   if (key === 'tab' && !$('overlay').hidden) {
     const buttons = [...$('panel').querySelectorAll('button,summary,a[href],input,select,[tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length > 0);
@@ -719,6 +784,11 @@ document.addEventListener('keydown', event => {
   }
   // Native dropdown dismissal/typeahead must not resume the battlefield.
   if (event.target.closest?.('select,textarea,input:not([type="checkbox"])')) return;
+  if (key === 'escape' && document.fullscreenElement && !event.repeat) {
+    event.preventDefault();
+    document.exitFullscreen().catch(() => {});
+    return;
+  }
   if ((key === 'escape' || key === 'p') && !event.repeat) {
     event.preventDefault();
     if (game.phase === 'ready' && campView === 'codex') { closeCodex(); return; }
