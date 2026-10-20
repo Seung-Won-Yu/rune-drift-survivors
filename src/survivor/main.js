@@ -1,4 +1,4 @@
-import { growthContext, fieldLoadout, upgradeRecipeHint } from './field-guide.js';
+import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice } from './field-guide.js';
 import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
 import { SIGNATURES, signatureState } from './signature.js';
@@ -72,7 +72,7 @@ let stick = {
   sound = true;
 const audio = createAudio();
 const keys = new Set();
-let campView = 'prepare', campSection = 'prepare', codexFilter = 'all', codexSelection = null, campScroll = 0;
+let campView = 'prepare', campSection = 'prepare', codexFilter = 'all', codexSelection = null, campScroll = 0, preparation = 'inheritance';
 let qaPilot = null;
 try {
   sound = localStorage.getItem('ash-sound') !== 'off';
@@ -149,7 +149,7 @@ function prepareExperiment(key) {
   profile.inheritances[game.characterId] = null;
   profile.goal = null;
   persist();
-  campSection = 'prepare';
+  campSection = 'prepare'; preparation = 'inheritance';
   camp();
   $('start-game').scrollIntoView({block: 'end'});
 }
@@ -161,29 +161,29 @@ function clearExperiment() {
 }
 function selectInheritance(key, id = game.characterId) {
   if (game.phase !== 'ready' || key !== 'none' && !validInheritance(profile, id, key)) return;
-  const scroll = $('panel').querySelector('.camp-controls')?.scrollTop ?? 0;
-  profile.selected = id; campView = 'prepare'; campSection = 'prepare';
+  const scroll = $('panel').querySelector('.preparation-editor')?.scrollTop ?? 0;
+  profile.selected = id; campView = 'prepare'; campSection = 'prepare'; preparation = 'inheritance';
   profile.inheritances[id] = key === 'none' ? null : key;
   profile.experiment = null;
   if (profile.goal?.startsWith('branch:') && primaryBranches(id).includes(profile.goal.slice(7))) profile.goal = null;
   persist(); camp();
-  $('panel').querySelector('.camp-controls').scrollTop = scroll;
+  $('panel').querySelector('.preparation-editor').scrollTop = scroll;
   requestAnimationFrame(() => $('panel').querySelector(`[data-inheritance="${key}"]`)?.focus({preventScroll: true}));
 }
 function selectKeepsake(id) {
   if (game.phase !== 'ready' || !canEquipKeepsake(profile, id)) return;
-  const scrollTop = $('panel').querySelector('.camp-controls')?.scrollTop ?? 0;
+  const scrollTop = $('panel').querySelector('.preparation-editor')?.scrollTop ?? 0;
   const journeyOpen = $('panel').querySelector('.journey-board')?.open;
   profile.keepsake = id;
   persist();
   camp();
   $('panel').querySelector('.journey-board').open = journeyOpen;
-  $('panel').querySelector('.camp-controls').scrollTop = scrollTop;
+  $('panel').querySelector('.preparation-editor').scrollTop = scrollTop;
   requestAnimationFrame(() => $('panel').querySelector(`[data-keepsake="${id}"]`)?.focus({preventScroll:true}));
 }
 function openCodex() {
   if (game.phase !== 'ready') return;
-  campScroll = $('panel').querySelector(campSection === 'journal' ? '.camp-journal' : '.camp-controls')?.scrollTop ?? 0;
+  campScroll = $('panel').querySelector(campSection === 'journal' ? '.camp-journal' : '.preparation-editor')?.scrollTop ?? 0;
   campView = 'codex';
   lastPhase = null; syncPhase();
 }
@@ -196,13 +196,23 @@ function openCodexEntry(id) {
     else { const card=$('panel').querySelector(`[data-codex-entry="${id}"]`); card?.scrollIntoView({block:'nearest'}); card?.focus({preventScroll:true}); }
   });
 }
-function jumpPreparation(section) {
-  const container=$('panel').querySelector('.camp-controls');
-  const target=container?.querySelector(`[data-preparation-section="${section}"]`);
-  if (!target) return;
-  const inset=container.querySelector('.preparation-links').getBoundingClientRect().height+12;
-  container.scrollTop+=target.getBoundingClientRect().top-container.getBoundingClientRect().top-inset;
-  const heading=target.querySelector('h2'); heading.tabIndex=-1; heading.focus({preventScroll:true});
+function changePreparation(section) {
+  if (game.phase !== 'ready' || !['inheritance','keepsake','vow'].includes(section)) return;
+  preparation = section;
+  lastPhase = null; syncPhase();
+  requestAnimationFrame(() => $('panel').querySelector(`[data-preparation-tab="${section}"]`)?.focus({preventScroll:true}));
+}
+function bindPreparation() {
+  const tabs = [...$('panel').querySelectorAll('[data-preparation-tab]')];
+  tabs.forEach((button, index) => {
+    button.onclick = () => changePreparation(button.dataset.preparationTab);
+    button.onkeydown = event => {
+      const next = event.key === 'ArrowRight' ? (index+1)%tabs.length : event.key === 'ArrowLeft' ? (index+tabs.length-1)%tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length-1 : null;
+      if (next === null) return;
+      event.preventDefault(); event.stopPropagation();
+      changePreparation(tabs[next].dataset.preparationTab);
+    };
+  });
 }
 function setSound(enabled) {
   sound=enabled;
@@ -223,9 +233,9 @@ function bindPreferences() {
 }
 function selectVow(id) {
   if (game.phase !== 'ready' || !canTakeVow(profile, id)) return;
-  const scroll = $('panel').querySelector('.camp-controls')?.scrollTop ?? 0;
+  const scroll = $('panel').querySelector('.preparation-editor')?.scrollTop ?? 0;
   profile.vow = id; persist(); camp();
-  $('panel').querySelector('.camp-controls').scrollTop = scroll;
+  $('panel').querySelector('.preparation-editor').scrollTop = scroll;
   requestAnimationFrame(() => $('panel').querySelector(`[data-vow="${id}"]`)?.focus({preventScroll: true}));
 }
 function selectGoal(id) {
@@ -246,7 +256,7 @@ function closeCodex() {
   if (game.phase !== 'ready' || campView !== 'codex') return;
   campView = 'prepare';
   lastPhase = null; syncPhase();
-  $('panel').querySelector(campSection === 'journal' ? '.camp-journal' : '.camp-controls').scrollTop = campScroll;
+  $('panel').querySelector(campSection === 'journal' ? '.camp-journal' : '.preparation-editor').scrollTop = campScroll;
   requestAnimationFrame(() => $('panel').querySelector('[data-open-codex]')?.focus({preventScroll: true}));
 }
 function changeCampSection(section) {
@@ -358,13 +368,13 @@ function syncPhase() {
     return;
   }
   if (game.phase === 'ready') {
-    panel(campView === 'codex' ? codexScreen(profile, codexFilter, codexSelection) : campScreen(game, profile, storageWarning, campSection));
+    panel(campView === 'codex' ? codexScreen(profile, codexFilter, codexSelection) : campScreen(game, profile, storageWarning, campSection, preparation));
     $('panel').classList.toggle('is-codex', campView === 'codex');
     $('panel').classList.toggle('is-camp', campView === 'prepare');
     for (const button of $('panel').querySelectorAll('[data-camp-section]')) button.onclick = () => changeCampSection(button.dataset.campSection);
     $('panel').querySelectorAll('[data-inheritance]').forEach(button => button.onclick = () => selectInheritance(button.dataset.inheritance));
     $('panel').querySelector('[data-prepare-inheritance]')?.addEventListener('click', event => selectInheritance(event.currentTarget.dataset.prepareInheritance, event.currentTarget.dataset.heir));
-    for (const button of $('panel').querySelectorAll('[data-preparation-jump]')) button.onclick=()=>jumpPreparation(button.dataset.preparationJump);
+    bindPreparation();
     $('panel').querySelector('[data-open-entry]')?.addEventListener('click',event=>openCodexEntry(event.currentTarget.dataset.openEntry));
     $('start-game')?.addEventListener('click', start);
     $('panel').querySelector('[data-open-codex]')?.addEventListener('click', openCodex);
@@ -386,14 +396,14 @@ function syncPhase() {
     const recoveryOffered = game.choices.some(key => key === 'heal' || key === 'vitality');
     const choosingBranch = game.choices.some(key => SPECIALIZATIONS[key]);
     panel(`<div class="upgrade-top"><div><p class="eyebrow">성장의 갈림길</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">전투가 잠시 멈췄습니다. 하나를 골라 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${growthContext(game)}${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<div class="upgrade-grid">${game.choices.map((key, i) => {
-      const weapon = weaponPresentation(game, key);
+      const weapon = weaponPresentation(game, key), choice = growthChoice(game, key);
       const m = ['sword', 'ember', 'orbit'].includes(key) ? {
         ...UPGRADE_META[key],
         name: weapon.name,
         color: weapon.color,
         description: weapon.description
       } : UPGRADE_META[key];
-      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small>${game.ranks[key] === 0 && ['sword', 'ember', 'orbit'].includes(key) ? '새로운 무기' : m.kind} · ${game.ranks[key] + 1}단계</small><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span>${upgradeRecipeHint(game,key) ? `<span class="recipe-link">${upgradeRecipeHint(game,key)}</span>` : ''}<span class="pick-label">이 힘 선택 <kbd>${i + 1}</kbd></span></button>`;
+      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-choice-kind="${choice.kind}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<span class="choice-heading"><b>${choice.label}</b><small>${choice.step}</small></span><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change">${upgradeChange(game, key)}</span>${upgradeRecipeHint(game,key) ? `<span class="recipe-link">${upgradeRecipeHint(game,key)}</span>` : ''}<span class="pick-label">${choice.action} <kbd>${i + 1}</kbd></span></button>`;
     }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button><p role="status">${game.rerollsUsed ? '후보가 바뀌었습니다. ' : ''}진화 후보는 유지 · 선택 전 ${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '다른 힘을 찾아보세요'}</p></div>`);
     $('panel').querySelector('[data-reroll]').onclick = () => {
       if (!rerollUpgrades(game)) return;
@@ -412,7 +422,7 @@ function syncPhase() {
     panel(`<p class="eyebrow">저주 상자의 계약</p><h1 id="panel-title">저주를 받아들이겠습니까?</h1><p class="panel-lead">18초 동안 일반 적의 이동 속도와 접촉 피해가 25% 증가합니다.</p><div class="curse-contract"><strong>살아남으면 아래 유물 중 하나 선택</strong><p>지금은 시간이 멈춰 있습니다. 도전을 수락한 뒤부터 저주가 시작됩니다.</p></div>${encounterRewardPreview(game, nearbyChest(game))}<div class="panel-actions"><button id="accept-curse" class="primary">저주를 받아들인다</button><button id="decline-curse" class="secondary">상자를 두고 간다</button></div>`);
     for (const [id, accept] of [['accept-curse',true],['decline-curse',false]]) $(id).onclick = () => { if (chooseCurse(game,accept)) { resetInput(); lastPhase=null; syncPhase(); } };
   } else if (game.phase === 'paused') {
-    panel(`<p class="eyebrow">여정의 쉼표</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">숲도 함께 멈췄습니다.<br>${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p>${preferenceControls(preferences,sound)}${fieldLoadout(game)}${buildSummary(game)}${buildGuide()}<div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
+    panel(`<p class="eyebrow">여정의 쉼표</p><h1 id="panel-title">잠시 쉬어가세요</h1><p class="panel-lead">숲도 함께 멈췄습니다.<br>${formatTime(game.time)} 경과 · ${game.kills} 처치 · 레벨 ${game.level}</p>${fieldLoadout(game)}<details class="run-notes"><summary>이번 판의 효과와 성장 기록</summary>${buildSummary(game)}${buildGuide()}</details>${preferenceControls(preferences,sound)}<div class="panel-actions"><button id="resume-game" class="primary">전투 계속하기</button></div><p class="controls-note">시간과 적의 움직임이 모두 정지되어 있습니다.</p>`, true);
     $('resume-game').onclick = resume;
     bindPreferences();
   } else if (game.phase === 'ended') {
@@ -503,7 +513,7 @@ function updateHud() {
   $('level-badge').textContent = `LV ${game.level}`;
   $('clock').textContent = formatTime(Math.max(0, RUN_SECONDS - game.time));
   $('kills').textContent = game.kills;
-  $('xp-text').textContent = `${game.xp} / ${game.xpNeed}`;
+  $('xp-text').textContent = `${Math.round(game.xp * 10) / 10} / ${game.xpNeed}`;
   $('xp-bar').firstElementChild.style.width = `${Math.min(100, game.xp / game.xpNeed * 100)}%`;
   $('xp-bar').setAttribute('aria-valuenow', String(Math.round(Math.min(100, game.xp / game.xpNeed * 100))));
   const pacing = combatPacing(game);
@@ -737,7 +747,10 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name === 'experiment-offer') {
+      if (name === 'fractional-xp') {
+        game.keepsake = 'bookmark';
+        game.gems.push({x:0,y:0,value:8,age:0}); updateGame(game,1/60);
+      } else if (name === 'experiment-offer') {
         game.level = 4; game.ranks[getCharacter(character).weapon] = 3;
         game.gems.push({x:0,y:0,value:9,age:0}); updateGame(game,1/60);
       } else if (name === 'pacing-surge' || name === 'pacing-rest' || name === 'pacing-boss') {

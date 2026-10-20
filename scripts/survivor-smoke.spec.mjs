@@ -191,7 +191,7 @@ test('codex goal persists, marks eligible growth, records on defeat and complete
   expect(result.profile.goal).toBeNull(); expect(result.profile.characters.ash.branches).toEqual(['duelist', 'sweep']);
   await page.getByRole('button',{name:'동료 선택',exact:true}).click();
   await expect(page.locator('.mastery-board summary')).toContainText('3/3'); expect((await snapshot(page)).rerolls).toBe(2);
-  await page.locator('[data-vow="mist"]').click(); expect((await snapshot(page)).vow).toBe('mist');
+  await page.locator('[data-preparation-tab="vow"]').click(); await page.locator('[data-vow="mist"]').click(); expect((await snapshot(page)).vow).toBe('mist');
   await page.reload(); expect((await snapshot(page)).vow).toBe('mist'); expect((await snapshot(page)).rerolls).toBe(2);
 });
 
@@ -268,8 +268,8 @@ test('three real run discoveries unlock an equippable growth keepsake and its se
   await expect(page.locator('.challenge-reward')).toContainText('첫빛의 책갈피');
   await page.getByRole('button',{name:'동료 선택',exact:true}).click();
   await expect(page.locator('[data-keepsake="bookmark"]')).toBeEnabled();
-  await page.locator('[data-keepsake="bookmark"]').click();
-  await expect(page.locator('.departure-summary')).toContainText('첫 60초 획득 경험치 +20%');
+  await page.locator('[data-preparation-tab="keepsake"]').click(); await page.locator('[data-keepsake="bookmark"]').click();
+  await expect(page.locator('[data-keepsake="bookmark"][aria-pressed="true"]')).toContainText('첫 60초 획득 경험치 +20%');
   await page.reload();await expect(page.locator('[data-keepsake="bookmark"]')).toHaveAttribute('aria-pressed','true');
   await page.locator('[data-open-codex]').click();
   await page.locator('[data-codex-filter="keepsakes"]').click();
@@ -287,7 +287,7 @@ for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740
     await page.setViewportSize(viewport);
     await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,bestTime:60,buildDiscoveries:['sweep','wildfire'],relicDiscoveries:['dew']})));
     await page.reload();
-    await page.locator('[data-keepsake="bookmark"]').click();
+    await page.locator('[data-preparation-tab="keepsake"]').click(); await page.locator('[data-keepsake="bookmark"]').click();
     // Capture preparation separately; the codex is checked at the actual viewport below.
     if(viewport.width===1280) await page.setViewportSize({width:1280,height:1000});
     await page.locator('#overlay').evaluate(el=>el.scrollTop=0);
@@ -408,7 +408,7 @@ test('keepsake selection preserves the experiment without granting its specializ
   await page.locator('.camp-tabs [data-camp-section="journal"]').click();
   await page.locator('.journey-board summary').click();
   await page.locator('.camp-tabs [data-camp-section="prepare"]').click();
-  await page.locator('[data-keepsake="seed"]').click();
+  await page.locator('[data-preparation-tab="keepsake"]').click(); await page.locator('[data-keepsake="seed"]').click();
   await expect(page.locator('.experiment-plan')).toContainText('일점 검법');
   await page.reload(); await page.getByRole('button', {name:'숲에 들어가기'}).click();
   const state = await snapshot(page);
@@ -476,6 +476,7 @@ test('upgrade pauses combat and chained levels show fresh choices', async ({ pag
   await expect(page.locator('[data-upgrade]')).toHaveCount(3);
   await page.waitForTimeout(200);
   expect((await snapshot(page)).time).toBe(paused.time);
+  await expect(page.locator('[data-upgrade="ember"]')).toHaveAttribute('data-choice-kind','new');
   await page.locator('[data-upgrade="ember"]').click();
   await expect(page.locator('.level-medal b')).toHaveText('3');
   await expect(page.locator('[data-upgrade="orbit"]')).toBeVisible();
@@ -510,6 +511,9 @@ test('earned evolution changes the weapon belt and produces piercing crescents',
   await expect(page.locator('#weapons [data-weapon="sword"]')).toHaveClass(/is-ready/);
   await expect(page.locator('#weapons [data-weapon="sword"] .weapon-state')).toHaveText('진화 가능');
   await expect(page.locator('[data-upgrade]').first()).toHaveAttribute('data-upgrade','dawn');
+  await expect(page.locator('[data-upgrade="dawn"]')).toHaveAttribute('data-choice-kind','evolution');
+  await expect(page.locator('[data-upgrade="dawn"] .pick-label')).toContainText('지금 진화하기');
+  await expect(page.locator('.growth-recipe')).toContainText('조건 완성');
   await page.screenshot({ path: 'output/playwright/survivor/evolution-choice.png', animations: 'disabled' });
   await page.locator('[data-upgrade="dawn"]').click();
   await expect(page.locator('#phase-label')).toContainText('진화의 여세');
@@ -540,7 +544,7 @@ for(const [key,name,effect] of [['comet','잿불 혜성','ember-burst'],['lunar'
     await page.waitForFunction(effect=>window.__ASH_QA__.snapshot().effects.includes(effect),effect);
     await page.screenshot({path:`output/playwright/survivor/evolution-${key}.png`,animations:'disabled'});
     await page.getByRole('button',{name:'일시정지',exact:true}).click();
-    await page.locator('.build-guide summary').click();
+    await page.locator('.run-notes summary').first().click(); await page.locator('.build-guide summary').click();
     await expect(page.locator('.build-guide')).toContainText('진화 완료');
     await expect(page.locator('.build-guide')).toContainText('여명의 검');
     await expect(page.locator('.build-guide')).toContainText('잿불 혜성');
@@ -1021,7 +1025,7 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
   await page.locator('.journey-board summary').click();
   await page.locator('.camp-tabs [data-camp-section="prepare"]').click();
   await expect(page.locator('[data-challenge="altar"]')).toContainText('완료');
-  await page.locator('[data-keepsake="seed"]').click();
+  await page.locator('[data-preparation-tab="keepsake"]').click(); await page.locator('[data-keepsake="seed"]').click();
   await expect(page.locator('[data-keepsake="seed"]')).toBeFocused();
   await expect(page.locator('[data-keepsake="seed"]')).toBeInViewport();
   await expect(page.locator('[data-keepsake="seed"]')).toHaveAttribute('aria-pressed','true');
@@ -1044,7 +1048,7 @@ test('legacy earned rewards and storage failure keep optional loadout usable',as
  await expect(page.locator('[data-keepsake="crown"]')).toBeEnabled();
  await expect(page.locator('[data-keepsake="seed"]')).toBeDisabled();
  await page.evaluate(()=>{Storage.prototype.setItem=()=>{throw new DOMException('Quota','QuotaExceededError');};});
- await page.locator('[data-keepsake="crown"]').click();
+ await page.locator('[data-preparation-tab="keepsake"]').click(); await page.locator('[data-keepsake="crown"]').click();
  await expect(page.locator('.storage-note')).toBeVisible();
  await page.getByRole('button',{name:'숲에 들어가기'}).click();expect((await snapshot(page)).player.maxHp).toBe(115);
 });
@@ -1310,7 +1314,7 @@ for (const viewport of [{width:1280,height:720},{width:1280,height:600},{width:3
     await page.locator('#panel').evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
     const before = await page.locator('#start-game').boundingBox();
     await expect(page.locator('#start-game')).toBeInViewport();
-    await page.locator('[data-keepsake="bookmark"]').scrollIntoViewIfNeeded();
+    await page.locator('[data-preparation-tab="keepsake"]').click(); await page.locator('[data-keepsake="bookmark"]').scrollIntoViewIfNeeded();
     const after = await page.locator('#start-game').boundingBox();
     expect(after).toEqual(before);
     await page.locator('.camp-tabs [data-camp-section="journal"]').focus(); await page.keyboard.press('Enter');
@@ -1328,6 +1332,7 @@ for (const viewport of [{width:1280,height:720},{width:1280,height:600},{width:3
     const roster = page.locator('.companion-roster');
     await expect(roster).toBeInViewport({ratio:1});
     for (const id of ['ash','ember','grove']) await expect(roster.locator(`[data-character="${id}"]`)).toBeInViewport({ratio:1});
+    await page.locator('[data-preparation-tab="inheritance"]').click();
     const readable = await page.locator('.companion-signature').evaluate(el => ({size:parseFloat(getComputedStyle(el).fontSize),color:getComputedStyle(el).color}));
     expect(readable.size).toBeGreaterThanOrEqual(12);
     expect(readable.color).toBe('rgb(82, 96, 68)');
@@ -1460,12 +1465,14 @@ test('actual flame release is visible while kiting in both directions and stays 
 });
 
 for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
-  test(`journey preparation links and next mission stay reachable at ${viewport.width}`,async({page})=>{
+  test(`preparation tabs and next mission stay reachable at ${viewport.width}`,async({page})=>{
     await page.setViewportSize(viewport);
     const before=(await snapshot(page)).profile;
     for(const section of ['keepsake','vow','inheritance']) {
-      await page.locator(`[data-preparation-jump="${section}"]`).click();
-      await expect(page.locator(`[data-preparation-section="${section}"] h2`)).toBeFocused();
+      await page.locator(`[data-preparation-tab="${section}"]`).click();
+      await expect(page.locator(`[data-preparation-tab="${section}"]`)).toBeFocused();
+      await expect(page.locator(`[data-preparation-tab="${section}"]`)).toHaveAttribute('aria-selected','true');
+      await expect(page.locator('[role="tabpanel"]:visible')).toHaveCount(1);
       await expect(page.locator(`[data-preparation-section="${section}"] h2`)).toBeInViewport();
       await expect(page.locator('#start-game')).toBeInViewport({ratio:1});
       await expect(page.locator('.camp-mission')).toBeInViewport({ratio:1});
@@ -1509,9 +1516,9 @@ test('journey growth context reflects current ranks and a ready evolution',async
   await expect(page.locator('.growth-recipe')).toContainText('황동 검 1/3');
   await expect(page.locator('[data-upgrade="sword"] .recipe-link')).toContainText('여명의 검');
   await scenario(page,'evolution');
-  await expect(page.locator('.growth-recipe')).toContainText('황동 검 3/3');
-  await expect(page.locator('.growth-recipe')).toContainText('정예 처치 1/1');
-  await expect(page.locator('[data-upgrade="dawn"] .recipe-link')).toHaveText('조건 완성 · 지금 진화');
+  await expect(page.locator('.growth-recipe')).toContainText('조건 완성 · 아래에서 진화하세요');
+  await expect(page.locator('.growth-recipe .recipe-parts')).toHaveCount(0);
+  await expect(page.locator('[data-upgrade="dawn"] .pick-label')).toContainText('지금 진화하기');
   await page.screenshot({path:'output/playwright/survivor/journey-growth.png'});
   await page.locator('[data-upgrade="dawn"]').click();
   await page.locator('[data-inspect-weapon="sword"]').click();
@@ -1534,4 +1541,61 @@ test('journey damage-number preference keeps impact rendering and the simulation
   });
   expect(result.withNumbers).toBeGreaterThan(0);expect(result.withoutNumbers).toBe(0);
   expect(result.unchanged).toBe(true);expect(result.visibleImpact).toBe(true);
+});
+
+
+test('preparation tabs preserve choice, support arrow keys and return from the codex', async ({page}) => {
+  const saved=(await snapshot(page)).profile;
+  await page.locator('[data-preparation-tab="inheritance"]').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('[data-preparation-tab="keepsake"]')).toBeFocused();
+  await expect(page.locator('#prepare-keepsake')).toBeVisible();
+  await page.locator('[data-keepsake="none"]').click();
+  await expect(page.locator('[data-keepsake="none"]')).toBeFocused();
+  await expect(page.locator('[data-preparation-tab="keepsake"]')).toHaveAttribute('aria-selected','true');
+  await page.locator('[data-open-codex]').click(); await page.keyboard.press('Escape');
+  await expect(page.locator('#prepare-keepsake')).toBeVisible();
+  await expect(page.locator('[data-open-codex]')).toBeFocused();
+  await page.locator('[data-preparation-tab="keepsake"]').focus(); await page.keyboard.press('End');
+  await expect(page.locator('[data-preparation-tab="vow"]')).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('[data-preparation-tab="inheritance"]')).toBeFocused();
+  expect((await snapshot(page)).profile).toEqual(saved);
+});
+for(const viewport of [{width:320,height:568},{width:740,height:360}]) {
+  test(`growth decisions stay accessible without page scrolling at ${viewport.width}`,async({page})=>{
+    await page.setViewportSize(viewport);
+    await scenario(page,'recovery-choice');
+    await expect(page.locator('[data-upgrade="sword"]')).toHaveAttribute('data-choice-kind','upgrade');
+    await expect(page.locator('[data-upgrade="heal"]')).toHaveAttribute('data-choice-kind','recovery');
+    await expect(page.locator('[data-upgrade="sword"] .choice-heading')).toContainText('1 → 2단계');
+    await page.locator('[data-upgrade="heal"]').scrollIntoViewIfNeeded();
+    await expect(page.locator('[data-upgrade="heal"]')).toBeInViewport();
+    expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+    await page.screenshot({path:`output/playwright/survivor/benchmark-growth-${viewport.width}.png`,animations:'disabled'});
+    await page.locator('[data-upgrade="heal"]').click();
+    expect((await snapshot(page)).phase).toBe('playing');
+  });
+}
+
+
+test('fractional XP stays precise while its HUD text stays readable',async({page})=>{
+  await scenario(page,'fractional-xp');
+  const before=await snapshot(page);
+  expect(before.xp).toBeCloseTo(1.6,10);
+  await expect(page.locator('#xp-text')).toHaveText('1.6 / 15');
+  await page.locator('[data-upgrade]').first().click();
+  await page.locator('#pause').click();
+  expect((await snapshot(page)).xp).toBe(before.xp);
+});
+test('keyboard can scroll locked preparation choices without moving the page',async({page})=>{
+  await page.setViewportSize({width:320,height:568});
+  await page.locator('[data-preparation-tab="keepsake"]').click();
+  await expect(page.locator('[data-preparation-tab="keepsake"]')).toBeFocused();
+  await page.locator('.preparation-editor').focus();
+  await page.keyboard.press('End');
+  await expect.poll(()=>page.locator('.preparation-editor').evaluate(el=>el.scrollTop)).toBeGreaterThan(0);
+  await expect(page.locator('[data-keepsake="bookmark"]')).toBeInViewport();
+  await expect(page.locator('#start-game')).toBeInViewport({ratio:1});
+  expect(await page.evaluate(()=>document.documentElement.scrollTop)).toBe(0);
 });

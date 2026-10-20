@@ -1,15 +1,33 @@
 /* Field notes: preparation, growth and inspection share the same brass and paper. */
-.preparation-links { position: sticky; top: -22px; z-index: 2; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; margin: -22px -26px 20px; padding: 14px 26px 12px; background: #e9dfc2f5; border-bottom: 1px solid #a9976866; box-shadow: 0 5px 12px #61502b0c; }
-.preparation-links button { display: grid; gap: 5px; min-height: 58px; text-align: left; border: 1px solid #a99b7559; border-radius: 2px; padding: 8px 10px; background: #fff9e747; color: #344c3b; }
-.preparation-links button:hover { background: #fff8e3; border-color: #897043; }
-.preparation-links small { color: #6c6245; font-size: 10px; }
+/* A bounded editor, not three long forms. The selection summary never scrolls. */
+.camp-controls { display: grid; grid-template-rows: auto minmax(0,1fr); overflow: hidden; padding: 0; scrollbar-gutter: auto; }
+.preparation-links { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0; margin: 0; padding: 0 18px; background: #dbcfad; border-bottom: 1px solid #a9976866; }
+.preparation-links button { position: relative; display: grid; align-content: center; gap: 5px; min-height: 73px; text-align: left; border: 0; border-bottom: 3px solid transparent; border-radius: 0; padding: 10px 12px; background: none; color: #344c3b; }
+.preparation-links button:hover { background: #fff8e34d; }
+.preparation-links button[aria-selected='true'] { background: #fff8e37a; border-bottom-color: #526d40; }
+.preparation-links small { color: #6c6245; font-size: 11px; }
+.preparation-links small b { font: 12px Georgia,serif; margin-right: 5px; color: #81704b; }
 .preparation-links strong { font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
-.camp-mission { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 44px; padding: 8px 11px; border: 1px solid #a38c5659; border-left: 3px solid #788056; border-radius: 1px; color: #40523a; background: #d2d6af45; text-align: left; }
+.preparation-links button:focus-visible { outline: 2px solid #516c42; outline-offset: -5px; }
+.preparation-editor { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-color: #8f896f75 transparent; padding: 16px 24px; scroll-padding-block: 12px; }
+.preparation-editor [hidden] { display: none; }
+.camp-controls .inheritance-selection,.camp-controls :is(.departure-kit,.vow-selection) { margin: 0; padding: 0; border: 0; }
+.camp-controls .companion-detail { display: block; margin: 18px 0 0; padding: 0; border: 0; border-top: 1px solid #a6946655; }
+.companion-detail summary { min-height: 44px; padding-block: 12px; width: 100%; color: #536044; }
+.camp-controls .companion-detail strong { font-size: 16px; }
+.camp-controls .camp-objective { margin-top: 16px; }
+.camp-mission { display: flex; align-items: center; gap: 9px; width: 100%; min-width: 0; min-height: 44px; padding: 7px 0; border: 0; border-bottom: 1px solid #a38c5659; border-radius: 0; color: #40523a; background: transparent; text-align: left; }
 .camp-mission > span { flex-shrink: 0; color: #706443; font-size: 10px; }
-.camp-mission strong { font-size: 12px; line-height: 1.5; font-weight: 600; }
+.camp-mission strong { flex-shrink: 0; font-size: 12px; line-height: 1.5; font-weight: 600; }
+.camp-mission > small { min-width: 0; font-size: 10px; color: #696246; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .camp-mission > b { margin-left: auto; font-weight: 400; }
-.camp-mission:hover { background: #d2d6af8a; border-color: #798052; }
-.camp-departure { gap: 9px; padding-top: 11px; }
+.camp-mission:hover { color: #294d2f; border-color: #798052; }
+.camp-departure { gap: 7px; padding: 0 24px 13px; }
+.camp-departure .departure-summary { flex-wrap: nowrap; justify-content: space-between; font-size: 11px; }
+.camp-departure .departure-summary strong { font-size: 11px; font-weight: 500; white-space: nowrap; }
+.camp-departure .departure-summary > span:first-of-type { display: block; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.camp-departure .controls-note { display: none; }
+.camp-departure .primary { min-height: 52px; }
 .growth-context { flex-shrink: 0; border-block: 1px solid #a8976859; padding: 10px 0; margin: 0 0 16px; }
 .growth-loadout { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
 .growth-loadout > span { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; color: #3d523c; }
@@ -26,7 +44,7 @@
 .recipe-complete { color: #40623c; font-size: 12px; }
 .recipe-link { font-size: 11px; color: #4b6b3c; margin-top: 10px; text-align: left; }
 .phase-upgrade .upgrade-top { margin-bottom: 12px; }
-.phase-upgrade .upgrade-card { min-height: 295px; padding-block: 16px; }
+.phase-upgrade .upgrade-card { min-height: 290px; padding-block: 16px; }
 .phase-upgrade .upgrade-icon { height: 68px; margin-block: 6px; }
 .phase-upgrade .upgrade-icon svg { width: 65px; height: 65px; }
 .phase-upgrade .upgrade-card .pick-label { padding-top: 10px; }
@@ -68,10 +86,7 @@
 .signature-pocket[data-state='ready'] .meter,.signature-pocket[data-state='guard'] .meter { box-shadow: 0 0 0 1px #d7d5a933,0 0 12px #e4d18e2c; height: 4px; }
 .signature-pocket[data-state='ready'] #signature-state,.signature-pocket[data-state='guard'] #signature-state { color: #fff1be; font-weight: 700; }
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { animation: none!important; transition: none!important; scroll-behavior: auto!important; }
-@media(max-width:1000px) and (min-width:681px) { .preparation-links { margin-inline: -18px; padding-inline: 18px; } }
 @media(max-width:680px) {
-  .preparation-links { top: -18px; margin: -18px -14px 15px; padding: 10px 14px; gap: 4px; }
-  .preparation-links button { padding: 7px; min-height: 56px; }
   .preparation-links strong { font-size: 11px; }
   .camp-mission { padding: 6px 8px; gap: 7px; }
   .camp-mission strong { font-size: 11px; }
@@ -93,9 +108,6 @@
   .preference-options { grid-template-columns: 1fr; }
 }
 @media(max-height:570px) and (orientation:landscape) {
-  .preparation-links { top: -15px; margin: -15px -15px 12px; padding: 6px 15px; }
-  .preparation-links button { min-height: 44px; gap: 2px; }
-  .preparation-links strong { font-size: 10px; }
   .camp-mission { min-height: 44px; padding: 4px 7px; }
   .camp-mission > span { display: none; }
   .camp-mission strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -107,3 +119,76 @@
   .phase-paused .field-weapon.is-empty { display: block; }
   .phase-paused .field-weapon-heading svg { width: 28px; height: 28px; }
 }
+
+/* Decision labels use words as well as color; all numbers still come from the run. */
+.phase-upgrade .upgrade-card { --decision-ink: #49613e; --decision-wash: #d4dbc0; border-top: 3px solid var(--decision-ink); }
+.phase-upgrade .upgrade-card::before { display: none; }
+.phase-upgrade .upgrade-card[data-choice-kind="evolution"] { --decision-ink: #795621; --decision-wash: #edcf89; background: linear-gradient(145deg,#fff6d6,#e6d3a2); }
+.phase-upgrade .upgrade-card[data-choice-kind="specialization"] { --decision-ink: #85542e; --decision-wash: #e5c7a1; }
+.phase-upgrade .upgrade-card[data-choice-kind="new"] { --decision-ink: #2e6555; --decision-wash: #c5dcc8; }
+.phase-upgrade .upgrade-card[data-choice-kind="recovery"] { --decision-ink: #8b493d; --decision-wash: #e6c6b3; }
+.choice-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 5px; width: 100%; margin-bottom: 5px; }
+.choice-heading > b { font-size: 11px; font-weight: 600; color: var(--decision-ink); background: var(--decision-wash); padding: 4px 7px; }
+.choice-heading > small { font-size: 11px; color: #706143; }
+.phase-upgrade .upgrade-card.is-experiment { padding-top: 29px; }
+.phase-upgrade .upgrade-change { color: #354d36; font-size: 13px; font-weight: 600; line-height: 1.7; }
+.phase-upgrade .upgrade-card > p { margin-bottom: 12px; }
+.phase-upgrade .recipe-link { font-size: 10px; line-height: 1.5; margin: 7px 0; }
+.phase-upgrade .pick-label { color: var(--decision-ink); font-weight: 600; }
+.run-notes { border-block: 1px solid #a6956859; margin-top: 18px; }
+.run-notes > summary { min-height: 44px; padding-block: 12px; color: #48583e; font-size: 12px; cursor: pointer; }
+@media(max-width:1000px) and (min-width:681px) {
+  .camp-controls { padding: 0; }
+  .preparation-links { padding-inline: 8px; }
+  .preparation-editor { padding: 16px; }
+}
+@media(max-width:680px) {
+  .camp-controls { padding: 0; }
+  .preparation-links { padding-inline: 5px; }
+  .preparation-links button { min-height: 62px; padding: 8px; gap: 4px; }
+  .preparation-links strong { font-size: 11px; }
+  .preparation-links small b { display: none; }
+  .preparation-editor { padding: 14px 12px; }
+  .camp-controls .companion-heading { margin-bottom: 8px; }
+  .camp-controls .companion-heading > span { font-size: 10px; }
+  .camp-departure { padding: 0 12px 10px; gap: 6px; }
+  .camp-departure .departure-summary { display: none; }
+  .camp-departure .primary { min-height: 46px; }
+  .camp-mission > small { display: none; }
+  .camp-mission { padding: 6px 0; }
+  .phase-upgrade .upgrade-top { margin-bottom: 8px; }
+  .phase-upgrade .panel-lead { display: none; }
+  .phase-upgrade .upgrade-card { min-height: 0; padding: 12px 12px 10px 68px; }
+  .phase-upgrade .upgrade-card.is-experiment { padding-top: 24px; }
+  .phase-upgrade .upgrade-card .upgrade-icon { width: 46px; height: 46px; left: 10px; top: 38px; margin: 0; }
+  .phase-upgrade .upgrade-icon svg { width: 46px; height: 46px; }
+  .phase-upgrade .upgrade-card > p { font-size: 11px; margin: 4px 0 7px; }
+  .phase-upgrade .upgrade-change { font-size: 11px; padding: 5px 7px; }
+  .phase-upgrade .choice-heading b,.phase-upgrade .choice-heading small { font-size: 10px; }
+  .phase-upgrade .growth-loadout { display: none; }
+  .phase-upgrade .growth-recipe { margin-top: 0; }
+  .phase-upgrade .growth-context { padding: 7px 0; margin-bottom: 10px; }
+  .phase-upgrade .upgrade-card > strong { font-size: 17px; }
+}
+@media(max-height:570px) and (orientation:landscape) {
+  .camp-controls { padding: 0; }
+  .preparation-links { padding-inline: 5px; }
+  .preparation-links button { min-height: 52px; padding: 6px; gap: 3px; }
+  .preparation-links small b { display: none; }
+  .preparation-links strong { font-size: 10px; }
+  .preparation-editor { padding: 12px; }
+  .camp-departure { padding: 0 12px 8px; gap: 4px; }
+  .camp-departure .departure-summary { display: none; }
+  .camp-departure .primary { min-height: 44px; }
+  .camp-mission > small { display: none; }
+  .phase-upgrade .upgrade-card { min-height: 260px; padding: 12px; }
+  .phase-upgrade .upgrade-card .upgrade-icon { position: static; height: 50px; width: 100%; margin-block: 4px; }
+  .phase-upgrade .upgrade-icon svg { width: 50px; height: 50px; }
+  .choice-heading { justify-content: start; }
+}
+
+.camp-controls .keepsake-grid { gap: 6px; }
+.camp-controls .keepsake-card { min-height: 90px; padding: 8px 10px; }
+.camp-controls .keepsake-card:first-child { min-height: 48px; padding-block: 7px; }
+.camp-controls .keepsake-card:last-child { grid-column: auto; }
+.camp-controls .keepsake-card:disabled small { color: #686447; }

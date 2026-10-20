@@ -2,15 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/survivor/game.js';
 import { createProfile } from '../src/survivor/profile.js';
-import { campMission } from '../src/survivor/camp.js';
-import { evolutionProgress, upgradeRecipeHint, growthContext, fieldLoadout } from '../src/survivor/field-guide.js';
+import { campMission, nextGoal } from '../src/survivor/camp.js';
+import { evolutionProgress, upgradeRecipeHint, growthContext, fieldLoadout, growthChoice } from '../src/survivor/field-guide.js';
 import { loadPreferences, savePreferences, reduceMotion, PREFERENCES_KEY } from '../src/survivor/preferences.js';
 
 test('field notes track real evolution requirements without changing the run', () => {
   const game = createGame(42), before = JSON.stringify(game);
   assert.deepEqual(evolutionProgress(game, 'dawn').parts.map(p => p.value), [1, 0, 0]);
   assert.equal(evolutionProgress(game, 'dawn').ready, false);
-  assert.match(upgradeRecipeHint(game, 'orbit'), /여명의 검.*월광 고리/);
+  assert.match(upgradeRecipeHint(game, 'orbit'), /여명의 검 진화 재료/);
   assert.match(growthContext(game), /황동 검/);
   assert.match(fieldLoadout(game), /1단계 \/ 6/);
   assert.equal(JSON.stringify(game), before);
@@ -54,4 +54,28 @@ test('display preferences are isolated from progress and tolerate unavailable st
   assert.equal(reduceMotion({motion:'system'},true),true);
   assert.equal(reduceMotion({motion:'system'},false),false);
   assert.equal(reduceMotion({motion:'reduced'},false),true);
+});
+
+
+test('journal and departure resolve the same discovery after the first rewards', () => {
+  const profile=createProfile();
+  Object.assign(profile,{bestTime:80,totalKills:250,altarRuns:1,wins:1,buildDiscoveries:['sweep','wildfire'],relicDiscoveries:['dew']});
+  const mission=campMission(profile);
+  assert.equal(mission.id,'branch:duelist');
+  assert.ok(nextGoal(profile).startsWith(mission.title));
+  profile.goal='evolution:lunar';
+  assert.ok(nextGoal(profile).startsWith(campMission(profile).title));
+});
+test('growth decisions distinguish acquisition, commitment, evolution and real ranks', () => {
+  const g=createGame(42),before=JSON.stringify(g);
+  assert.equal(growthChoice(g,'ember').kind,'new');
+  assert.equal(growthChoice(g,'sword').step,'1 → 2단계');
+  assert.equal(growthChoice(g,'sweep').kind,'specialization');
+  assert.equal(growthChoice(g,'heal').label,'즉시 회복');
+  assert.equal(growthChoice(g,'vitality').label,'생존 강화');
+  assert.equal(growthChoice(g,'dawn').action,'지금 진화하기');
+  assert.equal(JSON.stringify(g),before);
+  Object.assign(g.ranks,{sword:3,orbit:1});g.eliteKills=1;g.choices=['dawn','might','heal'];
+  assert.match(growthContext(g),/조건 완성 · 아래에서 진화하세요/);
+  assert.doesNotMatch(growthContext(g),/recipe-parts/);
 });
