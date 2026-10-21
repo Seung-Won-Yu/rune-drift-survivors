@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createGame,startGame,updateGame,pauseGame,resumeGame,spawnEnemy,LIMITS} from '../src/survivor/game.js';
-import {RECOVERY,healPlayer,nearestRecovery} from '../src/survivor/field.js';
+import {RECOVERY,healPlayer,nearestRecovery,recoveryTimeLeft} from '../src/survivor/field.js';
 
 function emptyRun(){const game=createGame(42);startGame(game);game.spawnClock=999;game.nextElite=999;return game;}
 test('recovery appears only three times, keeps full-health fruit, and heals actual missing HP once',()=>{
@@ -20,6 +20,18 @@ test('fruit and recovery feedback freeze during pause and expire using simulatio
   const fruit=game.supplies[0],age=fruit.age;pauseGame(game);updateGame(game,1);assert.equal(fruit.age,age);
   resumeGame(game);fruit.age=RECOVERY.lifetime-.001;updateGame(game,1/60);assert.equal(game.supplies.length,0);
   assert.equal(game.player.hp,40);
+});
+test('recovery guidance follows the nearest fruit, movement and its pause-safe expiry',()=>{
+  const game=emptyRun();game.player.hp=40;
+  game.supplies=[{x:110,y:0,age:70.1},{x:-150,y:0,age:20}];
+  let cue=nearestRecovery(game);
+  assert.equal(cue.direction,'오른쪽');assert.equal(cue.distance,110);assert.equal(cue.remaining,10);
+  pauseGame(game);updateGame(game,1);assert.deepEqual(nearestRecovery(game),cue);
+  resumeGame(game);game.player.x=-80;cue=nearestRecovery(game);
+  assert.equal(cue.direction,'왼쪽');assert.equal(cue.distance,70);assert.equal(cue.remaining,60);
+  game.supplies[0].age=RECOVERY.lifetime-.001;updateGame(game,1/60);
+  assert.equal(game.supplies.length,1);assert.equal(nearestRecovery(game).x,-150);
+  assert.equal(recoveryTimeLeft({age:80}),0);assert.equal(recoveryTimeLeft({age:90}),0);
 });
 test('a lethal contact cannot be undone by a nearby fruit in the same step',()=>{
   const game=emptyRun();game.player.hp=1;game.supplies.push({x:0,y:0,age:0});spawnEnemy(game,0,false,{x:0,y:0});updateGame(game,1/60);

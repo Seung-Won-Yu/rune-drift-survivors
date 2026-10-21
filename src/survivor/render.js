@@ -7,7 +7,7 @@ import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
 import { ENCOUNTERS } from './encounters.js';
 import { orbitPositions, SLAM } from './game.js';
 import { BOSS } from './boss.js';
-import { nearestRecovery } from './field.js';
+import { nearestRecovery, recoveryTimeLeft, RECOVERY } from './field.js';
 import { evolutionFeedback, evolutionFrame } from './evolution-feedback.js';
 import { drawWeaponMotif } from './weapon-motifs.js';
 import { drawFootfall, drawMaterialHit, drawChampionCrest } from './combat-ink.js';
@@ -380,6 +380,8 @@ export function createRenderer(canvas, art, preferences = {motion: 'system', dam
       ctx.strokeText(label,0,meta.radius+19);ctx.fillStyle=meta.color;ctx.fillText(label,0,meta.radius+19);ctx.restore();
     }
     for (const supply of game.supplies) {
+      const remaining = recoveryTimeLeft(supply);
+      const label = `+${RECOVERY.amount}${remaining <= 10 ? ` · ${remaining}초` : ''}`;
       shadow(supply.x, supply.y + 3, 17, 6);
       ctx.save();
       ctx.translate(supply.x, supply.y - 12);
@@ -412,9 +414,9 @@ export function createRenderer(canvas, art, preferences = {motion: 'system', dam
       ctx.textAlign = 'center';
       ctx.strokeStyle = '#17251c';
       ctx.lineWidth = 4;
-      ctx.strokeText('+25', 0, 35);
+      ctx.strokeText(label, 0, 35);
       ctx.fillStyle = '#ffe2ae';
-      ctx.fillText('+25', 0, 35);
+      ctx.fillText(label, 0, 35);
       ctx.restore();
     }
     for (const remnant of game.remnants) {

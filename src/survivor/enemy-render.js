@@ -6,9 +6,9 @@ function warningStroke(ctx, color, width = 2) {
   ctx.strokeStyle = '#15231fee'; ctx.lineWidth = width + 4; ctx.stroke();
   ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke();
 }
-function quietBoundary(ctx, color) {
-  ctx.strokeStyle = '#15231f'; ctx.lineWidth = 3.5; ctx.stroke();
-  ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+function quietBoundary(ctx, color, width = 1.5) {
+  ctx.strokeStyle = '#15231f'; ctx.lineWidth = width + 2; ctx.stroke();
+  ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke();
 }
 
 export function drawEnemyGround(ctx, game) {
@@ -16,7 +16,7 @@ export function drawEnemyGround(ctx, game) {
   for (const s of game.spores) {
     const rule = sporeRule(s);
     const active=s.age>=rule.windup;
-    ctx.fillStyle=active?'#b8a16b28':'#b6a06d12';
+    ctx.fillStyle=active?'#b8a16b38':'#b6a06d12';
     ctx.beginPath();ctx.arc(s.x,s.y,rule.radius,0,Math.PI*2);ctx.fill();
   }
   for (const enemy of game.enemies) {
@@ -79,15 +79,29 @@ export function drawEnemyWarnings(ctx, game, reduced) {
     }
     if (enemy.slam && !enemy.slam.hit) {
       const slam = enemy.slam, rule = enemy.elite ? SLAM : GIANT;
-      // One honest footprint. The club pose supplies anticipation; the impact
-      // itself supplies the connection, without text, crosshair or tether.
-      ctx.beginPath(); ctx.arc(slam.x, slam.y, rule.radius, 0, Math.PI * 2); quietBoundary(ctx, '#d8ab86');
+      // The same footprint warms once as the club reaches release. It never
+      // grows, blinks or introduces a second range/target diagram.
+      const urgency = Math.max(0, Math.min(1, (slam.age / rule.windup - .65) / .35));
+      const color = `rgb(${216 + Math.round(39 * urgency)}, ${171 + Math.round(27 * urgency)}, ${134 + Math.round(9 * urgency)})`;
+      ctx.beginPath(); ctx.arc(slam.x, slam.y, rule.radius, 0, Math.PI * 2); quietBoundary(ctx, color, 1.5 + urgency * 1.5);
     }
   }
   for (const s of game.spores) {
     const rule = sporeRule(s);
     const active=s.age>=rule.windup;
-    ctx.beginPath();ctx.arc(s.x,s.y,rule.radius,0,Math.PI*2);quietBoundary(ctx,active?'#9cb786':'#9aab7e');
+    ctx.beginPath();ctx.arc(s.x,s.y,rule.radius,0,Math.PI*2);quietBoundary(ctx,active?'#e0bf83':'#9aab7e',active?2:1.5);
+    if (active) {
+      // Small actual spore plumes replace the ambiguous "three idle dots"
+      // silhouette on activation. All motion uses the hazard's frozen clock.
+      const size = rule.radius / 32;
+      for (let i = 0; i < 5; i++) {
+        const angle = i * Math.PI * 2 / 5;
+        const rise = reduced ? 0 : Math.sin((s.age - rule.windup) * 3 + i) * 2;
+        ctx.fillStyle = i % 2 ? '#b7a66b50' : '#d5c08b60';
+        ctx.beginPath(); ctx.ellipse(s.x + Math.cos(angle) * 12 * size, s.y + (Math.sin(angle) * 10 - rise) * size,
+          10 * size, 8 * size, angle, 0, Math.PI * 2); ctx.fill();
+      }
+    }
     ctx.fillStyle=active?'#d3c992':'#9aab7e';
     for(let i=0;i<3;i++){const a=i*Math.PI*2/3;ctx.beginPath();ctx.arc(s.x+Math.cos(a)*12,s.y+Math.sin(a)*9-(active&&!reduced?Math.sin(game.time*3+i)*2:0),2.5,0,7);ctx.fill();}
   }

@@ -49,7 +49,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice'
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice'
 ].includes(previewScene);
 try {
   storage = visualPreview ? { getItem: () => null, setItem: () => {} } : window.localStorage;
@@ -690,7 +690,7 @@ function updateHud() {
   const recovery = nearestRecovery(game),
     needsRecovery = game.player.hp / game.player.maxHp < .6;
   $('recovery-hint').hidden = !needsRecovery || game.phase !== 'playing';
-  $('recovery-hint').textContent = recovery ? `회복 열매 +${RECOVERY.amount} · ${recovery.direction} 방향으로 이동` : '체력 위험 · 무리의 가장자리로 빠져나오세요';
+  $('recovery-hint').textContent = recovery ? `회복 열매 +${RECOVERY.amount} · ${recovery.direction} · 거리 ${Math.ceil(recovery.distance / 10) * 10}${recovery.remaining <= 10 ? ` · ${recovery.remaining}초 뒤 사라짐` : ''}` : '체력 위험 · 무리의 가장자리로 빠져나오세요';
   const p = game.player;
   const hurt = hurtFeedback(game, reduceMotion(preferences, systemMotion.matches));
   const damage = hurt ? Math.round(hurt.amount * 10) / 10 : 0;
@@ -1233,6 +1233,16 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
         }
         const boss = spawnBoss(game);
         boss.hp = boss.maxHp = 100000;
+      } else if (name === 'field-practice') {
+        game.time = 151; game.nextRecovery = 2; game.nextElite = 999;
+        game.encounters = [{kind:'altar',state:'completed',progress:10,x:0,y:0}, {kind:'chest',state:'declined',progress:0,x:0,y:0}];
+        game.player.hp = 45; game.player.invincible = 0; game.xpNeed = 99999;
+        game.ranks.sword = 3; game.ranks.ember = 2; game.ranks.orbit = 1;
+        game.supplies = [{x:100,y:40,age:71}];
+        game.spores = [{x:-70,y:95,age:.4}, {x:-150,y:80,age:1}];
+        const giant = spawnEnemy(game, 2, false, {x:40,y:-100});
+        giant.slam = {x:20,y:-15,age:.4,hit:false};
+        game.phase = 'paused';
       } else if (name === 'recovery') {
         game.time = 74.99;
         game.nextElite = 999;

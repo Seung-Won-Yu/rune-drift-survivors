@@ -5,6 +5,7 @@ export const RECOVERY = {
   reach: 25,
   limit: 3
 };
+export const recoveryTimeLeft = supply => Math.max(0, Math.ceil(RECOVERY.lifetime - supply.age));
 export function healPlayer(game, amount, source) {
   const healed = Math.min(amount, Math.max(0, game.player.maxHp - game.player.hp));
   if (healed <= 0) return 0;
@@ -53,7 +54,8 @@ export function nearestRecovery(game) {
     return !nearest || distance < nearest.distance ? {
       ...supply,
       distance,
-      direction
+      direction,
+      remaining: recoveryTimeLeft(supply)
     } : nearest;
   }, null);
 }

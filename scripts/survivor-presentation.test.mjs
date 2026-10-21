@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, spawnEnemy, updateGame, SLAM } from '../src/survivor/game.js';
-import { HOUND, GIANT } from '../src/survivor/enemies.js';
+import { HOUND, GIANT, SPORE } from '../src/survivor/enemies.js';
 import { ashFrame, companionFrame, creatureFrame, remnantFrame, bossFrame, bossRemnantFrame } from '../src/survivor/actor-animation.js';
 import { BOSS } from '../src/survivor/boss.js';
 import { drawBossThorn, drawBossRelease } from '../src/survivor/boss-ink.js';
@@ -14,7 +14,7 @@ import { codexEntries } from '../src/survivor/codex.js';
 import { collectionArt } from '../src/survivor/collection-art.js';
 import { attackPose, companionActionPose } from '../src/survivor/impact.js';
 import { heroGait, enemyMotion } from '../src/survivor/motion.js';
-import { CHAMPION_HUNT } from '../src/survivor/champions.js';
+import { CHAMPION_HUNT, CHAMPION_SPORE } from '../src/survivor/champions.js';
 import { evolutionFeedback, evolutionFrame } from '../src/survivor/evolution-feedback.js';
 import { weaponPresentation, weaponLoadout, weaponBeltKey } from '../src/survivor/weapon-presentation.js';
 import { SPECIALIZATIONS } from '../src/survivor/expansion.js';
@@ -144,6 +144,43 @@ test('ordinary warnings omit text and target tethers; hound motion follows the a
   const dash=drawingCalls(ctx=>drawEnemyWarnings(ctx,game,false));
   assert.deepEqual(dash.find(c=>c[0]==='translate'),['translate',-55,-12]);
   assert.ok(!drawingCalls(ctx=>drawEnemyWarnings(ctx,game,true)).some(c=>c[0]==='lineTo'));
+});
+
+test('spore plumes appear at actual activation and stay inside the existing footprint', () => {
+  for (const royal of [false,true]) {
+    const rule=royal?CHAMPION_SPORE:SPORE;
+    const game={time:1,enemies:[],spores:[{x:0,y:0,age:rule.windup-.001,royal}]};
+    assert.ok(!drawingCalls(ctx=>drawEnemyWarnings(ctx,game,false)).some(c=>c[0]==='ellipse'));
+    game.spores[0].age=rule.windup;
+    const before=JSON.stringify(game),calls=drawingCalls(ctx=>drawEnemyWarnings(ctx,game,false));
+    assert.deepEqual(calls,drawingCalls(ctx=>drawEnemyWarnings(ctx,game,false)));
+    assert.equal(JSON.stringify(game),before);assert.ok(calls.length<90);
+    const plumes=calls.filter(c=>c[0]==='ellipse');assert.equal(plumes.length,5);
+    for(const c of plumes)assert.ok(Math.hypot(c[1],c[2])+Math.max(c[3],c[4])<rule.radius);
+    const calm=drawingCalls(ctx=>drawEnemyWarnings(ctx,game,true));
+    game.spores[0].age+=.4;
+    assert.deepEqual(calm,drawingCalls(ctx=>drawEnemyWarnings(ctx,game,true)));
+    assert.ok(!calls.some(c=>['fillText','strokeText','setLineDash'].includes(c[0])));
+  }
+});
+
+test('slam anticipation intensifies once without enlarging the damage footprint', () => {
+  for(const elite of [false,true]) {
+    const rule=elite?SLAM:GIANT,slam={x:20,y:30,age:0,hit:false};
+    const game={time:0,spores:[],enemies:[{type:2,elite,slam}]};
+    let previous=0;
+    for(const progress of [0,.65,.8,.95,1]) {
+      slam.age=rule.windup*progress;
+      const before=JSON.stringify(game),calls=drawingCalls(ctx=>drawEnemyWarnings(ctx,game,false));
+      assert.equal(JSON.stringify(game),before);
+      assert.deepEqual(calls.filter(c=>c[0]==='arc'),[['arc',20,30,rule.radius,0,Math.PI*2]]);
+      const width=calls.filter(c=>c[0]==='lineWidth').at(-1)[1];
+      assert.ok(width>=previous && width<=3);previous=width;
+      assert.deepEqual(calls,drawingCalls(ctx=>drawEnemyWarnings(ctx,game,true)));
+    }
+    slam.hit=true;
+    assert.ok(!drawingCalls(ctx=>drawEnemyWarnings(ctx,game,false)).some(c=>c[0]==='arc'));
+  }
 });
 
 test('ground and fire impacts remain bounded, deterministic and free of full-radius target rings', () => {

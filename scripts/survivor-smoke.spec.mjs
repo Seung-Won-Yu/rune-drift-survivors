@@ -661,6 +661,32 @@ test('manual boss practice keeps real damage, weapon clocks and the pause contro
   expect((await snapshot(page)).phase).toBe('playing');
 });
 
+for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+  test(`expiring fruit guidance stays readable and pause-safe at ${viewport.width}px`,async({page})=>{
+    await page.setViewportSize(viewport);await scenario(page,'field-practice');
+    await page.locator('#resume-game').click();
+    const hint=page.locator('#recovery-hint');
+    await expect(hint).toContainText('회복 열매 +25 · 오른쪽 · 거리 110');
+    await expect(hint).toContainText('초 뒤 사라짐');
+    const boxes=await page.locator('#recovery-hint, #weapons, #touch').evaluateAll(elements=>elements.map(el=>el.getBoundingClientRect().toJSON()).filter(b=>b.width&&b.height));
+    for(let i=0;i<boxes.length;i++) {
+      const a=boxes[i];expect(a.x).toBeGreaterThanOrEqual(0);expect(a.right).toBeLessThanOrEqual(viewport.width);
+      expect(a.y).toBeGreaterThanOrEqual(0);expect(a.bottom).toBeLessThanOrEqual(viewport.height);
+      for(const b of boxes.slice(i+1))expect(a.x>=b.right||b.x>=a.right||a.y>=b.bottom||b.y>=a.bottom).toBe(true);
+    }
+    await page.screenshot({path:`output/playwright/survivor/field-guidance-${viewport.width}.png`});
+    await page.keyboard.press('Escape');const paused=await snapshot(page);
+    await page.waitForTimeout(250);expect((await snapshot(page)).supplies).toEqual(paused.supplies);
+    await page.locator('#resume-game').click();
+    await page.keyboard.down('d');await page.waitForTimeout(590);await page.keyboard.up('d');
+    await page.keyboard.down('s');
+    await expect.poll(async()=> (await snapshot(page)).healing.field).toBe(25);
+    await page.keyboard.up('s');
+    await expect(hint).not.toContainText('초 뒤 사라짐');
+    expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  });
+}
+
 for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]){
   test(`boss patterns and HUD are readable at ${viewport.width}x${viewport.height}`,async({page})=>{
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
