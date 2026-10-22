@@ -6,6 +6,45 @@ test.afterEach(async({page})=>{expect(pageErrors.get(page)??[], 'browser runtime
 const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
+  test(`departure comparisons match selected equipment and remain visible at ${viewport.width}`,async({page})=>{
+    await page.setViewportSize(viewport);
+    await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,selected:'grove',bestTime:300,totalKills:500,wins:1,altarRuns:1,buildDiscoveries:['sweep','wildfire'],discoveries:['dawn'],keepsake:'crown'})));
+    await page.reload();
+    const before=await snapshot(page), stat=key=>page.locator(`[data-departure-stat="${key}"]`);
+    for(const [id,hp,speed] of [['ash',115,160],['ember',100,176],['grove',140,148]]) {
+      await page.locator(`[data-character="${id}"]`).click();
+      await expect(stat('hp')).toHaveText(String(hp));await expect(stat('speed')).toHaveText(String(speed));
+      await expect(page.locator('.departure-stats')).toBeInViewport({ratio:1});
+    }
+    await page.locator('[data-preparation-tab="keepsake"]').click();
+    const seed=page.locator('[data-keepsake="seed"]');
+    await expect(seed).toContainText('140 → 115');await expect(seed).toContainText('148 → 156');await expect(seed).toContainText('64 → 92');
+    await seed.click();await expect(seed).toBeFocused();
+    await expect(seed.locator('.keepsake-comparison')).toHaveCount(0);
+    await expect(stat('hp')).toHaveText('115');await expect(stat('magnet')).toHaveText('92');
+    await expect(page.locator('[data-keepsake="crown"]')).toContainText('115 → 140');
+    await page.screenshot({path:`output/playwright/survivor/preparation-comparison-${viewport.width}.png`,animations:'disabled'});
+    await page.locator('[data-keepsake="bookmark"]').click();
+    await page.locator('[data-preparation-tab="vow"]').click();
+    await expect(page.locator('[data-vow="mist"] .vow-growth')).toContainText('첫 60초 획득 경험치 +35% · 이후 +15%');
+    await page.locator('[data-vow="mist"]').click();
+    await page.locator('[data-preparation-tab="keepsake"]').click();
+    await expect(page.locator('[data-keepsake="bookmark"]')).toContainText('첫 60초 획득 경험치 +35% · 이후 +15%');
+    await page.reload();
+    expect((await snapshot(page)).profile.runs).toBe(before.profile.runs);
+    expect((await snapshot(page)).profile.history).toEqual(before.profile.history);
+    await expect(stat('hp')).toHaveText('125');
+    await expect(page.locator('#start-game')).toBeInViewport({ratio:1});
+    await expect(page.locator('.companion-roster')).toBeInViewport({ratio:1});
+    expect(await page.locator('.preparation-editor').evaluate(el=>el.clientHeight)).toBeGreaterThanOrEqual(44);
+    expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+    await page.locator('#start-game').click();
+    const started=await snapshot(page);expect(started.phase).toBe('playing');expect(started.vow).toBe('mist');expect(started.keepsake).toBe('bookmark');
+    expect(started.player.maxHp).toBe(125);expect(started.ranks.orbit).toBe(1);expect(started.level).toBe(1);
+  });
+}
+
 for (const width of [1280,320]) {
   test(`ember build rewards and next evolution stay truthful at ${width}px`, async ({page}) => {
     await page.setViewportSize({width,height:720});await scenario(page,'ember-coal');

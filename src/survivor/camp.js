@@ -9,6 +9,7 @@ import { primaryBranches, validInheritance, masteryProgress, masteryCount, VOWS,
 import { goalMeta, goalProgress } from './goals.js';
 import { collectionArt } from './collection-art.js';
 import { appHeader, appNavigation } from './app-shell.js';
+import { preparationPreview, experiencePreview, keepsakeComparison } from './preparation-preview.js';
 export const formatTime = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 const outcomeName = {
   victory: '군주 격파',
@@ -93,9 +94,10 @@ function companionRoster(game, profile) {
   }).join('')}</div></div>`;
 }
 function departureKit(game, profile) {
-  return `<section data-preparation-section="keepsake" class="departure-kit" aria-labelledby="keepsake-title"><div class="companion-heading"><h2 id="keepsake-title">출발 기념품</h2><span>하나를 골라 가져가세요</span></div><div class="keepsake-grid" role="group" aria-label="출발 기념품">${Object.entries(KEEPSAKES).map(([id, item]) => {
+  return `<section data-preparation-section="keepsake" class="departure-kit" aria-labelledby="keepsake-title"><div class="companion-heading"><h2 id="keepsake-title">출발 기념품</h2><span id="keepsake-compare-note">하나를 선택 · 화살표는 현재 준비와 비교</span></div><div class="keepsake-grid" role="group" aria-label="출발 기념품">${Object.entries(KEEPSAKES).map(([id, item]) => {
     const unlocked = canEquipKeepsake(profile, id), challenge = CHALLENGES.find(c => c.reward === id);
-    return `<button class="keepsake-card" data-keepsake="${id}" aria-pressed="${profile.keepsake === id}" ${unlocked ? '' : 'disabled'}><span class="keepsake-art">${collectionArt(id, !unlocked)}</span><span class="keepsake-copy"><strong>${item.name}</strong><span>${item.change}</span><small>${unlocked ? profile.keepsake === id ? '이번 출발에 선택됨' : '선택하기' : `${challenge.name} ${challengeProgress(profile, challenge)}/${challenge.target}`}</small></span></button>`;
+    const selected = profile.keepsake === id, comparison = unlocked && !selected ? keepsakeComparison(game,id) : [];
+    return `<button class="keepsake-card" data-keepsake="${id}" aria-pressed="${selected}" aria-describedby="keepsake-compare-note" ${unlocked ? '' : 'disabled'}><span class="keepsake-art">${collectionArt(id, !unlocked)}</span><span class="keepsake-copy"><strong>${item.name}</strong><span>${item.xpSeconds ? experiencePreview(game,id) : item.change}</span>${comparison.length ? `<span class="keepsake-comparison">${comparison.map(row=>`<span class="is-${row.after > row.before ? 'gain' : 'cost'}">${row.label} <b>${row.before} → ${row.after}</b></span>`).join('')}</span>` : ''}<small>${unlocked ? selected ? '이번 출발에 선택됨' : '선택하기' : `${challenge.name} ${challengeProgress(profile, challenge)}/${challenge.target}`}</small></span>${selected ? '<b class="selection-mark" aria-hidden="true">✓</b>' : ''}</button>`;
   }).join('')}</div></section>`;
 }
 function masteryBoard(game, profile) {
@@ -103,7 +105,7 @@ function masteryBoard(game, profile) {
   return `<details class="mastery-board"><summary>${c.name}의 숙련 <span>${count}/3 인장 · 성장 다시 뽑기 ${game.rerolls}회</span></summary><p class="record-line">이 동료로 달성한 기록이 남습니다. 인장 3개를 모으면 이 동료의 다시 뽑기가 매 판 1회 늘어납니다.</p><div class="mastery-seals">${masteryProgress(profile, c.id).map(seal => `<article class="${seal.current >= seal.target ? 'complete' : ''}"><strong>${seal.name}</strong><span>${seal.current}/${seal.target}</span></article>`).join('')}</div><p class="record-line">${UPGRADE_META[c.weapon].name}의 두 전문화를 서로 다른 판에서 선택 · ${UPGRADE_META[c.evolution].name} 진화 · 군주 격파</p>${profile.characters[c.id].vowWins ? `<p class="record-line">짙은 안개 군주 격파 ${profile.characters[c.id].vowWins}회</p>` : ''}</details>`;
 }
 function vowSelection(game, profile) {
-  return `<section data-preparation-section="vow" class="vow-selection" aria-label="숲의 서약"><div class="companion-heading"><h2>숲의 서약</h2><span>첫 군주 격파 후 도전 해금</span></div><div class="vow-options" role="group" aria-label="여정 난이도">${Object.entries(VOWS).map(([id, vow]) => `<button class="secondary" data-vow="${id}" aria-pressed="${game.vow === id}" ${canTakeVow(profile, id) ? '' : 'disabled'}><strong>${vow.name}</strong><span>${vow.change}</span>${canTakeVow(profile, id) ? '' : '<small>군주를 한 번 쓰러뜨리면 열립니다</small>'}</button>`).join('')}</div><p class="record-line">도전 격파 기록은 동료별로 남습니다. 경험치 보너스는 기념품과 합산합니다.</p></section>`;
+  return `<section data-preparation-section="vow" class="vow-selection" aria-label="숲의 서약"><div class="companion-heading"><h2>숲의 서약</h2><span>첫 군주 격파 후 도전 해금</span></div><div class="vow-options" role="group" aria-label="여정 난이도">${Object.entries(VOWS).map(([id, vow]) => `<button class="secondary" data-vow="${id}" aria-pressed="${game.vow === id}" ${canTakeVow(profile, id) ? '' : 'disabled'}><strong>${vow.name}</strong><span>${vow.change}</span><small class="vow-growth">${experiencePreview(game,game.keepsake,id)}${game.keepsake === 'bookmark' ? ' · 책갈피 포함' : ''}</small>${canTakeVow(profile, id) ? '' : '<small>군주를 한 번 쓰러뜨리면 열립니다</small>'}</button>`).join('')}</div><p class="record-line">도전 격파 기록은 동료별로 남습니다. 경험치 보너스는 기념품과 합산합니다.</p></section>`;
 }
 function goalPlan(game, profile) {
   const meta = goalMeta(game.goal);
@@ -115,8 +117,9 @@ export function campScreen(game, profile, warning, section = 'prepare', preparat
   const c = getCharacter(game.characterId), record = profile.characters[c.id];
   const entries = codexEntries(profile), found = entries.filter(e => e.found).length;
   const k = keepsakeStats(profile.keepsake), mastery = masteryCount(profile, c.id), mission = campMission(profile);
+  const prepared = preparationPreview(game);
   return `${appHeader('잿빛의 숲')}${appNavigation(section, found, entries.length, profile)}
-  <div class="camp-content"><aside class="camp-stage" aria-label="선택한 동료와 전투 방식"><div class="camp-scene" aria-hidden="true"><div class="camp-stage-light"></div><img class="hero-art camp-portrait" src="${import.meta.env.BASE_URL}art/survivor/portrait-${c.id}-v1.webp" width="1024" height="1536" alt="" decoding="async"></div><div class="camp-stage-caption"><small>${UPGRADE_META[c.weapon].name} · 체력 ${game.player.maxHp} · 이동 ${c.speed + k.speed}</small><strong>${c.name}</strong><span>${c.title}</span></div>${companionRoster(game, profile)}<button class="camp-mastery-link" data-camp-section="journal">숙련 인장 ${mastery}/3 <span>다시 뽑기 ${game.rerolls}회 →</span></button>
+  <div class="camp-content"><aside class="camp-stage" aria-label="선택한 동료와 전투 방식"><div class="camp-scene" aria-hidden="true"><div class="camp-stage-light"></div><img class="hero-art camp-portrait" src="${import.meta.env.BASE_URL}art/survivor/portrait-${c.id}-v1.webp" width="1024" height="1536" alt="" decoding="async"></div><div class="camp-stage-caption"><small>${UPGRADE_META[c.weapon].name} · 1단계로 출발</small><strong>${c.name}</strong><span>${c.title}</span><dl class="departure-stats" aria-label="현재 출발 능력">${[['hp','체력'],['speed','이동'],['magnet','수집']].map(([key,label])=>`<div><dt>${label}</dt><dd data-departure-stat="${key}">${prepared[key]}</dd></div>`).join('')}</dl></div>${companionRoster(game, profile)}<button class="camp-mastery-link" data-camp-section="journal">숙련 인장 ${mastery}/3 <span>다시 뽑기 ${game.rerolls}회 →</span></button>
   <div class="camp-stage-note"><p>${companionRhythm[c.id]}</p></div></aside>
   <section class="camp-controls camp-section" aria-label="출발 준비" ${section === 'prepare' ? '' : 'hidden'}>
   ${preparationLinks(game, profile, preparation)}<div class="preparation-editor" tabindex="0" role="region" aria-label="준비 선택 목록">

@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame } from '../src/survivor/game.js';
+import { createGame, stats } from '../src/survivor/game.js';
+import { preparationPreview, experiencePreview, keepsakeComparison } from '../src/survivor/preparation-preview.js';
+import { KEEPSAKES, keepsakeXpMultiplier } from '../src/survivor/journey.js';
+import { vowStats } from '../src/survivor/progression.js';
 import { createProfile, recordRun } from '../src/survivor/profile.js';
 import { campMission, nextGoal, resultTakeaway, resultOverview } from '../src/survivor/camp.js';
 import { inheritanceHint } from '../src/survivor/codex.js';
@@ -9,6 +12,36 @@ import { relicEffect } from '../src/survivor/expansion.js';
 import { loadPreferences, savePreferences, reduceMotion, PREFERENCES_KEY } from '../src/survivor/preferences.js';
 import { choiceReceipt } from '../src/survivor/choice-feedback.js';
 import { bossAttackLabel, BOSS } from '../src/survivor/boss.js';
+
+test('preparation forecasts match actual starting runs across companions, equipment and vows', () => {
+  for(const character of ['ash','ember','grove']) for(const current of Object.keys(KEEPSAKES)) {
+    const game=createGame(42,character,current), before=JSON.stringify(game);
+    for(const candidate of Object.keys(KEEPSAKES)) for(const vow of ['none','mist']) {
+      const preview=preparationPreview(game,candidate,vow), actual=createGame(42,character,candidate,null,{vow});
+      assert.equal(preview.hp,actual.player.maxHp);
+      assert.equal(preview.speed,Math.round(stats(actual).speed));
+      assert.equal(preview.magnet,Math.round(stats(actual).magnet));
+      assert.equal(preview.xp,Math.round((keepsakeXpMultiplier(actual)-1+vowStats(vow).xpBonus)*100));
+      actual.time=60;
+      assert.equal(preview.laterXp,Math.round((keepsakeXpMultiplier(actual)-1+vowStats(vow).xpBonus)*100));
+    }
+    assert.equal(JSON.stringify(game),before);
+  }
+});
+
+test('keepsake comparison uses the equipped item and experience bonuses add for the first minute', () => {
+  const game=createGame(42,'grove','crown');
+  assert.deepEqual(keepsakeComparison(game,'seed'),[
+    {key:'hp',label:'체력',before:140,after:115},
+    {key:'speed',label:'이동',before:148,after:156},
+    {key:'magnet',label:'수집',before:64,after:92}
+  ]);
+  assert.deepEqual(keepsakeComparison(game,'crown'),[]);
+  assert.equal(experiencePreview(game,'bookmark','mist'),'첫 60초 획득 경험치 +35% · 이후 +15%');
+  assert.equal(experiencePreview(game,'bookmark','none'),'첫 60초 획득 경험치 +20%');
+  assert.equal(experiencePreview(game,'seed','mist'),'획득 경험치 +15%');
+  assert.equal(experiencePreview(game,'none','none'),'획득 경험치 기본');
+});
 
 test('evolution guidance follows owned weapons and distinguishes completion from acquisition', () => {
   const g=createGame(42,'ember');
