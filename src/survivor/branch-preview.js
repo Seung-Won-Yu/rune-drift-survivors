@@ -39,6 +39,7 @@ export function openBranchPreview({branches,characterId,art,preferences,onClose}
   let painter, demo, frame=0, last=0, accumulator=0, selected=options[0], disposed=false;
   const system=matchMedia('(prefers-reduced-motion: reduce)');
   const canvas=dialog.querySelector('canvas');
+  const resize=new ResizeObserver(()=>{if(painter && !disposed && dialog.open) draw();});
   const reduced=()=>reduceMotion(preferences,system.matches);
   const step=()=>{ updateGame(demo,1/60,{x:0,y:0});demo.events.length=0; };
   function draw() { painter.render(demo,demo.time*1000); }
@@ -96,13 +97,14 @@ export function openBranchPreview({branches,characterId,art,preferences,onClose}
   dialog.querySelector('.branch-preview-close').onclick=()=>dialog.close();
   dialog.querySelector('[data-close-demo]').onclick=()=>dialog.close();
   dialog.addEventListener('close',()=>{
-    disposed=true;cancelAnimationFrame(frame);
+    disposed=true;cancelAnimationFrame(frame);resize.disconnect();
     document.removeEventListener('visibilitychange',visibility);system.removeEventListener('change',motion);
     dialog.remove();painter=null;demo=null;onClose?.();
   },{once:true});
   dialog.showModal();
   painter=createRenderer(canvas,art,{...preferences,damageNumbers:false});
   select(selected);
+  resize.observe(canvas);
   document.addEventListener('visibilitychange',visibility);system.addEventListener('change',motion);
   return dialog;
 }

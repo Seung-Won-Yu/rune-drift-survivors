@@ -55,6 +55,10 @@ test('reduced motion keeps branch comparison still and restores the selection fo
  const before=await dialog.locator('canvas').evaluate(el=>el.toDataURL());
  await page.waitForTimeout(250);
  expect(await dialog.locator('canvas').evaluate(el=>el.toDataURL())).toBe(before);
+ await page.setViewportSize({width:740,height:360});
+ await expect.poll(()=>dialog.locator('canvas').evaluate(el=>el.width===Math.round(el.clientWidth*Math.min(devicePixelRatio,2)) && el.height===Math.round(el.clientHeight*Math.min(devicePixelRatio,2)))).toBe(true);
+ const rotated=await dialog.locator('canvas').evaluate(el=>el.toDataURL());
+ await page.waitForTimeout(100);expect(await dialog.locator('canvas').evaluate(el=>el.toDataURL())).toBe(rotated);
  await page.keyboard.press('Shift+Tab');await expect(dialog.getByRole('button',{name:'선택 화면으로'})).toBeFocused();
  await page.keyboard.press('Tab');await expect(dialog.getByRole('button',{name:'미리보기 닫기'})).toBeFocused();
  await page.keyboard.press('Escape');await expect(page.locator('[data-preview-branches]')).toBeFocused();
