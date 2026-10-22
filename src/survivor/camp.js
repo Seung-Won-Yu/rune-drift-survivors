@@ -165,7 +165,7 @@ export function resultTakeaway(game, profile, rewards = {}) {
   if (entry) {
     feature = {
       id, title: entry.name, detail: entry.change || entry.description,
-      label: keepsake ? '다음 출발에 가져갈 수 있어요' : id.startsWith('companion:') ? '새로운 시작 무기가 열렸어요' : '쓰러져도 이 발견은 남아요',
+      label: keepsake ? '다음 출발에 가져갈 수 있어요' : id.startsWith('companion:') ? '새로운 시작 무기가 열렸어요' : game.outcome === 'defeat' ? '쓰러져도 이 발견은 남아요' : '이번 여정의 발견을 도감에 새겼어요',
       action: keepsake ? '기념품 준비하기' : id.startsWith('companion:') ? '새 동료 살펴보기' : '발견한 도감 펼치기',
       preparation: keepsake ? 'keepsake' : null, keepsake
     };

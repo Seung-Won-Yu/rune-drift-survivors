@@ -646,6 +646,26 @@ for(const [key,name,effect] of [['comet','잿불 혜성','ember-burst'],['lunar'
   });
 }
 
+for (const reduced of [false,true]) test(`boss damage meter follows real HP and freezes on pause, reduced motion ${reduced}`,async({page})=>{
+  await page.emulateMedia({reducedMotion:reduced?'reduce':'no-preference'});
+  await scenario(page,'boss-practice');
+  await page.waitForFunction(()=>{
+    const current=parseFloat(document.querySelector('#boss-health i').style.width);
+    return current>0 && current<100;
+  });
+  await page.keyboard.press('Escape');
+  const paused=await snapshot(page);
+  const widths=()=>page.locator('#boss-health i').evaluateAll(nodes=>nodes.map(n=>parseFloat(n.style.width)));
+  const frozen=await widths();
+  expect(frozen[0]).toBeCloseTo(paused.boss.hp/paused.boss.maxHp*100,5);
+  if (reduced) expect(frozen[1]).toBe(frozen[0]);else expect(frozen[1]).toBeGreaterThan(frozen[0]);
+  await expect(page.locator('#boss-health-value')).toHaveText(`체력 ${Math.ceil(paused.boss.hp/paused.boss.maxHp*100)}%`);
+  await page.waitForTimeout(300);expect(await widths()).toEqual(frozen);
+  await page.getByRole('button',{name:'전투 계속하기'}).click();
+  await scenario(page,'boss');
+  await expect.poll(widths).toEqual([100,100]);
+});
+
 test('manual boss practice keeps real damage, weapon clocks and the pause controls',async({page})=>{
   await page.goto('/survivor/?qa&scene=boss-practice');
   await expect(page.locator('#boss-hud')).toBeVisible();

@@ -3,7 +3,7 @@ import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice } from './
 import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
 import { SIGNATURES, signatureState } from './signature.js';
-import { attackPose, isEvolvedWeapon, hurtFeedback } from './impact.js';
+import { attackPose, isEvolvedWeapon, hurtFeedback, bossHealthTrail } from './impact.js';
 import { GIANT } from './enemies.js';
 import { combatPacing } from './pacing.js';
 import { validExperiment, nextExperiment, experimentProgress } from './experiments.js';
@@ -689,6 +689,8 @@ function updateHud() {
     $('boss-name').textContent = boss.enraged ? '재의 군주 · 격노' : '재의 군주';
     $('boss-caption').textContent = bossAttackLabel(boss, game.thorns.some(t => t.life > 0));
     $('boss-health').firstElementChild.style.width = `${boss.hp / boss.maxHp * 100}%`;
+    $('boss-hp-loss').style.width = `${bossHealthTrail(boss, game.time, reduceMotion(preferences, systemMotion.matches)) / boss.maxHp * 100}%`;
+    $('boss-health-value').textContent = `체력 ${Math.ceil(boss.hp / boss.maxHp * 100)}%`;
     $('boss-health').setAttribute('aria-valuenow', String(Math.round(boss.hp / boss.maxHp * 100)));
     $('boss-health').setAttribute('aria-valuetext', `${Math.ceil(boss.hp)} / ${boss.maxHp}`);
   }

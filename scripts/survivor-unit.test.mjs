@@ -1,11 +1,42 @@
 import test from 'node:test';
 import { createPilot } from '../src/survivor/qa-pilot.js';
 import { BOSS } from '../src/survivor/boss.js';
+import { bossHealthTrail, recordBossDamage } from '../src/survivor/impact.js';
 import assert from 'node:assert/strict';
 import { createGame, startGame, updateGame, spawnEnemy, chooseUpgrade, draftUpgrades, pauseGame, resumeGame, stats, RUN_SECONDS, LIMITS, canEvolve, SLAM, spawnBoss, EVOLUTIONS, upgradeChange } from '../src/survivor/game.js';
 
 const playing=()=>{const g=createGame(42);startGame(g);g.spawnClock=999;return g;};
 const frames=(g,n,input)=>{for(let i=0;i<n;i++)updateGame(g,1/60,input);};
+test('boss damage trail captures real hits and burns, freezes on pause and clears per hit',()=>{
+  const g=playing(), boss=spawnBoss(g);
+  Object.assign(boss,{x:62,y:0,entrance:0,attackClock:999});
+  frames(g,30);
+  assert.ok(boss.hp<boss.maxHp);
+  assert.ok(boss.healthLoss.length>0);
+  assert.ok(bossHealthTrail(boss,g.time)>boss.hp);
+  pauseGame(g);const trail=bossHealthTrail(boss,g.time),before=JSON.stringify(g);
+  frames(g,60);assert.equal(JSON.stringify(g),before);assert.equal(bossHealthTrail(boss,g.time),trail);
+  assert.equal(bossHealthTrail(boss,g.time,true),boss.hp);
+  resumeGame(g);g.ranks.sword=0;g.swing=null;
+  boss.burn={until:g.time+2,next:g.time,damage:20};
+  const hp=boss.hp;frames(g,1);
+  assert.equal(boss.hp,hp-10);assert.equal(boss.healthLoss.at(-1).amount,10);
+  boss.burn=null;frames(g,50);
+  assert.equal(bossHealthTrail(boss,g.time),boss.hp);
+  assert.equal(spawnBoss(playing()).healthLoss,undefined);
+});
+
+test('sustained boss damage cannot pin the loss trail to the start of the fight',()=>{
+  const boss={hp:3200,maxHp:3200};
+  for(let i=0;i<300;i++) {
+    boss.hp-=1;recordBossDamage(boss,i/60,1);
+    assert.ok(boss.healthLoss.length<=32);
+    assert.ok(bossHealthTrail(boss,i/60)-boss.hp<=32);
+  }
+  const before=JSON.stringify(boss);
+  assert.equal(bossHealthTrail(boss,6),boss.hp);
+  assert.equal(JSON.stringify(boss),before);
+});
 test('walk animation follows real travel for analog input and companion speed without advancing while stopped',()=>{
   for(const id of ['ash','ember','grove']){
     const g=createGame(42,id);startGame(g);g.spawnClock=999;

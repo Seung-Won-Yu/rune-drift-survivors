@@ -157,6 +157,11 @@ test('earned companion and discovery links resolve to the correct codex group', 
   profile.buildDiscoveries=['duelist'];
   assert.equal(resultTakeaway(game,profile,{discoveries:{branches:['duelist']}}).feature.id,'branch:duelist');
   assert.equal(resultTakeaway(game,profile,{discoveries:{relics:['fang']}}).feature.id,'relic:fang');
+  for (const outcome of ['victory','survived','defeat']) {
+    game.outcome=outcome;
+    assert.equal(resultTakeaway(game,profile,{discoveries:{relics:['fang']}}).feature.label,
+      outcome==='defeat'?'쓰러져도 이 발견은 남아요':'이번 여정의 발견을 도감에 새겼어요');
+  }
 });
 
 test('mastery-only reward directs to the journal and accurately reports the completed reroll benefit', () => {

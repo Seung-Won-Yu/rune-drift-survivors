@@ -266,6 +266,11 @@ test('boss root shards follow actual velocity and release fragments stay small',
     const calls=drawingCalls(ctx=>drawBossThorn(ctx,thorn,reduced));
     assert.deepEqual(calls.find(c=>c[0]==='translate'),['translate',120,80]);
     assert.deepEqual(calls.find(c=>c[0]==='rotate'),['rotate',Math.atan2(30,-150)]);
+    assert.deepEqual(calls,drawingCalls(ctx=>drawBossThorn(ctx,thorn,reduced)),'drawing never advances its clock');
+    if (reduced) assert.deepEqual(calls,drawingCalls(ctx=>drawBossThorn(ctx,{...thorn,age:1},true)));
+    for (const c of calls.filter(c=>['moveTo','lineTo','quadraticCurveTo'].includes(c[0]))) {
+      for (const n of c.slice(1)) assert.ok(Number.isFinite(n) && Math.abs(n)<=27,'head and wake stay compact');
+    }
     const release=drawingCalls(ctx=>drawBossRelease(ctx,{x:120,y:80,angle:.3,age:.1,life:.4},reduced));
     assert.ok(!release.some(c=>c[0]==='arc'));assert.ok(release.length<60);
   }

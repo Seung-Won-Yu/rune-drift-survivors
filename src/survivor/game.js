@@ -1,6 +1,6 @@
 import { CHAMPIONS, updateChampionBloom } from './champions.js';
 import { createSignature, advanceSignature, chargeBlade, chargeRune, consumeSignature, absorbDamage } from './signature.js';
-import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact } from './impact.js';
+import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact, recordBossDamage } from './impact.js';
 import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy } from './enemies.js';
 import { updateEncounters, curseActive } from './encounters.js';
 import { SPECIALIZATIONS, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
@@ -551,6 +551,7 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false,
       buildFeedback(game, game.ranks.bulwark ? 'guard-impact' : 'star-impact', {x: enemy.x, y: enemy.y - 10, angle});
     }
   }
+  if (enemy.boss && actual > 0) recordBossDamage(enemy, game.time, actual);
   enemy.hp -= damage;
   enemy.hit = .13;
   enemy.knockX += nx * 85;

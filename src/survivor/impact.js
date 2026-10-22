@@ -2,6 +2,24 @@
 export const IMPACT_LIFE = .18;
 export const ELITE_FINISH_LIFE = .48;
 export const HURT_FEEDBACK_LIFE = .95;
+const BOSS_LOSS_LIFE = .75;
+
+// Each hit expires on its own, so a stream of hits cannot hold the entire bar
+// open. This bounded presentation history includes burn damage, not just poses.
+export function recordBossDamage(boss, time, amount) {
+  boss.healthLoss = (boss.healthLoss ?? []).filter(hit => time - hit.at < BOSS_LOSS_LIFE).slice(-31);
+  boss.healthLoss.push({ at: time, amount });
+}
+
+export function bossHealthTrail(boss, time, reduced = false) {
+  const hp = Math.max(0, boss.hp);
+  if (reduced) return hp;
+  const loss = (boss.healthLoss ?? []).reduce((sum, hit) => {
+    const age = time - hit.at;
+    return sum + (age < 0 ? 0 : hit.amount * Math.max(0, 1 - Math.max(0, age - .15) / .6));
+  }, 0);
+  return Math.min(boss.maxHp, hp + loss);
+}
 export const HURT_LABELS = { contact: '접촉', hunt: '사냥개 돌진', spore: '포자', slam: '내려찍기', charge: '군주 돌진', thorns: '가시' };
 
 // Only actual HP loss creates this record. No collision, timing or RNG changes.
