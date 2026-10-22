@@ -49,7 +49,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal'
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary'
 ].includes(previewScene);
 try {
   storage = visualPreview ? { getItem: () => null, setItem: () => {} } : window.localStorage;
@@ -637,9 +637,11 @@ function syncPhase() {
         }
       });
     };
-    $('panel').querySelector('[data-review-discoveries]')?.addEventListener('click', event => reviewEntry(event.currentTarget.dataset.reviewDiscoveries, '[data-review-discoveries]'));
-    $('panel').querySelector('[data-result-entry]')?.addEventListener('click', event => reviewEntry(event.currentTarget.dataset.resultEntry, '[data-result-entry]'));
-    $('panel').querySelector('[data-result-preparation]')?.addEventListener('click', event => {
+    $('panel').querySelectorAll('[data-result-entry]').forEach(button => button.addEventListener('click', () => {
+      const id = button.dataset.resultEntry;
+      reviewEntry(id, `[data-result-entry="${id}"]`);
+    }));
+    $('panel').querySelectorAll('[data-result-preparation]').forEach(button => button.addEventListener('click', event => {
       const {resultPreparation: target, resultKeepsake: keepsake} = event.currentTarget.dataset;
       campSection = target === 'journal' ? 'journal' : 'prepare';
       if (target === 'keepsake') preparation = 'keepsake';
@@ -648,7 +650,7 @@ function syncPhase() {
         const control = $('panel').querySelector(keepsake ? `[data-keepsake="${keepsake}"]` : '.camp-tabs [data-camp-section="journal"]');
         control?.scrollIntoView({block: 'nearest'}); control?.focus({preventScroll: true});
       });
-    });
+    }));
     $('camp-game').onclick = () => { campSection = 'prepare'; camp(); };
     $('panel').querySelector('[data-experiment]')?.addEventListener('click', event => prepareExperiment(event.currentTarget.dataset.experiment));
   }
@@ -950,7 +952,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
     }),
     scenario(name) {
       resetInput();
-      const character = name.startsWith('character-') ? name.slice(10) : name === 'ember-coal' ? 'ember' : name === 'experiment-offer' ? game.characterId : 'ash';
+      const character = name.startsWith('character-') ? name.slice(10) : ['ember-coal','record-secondary'].includes(name) ? 'ember' : name === 'experiment-offer' ? game.characterId : 'ash';
       game = createGame(42, character, 'none', profile.experiment, runPreparation(profile, character));
       game.phase = 'playing';
       game.spawnClock = 999;
@@ -1166,6 +1168,16 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
           // Other boss fixtures keep their existing isolated test behavior.
           game.player.invincible = 0;
         } else game.swordClock = 999;
+      } else if (name === 'record-secondary') {
+        // A completed Ember run can discover a Grove specialization. Keep the
+        // same recordRun path; a preview's disposable storage never writes saves.
+        profile.selected='ember';profile.bestTime=300;profile.totalKills=800;profile.wins=1;
+        profile.buildDiscoveries=['wildfire','detonation'];profile.discoveries=['comet','lunar'];
+        profile.relicDiscoveries=['sail','dew'];profile.altarRuns=1;
+        Object.assign(profile.characters.ember,{branches:['wildfire','detonation'],evolved:true,wins:1});
+        game.runId=crypto.randomUUID();game.time=260;game.kills=731;game.level=18;
+        Object.assign(game.ranks,{ember:5,comet:1,detonation:1,orbit:5,lunar:1,horizon:1});
+        game.phase='ended';game.outcome='victory';game.bossDefeated=true;
       } else if (name === 'record-unlock' || name === 'record-journey' || name === 'record-experiment') {
         if (name === 'record-journey') { game.encounters = [{kind:'altar',state:'completed',progress:10,x:0,y:0}]; game.ranks.sweep=1; game.ranks.horizon=1; }
         if (name === 'record-experiment') { game.ranks.sweep=1; game.ranks.dawn=1; game.ranks.sword=3; game.relics=['fang']; }

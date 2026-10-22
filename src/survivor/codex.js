@@ -8,6 +8,12 @@ import { CHALLENGES, KEEPSAKES, canEquipKeepsake, challengeProgress, discoveryCo
 
 export const CODEX_GROUPS = { all: '전체', companions: '동료', weapons: '무기', relics: '유물', keepsakes: '기념품' };
 
+export function inheritanceHint(profile, key) {
+  const owner = Object.values(CHARACTERS).find(c => c.weapon === SPECIALIZATIONS[key]?.weapon);
+  if (!owner) return '';
+  return `${owner.name}${isUnlocked(profile, owner.id) ? '에게' : ' 합류 후'} 전승할 수 있어요.`;
+}
+
 // The codex reads the existing save. Opening a page never grants a discovery.
 export function codexEntries(profile) {
   return [
@@ -21,7 +27,7 @@ export function codexEntries(profile) {
     ...Object.entries(SPECIALIZATIONS).map(([key, s]) => ({
       ...s, id: `branch:${key}`, group: 'weapons', kind: '전문화', found: profile.buildDiscoveries.includes(key),
       hint: `${UPGRADE_META[s.weapon].name} 3단계 · 레벨 4부터 성장 후보에 등장합니다. ${s.name} 선택 후 여정을 마치세요.`,
-      use: '발견한 전투법은 해당 무기로 시작하는 동료에게 전승할 수 있습니다. 한 갈래를 골라 1단계부터 사용하며 무기는 다시 성장시킵니다.'
+      use: `${inheritanceHint(profile, key)} 한 갈래를 골라 1단계부터 사용하며 무기는 다시 성장시킵니다.`
     })),
     ...Object.entries(EVOLUTIONS).map(([key, recipe]) => ({
       ...UPGRADE_META[key], id: `evolution:${key}`, group: 'weapons', kind: '진화', found: profile.discoveries.includes(key),

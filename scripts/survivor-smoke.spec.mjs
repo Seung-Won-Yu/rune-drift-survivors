@@ -277,7 +277,7 @@ test('codex goal persists, marks eligible growth, records on defeat and complete
   await page.locator('[data-upgrade="sweep"]').click();
   await expect(page.locator('#evolution-hint')).toContainText('반월 검법 달성');
   await scenario(page, 'record-experiment');
-  await expect(page.locator('.mastery-reward')).toContainText('숙련 완료');
+  await expect(page.locator('[data-result-preparation="journal"]')).toContainText('숙련 완료');
   const result = await snapshot(page);
   expect(result.profile.goal).toBeNull(); expect(result.profile.characters.ash.branches).toEqual(['duelist', 'sweep']);
   await page.getByRole('button',{name:'출발 준비',exact:true}).click();
@@ -374,7 +374,7 @@ test('fresh lobby codex shows collection goals without writing records and Escap
 test('three real run discoveries unlock an equippable growth keepsake and its selection survives reload',async({page})=>{
   // The ended-run fixture has a branch, an evolution and a relic; recordRun owns the unlock.
   await scenario(page,'record-experiment');
-  await expect(page.locator('.challenge-reward')).toContainText('첫빛의 책갈피');
+  await expect(page.locator('.result-takeaway')).toContainText('첫빛의 책갈피');
   await page.getByRole('button',{name:'출발 준비',exact:true}).click();
   await expect(page.locator('[data-keepsake="bookmark"]')).toBeEnabled();
   await page.locator('[data-preparation-tab="keepsake"]').click(); await page.locator('[data-keepsake="bookmark"]').click();
@@ -449,10 +449,10 @@ for (const viewport of [{width:1280,height:720}, {width:320,height:740}, {width:
   test(`new discoveries lead into an optional saved experiment at ${viewport.width}px`, async ({page}) => {
     await page.setViewportSize(viewport);
     await scenario(page, 'record-experiment');
-    await expect(page.locator('.run-discoveries')).toContainText('반월 검법');
-    await expect(page.locator('.run-discoveries')).toContainText('여명의 검');
-    await expect(page.locator('.run-discoveries')).toContainText('왕을 노리는 송곳니');
-    await expect(page.locator('.run-discoveries .found')).toHaveCount(3);
+    await expect(page.locator('.result-takeaway')).toContainText('반월 검법');
+    await expect(page.locator('.result-takeaway')).toContainText('여명의 검');
+    await expect(page.locator('.result-takeaway')).toContainText('왕을 노리는 송곳니');
+    await expect(page.locator('.earned-rewards [data-result-entry^="branch:"], .earned-rewards [data-result-entry^="evolution:"], .earned-rewards [data-result-entry^="relic:"]')).toHaveCount(3);
     await expect(page.locator('[data-experiment]')).toHaveAttribute('data-experiment', 'duelist');
     await page.locator('.next-experiment').scrollIntoViewIfNeeded();
     const box = await page.locator('.next-experiment').boundingBox();
@@ -542,12 +542,12 @@ test('a failed save keeps the experiment usable in memory and reports its limit'
 
 test('already discovered choices and unrecorded scenes do not announce new discoveries', async ({page}) => {
   await scenario(page, 'record-experiment');
-  await expect(page.locator('.run-discoveries')).toBeVisible();
+  await expect(page.locator('.result-takeaway')).toBeVisible();
   await scenario(page, 'record-experiment');
-  await expect(page.locator('.run-discoveries')).toHaveCount(0);
+  await expect(page.locator('.result-earned')).toContainText('새 발견은 없지만');
   expect((await snapshot(page)).profile.runs).toBe(2);
   await scenario(page, 'defeat');
-  await expect(page.locator('.run-discoveries')).toHaveCount(0);
+  await expect(page.locator('.result-earned')).toContainText('새 발견은 없지만');
   expect((await snapshot(page)).profile.runs).toBe(2);
 });
 
@@ -842,7 +842,8 @@ test('earned companions, selection and journey records survive reload without du
   await expect(page.locator('[data-character="ember"]')).toBeDisabled();
   await expect(page.locator('[data-character="grove"]')).toBeDisabled();
   await scenario(page,'record-unlock');
-  await expect(page.locator('.unlock-reward')).toContainText('불씨술사 · 룬 수호자');
+  await expect(page.locator('.result-takeaway')).toContainText('불씨술사');
+  await expect(page.locator('.result-takeaway')).toContainText('룬 수호자');
   await page.locator('.battle-record summary').click();
   await expect(page.locator('.damage-row')).toContainText('560');
   await page.getByRole('button',{name:'출발 준비',exact:true}).click();
@@ -877,7 +878,7 @@ for(const viewport of [{width:320,height:640},{width:390,height:844},{width:740,
     for(const selector of ['.companion-grid','.companion-detail','#start-game']){const box=await page.locator(selector).boundingBox();expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(viewport.width);}
     await page.screenshot({path:`output/playwright/survivor/camp-${viewport.width}.png`,animations:'disabled'});
     await scenario(page,'record-unlock');
-    await expect(page.locator('.unlock-reward')).toBeVisible();
+    await expect(page.locator('.result-takeaway')).toBeVisible();
     await page.getByRole('button',{name:'출발 준비',exact:true}).scrollIntoViewIfNeeded();
     await page.screenshot({path:`output/playwright/survivor/result-unlock-${viewport.width}.png`,animations:'disabled'});
     await page.getByRole('button',{name:'출발 준비',exact:true}).click();
@@ -1189,8 +1190,8 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
   await page.locator('.camp-tabs [data-camp-section="prepare"]').click();
   await expect(page.locator('[data-keepsake="seed"]')).toBeDisabled();
   await scenario(page,'record-journey');
-  await expect(page.locator('.challenge-reward')).toContainText('제단의 씨앗');
-  await expect(page.locator('.challenge-reward')).toContainText('갈림길의 리본');
+  await expect(page.locator('.result-takeaway')).toContainText('제단의 씨앗');
+  await expect(page.locator('.result-takeaway')).toContainText('갈림길의 리본');
   await page.getByRole('button',{name:'출발 준비',exact:true}).click();
   await page.locator('.camp-tabs [data-camp-section="journal"]').click();
   await page.locator('.journey-board summary').click();
@@ -1548,10 +1549,10 @@ test('original collection art reveals real discoveries and the result links to t
   await page.screenshot({path:'output/playwright/survivor/polish-codex-locked.png',animations:'disabled'});
   await page.keyboard.press('Escape');
   await scenario(page,'record-experiment');
-  await expect(page.locator('.discovery-trophy')).toHaveCount(3);
-  await expect(page.locator('.discovery-trophy .collection-illustration.is-silhouette')).toHaveCount(0);
+  await expect(page.locator('.earned-rewards [data-result-entry^="branch:"], .earned-rewards [data-result-entry^="evolution:"], .earned-rewards [data-result-entry^="relic:"]')).toHaveCount(3);
+  await expect(page.locator('.earned-rewards .collection-illustration.is-silhouette')).toHaveCount(0);
   await page.screenshot({path:'output/playwright/survivor/polish-discovery-result.png',animations:'disabled'});
-  await page.locator('[data-review-discoveries]').click();
+  await page.locator('[data-result-entry="branch:sweep"]').click();
   await expect(page.locator('[data-codex-entry="branch:sweep"]')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('[data-codex-entry="branch:sweep"]')).toBeFocused();
   await expect(page.locator('.codex-detail .collection-illustration')).not.toHaveClass(/is-silhouette/);
@@ -1595,7 +1596,7 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
   await expect(page.locator('#restart-game')).toBeInViewport(); await expect(page.locator('#camp-game')).toBeInViewport();
   expect(await page.locator('#panel').evaluate(el=>el.scrollTop)).toBe(0);
   expect(await page.evaluate(()=>document.documentElement.scrollHeight-innerHeight)).toBe(0);
-  await page.locator('[data-review-discoveries]').click();
+  await page.locator('[data-result-entry="branch:sweep"]').click();
   if(viewport.width<=680) await expect(page.locator('.codex-detail h2')).toBeFocused();
   else await expect(page.locator('[data-codex-entry="branch:sweep"]')).toBeFocused();
   await page.keyboard.press('Escape'); await page.locator('#restart-game').click();
@@ -1610,14 +1611,14 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:32
   await expect(page.locator('.result-earned')).toContainText('동료 합류 2');
   await expect(page.locator('.result-earned')).toContainText('기념품 해금 1');
   await expect(page.locator('.result-earned')).toContainText('숙련 인장 1');
-  await expect(page.locator('.earned-tokens')).toContainText('반월 검법');
-  await expect(page.locator('.earned-tokens')).toContainText('불씨술사');
-  await expect(page.locator('[data-result-preparation]')).toBeInViewport({ratio:1});
+  await expect(page.locator('.earned-rewards')).toContainText('반월 검법');
+  await expect(page.locator('.earned-rewards')).toContainText('불씨술사');
+  await expect(page.locator('[data-result-preparation="keepsake"]')).toBeInViewport({ratio:1});
   await expect(page.locator('#restart-game')).toBeInViewport({ratio:1});
   await expect(page.locator('#camp-game')).toBeInViewport({ratio:1});
   await page.screenshot({path:`output/playwright/survivor/earned-result-${viewport.width}.png`,animations:'disabled'});
   const before=await snapshot(page);
-  await page.locator('[data-result-preparation]').click();
+  await page.locator('[data-result-preparation="keepsake"]').click();
   await expect(page.locator('#prepare-tab-keepsake')).toHaveAttribute('aria-selected','true');
   await expect(page.locator('[data-keepsake="bookmark"]')).toBeFocused();
   await expect(page.locator('[data-keepsake="bookmark"]')).toBeInViewport({ratio:1});
@@ -1634,10 +1635,10 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:32
 test('result companion shortcut opens its actual codex group without selecting or granting twice',async({page})=>{
  await page.setViewportSize({width:740,height:360});
  await scenario(page,'record-unlock');
- await expect(page.locator('[data-result-entry]')).toHaveAttribute('data-result-entry','companion:ember');
- await expect(page.locator('[data-result-entry]')).toBeInViewport({ratio:1});
+ await expect(page.locator('[data-result-entry="companion:ember"]')).toHaveAttribute('data-result-entry','companion:ember');
+ await expect(page.locator('[data-result-entry="companion:ember"]')).toBeInViewport({ratio:1});
  const before=await snapshot(page);
- await page.locator('[data-result-entry]').click();
+ await page.locator('[data-result-entry="companion:ember"]').click();
  await expect(page.locator('[data-codex-filter="companions"]')).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('.codex-detail h2')).toHaveText('불씨술사');
  expect((await snapshot(page)).profile.runs).toBe(before.profile.runs);
@@ -1925,13 +1926,13 @@ for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:74
   await page.setViewportSize(viewport); await scenario(page,'record-experiment');
   await page.locator('.battle-record summary').click();
   const before=await snapshot(page);
-  await page.locator('[data-review-discoveries]').scrollIntoViewIfNeeded();
+  await page.locator('[data-result-entry="branch:sweep"]').scrollIntoViewIfNeeded();
   const scroll=await page.locator('.result-body').evaluate(el=>el.scrollTop);
   for(let i=0;i<2;i++) {
-   await page.locator('[data-review-discoveries]').click();
+   await page.locator('[data-result-entry="branch:sweep"]').click();
    await expect(page.locator('[data-close-codex]')).toContainText('결과로 돌아가기');
    if(i===0) await page.keyboard.press('Escape'); else await page.locator('[data-close-codex]').click();
-   await expect(page.locator('[data-review-discoveries]')).toBeFocused();
+   await expect(page.locator('[data-result-entry="branch:sweep"]')).toBeFocused();
    await expect(page.locator('.battle-record')).toHaveAttribute('open','');
    expect(Math.abs(await page.locator('.result-body').evaluate(el=>el.scrollTop)-scroll)).toBeLessThan(2);
    const after=await snapshot(page);
@@ -2009,17 +2010,70 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:32
 }
 
 
-test('visual result previews leave the saved profile untouched',async({page})=>{
+for (const preview of ['record-experiment','record-secondary']) test(`visual result preview ${preview} leaves the saved profile untouched`,async({page})=>{
   const saved={version:1,bestTime:91,totalKills:245,selected:'ember'};
   await page.evaluate(data=>localStorage.setItem('ash-profile-v1',JSON.stringify(data)),saved);
-  await page.goto('/?preview=record-experiment');
-  await expect(page.locator('.result-earned')).toContainText(' 새 발견 3'.trim());
+  await page.goto(`/?preview=${preview}`);
+  await expect(page.locator('.result-earned')).toContainText(preview === 'record-secondary' ? '새 발견 1' : '새 발견 3');
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('ash-profile-v1')))).toEqual(saved);
   await page.locator('#camp-game').click();
   await page.goto('/?qa');await page.locator('#start-game').waitFor();
   expect((await snapshot(page)).profile.selected).toBe('ember');
   expect((await snapshot(page)).profile.runs).toBe(0);
 });
+
+for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+ test(`secondary discovery names its heir and prepares only that companion at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport); await scenario(page,'record-secondary');
+  await expect(page.locator('.result-earned')).toContainText('새 발견 1');
+  const before=await snapshot(page), reward=page.locator('[data-result-entry="branch:horizon"]');
+  expect(before.characterId).toBe('ember');
+  await expect(page.locator('.result-next-step h3')).toHaveText('별자리 궤도');
+  await expect(page.locator('.reward-use')).toHaveText('룬 수호자에게 전승할 수 있어요.');
+  await expect(page.locator('.earned-rewards')).toHaveCount(0);
+  await expect(reward).toHaveCount(1);
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  await page.screenshot({path:`output/playwright/survivor/result-secondary-${viewport.width}.png`});
+  await reward.click();
+  await expect(page.locator('.codex-detail h2')).toHaveText('별자리 궤도');
+  expect((await snapshot(page)).profile).toEqual(before.profile);
+  await page.locator('[data-close-codex]').click(); await expect(reward).toBeFocused();
+  expect((await snapshot(page)).phase).toBe('ended');
+  await reward.click(); await page.locator('[data-prepare-inheritance="horizon"]').click();
+  await expect(page.locator('[data-inheritance="horizon"]')).toHaveAttribute('aria-pressed','true');
+  const prepared=await snapshot(page);
+  expect(prepared.characterId).toBe('grove');expect(prepared.inheritance).toBe('horizon');
+  expect(prepared.profile).toEqual({...before.profile,selected:'grove',inheritances:{...before.profile.inheritances,grove:'horizon'}});
+  await page.locator('#start-game').click(); await page.keyboard.press('Escape');
+  const started=await snapshot(page);
+  expect(started.ranks.orbit).toBe(1);expect(started.ranks.horizon).toBe(1);
+  expect(started.ranks.ember).toBe(0);expect(started.ranks.lunar).toBe(0);
+  expect(started.rerolls).toBe(1);expect(started.keepsake).toBe(before.keepsake);
+ });
+ test(`each remaining reward opens its exact record and restores its place at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport); await scenario(page,'record-experiment');
+  await expect(page.locator('.result-earned')).toContainText('새 발견 3');
+  const before=await snapshot(page);
+  const rewards=[['branch:sweep','반월 검법'],['evolution:dawn','여명의 검'],['relic:fang','왕을 노리는 송곳니'],['companion:grove','룬 수호자']];
+  await page.screenshot({path:`output/playwright/survivor/result-ledger-${viewport.width}.png`});
+  for(const [id,name] of rewards) {
+   const item=page.locator(`.earned-rewards [data-result-entry="${id}"]`);
+   await expect(item).toHaveCount(1);await item.scrollIntoViewIfNeeded();
+   expect((await item.boundingBox()).height).toBeGreaterThanOrEqual(44);
+   const scroll=await page.locator('.result-body').evaluate(el=>el.scrollTop);
+   await item.click();await expect(page.locator('.codex-detail h2')).toHaveText(name);
+   expect((await snapshot(page)).profile).toEqual(before.profile);
+   await page.locator('[data-close-codex]').click();await expect(item).toBeFocused();
+   expect(Math.abs(await page.locator('.result-body').evaluate(el=>el.scrollTop)-scroll)).toBeLessThan(2);
+   expect((await snapshot(page)).profile).toEqual(before.profile);
+   await expect(page.locator('#restart-game')).toBeInViewport({ratio:1});
+  }
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  await page.locator('.earned-rewards [data-result-preparation="journal"]').click();
+  await expect(page.locator('.camp-journal')).toBeVisible();
+  expect((await snapshot(page)).profile).toEqual(before.profile);
+ });
+}
 
 for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]) {
   test(`codex explains an inheritance change before goal selection at ${viewport.width}px`, async ({page}) => {
@@ -2068,7 +2122,7 @@ test('codex keeps compatible inheritance and explains a secondary weapon goal',a
 });
 
 test('a goal selected from results goes to preparation without reviving the finished run',async({page})=>{
-  await scenario(page,'record-experiment'); await page.locator('[data-review-discoveries]').click();
+  await scenario(page,'record-experiment'); await page.locator('[data-result-entry="branch:sweep"]').click();
   await page.locator('[data-codex-entry="branch:duelist"]').click();
   await page.locator('[data-codex-goal]').click(); await page.locator('[data-goal-prepare]').click();
   const state=await snapshot(page);expect(state.phase).toBe('ready');expect(state.goal).toBe('branch:duelist');

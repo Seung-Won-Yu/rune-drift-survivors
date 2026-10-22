@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/survivor/game.js';
 import { createProfile, recordRun } from '../src/survivor/profile.js';
-import { campMission, nextGoal, resultTakeaway } from '../src/survivor/camp.js';
+import { campMission, nextGoal, resultTakeaway, resultOverview } from '../src/survivor/camp.js';
+import { inheritanceHint } from '../src/survivor/codex.js';
 import { evolutionProgress, evolutionGuidance, upgradeRecipeHint, growthContext, fieldLoadout, growthChoice } from '../src/survivor/field-guide.js';
 import { relicEffect } from '../src/survivor/expansion.js';
 import { loadPreferences, savePreferences, reduceMotion, PREFERENCES_KEY } from '../src/survivor/preferences.js';
@@ -205,4 +206,35 @@ test('mastery-only reward directs to the journal and accurately reports the comp
   assert.equal(result.feature.preparation,'journal');
   assert.match(result.feature.detail,/다시 뽑기 2회/);
   assert.deepEqual(result.counts,[{label:'숙련 인장',value:1}]);
+});
+
+test('result rewards have one destination each and identify the secondary branch recipient', () => {
+  const game=createGame(42,'ember'),profile=createProfile();profile.bestTime=300;profile.totalKills=800;
+  profile.buildDiscoveries=['horizon'];
+  const rewards={discoveries:{branches:['horizon'],evolutions:['lunar'],relics:['bell']}};
+  const before=JSON.stringify([game,profile,rewards]);
+  const result=resultTakeaway(game,profile,rewards);
+  assert.equal(result.feature.id,'branch:horizon');
+  assert.match(result.feature.note,/룬 수호자에게 전승/);
+  assert.deepEqual(result.remaining.map(item=>item.id),['evolution:lunar','relic:bell']);
+  const html=resultOverview(game,profile,rewards);
+  for(const id of ['branch:horizon','evolution:lunar','relic:bell']) assert.equal(html.split(`data-result-entry="${id}"`).length-1,1);
+  assert.equal(html.split('별자리 궤도').length-1,1);
+  assert.equal(JSON.stringify([game,profile,rewards]),before);
+  profile.totalKills=0;
+  assert.match(inheritanceHint(profile,'horizon'),/룬 수호자 합류 후/);
+  assert.equal(inheritanceHint(profile,'invalid'),'');
+});
+
+test('single discovery and mastery results do not repeat their featured reward', () => {
+  const game=createGame(42),profile=createProfile();profile.buildDiscoveries=['sweep'];
+  assert.deepEqual(resultTakeaway(game,profile,{discoveries:{branches:['sweep']}}).remaining,[]);
+  Object.assign(profile.characters.ash,{branches:['sweep','duelist'],evolved:true,wins:1});
+  const result=resultTakeaway(game,profile,{mastery:['branches','victory']});
+  assert.equal(result.feature.preparation,'journal');
+  assert.deepEqual(result.remaining,[]);
+  assert.deepEqual(result.counts,[{label:'숙련 인장',value:2}]);
+  for (const name of result.earned[0].names) {
+    assert.equal(resultOverview(game,profile,{mastery:['branches','victory']}).split(name).length-1,1);
+  }
 });
