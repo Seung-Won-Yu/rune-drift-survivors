@@ -293,3 +293,11 @@
 @media (prefers-reduced-motion:reduce) {
   .panel.is-entering:is(.is-camp,.is-codex) :is(.camp-stage,.camp-controls,.camp-journal,.codex-layout) { animation: none; }
 }
+.codex-target { margin: 16px 0; padding: 14px; border-left: 2px solid #a39568; background: #8e875b0c; }
+.codex-target.is-tracked { border-color: #536342; background: #5363420d; }
+.codex-target > small { display: block; color: var(--paper-note); font-size: 10px; letter-spacing: .04em; }
+.codex-target > strong { display: block; margin-top: 7px; color: #40543b; font-size: 13px; line-height: 1.6; }
+.codex-target p { margin: 8px 0 12px; }
+.codex-target .goal-replacement { display: block; margin-top: 6px; }
+.codex-target .codex-goal + .codex-goal { margin-top: 8px; }
+.codex-card .codex-state.is-goal { color: #40543b; font-weight: 700; }

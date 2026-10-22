@@ -1979,3 +1979,74 @@ test('visual result previews leave the saved profile untouched',async({page})=>{
   expect((await snapshot(page)).profile.selected).toBe('ember');
   expect((await snapshot(page)).profile.runs).toBe(0);
 });
+
+for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]) {
+  test(`codex explains an inheritance change before goal selection at ${viewport.width}px`, async ({page}) => {
+    await page.setViewportSize(viewport);
+    await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,selected:'grove',bestTime:300,totalKills:500,wins:1,altarRuns:1,buildDiscoveries:['sweep','duelist','wildfire','detonation','bulwark'],discoveries:['dawn','comet','lunar'],relicDiscoveries:['coal','fang','bell','sail','dew','briar'],inheritances:{grove:'bulwark'}})));
+    await page.reload();
+    await expect(page.locator('.camp-mission')).toContainText('도감 추천');
+    await page.locator('.camp-mission').click();
+    await expect(page.locator('.codex-target')).toContainText('수호 결계 전승을 풀고');
+    await expect(page.locator('[data-codex-goal]')).toHaveText('전승 풀고 목표 지정');
+    expect((await snapshot(page)).inheritance).toBe('bulwark');
+    await page.locator('[data-codex-goal]').focus(); await page.keyboard.press('Enter');
+    await expect(page.locator('.codex-target')).toContainText('이번 판 목표 · 추적 중');
+    await expect(page.locator('[data-codex-entry="branch:horizon"] .codex-state')).toHaveText('이번 판 목표');
+    const selected=await snapshot(page);
+    expect(selected.goal).toBe('branch:horizon'); expect(selected.inheritance).toBeNull();
+    expect(selected.profile.buildDiscoveries).not.toContain('horizon');
+    await expect(page.locator('[data-codex-goal]')).toBeFocused();
+    await page.keyboard.press('Tab'); await expect(page.locator('[data-goal-prepare]')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#start-game')).toBeFocused();
+    await expect(page.locator('[data-inheritance="none"]')).toHaveAttribute('aria-pressed','true');
+    await expect(page.locator('.camp-mission')).toContainText('이번 판 목표');
+    expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+    await page.reload(); expect((await snapshot(page)).goal).toBe('branch:horizon');
+    await page.locator('#start-game').click(); await page.keyboard.press('Escape');
+    const started=await snapshot(page);
+    expect(started.goal).toBe('branch:horizon'); expect(started.ranks.orbit).toBe(1);
+    expect(started.ranks.bulwark).toBe(0); expect(started.ranks.horizon).toBe(0);
+  });
+}
+
+test('codex keeps compatible inheritance and explains a secondary weapon goal',async({page})=>{
+  await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,selected:'grove',totalKills:300,buildDiscoveries:['bulwark'],inheritances:{grove:'bulwark'}})));
+  await page.reload(); await page.locator('[data-open-codex]').click();
+  await page.locator('[data-codex-entry="branch:sweep"]').click();
+  await expect(page.locator('.codex-target')).toContainText('필요한 무기: 황동 검');
+  await expect(page.locator('.codex-target')).toContainText('룬 수호자 · 수호 결계');
+  await page.locator('[data-codex-entry="relic:dew"]').click();
+  await expect(page.locator('[data-codex-goal]')).toHaveText('이번 판의 목표로 지정');
+  await page.locator('[data-codex-goal]').click();
+  expect((await snapshot(page)).inheritance).toBe('bulwark');
+  await page.locator('[data-codex-goal]').click();
+  await expect(page.locator('[data-goal-prepare]')).toHaveCount(0);
+  const state=await snapshot(page); expect(state.goal).toBeNull(); expect(state.inheritance).toBe('bulwark');
+});
+
+test('a goal selected from results goes to preparation without reviving the finished run',async({page})=>{
+  await scenario(page,'record-experiment'); await page.locator('[data-review-discoveries]').click();
+  await page.locator('[data-codex-entry="branch:duelist"]').click();
+  await page.locator('[data-codex-goal]').click(); await page.locator('[data-goal-prepare]').click();
+  const state=await snapshot(page);expect(state.phase).toBe('ready');expect(state.goal).toBe('branch:duelist');
+  await page.locator('[data-open-codex]').click();
+  await expect(page.locator('[data-close-codex]')).toHaveText('← 출발 준비');
+  await page.locator('[data-close-codex]').click();
+  expect((await snapshot(page)).phase).toBe('ready');
+});
+
+test('codex previews replacing a prepared experiment and another collection goal',async({page})=>{
+  await scenario(page,'record-experiment'); await page.locator('[data-experiment]').click();
+  await page.locator('[data-open-codex]').click(); await page.locator('[data-codex-entry="relic:dew"]').click();
+  await expect(page.locator('.goal-replacement')).toHaveText('기존 ‘일점 검법’ 목표를 이 목표로 바꿉니다.');
+  await expect(page.locator('[data-codex-goal]')).toHaveText('이 목표로 바꾸기');
+  expect((await snapshot(page)).experiment).toBe('duelist');
+  await page.locator('[data-codex-goal]').click();
+  const state=await snapshot(page);expect(state.experiment).toBeNull();expect(state.goal).toBe('relic:dew');
+  expect(state.profile.relicDiscoveries).not.toContain('dew');
+  await page.locator('[data-codex-entry="evolution:lunar"]').click();
+  await expect(page.locator('.goal-replacement')).toContainText('기존 ‘이슬 씨앗’ 목표');
+  await expect(page.locator('.codex-target')).toContainText('필요한 무기: 회전 룬');
+});

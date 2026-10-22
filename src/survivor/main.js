@@ -551,6 +551,11 @@ function syncPhase() {
     for (const button of document.querySelectorAll('[data-keepsake]')) button.onclick = () => selectKeepsake(button.dataset.keepsake);
     for (const button of $('panel').querySelectorAll('[data-vow]')) button.onclick = () => selectVow(button.dataset.vow);
     $('panel').querySelector('[data-codex-goal]')?.addEventListener('click', event => selectGoal(event.currentTarget.dataset.codexGoal));
+    $('panel').querySelector('[data-goal-prepare]')?.addEventListener('click', () => {
+      preparation = 'inheritance';
+      changeCampSection('prepare');
+      requestAnimationFrame(() => $('start-game')?.focus({preventScroll: true}));
+    });
     $('panel').querySelector('[data-clear-goal]')?.addEventListener('click', () => selectGoal(null));
     for (const button of document.querySelectorAll('[data-character]')) button.onclick = () => selectCharacter(button.dataset.character);
     $('panel').querySelector('[data-clear-experiment]')?.addEventListener('click', clearExperiment);

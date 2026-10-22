@@ -35,7 +35,7 @@ export function campMission(profile) {
   const challenge = CHALLENGES.find(c => challengeProgress(profile, c) < c.target);
   if (challenge) return {id: `keepsake:${challenge.reward}`, title: KEEPSAKES[challenge.reward].name, detail: `${challenge.name} ${challengeProgress(profile, challenge)}/${challenge.target} · ${challenge.description}`, label: '다음 보상'};
   const missing = entries.find(e => !e.found);
-  return missing ? entryMission(missing, '다음 발견') : {id:`companion:${profile.selected}`,title:'동료의 숙련 인장',detail:'다른 동료로 전문화·진화·군주 격파에 도전하세요.',label:'다음 여정'};
+  return missing ? entryMission(missing, '도감 추천') : {id:`companion:${profile.selected}`,title:'동료의 숙련 인장',detail:'다른 동료로 전문화·진화·군주 격파에 도전하세요.',label:'다음 여정'};
 }
 export function nextGoal(profile) {
   const mission = campMission(profile);
@@ -78,7 +78,7 @@ export function nextExperimentCard(game, profile) {
   const key = nextExperiment(game, profile);
   if (!key || !isUnlocked(profile, game.characterId)) return '';
   const target = SPECIALIZATIONS[key];
-  return `<section class="next-experiment" aria-label="다음 판의 실험"><small>다음 판의 실험 · ${profile.buildDiscoveries.includes(key) ? '다른 갈래로 도전' : '아직 발견하지 않은 갈래'}</small><strong>${target.name}</strong><p>${target.description}</p><p class="experiment-change">${target.change}</p><button class="secondary" data-experiment="${key}">이 빌드로 다음 판 준비</button><p class="record-line">${getCharacter(game.characterId).name} · ${UPGRADE_META[target.weapon].name} 3단계부터 선택합니다.</p></section>`;
+  return `<section class="next-experiment" aria-label="다음 판의 실험"><small>다음 판의 실험 · ${profile.buildDiscoveries.includes(key) ? '다른 갈래로 도전' : '아직 발견하지 않은 갈래'}</small><strong>${target.name}</strong><p>${target.description}</p><p class="experiment-change">${target.change}</p><button class="secondary" data-experiment="${key}">이 빌드로 다음 판 준비</button><p class="record-line">${getCharacter(game.characterId).name} · 전승 없이 출발해 ${UPGRADE_META[target.weapon].name} 3단계 · 레벨 4부터 선택 후보를 기다립니다.${profile.goal ? ' 기존 도감 목표를 이 목표로 바꿉니다.' : ''}</p></section>`;
 }
 export function journeyScreen(profile) {
   const completed = completedChallenges(profile);
