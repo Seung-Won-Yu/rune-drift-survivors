@@ -47,7 +47,8 @@ export function nextEvolution(game) {
   return Object.keys(EVOLUTIONS).filter(k => !game.ranks[k]).sort((a, b) => {
     const score = k => Math.min(3, game.ranks[EVOLUTIONS[k].weapon]) + Math.min(1, game.ranks[EVOLUTIONS[k].support]);
     const primary = getCharacter(game.characterId).weapon;
-    return score(b) - score(a) || Number(EVOLUTIONS[b].weapon === primary) - Number(EVOLUTIONS[a].weapon === primary);
+    return Number(game.ranks[EVOLUTIONS[b].weapon] > 0) - Number(game.ranks[EVOLUTIONS[a].weapon] > 0)
+      || score(b) - score(a) || Number(EVOLUTIONS[b].weapon === primary) - Number(EVOLUTIONS[a].weapon === primary);
   })[0] ?? null;
 }
 export const SLAM = {

@@ -1,5 +1,5 @@
-import { SIGNATURES } from './signature.js';
-import { SPECIALIZATIONS, RELICS, relicContext } from './expansion.js';
+import { SIGNATURES, signatureDescription } from './signature.js';
+import { SPECIALIZATIONS, RELICS, relicContext, relicEffect } from './expansion.js';
 import { CHALLENGES, KEEPSAKES, challengeProgress, completedChallenges, canEquipKeepsake, keepsakeStats } from './journey.js';
 import { codexEntries, codexIcon } from './codex.js';
 import { CHARACTERS, getCharacter, isUnlocked, unlockProgress } from './characters.js';
@@ -57,7 +57,7 @@ export function relicContextMarkup(game, key, showLabel = true) {
   return `<span class="relic-context is-${context.kind}">${showLabel ? `<b>${context.label}</b>` : ''}<span>${context.detail}</span></span>`;
 }
 export function encounterRewardPreview(game, event) {
-  return `<div class="reward-preview-list">${(event?.rewards ?? []).map(key => `<article data-preview-relic="${key}" style="--tone:${RELICS[key].color}"><strong>${RELICS[key].name}</strong><p>${RELICS[key].change}</p>${relicContextMarkup(game, key)}</article>`).join('')}</div><p class="record-line">완료하면 이 후보 중 하나를 선택합니다. 살펴보기로 보상이 바뀌지는 않습니다.</p>`;
+  return `<div class="reward-preview-list">${(event?.rewards ?? []).map(key => `<article data-preview-relic="${key}" style="--tone:${RELICS[key].color}"><strong>${RELICS[key].name}</strong><p>${relicEffect(game, key, true)}</p>${relicContextMarkup(game, key)}</article>`).join('')}</div><p class="record-line">완료하면 이 후보 중 하나를 선택합니다. 살펴보기로 보상이 바뀌지는 않습니다.</p>`;
 }
 export function experimentPlan(game) {
   const progress = experimentProgress(game);
@@ -129,7 +129,7 @@ export function campScreen(game, profile, warning, section = 'prepare', preparat
   <div class="camp-stage-note"><p>${companionRhythm[c.id]}</p></div></aside>
   <section class="camp-controls camp-section" aria-label="출발 준비" ${section === 'prepare' ? '' : 'hidden'}>
   ${preparationLinks(game, profile, preparation)}<div class="preparation-editor" tabindex="0" role="region" aria-label="준비 선택 목록">
-  <div id="prepare-inheritance" role="tabpanel" aria-labelledby="prepare-tab-inheritance" ${preparation === 'inheritance' ? '' : 'hidden'}>${inheritanceSelection(game, profile)}<details class="companion-detail companion-guide"><summary>${c.name}의 전투 방식</summary><strong>${SIGNATURES[c.id].name} <span>${UPGRADE_META[c.weapon].name} · ${c.trait}</span></strong><p class="companion-signature">${companionRhythm[c.id]}</p><p>${c.description}</p><p>${SIGNATURES[c.id].description}</p></details></div>
+  <div id="prepare-inheritance" role="tabpanel" aria-labelledby="prepare-tab-inheritance" ${preparation === 'inheritance' ? '' : 'hidden'}>${inheritanceSelection(game, profile)}<details class="companion-detail companion-guide"><summary>${c.name}의 전투 방식</summary><strong>${SIGNATURES[c.id].name} <span>${UPGRADE_META[c.weapon].name} · ${c.trait}</span></strong><p class="companion-signature">${companionRhythm[c.id]}</p><p>${c.description}</p><p>${signatureDescription(game)}</p></details></div>
   <div id="prepare-keepsake" role="tabpanel" aria-labelledby="prepare-tab-keepsake" ${preparation === 'keepsake' ? '' : 'hidden'}>${departureKit(game, profile)}</div>
   <div id="prepare-vow" role="tabpanel" aria-labelledby="prepare-tab-vow" ${preparation === 'vow' ? '' : 'hidden'}>${vowSelection(game, profile)}</div>
   ${game.goal || game.experiment ? `<div class="camp-objective">${goalPlan(game, profile)}${experimentPlan(game)}</div>` : ''}</div></section>
@@ -142,7 +142,7 @@ export function buildSummary(game) {
   const progress = experimentProgress(game), collectionGoal = goalProgress(game);
   const k = keepsakeStats(game.keepsake);
   const growth = k.xpSeconds ? ` · ${game.time < k.xpSeconds ? `효과 ${Math.ceil(k.xpSeconds - game.time)}초 남음` : '경험치 강화 종료'}` : '';
-  return `<div class="build-summary">${collectionGoal ? `<p class="experiment-progress is-${collectionGoal.state}"><strong>도감 목표</strong> ${game.phase === 'ended' && collectionGoal.state === 'complete' ? `${collectionGoal.name} 달성 · 도감 기록 완료` : collectionGoal.text}</p>` : ''}<p><strong>숲의 서약</strong> ${vowStats(game.vow).name} · ${vowStats(game.vow).change}</p><p><strong>성장 다시 뽑기</strong> ${game.rerollsUsed}회 사용 · ${game.rerolls}회 남음</p>${progress ? `<p class="experiment-progress is-${progress.state}"><strong>이번 판의 목표</strong> ${progress.text}</p>` : ''}<p><strong>출발 기념품</strong> ${k.name} · ${k.change}${growth}</p><p><strong>이번 판의 전문화</strong> ${branches.length ? branches.map(key => SPECIALIZATIONS[key].name).join(' · ') : '무기 3단계부터 선택할 수 있습니다'}</p><p><strong>숲의 유물 ${game.relics.length}/2</strong> ${game.relics.length ? game.relics.map(key => RELICS[key].name).join(' · ') : '제단 또는 저주 상자를 완료하면 얻습니다'}</p>${branches.map(key => `<small>${SPECIALIZATIONS[key].name} · ${SPECIALIZATIONS[key].change}</small>`).join('')}${game.relics.map(key => `<small>${RELICS[key].name} · ${RELICS[key].change}</small>`).join('')}</div>`;
+  return `<div class="build-summary">${collectionGoal ? `<p class="experiment-progress is-${collectionGoal.state}"><strong>도감 목표</strong> ${game.phase === 'ended' && collectionGoal.state === 'complete' ? `${collectionGoal.name} 달성 · 도감 기록 완료` : collectionGoal.text}</p>` : ''}<p><strong>숲의 서약</strong> ${vowStats(game.vow).name} · ${vowStats(game.vow).change}</p><p><strong>성장 다시 뽑기</strong> ${game.rerollsUsed}회 사용 · ${game.rerolls}회 남음</p>${progress ? `<p class="experiment-progress is-${progress.state}"><strong>이번 판의 목표</strong> ${progress.text}</p>` : ''}<p><strong>출발 기념품</strong> ${k.name} · ${k.change}${growth}</p><p><strong>이번 판의 전문화</strong> ${branches.length ? branches.map(key => SPECIALIZATIONS[key].name).join(' · ') : '무기 3단계부터 선택할 수 있습니다'}</p><p><strong>숲의 유물 ${game.relics.length}/2</strong> ${game.relics.length ? game.relics.map(key => RELICS[key].name).join(' · ') : '제단 또는 저주 상자를 완료하면 얻습니다'}</p>${branches.map(key => `<small>${SPECIALIZATIONS[key].name} · ${SPECIALIZATIONS[key].change}</small>`).join('')}${game.relics.map(key => `<small>${RELICS[key].name} · ${relicEffect(game, key)}</small>`).join('')}</div>`;
 }
 // Present only the deltas returned by recordRun, never everything already owned.
 export function resultTakeaway(game, profile, rewards = {}) {

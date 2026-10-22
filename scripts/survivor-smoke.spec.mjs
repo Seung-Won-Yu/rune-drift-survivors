@@ -6,6 +6,27 @@ test.afterEach(async({page})=>{expect(pageErrors.get(page)??[], 'browser runtime
 const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
+for (const width of [1280,320]) {
+  test(`ember build rewards and next evolution stay truthful at ${width}px`, async ({page}) => {
+    await page.setViewportSize({width,height:720});await scenario(page,'ember-coal');
+    const before=await snapshot(page);
+    const coal=page.locator('[data-relic="coal"]');
+    await expect(coal).toContainText('22 → 33');
+    expect(await coal.evaluate(el=>el.scrollHeight-el.clientHeight)).toBeLessThanOrEqual(2);
+    await coal.click();
+    await expect(page.locator('#reward-notice')).toContainText('22 → 33');
+    await expect(page.locator('#evolution-hint')).toContainText('보유 무기 진화 완료');
+    await expect(page.locator('#evolution-hint')).not.toHaveClass(/is-ready/);
+    await page.keyboard.press('Escape');
+    await page.getByText('이번 판의 효과와 성장 기록',{exact:true}).click();
+    await expect(page.locator('#pause-equipment')).toContainText('연소 초당 33');
+    const after=await snapshot(page);
+    expect(after.ranks).toEqual(before.ranks);
+    expect(after.relics).toContain('coal');
+    expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  });
+}
+
 for (const viewport of [{width:1280,height:720},{width:320,height:568},{width:640,height:360}]) {
   test(`app settings stay modal, persistent and separate from progression at ${viewport.width}`, async ({page}) => {
     await page.setViewportSize(viewport);

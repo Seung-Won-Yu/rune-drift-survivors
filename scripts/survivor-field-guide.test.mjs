@@ -3,10 +3,44 @@ import assert from 'node:assert/strict';
 import { createGame } from '../src/survivor/game.js';
 import { createProfile, recordRun } from '../src/survivor/profile.js';
 import { campMission, nextGoal, resultTakeaway } from '../src/survivor/camp.js';
-import { evolutionProgress, upgradeRecipeHint, growthContext, fieldLoadout, growthChoice } from '../src/survivor/field-guide.js';
+import { evolutionProgress, evolutionGuidance, upgradeRecipeHint, growthContext, fieldLoadout, growthChoice } from '../src/survivor/field-guide.js';
+import { relicEffect } from '../src/survivor/expansion.js';
 import { loadPreferences, savePreferences, reduceMotion, PREFERENCES_KEY } from '../src/survivor/preferences.js';
 import { choiceReceipt } from '../src/survivor/choice-feedback.js';
 import { bossAttackLabel, BOSS } from '../src/survivor/boss.js';
+
+test('evolution guidance follows owned weapons and distinguishes completion from acquisition', () => {
+  const g=createGame(42,'ember');
+  Object.assign(g.ranks,{ember:5,comet:1,fleet:1});g.eliteKills=1;
+  const before=JSON.stringify(g);
+  assert.equal(evolutionGuidance(g).kind,'new-weapon');
+  assert.match(growthContext(g),/보유 무기 진화 완료/);
+  assert.doesNotMatch(growthContext(g),/다음 진화 · 여명의 검/);
+  assert.equal(JSON.stringify(g),before);
+  g.ranks.orbit=1;
+  assert.equal(evolutionGuidance(g).key,'lunar');
+  assert.equal(evolutionGuidance(g).kind,'progress');
+  g.ranks.orbit=3;g.ranks.vitality=1;
+  assert.equal(evolutionGuidance(g).progress.ready,true);
+  g.ranks.lunar=1;g.ranks.sword=3;
+  assert.equal(evolutionGuidance(g).key,'dawn');
+  g.ranks.dawn=1;assert.equal(evolutionGuidance(g).kind,'complete');
+});
+
+test('coal acquisition and equipped feedback use this build without changing it', () => {
+  const g=createGame(42,'ember');g.phase='relic';g.relicChoices=['coal'];
+  assert.match(relicEffect(g,'coal',true),/초당 8/);
+  g.ranks.wildfire=1;
+  assert.match(relicEffect(g,'coal',true),/12 → 18/);
+  g.ranks.comet=1;
+  const before=JSON.stringify(g);
+  assert.match(relicEffect(g,'coal',true),/22 → 33/);
+  assert.match(choiceReceipt(g,'coal').detail,/22 → 33/);
+  assert.equal(JSON.stringify(g),before);
+  g.relics.push('coal');
+  assert.match(relicEffect(g,'coal'),/초당 33/);
+  assert.doesNotMatch(relicEffect(g,'coal',true),/→/);
+});
 
 test('choice feedback captures the real comparison before applying an offered reward', () => {
   const g=createGame(42); g.phase='upgrade'; g.choices=['vitality','ember','sword'];g.player.hp=27;

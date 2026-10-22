@@ -1,5 +1,5 @@
 import { EVOLUTIONS, UPGRADE_META, upgradeChange } from './game.js';
-import { SPECIALIZATIONS, RELICS } from './expansion.js';
+import { SPECIALIZATIONS, RELICS, relicEffect } from './expansion.js';
 import { weaponPresentation } from './weapon-presentation.js';
 
 // Capture the comparison before applying it; reading a reward never grants it.
@@ -7,7 +7,7 @@ export function choiceReceipt(game, key) {
   if (game.phase === 'relic') {
     const relic = RELICS[key];
     return relic && game.relicChoices.includes(key)
-      ? {kind: 'relic', label: '유물 획득', name: relic.name, art: key, detail: relic.change} : null;
+      ? {kind: 'relic', label: '유물 획득', name: relic.name, art: key, detail: relicEffect(game, key, true)} : null;
   }
   if (game.phase !== 'upgrade' || !game.choices.includes(key) || !UPGRADE_META[key]) return null;
   const weapon = weaponPresentation(game, key);

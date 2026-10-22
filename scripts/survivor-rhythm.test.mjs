@@ -34,6 +34,19 @@ test('ember movement earns only one empowered shot per volley; menus, standing a
   g.shots=Array.from({length:LIMITS.shots},()=>({x:1e4,y:1e4,vx:0,vy:0,life:20}));step(g);assert.equal(g.signature.charge,1);
   g.shots=[];g.emberClock=0;step(g);assert.equal(g.shots.filter(s=>s.empowered).length,1);assert.equal(g.signature.activations,1);assert.equal(g.signature.charge,0);
 });
+test('ember signature description matches empowered projectiles for each specialization', () => {
+  for (const branch of ['wildfire','detonation']) {
+    const g=arena('ember');Object.assign(g.ranks,{ember:5,comet:1,[branch]:1});
+    target(g,300);advanceSignature(g,1000);g.emberClock=0;step(g);
+    const shot=g.shots.find(s=>s.empowered);
+    assert.ok(shot);assert.equal(shot.blast,branch==='detonation');
+    const description=signatureState(g).description;
+    assert.match(description,/첫 불씨의 직격 피해 ×1.45/);
+    if(branch==='wildfire') {
+      assert.match(description,/주변에도 3초 연소/);assert.doesNotMatch(description,/폭발/);
+    } else assert.match(description,/폭발 반경 \+18/);
+  }
+});
 test('grove needs spaced actual orbit contacts; shield absorbs before HP feedback, expires and cannot stack', () => {
   const g=arena('grove');for(let i=0;i<6;i++){g.time=i*.4;chargeRune(g);chargeRune(g);}
   assert.equal(g.signature.guard,20);assert.equal(g.signature.activations,1);chargeRune(g);assert.equal(g.signature.charge,0);

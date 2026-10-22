@@ -107,6 +107,15 @@ export function relicContext(game, key) {
   };
   return { kind: weapon ? 'ready' : 'utility', label: weapon ? '현재 무기와 연결' : key === 'dew' ? '수집으로 회복' : '피격 후 반격', detail: details[key] };
 }
+// Describes this build, not the base catalog entry. Acquisition previews compare
+// before/after; equipped gear and results describe the effect already active.
+export function relicEffect(game, key, preview = false) {
+  if (key !== 'coal') return RELICS[key]?.change ?? '';
+  if (!game.ranks.wildfire) return '불씨 적중: 연소 초당 8 · 3초 지속';
+  const base = game.ranks.comet ? 22 : 12;
+  const rate = preview && !game.relics.includes('coal') ? `${base} → ${base * 1.5}` : base * 1.5;
+  return `연소 초당 ${rate} · 3초 지속`;
+}
 export const specializationFor = (game, weapon) => Object.keys(SPECIALIZATIONS).find(key => SPECIALIZATIONS[key].weapon === weapon && game.ranks[key]);
 export function specializationOffers(game) {
   if (game.level < 4) return [];

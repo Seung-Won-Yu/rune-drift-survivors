@@ -5,6 +5,11 @@ export const SIGNATURES = {
   grove: { name: '숲의 수호', action: '회전 룬을 맞혀 수호를 쌓으세요', description: '회전 룬 적중 6회마다 4초간 보호막 20. 한 번에 하나씩 충전하며 발동 뒤 5초간 다시 준비합니다.', ready: '수호 준비', color: '#a1e4ce' }
 };
 export const createSignature = () => ({ charge: 0, guard: 0, guardUntil: 0, cooldownUntil: 0, hitAt: -1, activatedAt: -10, blockedAt: -10, activations: 0, absorbed: 0 });
+export function signatureDescription(game) {
+  if (game.characterId !== 'ember') return SIGNATURES[game.characterId].description;
+  return `이동으로 힘을 모아 다음 첫 불씨의 직격 피해 ×1.45 · ${game.ranks.wildfire
+    ? '적중 지점 주변에도 3초 연소를 붙입니다.' : '폭발 반경 +18.'}`;
+}
 export function advanceSignature(game, distance) {
   const s = game.signature;
   if (game.time >= s.guardUntil) s.guard = 0;
@@ -38,7 +43,7 @@ export function absorbDamage(game, damage) {
   return damage - absorbed;
 }
 export function signatureState(game) {
-  const meta = SIGNATURES[game.characterId], s = game.signature;
+  const meta = { ...SIGNATURES[game.characterId], description: signatureDescription(game) }, s = game.signature;
   if (s.guard > 0 && game.time < s.guardUntil) return { ...meta, value: s.guard / 20, state: 'guard', label: `보호막 ${Math.ceil(s.guard)} · ${Math.ceil(s.guardUntil - game.time)}초` };
   if (game.characterId === 'grove' && game.time < s.cooldownUntil) return { ...meta, value: 0, state: 'rest', label: `${Math.ceil(s.cooldownUntil - game.time)}초 뒤 수호 준비` };
   const ready = s.charge >= 1 - 1e-9;
