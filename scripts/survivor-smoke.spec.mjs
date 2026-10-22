@@ -7,6 +7,50 @@ const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
 for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
+ test(`pinned goal guides growth and pause without changing the offered build at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);
+  await page.locator('[data-open-codex]').click();
+  await page.locator('[data-codex-entry="evolution:comet"]').click();await page.locator('[data-codex-goal]').click();
+  await page.locator('[data-close-codex]').click();await page.locator('#start-game').click();
+  await scenario(page,'goal-comet');
+  const before=await snapshot(page),guide=page.locator('.goal-guidance');
+  await expect(guide).toContainText('잿불 혜성');await expect(guide).toContainText('추적 불씨 1/3');
+  await expect(guide).toContainText('가벼운 발걸음 0/1');await expect(guide).toContainText('정예 처치 0/1');
+  await expect(guide).not.toContainText('여명의 검');await expect(guide).toBeInViewport({ratio:1});
+  await expect(page.locator('[data-upgrade="fleet"] .experiment-badge')).toHaveText('이번 판의 목표 · 재료');
+  await expect(page.locator('[data-upgrade="sword"] .experiment-badge')).toHaveCount(0);
+  expect(await page.locator('.choice-list').evaluate(el=>el.clientHeight)).toBeGreaterThanOrEqual(44);
+  if(viewport.width===1280) for(const label of await page.locator('.pick-label').all()) await expect(label).toBeInViewport({ratio:1});
+  await page.screenshot({path:`output/playwright/survivor/goal-guidance-${viewport.width}.png`,animations:'disabled'});
+  await page.locator('[data-upgrade="fleet"]').click();await page.keyboard.press('Escape');
+  const after=await snapshot(page);
+  expect(after.ranks.fleet).toBe(1);expect(after.ranks.ember).toBe(before.ranks.ember);expect(after.profile.discoveries).toEqual(before.profile.discoveries);
+  await expect(guide).toContainText('가벼운 발걸음 1/1');await expect(guide).toContainText('잿불 혜성');
+  await expect(page.locator('#resume-game')).toBeInViewport({ratio:1});
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  await page.locator('#resume-game').click();expect((await snapshot(page)).goal).toBe('evolution:comet');
+  await scenario(page,'overflow');await page.locator('[data-upgrade]').first().click();
+  await expect(page.locator('.previous-choice')).toBeVisible();
+  await expect(page.locator('.goal-guidance')).toContainText('잿불 혜성');
+  expect(await page.locator('.choice-list').evaluate(el=>el.clientHeight)).toBeGreaterThanOrEqual(44);
+  await expect(page.locator('[data-reroll]')).toBeInViewport({ratio:1});
+ });
+}
+
+test('a completed or changed target is explained in pause without promising another choice',async({page})=>{
+ await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,goal:'branch:sweep'})));await page.reload();
+ await scenario(page,'branch-sword');await expect(page.locator('.goal-guidance')).toContainText('지금 선택 가능');
+ await page.locator('[data-upgrade="duelist"]').click();await page.keyboard.press('Escape');
+ await expect(page.locator('.goal-guidance')).toContainText('다른 갈래 선택');
+ await expect(page.locator('.goal-guidance')).toContainText('다음 여정');
+ await expect(page.locator('.goal-guidance .recipe-parts')).toHaveCount(0);
+ await scenario(page,'branch-sword');await page.locator('[data-upgrade="sweep"]').click();await page.keyboard.press('Escape');
+ await expect(page.locator('.goal-guidance')).toContainText('목표 달성');
+ await expect(page.locator('.goal-guidance')).toContainText('여정을 마치면 도감에 기록');
+ expect((await snapshot(page)).profile.buildDiscoveries).toEqual([]);
+});
+
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
   test(`departure comparisons match selected equipment and remain visible at ${viewport.width}`,async({page})=>{
     await page.setViewportSize(viewport);
     await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,selected:'grove',bestTime:300,totalKills:500,wins:1,altarRuns:1,buildDiscoveries:['sweep','wildfire'],discoveries:['dawn'],keepsake:'crown'})));
@@ -338,6 +382,8 @@ test('tracked relic highlights only its promised offer and stays unrecorded unti
   await page.getByRole('button', {name:'숲에 들어가기'}).click(); await scenario(page, 'event-altar');
   await expect(page.locator('[data-relic]')).toHaveCount(3, {timeout:15000});
   expect((await snapshot(page)).relicChoices).toEqual(promised);
+  await expect(page.locator('.goal-guidance')).toContainText('지금 선택 가능');
+  await expect(page.locator('.goal-guidance')).toHaveAttribute('data-goal-offered','true');
   await expect(page.locator(`[data-relic="${key}"] .experiment-badge`)).toContainText('이번 판의 목표');
   await expect(page.locator('[data-relic] .experiment-badge')).toHaveCount(1);
   await page.locator(`[data-relic="${key}"]`).click();

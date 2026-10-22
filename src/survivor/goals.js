@@ -34,3 +34,7 @@ export function goalRelevant(game, key) {
   }
   return false;
 }
+export function goalChoiceLabel(game, key) {
+  if (!goalRelevant(game,key)) return '';
+  return goalMeta(game.goal).key === key ? '이번 판의 목표' : '이번 판의 목표 · 재료';
+}

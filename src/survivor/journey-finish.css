@@ -9,6 +9,19 @@
 .phase-upgrade .growth-context { padding-block: 5px; margin-bottom: 8px; }
 .phase-upgrade .growth-loadout svg { width: 22px; height: 22px; }
 .phase-upgrade .growth-recipe { margin-top: 4px; }
+.goal-guidance { display: grid; grid-template-columns: 30px minmax(0,1fr); gap: 5px 9px; margin: 8px 0; padding: 10px 12px; border-left: 2px solid #76845b; background: #8b9d6b13; color: #526044; }
+.goal-guidance-art { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+.goal-guidance-art svg { display: block; width: 30px; height: 30px; }
+.goal-guidance-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; font-size: 10px; }
+.goal-guidance-heading strong { margin-left: 6px; color: #354e38; font: 700 15px var(--display); }
+.goal-guidance-heading > small { font-size: 10px; color: #596247; white-space: nowrap; }
+.goal-guidance > :not(.goal-guidance-art) { grid-column: 2; }
+.goal-guidance p { margin: 0; font-size: 11px; line-height: 1.5; }
+.goal-guidance[data-goal-offered='true'],.goal-guidance[data-goal-state='complete'] { border-color: #416342; background: #71926320; }
+.goal-guidance[data-goal-offered='true'] .goal-guidance-heading > small,.goal-guidance[data-goal-state='complete'] .goal-guidance-heading > small { color: #315535; font-weight: 700; }
+.goal-guidance:is([data-goal-state='changed'],[data-goal-state='missed']) { border-color: #97704b; background: #a2845812; }
+.growth-context .goal-guidance { margin: 5px 0 0; padding-block: 6px; }
+.phase-relic > .goal-guidance { margin-top: 0; }
 .choice-instruction {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
   margin: 0 0 12px; color: var(--paper-muted); font-size: 11px; line-height: 1.5;
@@ -27,12 +40,15 @@
 }
 .panel .choice-list .upgrade-card:focus-visible { outline: 2px solid #53704c; outline-offset: 2px; }
 .panel .choice-list .upgrade-card:active { transform: translateY(1px); }
-.panel .choice-list .upgrade-card.is-experiment { padding-top: 30px; }
+.panel .choice-list .upgrade-card.is-experiment { padding-top: 26px; }
+.panel .choice-list .experiment-badge { position: absolute; top: 0; right: 0; margin: 0; padding: 3px 7px; line-height: 1.4; }
 .panel .choice-list .upgrade-icon {
   width: 100%; height: 60px; margin: 4px 0; border: 0; border-radius: 0;
   background: radial-gradient(ellipse at center,color-mix(in srgb,var(--tone) 14%,transparent),transparent 62%);
 }
 .panel .choice-list .upgrade-icon svg { width: 60px; height: 60px; }
+.panel:has(.goal-guidance) .choice-list .upgrade-icon { height: 48px; }
+.panel:has(.goal-guidance) .choice-list .upgrade-icon svg { width: 48px; height: 48px; }
 .panel .choice-list .upgrade-card > strong { font-size: 23px; margin-bottom: 0; }
 .panel .choice-list .upgrade-card > p { order: 2; margin: 9px 0; color: #626549; font-size: 11px; }
 .panel .choice-list .upgrade-change {
@@ -41,6 +57,7 @@
 }
 .upgrade-change > small { display: block; font-size: 9px; font-weight: 400; color: #777252; margin-bottom: 3px; }
 .panel .choice-list .recipe-link { order: 3; margin: 0 0 12px; border: 0; padding: 0; font-size: 10px; color: #626549; }
+.panel:has(.goal-guidance) .choice-list .recipe-link { margin-bottom: 6px; }
 .panel .choice-list .pick-label {
   order: 4; padding-top: 10px; color: #385742; border-color: #a4996b40; font-weight: 650;
 }
@@ -236,4 +253,22 @@
 }
 @media (prefers-reduced-motion:reduce) {
   .panel .choice-list .upgrade-card { transition: none; }
+}
+@media (max-height:570px) and (orientation:landscape) {
+  .panel:has(.goal-guidance) .choice-list .upgrade-icon { height: 28px; }
+  .panel:has(.goal-guidance) .choice-list .upgrade-icon svg { width: 28px; height: 28px; }
+  .goal-guidance { display: flex; align-items: center; flex-wrap: wrap; }
+  .goal-guidance-heading { display: contents; }
+  .goal-guidance-heading > span { order: 1; font-size: 9px; }
+  .goal-guidance > .recipe-parts { order: 2; }
+  .goal-guidance-heading > small { order: 3; margin-left: auto; }
+  .goal-guidance p { order: 4; flex-basis: 100%; padding-left: 29px; }
+}
+@media (max-width:680px), (max-height:570px) {
+  .goal-guidance { grid-template-columns: 22px minmax(0,1fr); padding: 7px 8px; gap: 4px 7px; }
+  .goal-guidance-art svg { width: 22px; height: 22px; }
+  .goal-guidance-heading { gap: 3px 8px; font-size: 9px; }
+  .goal-guidance-heading strong { font-size: 12px; margin-left: 4px; }
+  .goal-guidance-heading > small { font-size: 9px; }
+  .goal-guidance p { font-size: 10px; }
 }

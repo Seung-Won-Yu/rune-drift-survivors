@@ -2,6 +2,7 @@ import { EVOLUTIONS, UPGRADE_META, canEvolve, nextEvolution } from './game.js';
 import { SPECIALIZATIONS } from './expansion.js';
 import { weaponLoadout } from './weapon-presentation.js';
 import { collectionArt } from './collection-art.js';
+import { goalProgress } from './goals.js';
 
 // Presentation reads the current run; it never grants ranks or advances time.
 export function evolutionProgress(game, key) {
@@ -34,6 +35,29 @@ export function upgradeRecipeHint(game, key) {
     }).join(' / ');
 }
 const recipeMarkup = progress => progress.complete ? '<span class="recipe-complete">진화 완료</span>' : `<span class="recipe-parts">${progress.parts.map(part => `<span class="${part.done ? 'is-met' : ''}">${part.done ? '✓ ' : ''}${part.name} <b>${part.value}/${part.target}</b></span>`).join('')}</span>`;
+export function goalGuidance(game) {
+  const goal = goalProgress(game);
+  if (!goal) return null;
+  const parts = goal.kind === 'evolution' ? evolutionProgress(game,goal.key).parts : goal.kind === 'branch' ? [
+    {name:UPGRADE_META[goal.weapon].name,value:Math.min(3,game.ranks[goal.weapon]),target:3,done:game.ranks[goal.weapon]>=3},
+    {name:'레벨',value:Math.min(4,game.level),target:4,done:game.level>=4}
+  ] : [];
+  const offered = goal.state === 'preparing' && (game.phase === 'upgrade' && game.choices.includes(goal.key) || game.phase === 'relic' && game.relicChoices.includes(goal.key));
+  const ready = goal.state === 'preparing' && parts.length > 0 && parts.every(part=>part.done);
+  const label = {complete:'목표 달성',changed:'다른 갈래 선택',missed:'유물 자리 가득'}[goal.state] ?? (offered ? '지금 선택 가능' : ready ? '준비 완료' : '준비 중');
+  const detail = goal.state === 'complete' ? '여정을 마치면 도감에 기록됩니다.' :
+    goal.state === 'changed' ? '이번 판의 전투법은 유지됩니다. 다음 여정에서 다시 도전하세요.' :
+    goal.state === 'missed' ? '유물 두 자리를 모두 채웠습니다. 다음 여정에서 다시 도전하세요.' :
+    offered ? '아래의 목표 카드를 선택하면 달성합니다.' :
+    goal.kind === 'relic' ? '제단·상자의 보상 후보를 확인하세요. 목표 유물이 나올 때 선택하세요.' :
+    ready ? (goal.kind === 'evolution' ? '다음 성장에서 진화를 선택하세요.' : '성장 후보에 이 전투법이 나오면 선택하세요.') : '';
+  return {...goal,parts,offered,ready,label,detail};
+}
+export function goalGuidanceMarkup(game) {
+  const goal=goalGuidance(game);
+  if (!goal) return '';
+  return `<section class="goal-guidance" aria-label="이번 판의 목표" data-goal-state="${goal.state}" data-goal-offered="${goal.offered}"><span class="goal-guidance-art" aria-hidden="true">${collectionArt(goal.key)}</span><div class="goal-guidance-heading"><span>이번 판의 목표 <strong>${goal.name}</strong></span><small>${goal.label}</small></div>${goal.state === 'preparing' && goal.parts.length ? recipeMarkup({parts:goal.parts}) : ''}${goal.detail ? `<p>${goal.detail}</p>` : ''}</section>`;
+}
 export function evolutionGuidance(game) {
   const key = nextEvolution(game), progress = evolutionProgress(game, key);
   if (!progress) return {key, progress, kind:'complete', hint:'세 무기 진화 완료 · 마지막 대결을 준비하세요'};
@@ -43,10 +67,11 @@ export function evolutionGuidance(game) {
 }
 export function growthContext(game) {
   const {key:next, progress, kind} = evolutionGuidance(game);
-  return `<section class="growth-context" aria-label="현재 무기와 다음 진화"><div class="growth-loadout">${weaponLoadout(game).map(w => `<span class="${w.rank ? '' : 'is-empty'}">${collectionArt(w.art)}<span>${w.rank ? `${w.name} <b>${w.rank}단계</b>` : '빈 무기 자리'}</span></span>`).join('')}</div>${kind === 'new-weapon' ? '<div class="growth-recipe"><strong>보유 무기 진화 완료</strong><span>새 무기를 얻으면 다음 진화를 준비할 수 있어요.</span></div>' : progress ? `<div class="growth-recipe"><strong>다음 진화 · ${progress.name}</strong>${game.choices.includes(next) ? '<span class="recipe-complete">조건 완성 · 아래에서 진화하세요</span>' : recipeMarkup(progress)}</div>` : '<p class="growth-recipe">세 무기 진화 완료</p>'}</section>`;
+  const target=goalGuidanceMarkup(game);
+  return `<section class="growth-context" aria-label="현재 무기와 ${target ? '이번 판의 목표' : '다음 진화'}"><div class="growth-loadout">${weaponLoadout(game).map(w => `<span class="${w.rank ? '' : 'is-empty'}">${collectionArt(w.art)}<span>${w.rank ? `${w.name} <b>${w.rank}단계</b>` : '빈 무기 자리'}</span></span>`).join('')}</div>${target || (kind === 'new-weapon' ? '<div class="growth-recipe"><strong>보유 무기 진화 완료</strong><span>새 무기를 얻으면 다음 진화를 준비할 수 있어요.</span></div>' : progress ? `<div class="growth-recipe"><strong>다음 진화 · ${progress.name}</strong>${game.choices.includes(next) ? '<span class="recipe-complete">조건 완성 · 아래에서 진화하세요</span>' : recipeMarkup(progress)}</div>` : '<p class="growth-recipe">세 무기 진화 완료</p>')}</section>`;
 }
 export function fieldLoadout(game) {
-  return `<section class="field-loadout" aria-label="현재 장비와 진화"><div class="field-section-heading"><h2>이번 여정의 무기</h2><span>현재 강화와 진화 조건</span></div><div class="field-weapons">${weaponLoadout(game).sort((a,b) => Number(!!b.rank) - Number(!!a.rank)).map(w => {
+  return `<section class="field-loadout" aria-label="현재 장비와 진화">${goalGuidanceMarkup(game)}<div class="field-section-heading"><h2>이번 여정의 무기</h2><span>현재 강화와 진화 조건</span></div><div class="field-weapons">${weaponLoadout(game).sort((a,b) => Number(!!b.rank) - Number(!!a.rank)).map(w => {
     const evolution = Object.keys(EVOLUTIONS).find(key => EVOLUTIONS[key].weapon === w.family);
     const progress = evolutionProgress(game, evolution);
     return `<article class="field-weapon${w.rank ? '' : ' is-empty'}" data-build-weapon="${w.family}" tabindex="-1"><div class="field-weapon-heading">${collectionArt(w.art)}<div><small>${w.rank ? `${w.rank}단계 / ${UPGRADE_META[w.family].max}` : '아직 획득하지 않음'}</small><h3>${w.name}</h3><span>${w.branchName || (w.rank ? '기본 전투법' : '성장 선택으로 획득')}</span></div></div>${w.rank ? `<p class="field-weapon-effect">${w.description}</p>` : ''}<div class="rank-marks" aria-hidden="true">${Array.from({length:UPGRADE_META[w.family].max},(_,i)=>`<i class="${i<w.rank?'is-filled':''}"></i>`).join('')}</div><p>${progress.name} ${progress.complete ? '' : progress.ready ? '· 준비 완료' : '진화'}</p>${recipeMarkup(progress)}</article>`;

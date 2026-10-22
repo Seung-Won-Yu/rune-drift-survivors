@@ -1,5 +1,5 @@
 import { choiceReceipt } from './choice-feedback.js';
-import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice, evolutionGuidance } from './field-guide.js';
+import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice, evolutionGuidance, goalGuidanceMarkup } from './field-guide.js';
 import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
 import { SIGNATURES, signatureState } from './signature.js';
@@ -8,7 +8,7 @@ import { GIANT } from './enemies.js';
 import { combatPacing } from './pacing.js';
 import { validExperiment, nextExperiment, experimentProgress } from './experiments.js';
 import { runPreparation, validInheritance, primaryBranches, canTakeVow, validGoal, goalFound } from './progression.js';
-import { goalProgress, goalRelevant } from './goals.js';
+import { goalProgress, goalRelevant, goalChoiceLabel } from './goals.js';
 import { canEquipKeepsake } from './journey.js';
 import { specializationFor, SPECIALIZATIONS, RELICS, relicContext, relicEffect } from './expansion.js';
 import { ENCOUNTERS, encounterDeadline, encounterTimeLeft, trackedEncounter, encounterDirection, encounterDistance, nearbyChest, openChest, closeChest, chooseCurse, chooseRelic, inspectEncounter, closeEncounterPreview } from './encounters.js';
@@ -49,7 +49,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary'
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet'
 ].includes(previewScene);
 try {
   storage = visualPreview ? { getItem: () => null, setItem: () => {} } : window.localStorage;
@@ -572,7 +572,7 @@ function syncPhase() {
         color: weapon.color,
         description: weapon.description
       } : UPGRADE_META[key];
-      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-choice-kind="${choice.kind}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<span class="choice-heading"><b>${choice.label}</b><small>${choice.step}</small></span><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change"><small>선택하면</small>${upgradeChange(game, key)}</span>${recipe ? `<span class="recipe-link">${recipe}</span>` : ''}<span class="pick-label">${choice.action} <kbd>${i + 1}</kbd></span></button>`;
+      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-choice-kind="${choice.kind}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? `<span class="experiment-badge">${goalChoiceLabel(game,key) || '이번 판의 목표'}</span>` : ''}<span class="choice-heading"><b>${choice.label}</b><small>${choice.step}</small></span><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change"><small>선택하면</small>${upgradeChange(game, key)}</span>${recipe ? `<span class="recipe-link">${recipe}</span>` : ''}<span class="pick-label">${choice.action} <kbd>${i + 1}</kbd></span></button>`;
     }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button><p role="status">${rerollFeedback ? '후보가 바뀌었습니다. ' : ''}${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '진화 후보는 유지됩니다.'}</p></div>`);
     $('panel').querySelector('[data-reroll]').onclick = () => {
       const previous = new Set(game.choices);
@@ -584,7 +584,7 @@ function syncPhase() {
     };
     for (const button of document.querySelectorAll('[data-upgrade]')) button.onclick = () => choose(button.dataset.upgrade);
   } else if (game.phase === 'relic') {
-    panel(`<p class="eyebrow">숲이 남긴 선물</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p><p class="choice-instruction"><span>하나를 획득 · 전투 일시정지</span><span class="choice-shortcuts">키보드 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key], context = relicContext(game, key); return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small class="relic-fit is-${context.kind}">${context.label}</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p class="relic-decision">${context.detail}</p><span class="upgrade-change"><small>이번 여정의 효과</small>${relicEffect(game, key, true)}</span><span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
+    panel(`<p class="eyebrow">숲이 남긴 선물</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p>${goalGuidanceMarkup(game)}<p class="choice-instruction"><span>하나를 획득 · 전투 일시정지</span><span class="choice-shortcuts">키보드 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key], context = relicContext(game, key); return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small class="relic-fit is-${context.kind}">${context.label}</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p class="relic-decision">${context.detail}</p><span class="upgrade-change"><small>이번 여정의 효과</small>${relicEffect(game, key, true)}</span><span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
     for (const button of document.querySelectorAll('[data-relic]')) button.onclick = () => choose(button.dataset.relic);
   } else if (game.phase === 'preview') {
     const event = game.encounters.find(event => event.kind === game.previewEncounter);
@@ -958,7 +958,10 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name === 'ember-coal') {
+      if (name === 'goal-comet') {
+        game.goal='evolution:comet';game.level=4;game.ranks.sword=3;game.ranks.ember=1;
+        game.phase='upgrade';game.choices=['ember','fleet','sword'];
+      } else if (name === 'ember-coal') {
         Object.assign(game.ranks,{ember:5,wildfire:1,comet:1,fleet:1});
         game.eliteKills=1;game.time=150;game.nextElite=999;
         game.phase='relic';game.rewardFrom='chest';game.relicChoices=['coal','fang','briar'];

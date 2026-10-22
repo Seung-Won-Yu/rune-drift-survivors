@@ -7,11 +7,58 @@ import { vowStats } from '../src/survivor/progression.js';
 import { createProfile, recordRun } from '../src/survivor/profile.js';
 import { campMission, nextGoal, resultTakeaway, resultOverview } from '../src/survivor/camp.js';
 import { inheritanceHint } from '../src/survivor/codex.js';
-import { evolutionProgress, evolutionGuidance, upgradeRecipeHint, growthContext, fieldLoadout, growthChoice } from '../src/survivor/field-guide.js';
+import { evolutionProgress, evolutionGuidance, upgradeRecipeHint, growthContext, fieldLoadout, growthChoice, goalGuidance, goalGuidanceMarkup } from '../src/survivor/field-guide.js';
+import { goalChoiceLabel } from '../src/survivor/goals.js';
 import { relicEffect } from '../src/survivor/expansion.js';
 import { loadPreferences, savePreferences, reduceMotion, PREFERENCES_KEY } from '../src/survivor/preferences.js';
 import { choiceReceipt } from '../src/survivor/choice-feedback.js';
 import { bossAttackLabel, BOSS } from '../src/survivor/boss.js';
+
+test('growth and pause guidance follow the pinned target instead of the closest evolution', () => {
+  const game=createGame(42,'ash','none',null,{goal:'evolution:comet'});
+  game.ranks.sword=3;game.ranks.ember=1;game.phase='upgrade';game.choices=['ember','fleet','sword'];
+  const before=JSON.stringify(game);
+  assert.equal(evolutionGuidance(game).key,'dawn');
+  const guide=goalGuidance(game);
+  assert.equal(guide.key,'comet');assert.equal(guide.label,'준비 중');
+  assert.deepEqual(guide.parts.map(p=>[p.value,p.target]),[[1,3],[0,1],[0,1]]);
+  assert.match(growthContext(game),/이번 판의 목표.*잿불 혜성/);
+  assert.doesNotMatch(growthContext(game),/다음 진화 · 여명의 검/);
+  assert.match(fieldLoadout(game),/이번 판의 목표.*잿불 혜성/);
+  assert.equal(goalChoiceLabel(game,'ember'),'이번 판의 목표 · 재료');
+  assert.equal(goalChoiceLabel(game,'sword'),'');
+  assert.equal(JSON.stringify(game),before);
+  game.goal=null;
+  assert.equal(goalGuidance(game),null);assert.equal(goalGuidanceMarkup(game),'');
+  assert.match(growthContext(game),/다음 진화 · 여명의 검/);
+});
+
+test('goal guidance distinguishes preparation, offers, completion and an unavailable branch', () => {
+  const game=createGame(42,'ash','none',null,{goal:'branch:sweep'});
+  game.level=4;game.ranks.sword=3;game.phase='upgrade';game.choices=['sweep','duelist','sword'];
+  assert.equal(goalGuidance(game).label,'지금 선택 가능');
+  assert.equal(goalChoiceLabel(game,'sweep'),'이번 판의 목표');
+  game.phase='paused';
+  assert.equal(goalGuidance(game).label,'준비 완료');assert.doesNotMatch(goalGuidance(game).detail,/아래/);
+  game.ranks.duelist=1;
+  assert.equal(goalGuidance(game).state,'changed');assert.equal(goalGuidance(game).ready,false);
+  assert.doesNotMatch(goalGuidanceMarkup(game),/recipe-parts/);
+  game.ranks.duelist=0;game.ranks.sweep=1;
+  assert.equal(goalGuidance(game).state,'complete');assert.match(goalGuidance(game).detail,/여정을 마치면/);
+  game.goal='evolution:comet';game.ranks.ember=3;game.ranks.fleet=1;game.eliteKills=1;
+  assert.equal(goalGuidance(game).label,'준비 완료');assert.match(goalGuidance(game).detail,/다음 성장/);
+  game.phase='upgrade';game.choices=['comet'];assert.equal(goalGuidance(game).label,'지금 선택 가능');
+});
+
+test('relic guidance only promises a selection when the target is actually offered', () => {
+  const game=createGame(42,'ash','none',null,{goal:'relic:coal'});
+  game.phase='relic';game.relicChoices=['bell','dew'];
+  assert.equal(goalGuidance(game).offered,false);assert.match(goalGuidance(game).detail,/후보/);
+  game.relicChoices.push('coal');assert.equal(goalGuidance(game).offered,true);
+  game.relics=['bell','dew'];
+  assert.equal(goalGuidance(game).state,'missed');assert.equal(goalGuidance(game).offered,false);
+  game.relics=['coal'];assert.equal(goalGuidance(game).state,'complete');
+});
 
 test('preparation forecasts match actual starting runs across companions, equipment and vows', () => {
   for(const character of ['ash','ember','grove']) for(const current of Object.keys(KEEPSAKES)) {
