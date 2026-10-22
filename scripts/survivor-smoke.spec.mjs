@@ -6,6 +6,61 @@ test.afterEach(async({page})=>{expect(pageErrors.get(page)??[], 'browser runtime
 const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
+for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+ for(const [weapon,branches] of [['sword',['sweep','duelist']],['ember',['wildfire','detonation']],['orbit',['bulwark','horizon']]]) {
+  test(`branch comparison demonstrates ${weapon} without choosing or advancing the run at ${viewport.width}`,async({page})=>{
+    await page.setViewportSize(viewport);await scenario(page,`branch-${weapon}`);
+    const before=await snapshot(page),trigger=page.locator('[data-preview-branches]');
+    await expect(trigger).toBeInViewport({ratio:1});await trigger.click();
+    const dialog=page.getByRole('dialog',{name:'전투법 비교'});
+    await expect(dialog).toBeVisible();await expect(dialog.getByRole('button',{name:'미리보기 닫기'})).toBeFocused();
+    await expect(dialog.getByRole('button',{name:'선택 화면으로'})).toBeInViewport({ratio:1});
+    const tabs=dialog.getByRole('tab');await expect(tabs).toHaveCount(2);
+    const initialFrame=await dialog.locator('canvas').evaluate(el=>el.toDataURL());
+    await page.waitForTimeout(250);
+    expect(await dialog.locator('canvas').evaluate(el=>el.toDataURL())).not.toBe(initialFrame);
+    for(let i=0;i<branches.length;i++) {
+      await tabs.nth(i).click();await expect(tabs.nth(i)).toHaveAttribute('aria-selected','true');
+      await expect(dialog.locator('canvas')).toHaveAttribute('data-branch',branches[i]);
+      const size=await dialog.locator('canvas').boundingBox();expect(size.width).toBeGreaterThan(150);expect(size.height).toBeGreaterThanOrEqual(110);
+      expect(await dialog.locator('canvas').evaluate(el=>el.width>0 && el.height>0)).toBe(true);
+      if(viewport.width===320) {
+        const scene=await dialog.locator('.branch-demo-scene').boundingBox(),copy=await dialog.locator('.branch-demo-copy').boundingBox();
+        expect(scene.y+scene.height+8).toBeLessThanOrEqual(copy.y);
+      }
+    }
+    await tabs.last().focus();await page.keyboard.press('ArrowRight');
+    await expect(tabs.first()).toBeFocused();await expect(tabs.first()).toHaveAttribute('aria-selected','true');
+    await page.keyboard.press('1');await page.keyboard.press('p');
+    await expect(dialog).toBeVisible();
+    await page.waitForTimeout(200);
+    const after=await snapshot(page);
+    for(const key of ['phase','time','level','xp','ranks','choices','player','profile','rerolls']) expect(after[key]).toEqual(before[key]);
+    expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+    await page.screenshot({path:`output/playwright/survivor/branch-preview-${weapon}-${viewport.width}.png`,animations:'disabled'});
+    await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0);await expect(trigger).toBeFocused();
+    await trigger.press('Enter');await expect(dialog).toBeVisible();await expect(dialog.locator('canvas')).toHaveCount(1);
+    await dialog.getByRole('button',{name:'선택 화면으로'}).click();await expect(trigger).toBeFocused();
+    await page.locator(`[data-upgrade="${branches[0]}"]`).click();expect((await snapshot(page)).ranks[branches[0]]).toBe(1);
+    await expect(page.locator('.branch-preview')).toHaveCount(0);
+  });
+ }
+}
+
+test('reduced motion keeps branch comparison still and restores the selection focus',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});await scenario(page,'branch-ember');
+ await page.locator('[data-preview-branches]').click();
+ const dialog=page.getByRole('dialog',{name:'전투법 비교'});
+ await expect(dialog).toContainText('정지 장면');
+ const before=await dialog.locator('canvas').evaluate(el=>el.toDataURL());
+ await page.waitForTimeout(250);
+ expect(await dialog.locator('canvas').evaluate(el=>el.toDataURL())).toBe(before);
+ await page.keyboard.press('Shift+Tab');await expect(dialog.getByRole('button',{name:'선택 화면으로'})).toBeFocused();
+ await page.keyboard.press('Tab');await expect(dialog.getByRole('button',{name:'미리보기 닫기'})).toBeFocused();
+ await page.keyboard.press('Escape');await expect(page.locator('[data-preview-branches]')).toBeFocused();
+ expect((await snapshot(page)).phase).toBe('upgrade');
+});
+
 for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
  test(`pinned goal guides growth and pause without changing the offered build at ${viewport.width}`,async({page})=>{
   await page.setViewportSize(viewport);

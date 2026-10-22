@@ -1,4 +1,5 @@
 import { choiceReceipt } from './choice-feedback.js';
+import { openBranchPreview } from './branch-preview.js';
 import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice, evolutionGuidance, goalGuidanceMarkup } from './field-guide.js';
 import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
@@ -19,6 +20,7 @@ import './combat-ui.css';
 import './choice-ui.css';
 import './journey-finish.css';
 import './app-shell.css';
+import './branch-preview.css';
 import { BOSS, bossAttackLabel } from './boss.js';
 import { createGame, startGame, updateGame, chooseUpgrade, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, RUN_SECONDS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
@@ -48,7 +50,7 @@ let storage;
 // Local visual previews use a disposable profile, never the player's saved journey.
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
-  'upgrade', 'overflow', 'branch-sword', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
+  'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
   'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet'
 ].includes(previewScene);
 try {
@@ -89,6 +91,7 @@ let resultReturn = null, pauseSection = 'equipment';
 const campMemory = {scroll: {}, details: {}, returnFocus: '[data-open-codex]'};
 let panelRoute = '';
 let appDialog = null;
+let branchDialog = null, previewArt = null;
 const campDetailSelectors = ['.companion-guide', '.mastery-board', '.journey-board', '.camp-records'];
 function rememberCamp() {
   if (game.phase !== 'ready' || campView !== 'prepare') return;
@@ -496,6 +499,7 @@ function buildGuide() {
   return `<details class="build-guide"><summary>무기 진화 조건 보기</summary>${Object.entries(EVOLUTIONS).map(([key, recipe]) => `<div><strong>${UPGRADE_META[key].name}</strong><span>${game.ranks[key] ? '진화 완료' : recipe.requirement}</span></div>`).join('')}</details>`;
 }
 function syncPhase() {
+  if(branchDialog?.open && game.phase !== 'upgrade') branchDialog.close();
   if (game.phase === 'ended' && ['defeat', 'victory'].includes(game.outcome)) {
     game.endAt ??= performance.now();
     game.endAge = (performance.now() - game.endAt) / 1000;
@@ -573,7 +577,15 @@ function syncPhase() {
         description: weapon.description
       } : UPGRADE_META[key];
       return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-choice-kind="${choice.kind}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? `<span class="experiment-badge">${goalChoiceLabel(game,key) || '이번 판의 목표'}</span>` : ''}<span class="choice-heading"><b>${choice.label}</b><small>${choice.step}</small></span><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change"><small>선택하면</small>${upgradeChange(game, key)}</span>${recipe ? `<span class="recipe-link">${recipe}</span>` : ''}<span class="pick-label">${choice.action} <kbd>${i + 1}</kbd></span></button>`;
-    }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button><p role="status">${rerollFeedback ? '후보가 바뀌었습니다. ' : ''}${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '진화 후보는 유지됩니다.'}</p></div>`);
+    }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button>${choosingBranch ? '<button class="secondary" data-preview-branches>전투법 비교</button>' : ''}<p role="status">${rerollFeedback ? '후보가 바뀌었습니다. ' : ''}${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '진화 후보는 유지됩니다.'}</p></div>`);
+    $('panel').querySelector('[data-preview-branches]')?.addEventListener('click',event=>{
+      if(branchDialog?.open) return;
+      const trigger=event.currentTarget;
+      branchDialog=openBranchPreview({branches:game.choices.filter(key=>SPECIALIZATIONS[key]),characterId:game.characterId,art:previewArt,preferences,onClose:()=>{
+        branchDialog=null;
+        if(trigger.isConnected) trigger.focus({preventScroll:true});
+      }});
+    });
     $('panel').querySelector('[data-reroll]').onclick = () => {
       const previous = new Set(game.choices);
       if (!rerollUpgrades(game)) return;
@@ -780,7 +792,7 @@ function tick(now) {
   requestAnimationFrame(tick);
 }
 document.addEventListener('keydown', event => {
-  if (appDialog?.open) return; // The settings dialog owns Escape and its focus loop.
+  if (appDialog?.open || branchDialog?.open) return; // Modal dialogs own their keyboard input.
   const key = event.key.toLowerCase();
   if (key === 'tab' && !$('overlay').hidden) {
     const buttons = [...$('panel').querySelectorAll('button,summary,a[href],input,select,[tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length > 0);
@@ -1292,6 +1304,7 @@ loadArt(import.meta.env.BASE_URL, (loaded, total) => {
   progress.value = loaded;
   $('art-progress-label').textContent = `여정 준비 ${loaded} / ${total}`;
 }).then(art => {
+  previewArt = art;
   renderer = createRenderer($('world'), art, preferences);
   syncPhase();
   if (import.meta.env.DEV) {

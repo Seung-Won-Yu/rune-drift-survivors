@@ -19,6 +19,26 @@ import { evolutionFeedback, evolutionFrame } from '../src/survivor/evolution-fee
 import { weaponPresentation, weaponLoadout, weaponBeltKey } from '../src/survivor/weapon-presentation.js';
 import { SPECIALIZATIONS } from '../src/survivor/expansion.js';
 import { drawWeaponMotif } from '../src/survivor/weapon-motifs.js';
+import { createBranchDemo } from '../src/survivor/branch-preview.js';
+
+test('branch demonstrations use real attacks in bounded independent encounters', () => {
+  const live=createGame(42,'ember','bookmark',null,{vow:'mist'}),before=JSON.stringify(live);
+  for(const character of ['ash','ember','grove']) for(const [key,meta] of Object.entries(SPECIALIZATIONS)) {
+    const demo=createBranchDemo(key,character),initial=demo.enemies.length;
+    assert.equal(demo.ranks[meta.weapon],3);assert.equal(demo.ranks[key],1);
+    assert.ok(initial>=5 && initial<=8);
+    for(let i=0;i<270;i++) updateGame(demo,1/60,{x:0,y:0});
+    assert.equal(demo.phase,'playing');assert.equal(demo.level,4);
+    assert.ok(demo.damageDealt[meta.weapon]>0,`${key} must demonstrate actual damage`);
+    for(const other of ['sword','ember','orbit'].filter(weapon=>weapon!==meta.weapon)) {
+      assert.equal(demo.ranks[other],0);assert.equal(demo.damageDealt[other],0);
+    }
+    assert.ok(demo.enemies.length<=initial);
+    assert.equal(demo.player.hp,demo.player.maxHp);
+  }
+  assert.equal(JSON.stringify(live),before);
+  assert.equal(createBranchDemo('invalid'),null);assert.equal(createBranchDemo('constructor'),null);
+});
 
 const drawingCalls = draw => {
   const calls = [], ctx = new Proxy({}, {
