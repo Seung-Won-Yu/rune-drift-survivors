@@ -732,7 +732,7 @@ function updateHud() {
   $('xp-bar').setAttribute('aria-valuenow', String(Math.round(Math.min(100, game.xp / game.xpNeed * 100))));
   $('xp-bar').setAttribute('aria-valuetext', `${Math.round(game.xp * 10) / 10} / ${game.xpNeed} · 다음 레벨 ${game.level + 1}`);
   const pacing = combatPacing(game);
-  $('phase-label').textContent = championStatus(game) ?? (['rest', 'evolution', 'surge', 'champion'].includes(pacing.kind) ? `${pacing.label} · ${Math.ceil(pacing.remaining)}초` : pacing.label);
+  $('phase-label').textContent = championStatus(game) ?? (['rest', 'evolution', 'surge', 'champion', 'harvest'].includes(pacing.kind) ? `${pacing.label} · ${Math.ceil(pacing.remaining)}초` : pacing.label);
   $('phase-label').dataset.pacing = pacing.kind;
   $('coach').textContent = game.time < 5 ? (matchMedia('(pointer:coarse)').matches ? '왼쪽 스틱으로 이동 · 공격은 자동' : 'WASD / 방향키 이동 · Esc / P 일시정지') : `공격은 자동 · ${SIGNATURES[game.characterId].action}`;
   $('coach').hidden = game.time >= 14 || needsRecovery;
@@ -774,6 +774,8 @@ function tick(now) {
     const events = new Set(game.events);
     if (events.has('event-ready')) notice('숲의 사건 발견 · 방향 안내를 따라가 보세요');else if (events.has('event-expired')) notice('미완료 사건이 사라졌습니다 · 다음 대결을 준비하세요');else if (events.has('curse')) notice('저주 시작 · 18초 동안 살아남으세요');else if (events.has('recovery-ready')) notice('숲의 열매가 열렸습니다 · 가까이 가면 체력 +25');else if (events.has('boss-arrival')) notice('재의 군주 출현 · 공격 예고를 보고 빈틈을 노리세요');else if (events.has('elite')) notice(`${game.enemies.find(e => e.champion && e.hp > 0)?.name ?? '정예'} 출현 · ${CHAMPIONS.find(c => c.id === game.enemies.find(e => e.champion && e.hp > 0)?.champion)?.tip ?? '처치하면 체력 회복'}`);
     if (events.has('elite-break')) notice('정예 격파 · 체력 +15 · 주변 경험치가 모입니다');
+    else if (events.has('swarm-cleared')) notice('무리 돌파 · 경험치가 모입니다 · 다음 전투를 준비하세요');
+    else if (events.has('swarm-arrival') && !events.has('elite') && !events.has('boss-arrival')) notice('무리가 몰려옵니다 · 빈 쪽으로 피하거나 한꺼번에 베어내세요');
     if (events.has('learn-spore')) notice('버섯의 포자 · 점선 원이 차오르면 밖으로 이동하세요');
     else if (events.has('learn-hound')) notice('사냥개 돌진 · 달려오는 방향 옆으로 피하세요');
     else if (events.has('learn-giant')) notice('거인의 내려찍기 · 고정된 원 밖으로 이동하세요');
@@ -906,6 +908,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       relics: [...game.relics],
       relicChoices: [...game.relicChoices],
       encounters: structuredClone(game.encounters),
+      swarms: structuredClone(game.swarms),
       audio: audio.state(),
       supplies: game.supplies.map(s => ({
         ...s

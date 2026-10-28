@@ -1,5 +1,5 @@
 import { getCharacter } from './characters.js';
-import { SPECIALIZATIONS } from './expansion.js';
+import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL } from './expansion.js';
 
 export function validExperiment(characterId, key) {
   return typeof key === 'string' && Object.hasOwn(SPECIALIZATIONS, key) && SPECIALIZATIONS[key].weapon === getCharacter(characterId).weapon ? key : null;
@@ -16,5 +16,5 @@ export function experimentProgress(game) {
   if (game.ranks[key]) return { key, state: 'complete', text: `${target.name} 선택 완료` };
   const other = Object.keys(SPECIALIZATIONS).find(id => SPECIALIZATIONS[id].weapon === target.weapon && game.ranks[id]);
   if (other) return { key, state: 'changed', text: `${SPECIALIZATIONS[other].name}으로 방향을 바꿨습니다` };
-  return { key, state: 'preparing', text: `${target.name} · ${Math.min(3, game.ranks[target.weapon])}/3단계 · 레벨 4부터 선택` };
+  return { key, state: 'preparing', text: `${target.name} · ${Math.min(SPECIALIZATION_RANK, game.ranks[target.weapon])}/${SPECIALIZATION_RANK}단계 · 레벨 ${SPECIALIZATION_LEVEL}부터 선택` };
 }

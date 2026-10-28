@@ -23,7 +23,7 @@
 .phase-upgrade .upgrade-top .panel-lead { margin: 5px 0; }
 .phase-upgrade .growth-context { padding: 8px 0; margin-bottom: 12px; }
 .panel .choice-list .upgrade-card { min-height: 0; padding: 14px 16px; gap: 0; }
-.panel .choice-list .upgrade-card:hover { transform: translateY(-2px); }
+.panel .choice-list .upgrade-card:hover { transform: none; }
 .panel .choice-list .upgrade-icon { height: 58px; margin: 5px 0; }
 .panel .choice-list .upgrade-icon svg { width: 55px; height: 55px; }
 .panel .choice-list .upgrade-card > strong { font-size: 21px; }
@@ -105,7 +105,7 @@
   .phase-relic > .eyebrow { display: none; }
   .phase-relic h1 { margin: 0 0 4px; font-size: 23px; }
   .phase-relic .choice-pause-note { margin-bottom: 8px; }
-  .phase-upgrade .reroll-row { margin-top: 8px; padding-top: 6px; }
+  .phase-upgrade .reroll-row { margin-top: 6px; padding-top: 6px; }
   .reward-notice { padding: 6px 8px; grid-template-columns: 28px minmax(0,1fr); }
   .receipt-art svg { width: 27px; height: 27px; }
   .reward-notice strong { font-size: 12px; }

@@ -1,5 +1,5 @@
 import { validGoal } from './progression.js';
-import { SPECIALIZATIONS, RELICS, specializationFor } from './expansion.js';
+import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL, RELICS, specializationFor } from './expansion.js';
 import { EVOLUTIONS, UPGRADE_META, canEvolve } from './game.js';
 
 export function goalMeta(id) {
@@ -15,7 +15,7 @@ export function goalProgress(game) {
   if (complete) return {...meta, state: 'complete', text: `${name} 달성 · 여정을 마치면 도감에 기록`};
   if (kind === 'branch') {
     const branch = specializationFor(game, meta.weapon);
-    return {...meta, state: branch ? 'changed' : 'preparing', text: branch ? `${name} · 다른 갈래를 골랐어요. 다음 판에 다시 도전` : `${name} · ${UPGRADE_META[meta.weapon].name} ${Math.min(3, game.ranks[meta.weapon])}/3 · 레벨 ${Math.min(4, game.level)}/4`};
+    return {...meta, state: branch ? 'changed' : 'preparing', text: branch ? `${name} · 다른 갈래를 골랐어요. 다음 판에 다시 도전` : `${name} · ${UPGRADE_META[meta.weapon].name} ${Math.min(SPECIALIZATION_RANK, game.ranks[meta.weapon])}/${SPECIALIZATION_RANK} · 레벨 ${Math.min(SPECIALIZATION_LEVEL, game.level)}/${SPECIALIZATION_LEVEL}`};
   }
   if (kind === 'evolution') {
     const path = EVOLUTIONS[key];
@@ -27,7 +27,7 @@ export function goalRelevant(game, key) {
   const meta = goalMeta(game.goal);
   if (!meta || goalProgress(game).state !== 'preparing') return false;
   if (meta.key === key) return true;
-  if (meta.kind === 'branch') return key === meta.weapon && game.ranks[key] < 3;
+  if (meta.kind === 'branch') return key === meta.weapon && game.ranks[key] < SPECIALIZATION_RANK;
   if (meta.kind === 'evolution') {
     const path = EVOLUTIONS[meta.key];
     return key === path.weapon && game.ranks[key] < 3 || key === path.support && game.ranks[key] < 1;

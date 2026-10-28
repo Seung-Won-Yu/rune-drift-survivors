@@ -22,11 +22,11 @@ const enemy = (g, x, y = 0) => {
   e.hp = e.maxHp = 1000;
   return e;
 };
-test('all three weapons offer mutually exclusive specializations after rank three', () => {
+test('all three weapons can commit to mutually exclusive styles at rank two and level three', () => {
   for (const weapon of ['sword', 'ember', 'orbit']) {
     const g = playing();
-    g.level = 4;
-    g.ranks[weapon] = 3;
+    g.level = 3;
+    g.ranks[weapon] = 2;
     const keys = Object.keys(SPECIALIZATIONS).filter(k => SPECIALIZATIONS[k].weapon === weapon);
     g.phase = 'upgrade';
     g.choices = draftUpgrades(g);

@@ -1,5 +1,5 @@
 import { EVOLUTIONS, UPGRADE_META, canEvolve, nextEvolution } from './game.js';
-import { SPECIALIZATIONS } from './expansion.js';
+import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL } from './expansion.js';
 import { weaponLoadout } from './weapon-presentation.js';
 import { collectionArt } from './collection-art.js';
 import { goalProgress } from './goals.js';
@@ -39,8 +39,8 @@ export function goalGuidance(game) {
   const goal = goalProgress(game);
   if (!goal) return null;
   const parts = goal.kind === 'evolution' ? evolutionProgress(game,goal.key).parts : goal.kind === 'branch' ? [
-    {name:UPGRADE_META[goal.weapon].name,value:Math.min(3,game.ranks[goal.weapon]),target:3,done:game.ranks[goal.weapon]>=3},
-    {name:'레벨',value:Math.min(4,game.level),target:4,done:game.level>=4}
+    {name:UPGRADE_META[goal.weapon].name,value:Math.min(SPECIALIZATION_RANK,game.ranks[goal.weapon]),target:SPECIALIZATION_RANK,done:game.ranks[goal.weapon]>=SPECIALIZATION_RANK},
+    {name:'레벨',value:Math.min(SPECIALIZATION_LEVEL,game.level),target:SPECIALIZATION_LEVEL,done:game.level>=SPECIALIZATION_LEVEL}
   ] : [];
   const offered = goal.state === 'preparing' && (game.phase === 'upgrade' && game.choices.includes(goal.key) || game.phase === 'relic' && game.relicChoices.includes(goal.key));
   const ready = goal.state === 'preparing' && parts.length > 0 && parts.every(part=>part.done);

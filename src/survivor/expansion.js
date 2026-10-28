@@ -1,4 +1,6 @@
 // Stable IDs are shared by gameplay, cards, and saved discovery records.
+export const SPECIALIZATION_RANK = 2;
+export const SPECIALIZATION_LEVEL = 3;
 export const SPECIALIZATIONS = {
   sweep: {
     weapon: 'sword',
@@ -118,8 +120,8 @@ export function relicEffect(game, key, preview = false) {
 }
 export const specializationFor = (game, weapon) => Object.keys(SPECIALIZATIONS).find(key => SPECIALIZATIONS[key].weapon === weapon && game.ranks[key]);
 export function specializationOffers(game) {
-  if (game.level < 4) return [];
-  const weapon = ['sword', 'ember', 'orbit'].find(key => game.ranks[key] >= 3 && !specializationFor(game, key));
+  if (game.level < SPECIALIZATION_LEVEL) return [];
+  const weapon = ['sword', 'ember', 'orbit'].find(key => game.ranks[key] >= SPECIALIZATION_RANK && !specializationFor(game, key));
   return Object.keys(SPECIALIZATIONS).filter(key => SPECIALIZATIONS[key].weapon === weapon);
 }
 export function modifyBuildStats(game, s) {

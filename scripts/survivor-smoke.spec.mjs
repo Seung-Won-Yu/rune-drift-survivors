@@ -6,6 +6,29 @@ test.afterEach(async({page})=>{expect(pageErrors.get(page)??[], 'browser runtime
 const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]) {
+ test(`ordinary opening choices lead into a breakable swarm and earned harvest at ${viewport.width}`,async({page})=>{
+  test.setTimeout(90_000);
+  await page.setViewportSize(viewport);
+  await page.evaluate(()=>window.__ASH_QA__.prepareRun('ash','blade',42));
+  await page.getByRole('button',{name:'숲에 들어가기',exact:true}).click();
+  await expect.poll(async()=>!!(await snapshot(page)).swarms.active,{timeout:45_000}).toBe(true);
+  const arrival=await snapshot(page);
+  expect(arrival.time).toBeLessThan(25);expect(arrival.ranks.sweep).toBe(1);expect(arrival.ranks.sword).toBeGreaterThanOrEqual(2);
+  await expect(page.locator('#phase-label')).toContainText('무리 돌파');
+  await page.keyboard.press('Escape');
+  const paused=await snapshot(page);expect(paused.phase).toBe('paused');
+  await page.waitForTimeout(150);const still=await snapshot(page);
+  expect(still.time).toBe(paused.time);expect(still.swarms).toEqual(paused.swarms);
+  await page.getByRole('button',{name:'전투 계속하기',exact:true}).click();
+  await expect.poll(async()=>(await snapshot(page)).swarms.cleared,{timeout:40_000}).toBe(1);
+  await expect(page.locator('#phase-label')).toContainText('경험치 수확');
+  const cleared=await snapshot(page);expect(cleared.kills).toBeGreaterThanOrEqual(14);expect(cleared.swarms.active).toBeNull();
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  await page.screenshot({path:`output/playwright/survivor/flow-harvest-${viewport.width}.png`});
+ });
+}
+
 for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
  for(const [weapon,branches] of [['sword',['sweep','duelist']],['ember',['wildfire','detonation']],['orbit',['bulwark','horizon']]]) {
   test(`branch comparison demonstrates ${weapon} without choosing or advancing the run at ${viewport.width}`,async({page})=>{
@@ -616,7 +639,7 @@ for (const viewport of [{width:1280,height:720}, {width:320,height:740}, {width:
     expect(fresh.experiment).toBe('duelist'); expect(fresh.ranks.sword).toBe(1);
     expect(fresh.ranks.duelist).toBe(0); expect(fresh.ranks.sweep).toBe(0); expect(fresh.ranks.dawn).toBe(0); expect(fresh.relics).toEqual([]);
     await page.keyboard.press('Escape');
-    await expect(page.locator('.experiment-progress')).toContainText('1/3단계');
+    await expect(page.locator('.experiment-progress')).toContainText('1/2단계');
     await scenario(page, 'experiment-offer');
     await expect(page.locator('[data-upgrade="duelist"] .experiment-badge')).toHaveText('이번 판의 목표');
     await expect(page.locator('[data-upgrade="sweep"]')).toBeEnabled();

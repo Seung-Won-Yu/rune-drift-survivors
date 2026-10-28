@@ -1,5 +1,5 @@
 import { SIGNATURES, signatureDescription } from './signature.js';
-import { SPECIALIZATIONS, RELICS, relicContext, relicEffect } from './expansion.js';
+import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL, RELICS, relicContext, relicEffect } from './expansion.js';
 import { CHALLENGES, KEEPSAKES, challengeProgress, completedChallenges, canEquipKeepsake, keepsakeStats } from './journey.js';
 import { codexEntries, codexIcon, inheritanceHint } from './codex.js';
 import { CHARACTERS, getCharacter, isUnlocked, unlockProgress } from './characters.js';
@@ -64,13 +64,13 @@ export function experimentPlan(game) {
   const progress = experimentProgress(game);
   if (!progress) return '';
   const target = SPECIALIZATIONS[progress.key];
-  return `<section class="experiment-plan" aria-label="이번 판의 목표"><small>이번 판의 목표</small><strong>${target.name}</strong><p>${target.description}</p><p class="record-line">${UPGRADE_META[target.weapon].name} 3단계 · 레벨 4부터 선택 후보로 등장합니다. 다른 갈래를 골라도 괜찮습니다.</p><button class="secondary" data-clear-experiment>목표 지우기</button></section>`;
+  return `<section class="experiment-plan" aria-label="이번 판의 목표"><small>이번 판의 목표</small><strong>${target.name}</strong><p>${target.description}</p><p class="record-line">${UPGRADE_META[target.weapon].name} ${SPECIALIZATION_RANK}단계 · 레벨 ${SPECIALIZATION_LEVEL}부터 선택 후보로 등장합니다. 다른 갈래를 골라도 괜찮습니다.</p><button class="secondary" data-clear-experiment>목표 지우기</button></section>`;
 }
 export function nextExperimentCard(game, profile) {
   const key = nextExperiment(game, profile);
   if (!key || !isUnlocked(profile, game.characterId)) return '';
   const target = SPECIALIZATIONS[key];
-  return `<section class="next-experiment" aria-label="다음 판의 실험"><small>다음 판의 실험 · ${profile.buildDiscoveries.includes(key) ? '다른 갈래로 도전' : '아직 발견하지 않은 갈래'}</small><strong>${target.name}</strong><p>${target.description}</p><p class="experiment-change">${target.change}</p><button class="secondary" data-experiment="${key}">이 빌드로 다음 판 준비</button><p class="record-line">${getCharacter(game.characterId).name} · 전승 없이 출발해 ${UPGRADE_META[target.weapon].name} 3단계 · 레벨 4부터 선택 후보를 기다립니다.${profile.goal ? ' 기존 도감 목표를 이 목표로 바꿉니다.' : ''}</p></section>`;
+  return `<section class="next-experiment" aria-label="다음 판의 실험"><small>다음 판의 실험 · ${profile.buildDiscoveries.includes(key) ? '다른 갈래로 도전' : '아직 발견하지 않은 갈래'}</small><strong>${target.name}</strong><p>${target.description}</p><p class="experiment-change">${target.change}</p><button class="secondary" data-experiment="${key}">이 빌드로 다음 판 준비</button><p class="record-line">${getCharacter(game.characterId).name} · 전승 없이 출발해 ${UPGRADE_META[target.weapon].name} ${SPECIALIZATION_RANK}단계 · 레벨 ${SPECIALIZATION_LEVEL}부터 선택 후보를 기다립니다.${profile.goal ? ' 기존 도감 목표를 이 목표로 바꿉니다.' : ''}</p></section>`;
 }
 export function journeyScreen(profile) {
   const completed = completedChallenges(profile);
@@ -136,7 +136,7 @@ export function buildSummary(game) {
   const progress = experimentProgress(game), collectionGoal = goalProgress(game);
   const k = keepsakeStats(game.keepsake);
   const growth = k.xpSeconds ? ` · ${game.time < k.xpSeconds ? `효과 ${Math.ceil(k.xpSeconds - game.time)}초 남음` : '경험치 강화 종료'}` : '';
-  return `<div class="build-summary">${collectionGoal ? `<p class="experiment-progress is-${collectionGoal.state}"><strong>도감 목표</strong> ${game.phase === 'ended' && collectionGoal.state === 'complete' ? `${collectionGoal.name} 달성 · 도감 기록 완료` : collectionGoal.text}</p>` : ''}<p><strong>숲의 서약</strong> ${vowStats(game.vow).name} · ${vowStats(game.vow).change}</p><p><strong>성장 다시 뽑기</strong> ${game.rerollsUsed}회 사용 · ${game.rerolls}회 남음</p>${progress ? `<p class="experiment-progress is-${progress.state}"><strong>이번 판의 목표</strong> ${progress.text}</p>` : ''}<p><strong>출발 기념품</strong> ${k.name} · ${k.change}${growth}</p><p><strong>이번 판의 전문화</strong> ${branches.length ? branches.map(key => SPECIALIZATIONS[key].name).join(' · ') : '무기 3단계부터 선택할 수 있습니다'}</p><p><strong>숲의 유물 ${game.relics.length}/2</strong> ${game.relics.length ? game.relics.map(key => RELICS[key].name).join(' · ') : '제단 또는 저주 상자를 완료하면 얻습니다'}</p>${branches.map(key => `<small>${SPECIALIZATIONS[key].name} · ${SPECIALIZATIONS[key].change}</small>`).join('')}${game.relics.map(key => `<small>${RELICS[key].name} · ${relicEffect(game, key)}</small>`).join('')}</div>`;
+  return `<div class="build-summary">${collectionGoal ? `<p class="experiment-progress is-${collectionGoal.state}"><strong>도감 목표</strong> ${game.phase === 'ended' && collectionGoal.state === 'complete' ? `${collectionGoal.name} 달성 · 도감 기록 완료` : collectionGoal.text}</p>` : ''}<p><strong>숲의 서약</strong> ${vowStats(game.vow).name} · ${vowStats(game.vow).change}</p><p><strong>성장 다시 뽑기</strong> ${game.rerollsUsed}회 사용 · ${game.rerolls}회 남음</p>${progress ? `<p class="experiment-progress is-${progress.state}"><strong>이번 판의 목표</strong> ${progress.text}</p>` : ''}<p><strong>출발 기념품</strong> ${k.name} · ${k.change}${growth}</p><p><strong>이번 판의 전문화</strong> ${branches.length ? branches.map(key => SPECIALIZATIONS[key].name).join(' · ') : `무기 ${SPECIALIZATION_RANK}단계 · 레벨 ${SPECIALIZATION_LEVEL}부터 선택할 수 있습니다`}</p><p><strong>숲의 유물 ${game.relics.length}/2</strong> ${game.relics.length ? game.relics.map(key => RELICS[key].name).join(' · ') : '제단 또는 저주 상자를 완료하면 얻습니다'}</p>${branches.map(key => `<small>${SPECIALIZATIONS[key].name} · ${SPECIALIZATIONS[key].change}</small>`).join('')}${game.relics.map(key => `<small>${RELICS[key].name} · ${relicEffect(game, key)}</small>`).join('')}</div>`;
 }
 // Present only the deltas returned by recordRun, never everything already owned.
 export function resultTakeaway(game, profile, rewards = {}) {

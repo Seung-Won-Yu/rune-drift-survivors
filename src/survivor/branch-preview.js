@@ -1,5 +1,5 @@
 import { createGame, spawnEnemy, updateGame } from './game.js';
-import { SPECIALIZATIONS } from './expansion.js';
+import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL } from './expansion.js';
 import { createRenderer } from './render.js';
 import { collectionArt } from './collection-art.js';
 import { reduceMotion } from './preferences.js';
@@ -9,12 +9,12 @@ export function createBranchDemo(branch, characterId = 'ash') {
   if (!Object.hasOwn(SPECIALIZATIONS,branch)) return null;
   const meta = SPECIALIZATIONS[branch];
   const demo = createGame(42, characterId);
-  Object.assign(demo, {phase:'playing',level:4,xpNeed:1e9,spawnClock:999,nextElite:999,nextRecovery:999});
+  Object.assign(demo, {phase:'playing',level:SPECIALIZATION_LEVEL,xpNeed:1e9,spawnClock:999,nextElite:999,nextRecovery:999});
   demo.player.invincible=999;
   for(const weapon of ['sword','ember','orbit']) demo.ranks[weapon]=0;
-  demo.ranks[meta.weapon]=3;demo.ranks[branch]=1;
+  demo.ranks[meta.weapon]=SPECIALIZATION_RANK;demo.ranks[branch]=1;
   const positions = meta.weapon === 'orbit'
-    ? [65,145].flatMap(radius=>[0,Math.PI/2,Math.PI,Math.PI*1.5].map(angle=>({x:Math.cos(angle)*radius,y:Math.sin(angle)*radius})))
+    ? [65,130].flatMap(radius=>[0,Math.PI/2,Math.PI,Math.PI*1.5].map(angle=>({x:Math.cos(angle)*radius,y:Math.sin(angle)*radius})))
     : meta.weapon === 'ember'
       ? [{x:100,y:0},{x:125,y:-24},{x:125,y:24},{x:150,y:0},{x:150,y:-42},{x:150,y:42}]
       : [-1.2,-.65,0,.65,1.2].map(angle=>({x:Math.cos(angle)*100,y:Math.sin(angle)*100}));
@@ -33,7 +33,7 @@ export function openBranchPreview({branches,characterId,art,preferences,onClose}
   dialog.setAttribute('aria-labelledby','branch-preview-title');
   dialog.innerHTML=`<header><div><p class="eyebrow">같은 무기, 다른 전투</p><h2 id="branch-preview-title">전투법 비교</h2></div><button class="branch-preview-close" aria-label="미리보기 닫기" autofocus>×</button></header>
     <div class="branch-preview-tabs" role="tablist" aria-label="비교할 전투법">${options.map((key,i)=>`<button id="demo-tab-${key}" role="tab" data-demo-branch="${key}" aria-selected="${i===0}" aria-controls="branch-demo-panel" tabindex="${i===0?0:-1}">${collectionArt(key)}<span>${SPECIALIZATIONS[key].name}</span></button>`).join('')}</div>
-    <section id="branch-demo-panel" class="branch-demo-body" role="tabpanel" tabindex="0" aria-labelledby="demo-tab-${options[0]}"><div class="branch-demo-scene"><canvas aria-hidden="true"></canvas><span class="branch-demo-caption">무기 3단계 기준</span></div><div class="branch-demo-copy"></div></section>
+    <section id="branch-demo-panel" class="branch-demo-body" role="tabpanel" tabindex="0" aria-labelledby="demo-tab-${options[0]}"><div class="branch-demo-scene"><canvas aria-hidden="true"></canvas><span class="branch-demo-caption">무기 ${SPECIALIZATION_RANK}단계 기준</span></div><div class="branch-demo-copy"></div></section>
     <footer><p>살펴보는 동안 여정의 시간이 멈춰 있어요.</p><button class="primary" data-close-demo>선택 화면으로 <span aria-hidden="true">→</span></button></footer>`;
   document.body.append(dialog);
   let painter, demo, frame=0, last=0, accumulator=0, selected=options[0], disposed=false;

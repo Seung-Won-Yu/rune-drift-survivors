@@ -83,7 +83,7 @@ test('an experiment grants no ranks, stats, different offers or combat advantage
 test('experiment progress distinguishes preparation, the earned target and a voluntary different branch', () => {
   const game = createGame(42, 'ash', 'none', 'duelist');
   assert.equal(experimentProgress(game).state, 'preparing');
-  game.ranks.sword = 5; assert.match(experimentProgress(game).text, /3\/3단계/);
+  game.ranks.sword = 5; assert.match(experimentProgress(game).text, /2\/2단계/);
   game.ranks.duelist = 1; assert.equal(experimentProgress(game).state, 'complete');
   game.ranks.duelist = 0; game.ranks.sweep = 1;
   assert.equal(experimentProgress(game).state, 'changed'); assert.match(experimentProgress(game).text, /반월 검법/);

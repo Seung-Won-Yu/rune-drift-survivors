@@ -1,6 +1,6 @@
 import { appHeader, appNavigation } from './app-shell.js';
 import { CHARACTERS, getCharacter, isUnlocked, unlockProgress } from './characters.js';
-import { SPECIALIZATIONS, RELICS } from './expansion.js';
+import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL, RELICS } from './expansion.js';
 import { EVOLUTIONS, UPGRADE_META } from './game.js';
 import { validGoal, validInheritance, runPreparation } from './progression.js';
 import { collectionArt } from './collection-art.js';
@@ -26,7 +26,7 @@ export function codexEntries(profile) {
     })),
     ...Object.entries(SPECIALIZATIONS).map(([key, s]) => ({
       ...s, id: `branch:${key}`, group: 'weapons', kind: '전문화', found: profile.buildDiscoveries.includes(key),
-      hint: `${UPGRADE_META[s.weapon].name} 3단계 · 레벨 4부터 성장 후보에 등장합니다. ${s.name} 선택 후 여정을 마치세요.`,
+      hint: `${UPGRADE_META[s.weapon].name} ${SPECIALIZATION_RANK}단계 · 레벨 ${SPECIALIZATION_LEVEL}부터 성장 후보에 등장합니다. ${s.name} 선택 후 여정을 마치세요.`,
       use: `${inheritanceHint(profile, key)} 한 갈래를 골라 1단계부터 사용하며 무기는 다시 성장시킵니다.`
     })),
     ...Object.entries(EVOLUTIONS).map(([key, recipe]) => ({

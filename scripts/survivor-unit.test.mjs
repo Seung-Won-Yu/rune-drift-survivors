@@ -172,8 +172,18 @@ test('each evolution is gated by its own build and all eligible choices fit a dr
   for(const key of Object.keys(EVOLUTIONS)){g.phase='upgrade';g.choices=draftUpgrades(g);assert.equal(chooseUpgrade(g,key),true);assert.ok(!draftUpgrades(g).includes(key));}
   assert.equal(createGame().ranks.comet,0);assert.equal(createGame().ranks.lunar,0);
 });
-test('first draft offers both attack families without forcing an ember unlock',()=>{
-  for(let seed=1;seed<=12;seed++){const g=createGame(seed);const choices=draftUpgrades(g);assert.ok(choices.includes('ember'));assert.ok(choices.includes('orbit'));assert.equal(choices.length,3);}
+test('early drafts offer commitment, one rotating new weapon and a survival alternative',()=>{
+  for(const character of ['ash','ember','grove']) for(let seed=1;seed<=12;seed++) {
+    const g=createGame(seed,character), primary={ash:'sword',ember:'ember',grove:'orbit'}[character];
+    const first=draftUpgrades(g), second=draftUpgrades(g);
+    for(const choices of [first,second]) {
+      assert.ok(choices.includes(primary));
+      assert.equal(choices.filter(key=>['sword','ember','orbit'].includes(key)&&key!==primary).length,1);
+      assert.ok(choices.some(key=>['fleet','magnet','vitality'].includes(key)));
+      assert.equal(new Set(choices).size,3);
+    }
+    assert.equal(new Set([...first,...second].filter(key=>['sword','ember','orbit'].includes(key))).size,3);
+  }
 });
 test('comet explosion hits nearby enemies once without reaching a distant enemy',()=>{
   const g=playing();g.swordClock=999;
@@ -272,9 +282,10 @@ test('audio retains a contact beside a foreground cue and collapses a crowd into
 test('attack poses separate windup, release and recovery without mutating combat state',async()=>{
   const {attackPose}=await import('../src/survivor/impact.js');
   const g=playing();g.swing={age:.15,angle:0,hit:false};
-  const saved=structuredClone({...g,rng:undefined,rewardRng:undefined});
+  const snapshot=()=>({...g,rng:undefined,rewardRng:undefined,flowRng:undefined,draftRng:undefined});
+  const saved=structuredClone(snapshot());
   assert.ok(attackPose(g).x<0);assert.ok(attackPose(g).sy<1);
-  assert.deepEqual({...g,rng:undefined,rewardRng:undefined},saved);
+  assert.deepEqual(snapshot(),saved);
   g.swing.age=.2;const strike=attackPose(g);assert.ok(strike.x>10);assert.ok(strike.sy>1);
   g.swing.age=.48;assert.ok(attackPose(g).x<strike.x*.1);
   g.swing.age=.2;g.swing.angle=Math.PI;assert.ok(attackPose(g).x<0);

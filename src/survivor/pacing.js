@@ -23,10 +23,15 @@ export function combatPacing(game) {
     return { kind: 'boss', rate: 1, remaining: 0, label: '최후의 대결' };
   }
   if (game.championBreatherUntil > game.time) return {kind: 'champion', rate: .35, remaining: game.championBreatherUntil - game.time, label: '정예 격파 · 수확의 시간'};
+  if (game.swarms?.harvestUntil > game.time) return {kind: 'harvest', rate: .3, remaining: game.swarms.harvestUntil - game.time, label: '무리 돌파 · 경험치 수확'};
   const beat = PACING.find(beat => game.time < beat.until);
   const evolutionRemaining = Math.min(BOSS.arrival, game.evolutionBreatherUntil ?? 0) - game.time;
   if (evolutionRemaining > 0) {
     return { kind: 'evolution', rate: Math.min(beat.rate, .45), remaining: evolutionRemaining, label: '진화의 여세' };
+  }
+  if (game.swarms?.active) {
+    const active = game.swarms.active;
+    return {kind: 'swarm', rate: .65, remaining: active.until - game.time, label: `무리 돌파 · ${active.kills}/${active.total}`};
   }
   return { ...beat, remaining: beat.until - game.time,
     label: beat.kind === 'rest' ? '숨 고르기' : beat.kind === 'surge' ? '밀려오는 무리' : waveAt(game.time).name };

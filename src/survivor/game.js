@@ -3,7 +3,7 @@ import { createSignature, advanceSignature, chargeBlade, chargeRune, consumeSign
 import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact, recordBossDamage } from './impact.js';
 import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy } from './enemies.js';
 import { updateEncounters, curseActive } from './encounters.js';
-import { SPECIALIZATIONS, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
+import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
 import { BOSS, updateBoss, updateThorns } from './boss.js';
 import { getCharacter } from './characters.js';
 import { keepsakeStats, keepsakeXpMultiplier, KEEPSAKES } from './journey.js';
@@ -11,6 +11,7 @@ import { healPlayer, updateField } from './field.js';
 import { EVOLUTION_BREATHER, spawnPlan } from './pacing.js';
 import { validExperiment } from './experiments.js';
 import { vowStats, validGoal, primaryBranches } from './progression.js';
+import { createSwarms, spawnOpening, updateSwarms, recordSwarmKill } from './swarms.js';
 export const RUN_SECONDS = 300;
 export const LIMITS = {
   enemies: 160,
@@ -189,6 +190,8 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', exp
     experiment: inheritance ? null : validExperiment(character.id, experiment),
     keepsake,
     signature: createSignature(),
+    swarms: createSwarms(),
+    weaponOfferCursor: 0,
     feedbackAt: {},
     spores: [],
     nextSpore: 0,
@@ -286,6 +289,8 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', exp
       orbit: 0
     },
     rng: seededRandom(seed),
+    flowRng: seededRandom(seed ^ 0x7A31B425),
+    draftRng: seededRandom(seed ^ 0x3C6EF372),
     rewardRng: seededRandom(seed ^ 0x51F15EED),
     spawnRadius: 370
   };
@@ -334,17 +339,27 @@ export function draftUpgrades(game) {
   const available = Object.keys(UPGRADE_META).filter(k => !SPECIALIZATIONS[k] && k !== 'heal' && game.ranks[k] < UPGRADE_META[k].max && (!EVOLUTIONS[k] || canEvolve(game, k)));
   const chosen = Object.keys(EVOLUTIONS).filter(k => canEvolve(game, k)).slice(0, 3);
   const branches = specializationOffers(game);
-  if (branches.length && chosen.length <= 1) return [...chosen, ...branches, ...available.filter(key => !chosen.includes(key))].slice(0, 3);
-  // Introduce both alternate weapons early, then leave room to grow the chosen build.
+  const pick = pool => pool.length ? pool[Math.floor(game.draftRng() * pool.length)] : null;
   const unowned = ['sword', 'ember', 'orbit'].filter(key => game.ranks[key] === 0);
-  const offers = game.level <= 3 ? unowned : unowned.slice(Math.floor(game.rng() * Math.max(1, unowned.length))).slice(0, 1);
-  for (const key of offers) if (chosen.length < 3) chosen.push(key);
   const primary = getCharacter(game.characterId).weapon;
   const recipe = Object.values(EVOLUTIONS).find(path => path.weapon === primary);
   const growth = game.ranks[primary] < UPGRADE_META[primary].max ? primary : game.ranks[recipe.support] === 0 ? recipe.support : null;
+  // Rotate discovery across drafts. Skipping a new weapon does not hide the
+  // other one, and committing to a weapon leaves a real survival alternative.
+  const alternates = ['sword', 'ember', 'orbit'].filter(key => key !== primary);
+  const discovery = alternates[game.weaponOfferCursor++ % alternates.length];
+  const secondary = pick(available.filter(key => ['sword', 'ember', 'orbit'].includes(key) && key !== primary && game.ranks[key] > 0));
+  const flank = !game.ranks[discovery] ? discovery : secondary || pick(unowned);
+  const utility = game.player.hp < game.player.maxHp * .5 && available.includes('vitality') ? 'vitality' : pick(available.filter(key => ['fleet', 'magnet', 'vitality'].includes(key)));
+  if (branches.length && chosen.length <= 1) {
+    for (const key of branches) if (chosen.length < 3) chosen.push(key);
+    const alternative = flank || utility || growth;
+    if (alternative && chosen.length < 3 && !chosen.includes(alternative)) chosen.push(alternative);
+  }
   if (growth && chosen.length < 3 && !chosen.includes(growth)) chosen.push(growth);
-  const remaining = available.filter(k => !chosen.includes(k) && (game.level <= 3 || !unowned.includes(k)));
-  while (chosen.length < 3 && remaining.length) chosen.push(remaining.splice(Math.floor(game.rng() * remaining.length), 1)[0]);
+  for (const key of [flank, utility]) if (key && chosen.length < 3 && !chosen.includes(key)) chosen.push(key);
+  const remaining = available.filter(key => !chosen.includes(key) && (!unowned.includes(key) || key === flank));
+  while (chosen.length < 3 && remaining.length) chosen.push(remaining.splice(Math.floor(game.draftRng() * remaining.length), 1)[0]);
   if (chosen.length < 3) chosen.push('heal');
   return chosen;
 }
@@ -352,7 +367,7 @@ function rerollPool(game) {
   return Object.keys(UPGRADE_META).filter(key => {
     if (game.ranks[key] >= UPGRADE_META[key].max) return false;
     if (EVOLUTIONS[key]) return canEvolve(game, key);
-    if (SPECIALIZATIONS[key]) return game.level >= 4 && game.ranks[SPECIALIZATIONS[key].weapon] >= 3 && !specializationFor(game, SPECIALIZATIONS[key].weapon);
+    if (SPECIALIZATIONS[key]) return game.level >= SPECIALIZATION_LEVEL && game.ranks[SPECIALIZATIONS[key].weapon] >= SPECIALIZATION_RANK && !specializationFor(game, SPECIALIZATIONS[key].weapon);
     return true;
   });
 }
@@ -385,7 +400,7 @@ function checkLevel(game) {
 }
 export function chooseUpgrade(game, key) {
   if (game.phase !== 'upgrade' || !game.choices.includes(key) || game.ranks[key] >= UPGRADE_META[key]?.max) return false;
-  if (SPECIALIZATIONS[key] && (game.ranks[SPECIALIZATIONS[key].weapon] < 3 || specializationFor(game, SPECIALIZATIONS[key].weapon))) return false;
+  if (SPECIALIZATIONS[key] && (game.level < SPECIALIZATION_LEVEL || game.ranks[SPECIALIZATIONS[key].weapon] < SPECIALIZATION_RANK || specializationFor(game, SPECIALIZATIONS[key].weapon))) return false;
   game.ranks[key]++;
   if (EVOLUTIONS[key]) {
     game.events.push('evolve');
@@ -441,7 +456,7 @@ export function spawnEnemy(game, type = 0, elite = false, position) {
   if (game.enemies.length >= LIMITS.enemies) return null;
   const meta = ENEMY[type] ?? ENEMY[0],
     angle = game.rng() * Math.PI * 2,
-    radius = game.spawnRadius + game.rng() * 80;
+    radius = (game.time < 10 ? Math.min(game.spawnRadius, 220) : game.spawnRadius) + game.rng() * 80;
   const hp = meta.hp * (1 + game.time / 270) * (elite ? 5 : 1) * vowStats(game.vow).hp;
   const enemy = {
     ...meta,
@@ -476,7 +491,7 @@ export function spawnChampion(game, index) {
   if (!rule) return null;
   // Retry if all slots are already important enemies; never silently skip the minute encounter.
   if (game.enemies.length >= LIMITS.enemies) {
-    const ordinary = game.enemies.filter(e => !e.elite && !e.boss).sort((a,b) => Math.hypot(b.x-game.player.x,b.y-game.player.y)-Math.hypot(a.x-game.player.x,a.y-game.player.y))[0];
+    const ordinary = game.enemies.filter(e => !e.elite && !e.boss && !(game.swarms.active && e.swarm === game.swarms.active.id)).sort((a,b) => Math.hypot(b.x-game.player.x,b.y-game.player.y)-Math.hypot(a.x-game.player.x,a.y-game.player.y))[0];
     if (!ordinary) return null;
     game.enemies.splice(game.enemies.indexOf(ordinary), 1);
   }
@@ -605,6 +620,7 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false,
       game.events.push('elite-break');
     }
     addGem(game, enemy.x, enemy.y, enemy.xp);
+    recordSwarmKill(game, enemy);
     if (enemy.champion) {
       for (const gem of game.gems) if (Math.hypot(gem.x - enemy.x, gem.y - enemy.y) <= 260) gem.recalled = true;
     }
@@ -947,7 +963,9 @@ export function updateGame(game, dt, input = {
   if (!p.cast) p.castFacing = null;
   game.spawnClock -= dt;
   if (game.time >= BOSS.arrival && !game.bossSpawned) spawnBoss(game);
+  updateSwarms(game, dt, spawnEnemy, LIMITS.enemies);
   if (game.spawnClock <= 0) {
+    spawnOpening(game, spawnEnemy);
     const { interval, count } = spawnPlan(game);
     game.spawnClock = interval;
     for (let i = 0; i < count; i++) {
