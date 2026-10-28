@@ -166,6 +166,17 @@ test('boss entrance is protected, real damage wins, and restart clears encounter
   assert.equal(g.bossDefeated,true);assert.equal(g.outcome,'victory');assert.equal(g.phase,'ended');
   const fresh=createGame();assert.equal(fresh.bossSpawned,false);assert.equal(fresh.bossDefeated,false);assert.deepEqual(fresh.thorns,[]);
 });
+test('the boss closes into a defensive rune build instead of parking outside its attacks',()=>{
+  const g=createGame(42,'grove');startGame(g);
+  Object.assign(g,{time:240.1,spawnClock:999,xpNeed:1e9});
+  Object.assign(g.ranks,{orbit:2,bulwark:1});g.player.invincible=999;
+  const boss=spawnBoss(g);Object.assign(boss,{x:160,y:0,entrance:0,attackClock:999});
+  frames(g,210);
+  assert.ok(boss.walk>0);assert.ok(boss.hp<boss.maxHp,'ordinary rune collision must be able to hit after the approach');
+  assert.equal(g.player.x,0);assert.equal(g.player.y,0);
+  const distance=Math.hypot(boss.x-g.player.x,boss.y-g.player.y);
+  assert.ok(distance>boss.radius+12 && distance<100,'approach leaves room for the player without idle body contact');
+});
 test('each evolution is gated by its own build and all eligible choices fit a draft',()=>{
   const g=playing();Object.assign(g.ranks,{sword:3,ember:3,orbit:3,fleet:1,vitality:1});g.eliteKills=1;
   assert.deepEqual(draftUpgrades(g),['dawn','comet','lunar']);

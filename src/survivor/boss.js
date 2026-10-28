@@ -5,6 +5,7 @@ export const BOSS = {
   radius: 34,
   size: 174,
   speed: 44,
+  approachRange: 90,
   entrance: 1.4,
   windup: 1,
   recovery: .8,
@@ -53,7 +54,7 @@ export function updateBoss(game, boss, dt, hurt, effect) {
   }
   const pattern = boss.pattern;
   if (!pattern) {
-    const speed = distance > 180 ? BOSS.speed : 0;
+    const speed = distance > BOSS.approachRange ? BOSS.speed : 0;
     boss.x += dx / distance * speed * dt;
     boss.y += dy / distance * speed * dt;
     boss.walk = (boss.walk ?? 0) + speed * dt;

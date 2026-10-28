@@ -760,9 +760,13 @@ test('upgrade pauses combat and chained levels show fresh choices', async ({ pag
   await expect(page.locator('.previous-choice')).toContainText('추적 불씨');
   await expect(page.locator('#reward-notice')).toBeHidden();
   await expect(page.locator('[data-upgrade="orbit"]')).toBeVisible();
+  const queued = await snapshot(page), first = queued.choices[0];
+  await expect(page.locator('[data-upgrade]').first()).toHaveAttribute('data-upgrade', first);
   await page.screenshot({ path: 'output/playwright/survivor/upgrade-desktop.png', animations: 'disabled' });
   await page.keyboard.press('1');
-  expect((await snapshot(page)).ranks.orbit).toBe(1);
+  const chosen = await snapshot(page);
+  expect(chosen.ranks[first]).toBe(queued.ranks[first] + 1);
+  for (const key of Object.keys(queued.ranks).filter(key => key !== first)) expect(chosen.ranks[key]).toBe(queued.ranks[key]);
   expect((await snapshot(page)).phase).toBe('playing');
   await expect(page.locator('#overlay')).toBeHidden();
 });
