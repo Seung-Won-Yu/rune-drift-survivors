@@ -7,6 +7,41 @@ const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
 for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]){
+ test(`an earned next combat style starts through inheritance without repeating discovery at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'record-known-experiment');
+  await expect(page.getByRole('button',{name:'이 전투법 전승하기',exact:true})).toBeVisible();
+  const before=await snapshot(page);expect(before.profile.inheritances.ash).toBe('sweep');
+  await expect(page.locator('.next-experiment')).toContainText('발견한 갈래 전승');
+  await expect(page.locator('.next-experiment')).toContainText('시작 무기는 1단계');
+  const action=page.getByRole('button',{name:'이 전투법 전승하기',exact:true});await action.click();
+  const prepared=await snapshot(page);expect(prepared.phase).toBe('ready');
+  expect(prepared.profile.selected).toBe('ash');expect(prepared.profile.inheritances.ash).toBe('duelist');
+  expect(prepared.profile.experiment).toBeNull();expect(prepared.profile.goal).toBeNull();
+  expect(prepared.profile.runs).toBe(before.profile.runs);expect(prepared.profile.totalKills).toBe(before.profile.totalKills);
+  await expect(page.locator('[data-inheritance="duelist"]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('.experiment-plan')).toHaveCount(0);
+  await page.reload();await page.getByRole('button',{name:'숲에 들어가기',exact:true}).click();
+  const fresh=await snapshot(page);
+  expect(fresh.inheritance).toBe('duelist');expect(fresh.experiment).toBeNull();expect(fresh.goal).toBeNull();
+  expect(Object.fromEntries(Object.entries(fresh.ranks).filter(([,rank])=>rank>0))).toEqual({sword:1,duelist:1});
+  expect(fresh.level).toBe(1);expect(fresh.relics).toEqual([]);expect(fresh.profile.runs).toBe(before.profile.runs);
+  await page.keyboard.press('Escape');
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+ });
+}
+test('an earned next style remains usable in memory when its save fails',async({page})=>{
+ await page.addInitScript(()=>{Storage.prototype.setItem=()=>{throw new Error('quota');};});
+ await page.reload();await scenario(page,'record-known-experiment');
+ await expect(page.getByRole('button',{name:'이 전투법 전승하기',exact:true})).toBeVisible();const before=await snapshot(page);
+ await page.getByRole('button',{name:'이 전투법 전승하기',exact:true}).click();
+ await expect(page.locator('.storage-note')).toContainText('기록을 저장하지 못했습니다');
+ expect((await snapshot(page)).profile.inheritances.ash).toBe('duelist');
+ await page.getByRole('button',{name:'숲에 들어가기',exact:true}).click();const fresh=await snapshot(page);
+ expect(fresh.inheritance).toBe('duelist');expect(fresh.ranks.duelist).toBe(1);
+ expect(fresh.profile.runs).toBe(before.profile.runs);expect(fresh.relics).toEqual([]);
+});
+
+for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]){
  test(`landing combinations join real secondary weapons and freeze with the field at ${viewport.width}`,async({page})=>{
   await page.setViewportSize(viewport);if(viewport.width===740)await page.emulateMedia({reducedMotion:'reduce'});
   await scenario(page,'landing-combo');const before=await snapshot(page);

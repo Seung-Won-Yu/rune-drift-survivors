@@ -10,7 +10,7 @@ import { SIGNATURES, signatureState } from './signature.js';
 import { attackPose, isEvolvedWeapon, hurtFeedback, bossHealthTrail } from './impact.js';
 import { GIANT } from './enemies.js';
 import { combatPacing } from './pacing.js';
-import { validExperiment, nextExperiment, experimentProgress } from './experiments.js';
+import { validExperiment, nextExperimentPlan, experimentProgress } from './experiments.js';
 import { runPreparation, validInheritance, primaryBranches, canTakeVow, validGoal, goalFound } from './progression.js';
 import { goalProgress, goalRelevant, goalChoiceLabel } from './goals.js';
 import { canEquipKeepsake } from './journey.js';
@@ -217,10 +217,11 @@ function selectCharacter(id) {
   camp(`[data-character="${id}"]`);
 }
 function prepareExperiment(key) {
-  if (game.phase !== 'ended' || !isUnlocked(profile, game.characterId) || key !== nextExperiment(game, profile)) return;
+  const plan=nextExperimentPlan(game,profile);
+  if (game.phase !== 'ended' || !isUnlocked(profile, game.characterId) || key !== plan?.key) return;
   profile.selected = game.characterId;
-  profile.experiment = validExperiment(game.characterId, key);
-  profile.inheritances[game.characterId] = null;
+  profile.experiment = plan.inheritance ? null : validExperiment(game.characterId, key);
+  profile.inheritances[game.characterId] = plan.inheritance;
   profile.goal = null;
   persist();
   campSection = 'prepare'; preparation = 'inheritance';
@@ -1306,9 +1307,13 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
         game.runId=crypto.randomUUID();game.time=260;game.kills=731;game.level=18;
         Object.assign(game.ranks,{ember:5,comet:1,detonation:1,orbit:5,lunar:1,horizon:1});
         game.phase='ended';game.outcome='victory';game.bossDefeated=true;
-      } else if (name === 'record-unlock' || name === 'record-journey' || name === 'record-experiment') {
+      } else if (name === 'record-unlock' || name === 'record-journey' || name === 'record-experiment' || name === 'record-known-experiment') {
+        if(name==='record-known-experiment') {
+          profile.buildDiscoveries=['sweep','duelist'];profile.inheritances.ash='sweep';
+          profile.goal='relic:bell';profile.experiment=null;
+        }
         if (name === 'record-journey') { game.encounters = [{kind:'altar',state:'completed',progress:10,x:0,y:0}]; game.ranks.sweep=1; game.ranks.horizon=1; }
-        if (name === 'record-experiment') { game.ranks.sweep=1; game.ranks.dawn=1; game.ranks.sword=3; game.relics=['fang']; }
+        if (name === 'record-experiment' || name === 'record-known-experiment') { game.ranks.sweep=1; game.ranks.dawn=1; game.ranks.sword=3; game.relics=['fang']; }
         game.runId = crypto.randomUUID();
         game.time = 65;
         game.kills = 200;

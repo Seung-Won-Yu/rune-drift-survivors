@@ -1,5 +1,6 @@
 import { getCharacter } from './characters.js';
 import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL } from './expansion.js';
+import { validInheritance } from './progression.js';
 
 export function validExperiment(characterId, key) {
   return typeof key === 'string' && Object.hasOwn(SPECIALIZATIONS, key) && SPECIALIZATIONS[key].weapon === getCharacter(characterId).weapon ? key : null;
@@ -8,6 +9,12 @@ export function nextExperiment(game, profile) {
   const weapon = getCharacter(game.characterId).weapon;
   const alternatives = Object.keys(SPECIALIZATIONS).filter(key => SPECIALIZATIONS[key].weapon === weapon && !game.ranks[key]);
   return alternatives.find(key => !profile.buildDiscoveries.includes(key)) ?? alternatives[0] ?? null;
+}
+// A discovered alternative can use the existing inheritance system now.
+// An undiscovered alternative remains an ordinary, unpurchased run goal.
+export function nextExperimentPlan(game, profile) {
+  const key=nextExperiment(game,profile);
+  return key ? {key,inheritance:validInheritance(profile,game.characterId,key)} : null;
 }
 export function experimentProgress(game) {
   const key = validExperiment(game.characterId, game.experiment);

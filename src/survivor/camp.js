@@ -4,7 +4,7 @@ import { CHALLENGES, KEEPSAKES, challengeProgress, completedChallenges, canEquip
 import { codexEntries, codexIcon, inheritanceHint } from './codex.js';
 import { CHARACTERS, getCharacter, isUnlocked, unlockProgress } from './characters.js';
 import { UPGRADE_META, EVOLUTIONS, weaponName } from './game.js';
-import { nextExperiment, experimentProgress } from './experiments.js';
+import { nextExperimentPlan, experimentProgress } from './experiments.js';
 import { primaryBranches, validInheritance, masteryProgress, masteryCount, VOWS, canTakeVow, vowStats } from './progression.js';
 import { goalMeta, goalProgress } from './goals.js';
 import { collectionArt } from './collection-art.js';
@@ -67,10 +67,14 @@ export function experimentPlan(game) {
   return `<section class="experiment-plan" aria-label="이번 판의 목표"><small>이번 판의 목표</small><strong>${target.name}</strong><p>${target.description}</p><p class="record-line">${UPGRADE_META[target.weapon].name} ${SPECIALIZATION_RANK}단계 · 레벨 ${SPECIALIZATION_LEVEL}부터 선택 후보로 등장합니다. 다른 갈래를 골라도 괜찮습니다.</p><button class="secondary" data-clear-experiment>목표 지우기</button></section>`;
 }
 export function nextExperimentCard(game, profile) {
-  const key = nextExperiment(game, profile);
+  const plan=nextExperimentPlan(game,profile),key=plan?.key;
   if (!key || !isUnlocked(profile, game.characterId)) return '';
-  const target = SPECIALIZATIONS[key];
-  return `<section class="next-experiment" aria-label="다음 판의 실험"><small>다음 판의 실험 · ${profile.buildDiscoveries.includes(key) ? '다른 갈래로 도전' : '아직 발견하지 않은 갈래'}</small><strong>${target.name}</strong><p>${target.description}</p><p class="experiment-change">${target.change}</p><button class="secondary" data-experiment="${key}">이 빌드로 다음 판 준비</button><p class="record-line">${getCharacter(game.characterId).name} · 전승 없이 출발해 ${UPGRADE_META[target.weapon].name} ${SPECIALIZATION_RANK}단계 · 레벨 ${SPECIALIZATION_LEVEL}부터 선택 후보를 기다립니다.${profile.goal ? ' 기존 도감 목표를 이 목표로 바꿉니다.' : ''}</p></section>`;
+  const target = SPECIALIZATIONS[key],inherited=!!plan.inheritance;
+  const label=inherited?'다음 판의 전투법':'다음 판의 실험';
+  const preparation=inherited
+    ? `${getCharacter(game.characterId).name} · 전승한 전투법을 처음부터 사용합니다. 시작 무기는 1단계이며 진화는 다시 준비합니다.${profile.goal?' 기존 도감 목표는 해제합니다.':''}`
+    : `${getCharacter(game.characterId).name} · 전승 없이 출발해 ${UPGRADE_META[target.weapon].name} ${SPECIALIZATION_RANK}단계 · 레벨 ${SPECIALIZATION_LEVEL}부터 선택 후보를 기다립니다.${profile.goal?' 기존 도감 목표를 이 목표로 바꿉니다.':''}`;
+  return `<section class="next-experiment" aria-label="${label}"><small>${label} · ${inherited?'발견한 갈래 전승':'아직 발견하지 않은 갈래'}</small><strong>${target.name}</strong><p>${target.description}</p><p class="experiment-change">${target.change}</p><button class="secondary" data-experiment="${key}">${inherited?'이 전투법 전승하기':'이 빌드로 다음 판 준비'}</button><p class="record-line">${preparation}</p></section>`;
 }
 export function journeyScreen(profile) {
   const completed = completedChallenges(profile);

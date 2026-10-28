@@ -4,7 +4,7 @@ import { createGame, startGame, updateGame, stats, draftUpgrades } from '../src/
 import { CHARACTERS } from '../src/survivor/characters.js';
 import { SPECIALIZATIONS } from '../src/survivor/expansion.js';
 import { createProfile, normalizeProfile, recordRun, loadProfile, saveProfile } from '../src/survivor/profile.js';
-import { validExperiment, nextExperiment, experimentProgress } from '../src/survivor/experiments.js';
+import { validExperiment, nextExperiment, nextExperimentPlan, experimentProgress } from '../src/survivor/experiments.js';
 
 const ended = id => ({ ...createGame(42), runId: id, phase: 'ended', outcome: 'defeat', time: 65, kills: 200 });
 const noDiscoveries = { evolutions: [], branches: [], relics: [] };
@@ -77,6 +77,18 @@ test('an experiment grants no ranks, stats, different offers or combat advantage
       for (let i = 0; i < 600; i++) updateGame(game, 1 / 60, { x: 1, y: 0 });
     }
     for (const key of ['player', 'enemies', 'ranks', 'kills', 'damageDealt', 'choices', 'gems']) assert.deepEqual(guided[key], plain[key], `${id}: ${key}`);
+  }
+});
+
+test('a known next branch prepares earned inheritance while an unknown branch stays an ordinary experiment',()=>{
+  for(const [id,character] of Object.entries(CHARACTERS)){
+    const branches=Object.keys(SPECIALIZATIONS).filter(key=>SPECIALIZATIONS[key].weapon===character.weapon);
+    const profile=normalizeProfile({version:1,bestTime:300,totalKills:1000,buildDiscoveries:[branches[0]],selected:id});
+    const game=createGame(42,id);game.ranks[branches[0]]=1;
+    assert.deepEqual(nextExperimentPlan(game,profile),{key:branches[1],inheritance:null});
+    profile.buildDiscoveries.push(branches[1]);const before=JSON.stringify(profile),ranks={...game.ranks};
+    assert.deepEqual(nextExperimentPlan(game,profile),{key:branches[1],inheritance:branches[1]});
+    assert.equal(JSON.stringify(profile),before);assert.deepEqual(game.ranks,ranks);
   }
 });
 
