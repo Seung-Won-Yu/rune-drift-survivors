@@ -1,4 +1,4 @@
-const IMPORTANT = ['hurt', 'guard-block', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'elite-break', 'evolve', 'signature-ash', 'signature-ember', 'signature-grove', 'level', 'heal', 'choose', 'slam', 'warning', 'elite'];
+const IMPORTANT = ['hurt', 'guard-block', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'elite-break', 'crowd-break', 'evolve', 'signature-ash', 'signature-ember', 'signature-grove', 'level', 'heal', 'choose', 'slam', 'warning', 'elite'];
 const IMPACTS = ['blade-impact', 'ember-impact', 'rune-hit', 'pulse'];
 
 export function selectAudioEvents(events) {
@@ -6,7 +6,7 @@ export function selectAudioEvents(events) {
   const important = IMPORTANT.find(has);
   const impact = IMPACTS.find(has);
   // One foreground cue plus one contact, never one voice per enemy.
-  if (important === 'hurt' || important === 'elite-break') return [important];
+  if (important === 'hurt' || important === 'elite-break' || important === 'crowd-break') return [important];
   if (important) return impact ? [important, impact] : [important];
   if (impact) return [impact];
   const other = ['fire-spread', 'ember-shot', 'swing', 'xp', 'kill'].find(has);
@@ -87,6 +87,10 @@ export function createAudio() {
       note(110, 38, 'triangle', now, .18, .045);
       transient(now, .07, .06, 1100);
       note(660, 990, 'sine', now + .045, .2, .018);
+    } else if (event === 'crowd-break') {
+      note(105, 34, 'triangle', now, .22, .055);
+      transient(now, .075, .06, 850);
+      note(440, 880, 'sine', now + .035, .18, .022);
     } else if (event === 'blade-impact') {
       note(150, 48, 'triangle', now, .12, .045);
       note(1650, 520, 'sine', now, .045, .016);

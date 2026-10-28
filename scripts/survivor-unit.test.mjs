@@ -1,7 +1,7 @@
 import test from 'node:test';
 import { createPilot } from '../src/survivor/qa-pilot.js';
 import { BOSS } from '../src/survivor/boss.js';
-import { bossHealthTrail, recordBossDamage } from '../src/survivor/impact.js';
+import { bossHealthTrail, recordBossDamage, combatKick } from '../src/survivor/impact.js';
 import assert from 'node:assert/strict';
 import { createGame, startGame, updateGame, spawnEnemy, chooseUpgrade, draftUpgrades, pauseGame, resumeGame, stats, RUN_SECONDS, LIMITS, canEvolve, SLAM, spawnBoss, EVOLUTIONS, upgradeChange } from '../src/survivor/game.js';
 
@@ -99,6 +99,103 @@ test('evolved crescent pierces targets beyond the sword without repeat hits',()=
   const a=spawnEnemy(g,2,false,{x:210,y:0}),b=spawnEnemy(g,2,false,{x:250,y:0});a.speed=b.speed=0;
   g.shots.push({kind:'crescent',x:150,y:0,vx:330,vy:0,life:.85,damage:20,hitIds:[]});
   frames(g,60);assert.equal(a.hp,75);assert.equal(b.hp,75);assert.equal(g.damageDealt.sword,40);
+});
+test('a charged sword cleave releases three real piercing blades from the first weapon',()=>{
+  const g=playing();g.ranks.sword=2;g.signature.charge=1;g.swordClock=0;
+  const e=spawnEnemy(g,2,false,{x:75,y:0});e.hp=e.maxHp=1000;e.speed=0;
+  frames(g,13);
+  assert.equal(g.signature.activations,1);assert.equal(g.shots.length,3);
+  assert.ok(g.shots.every(s=>s.kind==='crescent'&&s.charged&&!s.turnAt));
+  assert.ok(g.damageDealt.sword>stats(g).swordDamage*1.6,'blades must cause real damage beyond the cleave');
+  const capped=playing();capped.signature.charge=1;capped.swordClock=0;
+  const target=spawnEnemy(capped,2,false,{x:70,y:0});target.hp=target.maxHp=1000;target.speed=0;
+  for(let i=0;i<LIMITS.shots-1;i++) capped.shots.push({x:5000,y:0,vx:0,vy:0,life:9,damage:0});
+  frames(capped,13);assert.equal(capped.shots.length,LIMITS.shots);
+  const blade=capped.shots.find(s=>s.kind==='crescent');assert.ok(blade);assert.equal(blade.vy,0,'the centre blade gets the final slot');
+});
+test('a returning crescent hits once per pass, follows the current player and freezes on pause',()=>{
+  const g=playing();g.ranks.sword=0;
+  const e=spawnEnemy(g,2,false,{x:100,y:0});e.hp=e.maxHp=1000;e.speed=0;
+  g.shots.push({kind:'crescent',charged:true,x:40,y:0,vx:380,vy:0,life:1.4,damage:10,turnAt:.3,hitIds:[]});
+  frames(g,12);assert.equal(e.hp,990);pauseGame(g);
+  const before=JSON.stringify(g);frames(g,30);assert.equal(JSON.stringify(g),before);resumeGame(g);
+  frames(g,35);assert.equal(e.hp,980);assert.equal(g.shots.length,0);
+  const moving=playing();moving.ranks.sword=0;
+  moving.shots.push({kind:'crescent',charged:true,x:160,y:0,vx:380,vy:0,life:1.4,damage:10,turnAt:.01,hitIds:[]});
+  frames(moving,5,{x:0,y:1});assert.equal(moving.shots[0].returning,true);assert.ok(moving.shots[0].vy>0);
+  frames(moving,60,{x:0,y:1});assert.equal(moving.shots.length,0);
+});
+test('evolution expands the charged fan to five returning blades',()=>{
+  const g=playing();g.ranks.sword=3;g.ranks.dawn=1;g.signature.charge=1;g.swordClock=0;
+  const e=spawnEnemy(g,2,false,{x:70,y:0});e.hp=e.maxHp=1000;e.speed=0;
+  frames(g,13);assert.equal(g.shots.length,5);
+  assert.ok(g.shots.every(s=>s.charged&&s.turnAt>g.time));
+});
+test('a crowd break briefly stops the whole simulation and pause preserves the remaining stop',()=>{
+  const g=playing();g.ranks.sword=2;g.ranks.sweep=1;g.swordClock=0;
+  for(let i=0;i<6;i++) {const e=spawnEnemy(g,0,false,{x:70,y:0});e.speed=0;}
+  frames(g,13);assert.equal(g.kills,6);assert.ok(g.impactStop>0);assert.ok(g.combatImpact.strength<=1);
+  pauseGame(g);const before=JSON.stringify(g);frames(g,30);assert.equal(JSON.stringify(g),before);resumeGame(g);
+  const time=g.time;frames(g,1);assert.ok(g.time>time&&g.time<time+1/60,'consume only the remaining stop before advancing');
+  assert.equal(createGame().impactStop,0);assert.equal(createGame().combatImpact,null);
+});
+test('a level-up consumes crowd impact rather than replaying the stop after choosing',()=>{
+  const g=playing();g.ranks.sword=2;g.ranks.sweep=1;g.swordClock=0;g.xpNeed=1;g.player.invincible=999;
+  for(let i=0;i<6;i++) {const e=spawnEnemy(g,0,false,{x:10,y:0});e.speed=0;}
+  frames(g,15);assert.equal(g.phase,'upgrade');assert.equal(g.impactStop,0);assert.equal(g.combatImpact,null);
+  assert.ok(chooseUpgrade(g,g.choices[0]));const time=g.time;frames(g,1);
+  assert.ok(Math.abs(g.time-time-1/60)<1e-9);
+});
+test('the crowd camera impulse is bounded as a vector and respects reduced motion and the end state',()=>{
+  const g=playing();g.combatImpact={at:0,strength:1};
+  for(let i=0;i<=160;i++) {g.time=i/1000;const before=JSON.stringify(g),p=combatKick(g);assert.ok(Math.hypot(p.x,p.y)<=6+1e-9);assert.equal(JSON.stringify(g),before);}
+  g.time=0;assert.deepEqual(combatKick(g,true),{x:0,y:0});g.phase='ended';assert.deepEqual(combatKick(g),{x:0,y:0});
+});
+test('reward and encounter overlays clear a pending crowd impact before control returns',async()=>{
+  const {updateEncounters,inspectEncounter}=await import('../src/survivor/encounters.js');
+  const g=playing();g.time=45;g.impactStop=.03;g.combatImpact={at:45,strength:1};
+  g.encounters=[{kind:'altar',x:0,y:0,state:'active',progress:9.99}];
+  updateEncounters(g,.02);assert.equal(g.phase,'relic');assert.equal(g.impactStop,0);assert.equal(g.combatImpact,null);
+  const preview=playing();preview.time=45;preview.impactStop=.03;preview.combatImpact={at:45,strength:1};
+  preview.encounters=[{kind:'altar',x:210,y:0,state:'available',progress:0}];
+  assert.ok(inspectEncounter(preview));assert.equal(preview.impactStop,0);assert.equal(preview.combatImpact,null);
+});
+test('charged fire splits once into damaging fragments without striking its original victim again',()=>{
+  const g=createGame(42,'ember');startGame(g);g.spawnClock=999;g.emberClock=0;g.signature.charge=1;g.ranks.wildfire=1;
+  const front=spawnEnemy(g,2,false,{x:80,y:0}),back=spawnEnemy(g,2,false,{x:170,y:0});
+  for(const e of [front,back]) {e.hp=e.maxHp=1000;e.speed=0;}
+  frames(g,30);
+  assert.equal(g.signature.activations,1);
+  assert.ok(g.shots.some(s=>s.kind==='ember-splinter'));
+  assert.ok(g.shots.filter(s=>s.kind==='ember-splinter').every(s=>!s.empowered&&s.ignoreId===front.id));
+  assert.ok(back.hp<1000,'an emitted fragment must reach the second target');
+  assert.ok(Math.abs(front.hp-(1000-stats(g).emberDamage*1.45))<1e-6,'fragments cannot multiply damage inside the initial victim');
+  g.ranks.ember=0;frames(g,60);assert.equal(g.shots.length,0);
+});
+test('evolved fire fragments explode once and exclude their original victim from the secondary blasts',()=>{
+  const g=createGame(42,'ember');startGame(g);g.spawnClock=999;g.emberClock=0;g.signature.charge=1;g.ranks.comet=1;
+  const front=spawnEnemy(g,2,false,{x:80,y:0}),back=spawnEnemy(g,2,false,{x:115,y:0});
+  for(const e of [front,back]) {e.hp=e.maxHp=1000;e.speed=0;}
+  frames(g,30);
+  const initial=stats(g).emberDamage*1.45;
+  assert.ok(Math.abs(front.hp-(1000-initial))<1e-6);
+  assert.ok(back.hp<1000-initial,'secondary blasts deal actual additional crowd damage');
+  assert.equal(g.signature.activations,1);assert.ok(g.shots.length<=3);
+});
+test('real rune contacts release a capped eight-way piercing volley when the guard activates',()=>{
+  for(const room of [8,2]) {
+    const g=createGame(42,'grove');startGame(g);g.spawnClock=999;g.signature.charge=5/6;
+    const close=spawnEnemy(g,2,false,{x:70,y:0}),far=spawnEnemy(g,2,false,{x:140,y:0});
+    for(const e of [close,far]) {e.hp=e.maxHp=1000;e.speed=0;}
+    for(let i=0;i<LIMITS.shots-room;i++)g.shots.push({x:5000,y:0,vx:0,vy:0,life:9,damage:0});
+    frames(g,1);assert.equal(g.signature.activations,1);assert.equal(g.signature.guard,20);
+    assert.equal(g.shots.filter(s=>s.kind==='rune-burst').length,room);
+    assert.equal(g.shots.length,LIMITS.shots);
+    frames(g,30);
+    assert.ok(far.hp<1000,'the volley reaches beyond the ordinary orbit');
+    assert.equal(g.damageDealt.ember,0);assert.ok(g.damageDealt.orbit>0);
+    assert.ok(g.shots.filter(s=>s.kind==='rune-burst').every(s=>s.hitIds.length<=3));
+  }
 });
 test('elite slam locks its target, pauses during upgrades and allows an escape',()=>{
   const g=playing();g.swordClock=999;const e=spawnEnemy(g,2,true,{x:180,y:0});e.attackClock=0;frames(g,1);

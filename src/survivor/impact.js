@@ -4,6 +4,15 @@ export const ELITE_FINISH_LIFE = .48;
 export const HURT_FEEDBACK_LIFE = .95;
 const BOSS_LOSS_LIFE = .75;
 
+export function combatKick(game, reduced = false) {
+  const impact = game.combatImpact, age = game.time - (impact?.at ?? -10);
+  if (reduced || game.phase === 'ended' || !impact || age < 0 || age >= .16) return {x:0,y:0};
+  const reach = Math.min(1,Math.max(0,impact.strength))*6*(1-age/.16);
+  const x = Math.cos(age*75), y = Math.sin(age*59+1)*.55;
+  const length = Math.max(1,Math.hypot(x,y));
+  return {x:x/length*reach,y:y/length*reach};
+}
+
 // Each hit expires on its own, so a stream of hits cannot hold the entire bar
 // open. This bounded presentation history includes burn damage, not just poses.
 export function recordBossDamage(boss, time, amount) {

@@ -1,6 +1,6 @@
 import { reduceMotion } from './preferences.js';
 import { SIGNATURES } from './signature.js';
-import { impactPose, attackPose, companionActionPose, hurtFeedback, companionFacing } from './impact.js';
+import { impactPose, attackPose, companionActionPose, hurtFeedback, companionFacing, combatKick } from './impact.js';
 import { GIANT, huntRule } from './enemies.js';
 import { heroGait, enemyMotion } from './motion.js';
 import { drawEnemyGround, drawEnemyWarnings } from './enemy-render.js';
@@ -276,7 +276,8 @@ export function createRenderer(canvas, art, preferences = {motion: 'system', dam
     ctx.fillStyle = '#26382e';
     ctx.fillRect(0, 0, width, height);
     ctx.save();
-    ctx.translate(width / 2, height * .53);
+    const kick = combatKick(game,reduced.matches);
+    ctx.translate(width / 2 + kick.x, height * .53 + kick.y);
     ctx.scale(scale, scale);
     ctx.translate(-p.x, -p.y);
     const viewW = width / scale,
@@ -284,8 +285,9 @@ export function createRenderer(canvas, art, preferences = {motion: 'system', dam
       left = p.x - viewW / 2,
       top = p.y - viewH * .53;
     const crowded = game.enemies.filter(e => (e.x - p.x) ** 2 + (e.y - p.y) ** 2 < 240 ** 2).length >= 12;
-    // Keep every hit and warning; only floating number clutter is limited in a crowd.
-    const damageLabels = crowded ? new Set(game.effects.filter(e => e.kind === 'damage')
+    // A cleared crowd must not reveal a wall of numbers from the same hit.
+    const pendingDamage = game.effects.filter(e => e.kind === 'damage');
+    const damageLabels = crowded || pendingDamage.length > 8 ? new Set(pendingDamage
       .sort((a, b) => (a.x - p.x) ** 2 + (a.y - p.y) ** 2 - ((b.x - p.x) ** 2 + (b.y - p.y) ** 2)).slice(0, 8)) : null;
     ctx.fillStyle = pattern;
     ctx.fillRect(left - 50, top - 50, viewW + 100, viewH + 100);
@@ -628,7 +630,16 @@ export function createRenderer(canvas, art, preferences = {motion: 'system', dam
         drawBossRelease(ctx, e, reduced.matches);
       } else if (e.kind === 'ember-burst') {
         drawEmberBurst(ctx, e, reduced.matches, !!game.ranks.comet);
-      } else if (e.kind === 'lunar-pulse' || e.kind === 'briar-pulse') {
+      } else if (e.kind === 'lunar-pulse') {
+        ctx.save();ctx.translate(e.x,e.y-12);
+        const radius=e.range*(reduced.matches ? .85 : .35+progress*.75);
+        for(let i=0;i<8;i++) {
+          ctx.save();ctx.rotate(i*Math.PI/4+(reduced.matches?0:progress*.32));
+          ctx.fillStyle=i%2?'#bff8eb':'#79cbbf';ctx.strokeStyle='#edfff1';ctx.lineWidth=2;
+          ctx.beginPath();ctx.moveTo(radius-28,-5);ctx.quadraticCurveTo(radius+5,-19,radius+14,0);ctx.quadraticCurveTo(radius-4,12,radius-28,5);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+        }
+        ctx.restore();
+      } else if (e.kind === 'briar-pulse') {
         ctx.strokeStyle = e.kind === 'briar-pulse' ? '#edb7d9' : '#b8f6df';
         ctx.lineWidth = 5 * (1 - progress) + 1;
         ctx.beginPath();

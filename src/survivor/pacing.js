@@ -41,6 +41,6 @@ export function spawnPlan(game) {
   if (game.time >= BOSS.arrival || game.bossSpawned) return { interval: 1.6, count: 1 };
   return {
     interval: Math.max(.18, .82 - game.time * .002) / combatPacing(game).rate,
-    count: game.time > 180 ? 3 : game.time > 70 ? 2 : 1
+    count: game.time > 180 ? 4 : game.time > 70 ? 3 : game.time > 15 ? 2 : 1
   };
 }

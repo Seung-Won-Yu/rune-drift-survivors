@@ -104,6 +104,13 @@ test('pacing covers every boundary and keeps the four-minute boss supply unchang
   }
 });
 
+test('ordinary packs build density after the opening without flooding the boss encounter',()=>{
+  const g=createGame(42);
+  for(const [time,count] of [[0,1],[15,1],[15.01,2],[70,2],[70.01,3],[180,3],[180.01,4],[240,1]]) {
+    g.time=time;assert.equal(spawnPlan(g).count,count);
+  }
+});
+
 test('real spawns ebb after a surge while living enemies and XP keep their value', () => {
   const samples = [];
   for (const time of [120, 132]) {

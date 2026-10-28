@@ -29,6 +29,7 @@ export function nearbyChest(game) {
 export function openChest(game) {
   if (game.phase !== 'playing' || !nearbyChest(game)) return false;
   prepareEncounterRewards(game, nearbyChest(game));
+  game.impactStop = 0; game.combatImpact = null;
   game.phase = 'event';
   game.player.moving = false;
   return true;
@@ -79,6 +80,7 @@ export function inspectEncounter(game) {
   if (game.phase !== 'playing' || !event) return false;
   prepareEncounterRewards(game, event);
   game.previewEncounter = event.kind;
+  game.impactStop = 0; game.combatImpact = null;
   game.phase = 'preview';
   game.player.moving = false;
   return true;
@@ -93,6 +95,7 @@ function reward(game, event) {
   event.state = 'completed';
   game.relicChoices = prepareEncounterRewards(game, event).filter(key => !game.relics.includes(key));
   if (game.relicChoices.length) {
+    game.impactStop = 0; game.combatImpact = null;
     game.phase = 'relic';
     game.rewardFrom = event.kind;
     game.events.push('relic-ready');

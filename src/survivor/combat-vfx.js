@@ -1,5 +1,5 @@
 // Action marks follow actual attack events and projectile velocities. They are
-// deliberately compact; these strokes are not diagrams of damage ranges.
+// shaped like attacks rather than diagrams of damage ranges.
 export function actionEffectFrame(effect, game) {
   const age = effect.age + (game.outcome ? game.endAge ?? 0 : 0);
   if (age >= effect.life) return null;
@@ -67,7 +67,7 @@ export function drawFinish(ctx, effect, reduced = false) {
 
 export function drawSlash(ctx, effect, reduced = false) {
   const progress = Math.max(0, Math.min(1, effect.age / effect.life));
-  const reach = Math.min(effect.branch === 'duelist' ? 88 : 76, 42 + effect.range * .16);
+  const reach = Math.min(270, effect.range * .94);
   ctx.save(); ctx.translate(effect.x, effect.y - 28); ctx.rotate(effect.angle);
   ctx.fillStyle = effect.empowered || effect.evolved ? '#fff0c5' : '#edc17d';
   if (effect.branch === 'duelist') {
@@ -75,10 +75,10 @@ export function drawSlash(ctx, effect, reduced = false) {
     ctx.beginPath(); ctx.moveTo(16, 0); ctx.lineTo(tip - 12, -5); ctx.lineTo(tip, 0); ctx.lineTo(tip - 12, 5); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#fff9e0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(24, 0); ctx.lineTo(tip - 4, 0); ctx.stroke();
   } else {
-    const spread = effect.branch === 'sweep' ? 1.12 : .88;
+    const spread = Math.min(2.3, effect.halfAngle ?? (effect.branch === 'sweep' ? 2.3 : 1.28));
     const head = reduced ? .42 : -spread + Math.min(1, progress * 2.5) * spread * 2;
     const tail = head - (effect.branch === 'sweep' ? 1.22 : .95);
-    const thickness = (effect.empowered ? 13 : 9) * (1 - progress * .65);
+    const thickness = (effect.empowered ? 24 : effect.evolved ? 19 : 15) * (1 - progress * .65);
     ctx.beginPath();
     ctx.arc(0, 0, reach, tail, head);
     ctx.quadraticCurveTo(Math.cos(head) * (reach - thickness * 1.8), Math.sin(head) * (reach - thickness * 1.8), Math.cos(tail) * (reach - 2), Math.sin(tail) * (reach - 2));
@@ -97,13 +97,13 @@ export function drawSlash(ctx, effect, reduced = false) {
 }
 
 export function drawProjectile(ctx, shot, reduced = false, evolved = false) {
-  const angle = Math.atan2(shot.vy, shot.vx), crescent = shot.kind === 'crescent';
-  const age = Math.max(0, (crescent ? .85 : 2) - shot.life);
+  const angle = Math.atan2(shot.vy, shot.vx), crescent = shot.kind === 'crescent', rune = shot.kind === 'rune-burst';
+  const age = Math.max(0, (rune ? .65 : shot.kind === 'ember-splinter' ? .6 : crescent ? shot.turnAt ? 1.4 : .85 : 2) - shot.life);
   const speed = Math.hypot(shot.vx, shot.vy);
-  const wake = Math.min(48, speed * .15, speed * age);
+  const wake = Math.min(shot.charged ? 92 : 62, speed * .2, speed * age);
   ctx.save(); ctx.translate(shot.x, shot.y - (crescent ? 8 : 14)); ctx.rotate(angle);
   if (!reduced && wake > 12) {
-    ctx.strokeStyle = crescent ? '#e9c17c70' : evolved ? '#ffb767b0' : '#edac607d';
+    ctx.strokeStyle = rune ? '#8eead8b0' : crescent ? '#e9c17c70' : evolved ? '#ffb767b0' : '#edac607d';
     ctx.lineCap = 'round';
     // The shot clock freezes with gameplay. Only the trailing edge flickers.
     for (let i = 0; i < 2; i++) {
@@ -113,18 +113,23 @@ export function drawProjectile(ctx, shot, reduced = false, evolved = false) {
       ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + wake * .38, y - side * 2); ctx.stroke();
     }
   }
-  if (crescent) {
+  if (rune) {
+    ctx.fillStyle='#93e5d8';ctx.strokeStyle='#244e46';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(20,0);ctx.lineTo(0,-12);ctx.lineTo(-14,0);ctx.lineTo(0,12);ctx.closePath();ctx.stroke();ctx.fill();
+    ctx.strokeStyle='#ecfff2';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-6,0);ctx.lineTo(14,0);ctx.moveTo(0,-7);ctx.lineTo(0,7);ctx.stroke();
+  } else if (crescent) {
+    const reach = shot.charged ? 34 : 25;
     if (!reduced) {
       ctx.strokeStyle = '#d9b27190'; ctx.lineWidth = 2; ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(-25, -9); ctx.lineTo(-3, -15); ctx.moveTo(-21, 10); ctx.lineTo(-2, 15); ctx.stroke();
     }
-    ctx.fillStyle = '#f3c983'; ctx.strokeStyle = '#493b28'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(-2, -23); ctx.quadraticCurveTo(29, 0, -2, 23);
-    ctx.quadraticCurveTo(11, 0, -2, -23); ctx.closePath(); ctx.stroke(); ctx.fill();
-    ctx.strokeStyle = '#fff8de'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(1, -17); ctx.quadraticCurveTo(22, 0, 1, 17); ctx.stroke();
+    ctx.fillStyle = shot.returning ? '#fff0c5' : '#f3c983'; ctx.strokeStyle = '#493b28'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-2, -reach); ctx.quadraticCurveTo(reach * 1.26, 0, -2, reach);
+    ctx.quadraticCurveTo(reach * .48, 0, -2, -reach); ctx.closePath(); ctx.stroke(); ctx.fill();
+    ctx.strokeStyle = '#fffbed'; ctx.lineWidth = shot.charged ? 4 : 2.5; ctx.beginPath(); ctx.moveTo(1, -reach * .74); ctx.quadraticCurveTo(reach * .96, 0, 1, reach * .74); ctx.stroke();
   } else {
-    const size = shot.empowered ? 8 : shot.blast ? 7 : 5;
-    const tail = reduced ? 12 : (shot.blast ? 34 : 24) + Math.sin(age * 44) * 2;
+    const size = shot.kind === 'ember-splinter' ? 6 : shot.empowered ? 13 : shot.blast ? 11 : 8;
+    const tail = reduced ? 16 : (shot.blast ? 46 : 34) + Math.sin(age * 44) * 2;
     // A tapered flame, bright leading core and dark rim survive grass/crowds.
     ctx.fillStyle = shot.blast ? '#ed824b' : '#df9c50'; ctx.strokeStyle = '#583222'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(size + 2, 0);
@@ -149,12 +154,12 @@ export function drawOrbitWake(ctx, orb, player, reduced = false, evolved = false
   if (reduced) return;
   const dx = orb.x - player.x, dy = orb.y - player.y, radius = Math.hypot(dx, dy);
   if (radius < 1) return;
-  const angle = Math.atan2(dy, dx), span = Math.min(.48, (evolved ? 38 : 29) / radius);
+  const angle = Math.atan2(dy, dx), span = Math.min(.36, (evolved ? 45 : 34) / radius);
   ctx.save(); ctx.translate(player.x, player.y - 12);
   ctx.strokeStyle = horizon ? '#b8daff80' : '#a9eed780'; ctx.lineCap = 'round';
   for (let i = 0; i < 2; i++) {
     const from = angle - span * (1 + i * .9), to = from + span * .68;
-    ctx.lineWidth = (evolved ? 4 : 3) - i * 1.5;
+    ctx.lineWidth = (evolved ? 6 : 4) - i * 1.5;
     ctx.beginPath(); ctx.moveTo(Math.cos(from) * radius, Math.sin(from) * radius);
     const middle = (from + to) / 2;
     ctx.quadraticCurveTo(Math.cos(middle) * radius, Math.sin(middle) * radius, Math.cos(to) * radius, Math.sin(to) * radius);
@@ -199,7 +204,7 @@ export function drawEmberBurst(ctx, effect, reduced = false, evolved = false) {
   const progress = Math.max(0, Math.min(1, effect.age / effect.life));
   const motion = reduced ? .45 : progress;
   const expansion = 1 - (1 - motion) ** 3;
-  const reach = Math.min(45, effect.range * .55) * (.4 + expansion * .6);
+  const reach = Math.min(120, effect.range * .9) * (.4 + expansion * .6);
   ctx.save(); ctx.translate(effect.x, effect.y - 12);
   const petals = evolved ? 8 : 6;
   for (let i = 0; i < petals; i++) {

@@ -51,7 +51,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet'
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune'
 ].includes(previewScene);
 try {
   storage = visualPreview ? { getItem: () => null, setItem: () => {} } : window.localStorage;
@@ -967,7 +967,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
     }),
     scenario(name) {
       resetInput();
-      const character = name.startsWith('character-') ? name.slice(10) : ['ember-coal','record-secondary'].includes(name) ? 'ember' : name === 'experiment-offer' ? game.characterId : 'ash';
+      const character = name.startsWith('character-') ? name.slice(10) : ['ember-coal','record-secondary','spectacle-flame'].includes(name) ? 'ember' : name === 'spectacle-rune' ? 'grove' : name === 'experiment-offer' ? game.characterId : 'ash';
       game = createGame(42, character, 'none', profile.experiment, runPreparation(profile, character));
       game.phase = 'playing';
       game.spawnClock = 999;
@@ -1042,6 +1042,19 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
         const h=spawnEnemy(game,1,false,{x:-160,y:0});h.hunt={x:-160,y:0,angle:0,age:.4,hit:false};
         const g=spawnEnemy(game,2,false,{x:120,y:50});g.slam={x:80,y:-40,age:.6,hit:false,radius:GIANT.radius,windup:GIANT.windup};
         game.phase='paused';
+      } else if (name.startsWith('spectacle-')) {
+        game.time=10;game.level=10;game.xpNeed=xpForLevel(10);game.nextElite=999;
+        Object.assign(game.ranks,{sword:0,ember:0,orbit:0});
+        if(name==='spectacle-blade') Object.assign(game.ranks,{sword:5,sweep:1,dawn:1});
+        else if(name==='spectacle-flame') Object.assign(game.ranks,{ember:5,detonation:1,comet:1});
+        else Object.assign(game.ranks,{orbit:5,horizon:1,lunar:1});
+        game.signature.charge=1;game.swordClock=.05;game.emberClock=.1;
+        for(let i=0;i<30;i++) {
+          const a=name==='spectacle-rune'?i*Math.PI*2/10:(i%10-4.5)*.15;
+          const radius=name==='spectacle-rune'?80+Math.floor(i/10)*60:85+Math.floor(i/10)*95;
+          const e=spawnEnemy(game,0,false,{x:Math.cos(a)*radius,y:Math.sin(a)*radius});
+          e.speed=12;e.hp=e.maxHp=35;
+        }
       } else if (name.startsWith('feel-')) {
         const branch=name.slice(5); const weapon=['sweep','duelist'].includes(branch)?'sword':['wildfire','detonation'].includes(branch)?'ember':'orbit';
         game.ranks.sword=0; game.ranks[weapon]=3; game.ranks[branch]=1; game.xpNeed=99999;

@@ -193,6 +193,8 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', exp
     swarms: createSwarms(),
     weaponOfferCursor: 0,
     feedbackAt: {},
+    combatImpact: null,
+    impactStop: 0,
     spores: [],
     nextSpore: 0,
     enemyLessons: [],
@@ -394,6 +396,8 @@ function checkLevel(game) {
   game.xp -= game.xpNeed;
   game.level++;
   game.xpNeed = xpForLevel(game.level);
+  game.impactStop = 0;
+  game.combatImpact = null;
   game.phase = 'upgrade';
   game.choices = draftUpgrades(game);
   game.events.push('level');
@@ -714,18 +718,23 @@ function updateWeapons(game, dt, s) {
       }
       if (swing.empowered && hits > 0) consumeSignature(game, 'ash');
       else if (!swing.empowered) chargeBlade(game, hits);
-      if (game.ranks.dawn && game.shots.length < LIMITS.shots) {
-        const vx = Math.cos(swing.angle),
-          vy = Math.sin(swing.angle);
+      const fan = swing.empowered && hits > 0;
+      const angles = fan ? game.ranks.dawn ? [0, -.3, .3, -.6, .6] : [0, -.32, .32] : game.ranks.dawn ? [0] : [];
+      for (const offset of angles) {
+        if (game.shots.length >= LIMITS.shots) break;
+        const vx = Math.cos(swing.angle + offset),
+          vy = Math.sin(swing.angle + offset);
         game.shots.push({
           kind: 'crescent',
           x: p.x + vx * 40,
           y: p.y + vy * 40,
-          vx: vx * 330,
-          vy: vy * 330,
-          life: .85,
-          damage: Math.round(s.swordDamage * .65),
-          hitIds: []
+          vx: vx * (fan ? 380 : 330),
+          vy: vy * (fan ? 380 : 330),
+          life: fan && game.ranks.dawn ? 1.4 : .85,
+          damage: Math.round(s.swordDamage * (fan && game.ranks.dawn ? .25 : .65)),
+          hitIds: [],
+          charged: fan,
+          turnAt: fan && game.ranks.dawn ? game.time + .42 : null
         });
       }
     }
@@ -765,7 +774,14 @@ function updateWeapons(game, dt, s) {
       }
     }
   }
+  const fragments = [];
   for (const shot of game.shots) {
+    if (shot.turnAt && game.time >= shot.turnAt) {
+      if (!shot.returning) { shot.returning = true; shot.hitIds = []; }
+      const dx = p.x - shot.x, dy = p.y - shot.y, distance = Math.hypot(dx, dy);
+      if (distance <= 20) { shot.life = 0; continue; }
+      shot.vx = dx / distance * 420; shot.vy = dy / distance * 420;
+    }
     const target = game.enemies.find(e => e.id === shot.targetId && e.hp > 0);
     if (target) {
       const a = Math.atan2(target.y - shot.y, target.x - shot.x);
@@ -777,8 +793,8 @@ function updateWeapons(game, dt, s) {
     shot.life -= dt;
     if (shot.life <= 0) continue;
     for (const enemy of game.enemies) {
-      const wave = shot.kind === 'crescent';
-      if (enemy.hp > 0 && (!wave || !shot.hitIds.includes(enemy.id)) && Math.hypot(shot.x - enemy.x, shot.y - enemy.y) < enemy.radius + (wave ? 22 : 7)) {
+      const wave = shot.kind === 'crescent', rune = shot.kind === 'rune-burst', piercing = wave || rune;
+      if (enemy.hp > 0 && enemy.id !== shot.ignoreId && (!piercing || shot.hitIds.length < (rune ? 3 : 8) && !shot.hitIds.includes(enemy.id)) && Math.hypot(shot.x - enemy.x, shot.y - enemy.y) < enemy.radius + (wave ? 22 : rune ? 14 : 7)) {
         if (shot.blast) {
           effect(game, {
             kind: 'ember-burst',
@@ -790,6 +806,7 @@ function updateWeapons(game, dt, s) {
           });
           if (game.ranks.detonation) game.events.push('ember-impact');
           for (const other of game.enemies) {
+            if (other.id === shot.ignoreId) continue;
             const dx = other.x - shot.x, dy = other.y - shot.y, distance = Math.hypot(dx, dy);
             if (distance > (shot.blastRadius ?? 56) + other.radius) continue;
             // A blast reacts away from its center. This is visual direction;
@@ -797,7 +814,15 @@ function updateWeapons(game, dt, s) {
             const angle = distance > .01 ? Math.atan2(dy, dx) : Math.atan2(shot.vy, shot.vx);
             hitEnemy(game, other, shot.damage, 'ember', 0, 0, false, angle);
           }
-        } else hitEnemy(game, enemy, shot.damage, wave ? 'sword' : 'ember', shot.vx / (wave ? 330 : 290), shot.vy / (wave ? 330 : 290));
+        } else hitEnemy(game, enemy, shot.damage, rune ? 'orbit' : wave ? 'sword' : 'ember', shot.vx / (wave ? 330 : rune ? 260 : 290), shot.vy / (wave ? 330 : rune ? 260 : 290));
+        if (shot.empowered && !piercing) {
+          const angle = Math.atan2(shot.vy, shot.vx);
+          for (const offset of [0, -.55, .55]) {
+            if (game.shots.length + fragments.length >= LIMITS.shots) break;
+            const vx = Math.cos(angle + offset), vy = Math.sin(angle + offset);
+            fragments.push({kind:'ember-splinter',x:shot.x+vx*18,y:shot.y+vy*18,vx:vx*360,vy:vy*360,life:.6,damage:shot.damage*.5,ignoreId:enemy.id,blast:!!game.ranks.comet&&!game.ranks.wildfire,blastRadius:48});
+          }
+        }
         if (shot.empowered && game.ranks.wildfire) {
           // Charged wildfire extends its burn; it keeps its damage-over-time identity.
           for (const other of game.enemies) if (other.hp > 0 && (!other.boss || other.entrance <= 0) && Math.hypot(other.x - shot.x, other.y - shot.y) <= 74 + other.radius) {
@@ -806,9 +831,9 @@ function updateWeapons(game, dt, s) {
           }
           game.events.push('fire-spread');
         }
-        if (wave) {
+        if (piercing) {
           shot.hitIds.push(enemy.id);
-          if (shot.hitIds.length < 8) continue;
+          if (shot.turnAt || shot.hitIds.length < (rune ? 3 : 8)) continue;
         }
         shot.life = 0;
         break;
@@ -823,7 +848,14 @@ function updateWeapons(game, dt, s) {
           d = Math.hypot(dx, dy) || 1;
         enemy.orbAt = game.time;
         if (hitEnemy(game, enemy, s.orbitDamage, 'orbit', dx / d * (game.ranks.bulwark ? 3.24 : 1.8), dy / d * (game.ranks.bulwark ? 3.24 : 1.8)) > 0) {
+          const activations = game.signature.activations;
           chargeRune(game);
+          if (game.signature.activations > activations) {
+            for (let i=0;i<8 && game.shots.length+fragments.length<LIMITS.shots;i++) {
+              const a=game.time*2.8+i*Math.PI/4,vx=Math.cos(a),vy=Math.sin(a);
+              game.shots.push({kind:'rune-burst',x:p.x+vx*24,y:p.y+vy*24,vx:vx*260,vy:vy*260,life:.65,damage:Math.round(s.orbitDamage*.45),hitIds:[]});
+            }
+          }
           buildFeedback(game, 'rune-touch', { x: orb.x, y: orb.y, angle: Math.atan2(orb.y - p.y, orb.x - p.x) + Math.PI / 2,
             branch: specializationFor(game, 'orbit'), life: .14 }, .055);
         }
@@ -863,7 +895,7 @@ function updateWeapons(game, dt, s) {
     }
     if (enemy.burn && game.time > enemy.burn.until) enemy.burn = null;
   }
-  game.shots = game.shots.filter(s => s.life > 0);
+  game.shots = game.shots.filter(s => s.life > 0).concat(fragments);
   game.enemies = game.enemies.filter(e => e.hp > 0);
 }
 function hurtPlayer(game, damage, source = 'contact', origin) {
@@ -939,6 +971,11 @@ export function updateGame(game, dt, input = {
 }) {
   if (game.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   dt = Math.min(dt, 1 / 30);
+  if (game.impactStop > 0) {
+    const stopped = Math.min(dt, game.impactStop);
+    game.impactStop -= stopped; dt -= stopped;
+    if (dt < 1e-9) return;
+  }
   game.time = Math.min(RUN_SECONDS, game.time + dt);
   if (game.eliteFinish && game.time - game.eliteFinish.at >= game.eliteFinish.life) game.eliteFinish = null;
   const danger = curseActive(game) ? 1.25 : 1;
@@ -1036,7 +1073,14 @@ export function updateGame(game, dt, input = {
   if (game.phase === 'ended') return;
   updateThorns(game, dt, hurtPlayer);
   if (game.phase === 'ended') return;
+  const killsBefore = game.kills, elitesBefore = game.eliteKills;
   updateWeapons(game, dt, s);
+  const burstKills = game.kills - killsBefore;
+  if ((burstKills >= 5 || game.eliteKills > elitesBefore) && game.time - (game.combatImpact?.at ?? -10) >= .6) {
+    game.combatImpact = {at:game.time,strength:Math.min(1,burstKills/8+.25)};
+    game.impactStop = .045;
+    game.events.push('crowd-break');
+  }
   if (game.bossDefeated) {
     game.phase = 'ended';
     game.outcome = 'victory';

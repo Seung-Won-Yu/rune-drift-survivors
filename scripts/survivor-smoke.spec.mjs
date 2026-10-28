@@ -264,7 +264,7 @@ test('app fullscreen reflects browser state and handles a rejected request', asy
 
 test.describe('rendered combat priorities',()=>{
   test.use({deviceScaleFactor:2});
-  test('a wide sword strike paints a compact weapon stroke rather than a large range diagram',async({page})=>{
+  test('a wide sword strike reaches through the crowd while leaving the sector mostly open',async({page})=>{
     const result=await page.evaluate(async()=>{
       const {createRenderer,loadArt}=await import('/src/survivor/render.js'),{createGame}=await import('/src/survivor/game.js');
       const canvas=document.createElement('canvas');canvas.style.cssText='width:800px;height:680px';document.body.append(canvas);
@@ -277,9 +277,10 @@ test.describe('rendered combat priorities',()=>{
         count++;const x=(i/4)%canvas.width,y=Math.floor(i/4/canvas.width);
         radius=Math.max(radius,Math.hypot((x-canvas.width/2)/ratio/scale,(y-canvas.height*.53)/ratio/scale+28));
       }
-      canvas.remove();return {radius,count,unchanged:before===JSON.stringify(g)};
+      canvas.remove();return {radius,count,coverage:count/(ratio*scale)**2/(Math.PI*240**2),unchanged:before===JSON.stringify(g)};
     });
-    expect(result.count).toBeGreaterThan(30);expect(result.radius).toBeLessThan(82);expect(result.unchanged).toBe(true);
+    expect(result.count).toBeGreaterThan(30);expect(result.radius).toBeGreaterThan(170);expect(result.radius).toBeLessThan(242);
+    expect(result.coverage).toBeLessThan(.15);expect(result.unchanged).toBe(true);
   });
   test('authored poses decode, keep planted feet and give a distinct leap and grounded death',async({page})=>{
     const result=await page.evaluate(async()=>{
@@ -370,7 +371,7 @@ test.describe('rendered combat priorities',()=>{
       for(const check of checks){expect(check.error,check.kind).toBeLessThanOrEqual(3);expect(check.unchanged,check.kind).toBe(true);}
     });
   }
-  test('crowd number budget preserves real effects and resumes the full readout in sparse combat',async({page})=>{
+  test('number clutter stays bounded after clearing a crowd and keeps small hit groups intact',async({page})=>{
     const result=await page.evaluate(async()=>{
       const {createRenderer,loadArt}=await import('/src/survivor/render.js');const {createGame,spawnEnemy}=await import('/src/survivor/game.js');
       const canvas=document.createElement('canvas');canvas.style.cssText='width:800px;height:680px;position:absolute;left:0;top:0';document.body.append(canvas);
@@ -381,10 +382,13 @@ test.describe('rendered combat priorities',()=>{
       renderer.render(g);const sparse=[...numbers];numbers=[];
       for(let i=0;i<12;i++)spawnEnemy(g,0,false,{x:i*3,y:80});
       const before=JSON.stringify(g);renderer.render(g);const crowded=[...numbers],unchanged=before===JSON.stringify(g);
-      g.enemies=[];numbers=[];renderer.render(g);const restored=[...numbers];canvas.remove();return {sparse,crowded,restored,unchanged};
+      g.enemies=[];numbers=[];renderer.render(g);const restored=[...numbers];
+      g.effects=g.effects.slice(0,3);numbers=[];renderer.render(g);const few=[...numbers];
+      canvas.remove();return {sparse,crowded,restored,few,unchanged};
     });
-    expect(result.sparse).toHaveLength(20);expect(result.crowded).toEqual([1,2,3,4,5,6,7,8]);
+    expect(result.sparse).toEqual([1,2,3,4,5,6,7,8]);expect(result.crowded).toEqual(result.sparse);
     expect(result.restored).toEqual(result.sparse);expect(result.unchanged).toBe(true);
+    expect(result.few).toEqual([1,2,3]);
   });
 });
 

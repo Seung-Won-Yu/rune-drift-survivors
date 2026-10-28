@@ -83,11 +83,11 @@ test('blast hit reactions point away from the explosion without adding physical 
   }
 });
 
-test('sword strokes stay near the weapon even at evolved range and never draw a full damage sector', () => {
+test('sword ribbons follow weapon reach without filling a damage-warning sector', () => {
   for (const branch of [null, 'sweep', 'duelist']) for (const reduced of [false,true]) for (const age of [0,.06,.16,.22]) {
     const effect={x:10,y:20,angle:.3,range:240,halfAngle:2.15,life:.22,age,branch,empowered:true},before=JSON.stringify(effect);
     const calls=drawingCalls(ctx=>drawSlash(ctx,effect,reduced));
-    for(const call of calls.filter(c=>c[0]==='arc')) { assert.ok(call[3]<=76);assert.ok(Math.abs(call[5]-call[4])<=1.23); }
+    for(const call of calls.filter(c=>c[0]==='arc')) { assert.ok(call[3]<=effect.range);assert.ok(Math.abs(call[5]-call[4])<=1.23); }
     assert.equal(JSON.stringify(effect),before);
     assert.deepEqual(calls,drawingCalls(ctx=>drawSlash(ctx,effect,reduced)));
   }
