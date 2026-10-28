@@ -16,7 +16,10 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740
   const arrival=await snapshot(page);
   expect(arrival.time).toBeLessThan(25);expect(arrival.ranks.sweep).toBe(1);expect(arrival.ranks.sword).toBeGreaterThanOrEqual(2);
   await expect(page.locator('#phase-label')).toContainText('무리 돌파');
-  await page.keyboard.press('Escape');
+  // The pilot can open/resolve a growth choice between frames. The visible
+  // pause control waits for the field to be interactive before clicking.
+  await page.getByRole('button',{name:'일시정지',exact:true}).click();
+  await expect(page.getByRole('button',{name:'전투 계속하기',exact:true})).toBeVisible();
   const paused=await snapshot(page);expect(paused.phase).toBe('paused');
   await page.waitForTimeout(150);const still=await snapshot(page);
   expect(still.time).toBe(paused.time);expect(still.swarms).toEqual(paused.swarms);
