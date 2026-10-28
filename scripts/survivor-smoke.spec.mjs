@@ -755,7 +755,7 @@ test('auto attack drops XP that can be collected through movement', async ({ pag
   await page.keyboard.up('d');
 });
 
-test('upgrade pauses combat and chained levels show fresh choices', async ({ page }) => {
+test('upgrade resumes real combat before a banked level opens fresh choices', async ({ page }) => {
   await scenario(page, 'overflow');
   const paused = await snapshot(page);
   await expect(page.locator('[data-upgrade]')).toHaveCount(3);
@@ -763,11 +763,21 @@ test('upgrade pauses combat and chained levels show fresh choices', async ({ pag
   expect((await snapshot(page)).time).toBe(paused.time);
   await expect(page.locator('[data-upgrade="ember"]')).toHaveAttribute('data-choice-kind','new');
   await page.locator('[data-upgrade="ember"]').click();
+  expect((await snapshot(page)).phase).toBe('playing');
+  await expect(page.locator('#reward-notice')).toBeVisible();
+  const resumed=await snapshot(page);
+  await page.keyboard.down('d');
+  await expect.poll(async()=>(await snapshot(page)).player.x).toBeGreaterThan(resumed.player.x+5);
+  await page.keyboard.up('d');
+  await page.getByRole('button',{name:'일시정지',exact:true}).click();
+  const resting=await snapshot(page);await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(resting.time);
+  await page.getByRole('button',{name:'전투 계속하기',exact:true}).click();
   await expect(page.locator('.level-medal b')).toHaveText('3');
   await expect(page.locator('.previous-choice')).toContainText('추적 불씨');
   await expect(page.locator('#reward-notice')).toBeHidden();
   await expect(page.locator('[data-upgrade="orbit"]')).toBeVisible();
   const queued = await snapshot(page), first = queued.choices[0];
+  expect(queued.time-paused.time).toBeGreaterThanOrEqual(2.98);
   await expect(page.locator('[data-upgrade]').first()).toHaveAttribute('data-upgrade', first);
   await page.screenshot({ path: 'output/playwright/survivor/upgrade-desktop.png', animations: 'disabled' });
   await page.keyboard.press('1');
@@ -2507,4 +2517,67 @@ test('departure takes the latest choice immediately while portrait loading canno
   expect(await page.locator('#overlay').evaluate(el=>el.contains(document.activeElement))).toBe(false);
   expect((await snapshot(page)).profile.runs).toBe(0);
  } finally {if(held)await held.abort();}
+});
+
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:640,height:360}]) {
+ test(`Space breakthrough moves, hits and waits through pause at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'burst-lane');
+  await expect(page.locator('#burst')).toBeInViewport({ratio:1});await expect(page.locator('#burst')).toBeEnabled();
+  const before=await snapshot(page);
+  await page.keyboard.press('Space');
+  await expect.poll(async()=>(await snapshot(page)).burst.uses).toBe(1);
+  await expect.poll(async()=>(await snapshot(page)).burst.active).toBe(false);
+  const after=await snapshot(page);
+  expect(after.player.x-before.player.x).toBeCloseTo(120,2);expect(after.kills).toBe(3);expect(after.burst.hitIds).toHaveLength(3);
+  expect(after.damageDealt.sword).toBe(45);expect(after.player.hp).toBe(100);
+  await expect(page.locator('#burst')).toBeDisabled();await page.keyboard.press('Space');
+  expect((await snapshot(page)).burst.uses).toBe(1);
+  await page.getByRole('button',{name:'일시정지',exact:true}).click();
+  const paused=await snapshot(page);await page.waitForTimeout(150);
+  expect((await snapshot(page)).time).toBe(paused.time);expect((await snapshot(page)).burst).toEqual(paused.burst);
+  await page.getByRole('button',{name:'전투 계속하기',exact:true}).click();
+  await expect(page.locator('#burst')).toBeEnabled({timeout:6000});
+  expect((await snapshot(page)).burst.uses).toBe(1);
+  await page.screenshot({path:`output/playwright/survivor/breakthrough-ready-${viewport.width}.png`,animations:'disabled'});
+ });
+}
+
+test('Space on another HUD button keeps its native action instead of consuming breakthrough',async({page})=>{
+ await scenario(page,'burst-lane');
+ await page.getByRole('button',{name:'일시정지',exact:true}).focus();await page.keyboard.press('Space');
+ expect((await snapshot(page)).phase).toBe('paused');expect((await snapshot(page)).burst.uses).toBe(0);
+ await page.getByRole('button',{name:'전투 계속하기',exact:true}).click();
+ await page.locator('#burst').focus();await page.keyboard.press('Space');
+ await expect.poll(async()=>(await snapshot(page)).burst.uses).toBe(1);
+});
+
+test('a breakthrough key tap cannot accidentally buy a growth or relic choice',async({page})=>{
+ for(const name of ['upgrade','ember-coal']) {
+  await scenario(page,name);const before=await snapshot(page);
+  await page.locator('[data-upgrade],[data-relic]').first().focus();
+  await page.keyboard.press('Space');
+  const after=await snapshot(page);expect(after.phase).toBe(before.phase);expect(after.ranks).toEqual(before.ranks);expect(after.relics).toEqual(before.relics);
+  if(name==='upgrade') {
+   await page.getByRole('button',{name:/성장 다시 뽑기/}).focus();await page.keyboard.press('Space');
+   await expect.poll(async()=>(await snapshot(page)).rerollsUsed).toBe(before.rerollsUsed+1);
+   expect((await snapshot(page)).ranks).toEqual(before.ranks);
+   await page.locator('[data-upgrade]').first().focus();
+  }
+  await page.keyboard.press('Enter');
+  expect((await snapshot(page)).phase).toBe('playing');
+ }
+});
+
+test.describe('explicit touch breakthrough',()=>{
+ test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
+ test('a thumb tap activates a separate action with a reachable target',async({page})=>{
+  await scenario(page,'burst-lane');
+  const button=page.locator('#burst'),box=await button.boundingBox();
+  expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
+  await expect(button).toBeInViewport({ratio:1});await expect(page.locator('#touch')).toBeVisible();
+  const stick=await page.locator('#touch').boundingBox();expect(stick.x+stick.width).toBeLessThan(box.x);
+  await button.tap();await expect.poll(async()=>(await snapshot(page)).burst.uses).toBe(1);
+  await expect.poll(async()=>(await snapshot(page)).kills).toBe(3);
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+ });
 });

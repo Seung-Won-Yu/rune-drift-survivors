@@ -97,6 +97,7 @@ export function attackPose(game, reduced = false) {
     if (game.characterId === 'ember') return { x: companionFacing(game) * 6 * release, y: -4 * release, tilt: .13 * release, sx: 1 - .025 * release, sy: 1 + .065 * release };
     return { x: p.facing * 4 * release, y: -1.5 * release, tilt: .075 * release, sx: 1 + .02 * release, sy: 1 + .025 * release };
   }
+  if(game.burst?.active)return {y:-2,tilt:.12*game.burst.x,sx:1.03,sy:.97};
   return {};
 }
 

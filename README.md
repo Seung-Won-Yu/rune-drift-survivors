@@ -12,6 +12,8 @@ The lobby image shows a fresh profile. Companions, combat styles and keepsakes u
 
 The combat image uses a development-only boss scenario to show the warning clearly; ordinary runs reach the sovereign after four minutes.
 
+- **A deliberate action inside the fight:** Space or the separate touch button makes a short directional breakthrough with real primary-weapon hits and a 4.2-second cooldown. Growth now returns to combat for three seconds (four after evolution), preserving banked XP; owned support weapon families rotate between actual offers. These are playable experiments in combat decisions and rhythm, with an 18-run comparison per version and explicit limits on what testing proves. [Rules, references and verification](./docs/design/survivor-restart/49-COMBAT-DECISIONS-PROTOTYPE.md).
+
 - **A new visual direction from the lobby:** a ruined outpost at night frames the selected companion, with real starting stats on the left, party selection on the right and an equipment dock below. Compact top navigation connects preparation, collection and records. Slate-blue surfaces, amber commands and heavy Korean sans-serif type continue through growth, equipment comparison, pause, settings, rewards and results. The layout keeps departure visible while equipment and collection scroll internally. [Art direction, assets and verification](./docs/design/survivor-restart/47-OUTPOST-ART-DIRECTION.md).
 
 - **Preparation that keeps its place:** tabs retain the companion stage and reading position, equipment changes keep decoded artwork, and companion pictures switch only when ready. Late or failed portrait requests cannot change the chosen companion or delay departure; keyboard focus stays with the choice and reduced motion skips the transitions. [Interaction and verification](./docs/design/survivor-restart/48-CAMP-SELECTION-CONTINUITY.md).
@@ -74,7 +76,7 @@ npm ci
 npm run dev
 ```
 
-Open **[the local game](http://127.0.0.1:5173/)**. Move with WASD/arrows or the touch stick. Attacks are automatic; use Escape/P to pause and 1–3 or a card to choose an upgrade. No backend, account, or environment secrets are required.
+Open **[the local game](http://127.0.0.1:5173/)**. Move with WASD/arrows or the touch stick. Attacks are automatic; use Space/the right touch button for a directional breakthrough, Escape/P to pause and 1–3, Enter or a card to choose an upgrade. No backend, account, or environment secrets are required.
 
 ## Verify and deploy
 

@@ -1,6 +1,7 @@
 import { choiceReceipt } from './choice-feedback.js';
 import { openBranchPreview } from './branch-preview.js';
 import { reuseCampScene } from './camp-presentation.js';
+import { BURST, canBurst, burstCooldown } from './burst.js';
 import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice, evolutionGuidance, goalGuidanceMarkup } from './field-guide.js';
 import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
@@ -52,7 +53,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune'
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane'
 ].includes(previewScene);
 try {
   storage = visualPreview ? { getItem: () => null, setItem: () => {} } : window.localStorage;
@@ -88,6 +89,7 @@ let stick = {
   sound = true;
 const audio = createAudio();
 const keys = new Set();
+let burstRequest = null;
 let campView = 'prepare', campSection = 'prepare', codexFilter = 'all', codexSelection = null, preparation = 'inheritance';
 let earnedReceipt = null, rerollFeedback = false, codexDetailOpen = false;
 let resultReturn = null, pauseSection = 'equipment';
@@ -116,6 +118,7 @@ try {
 } catch {/* Private storage can be unavailable. */}
 function resetInput() {
   keys.clear();
+  burstRequest = null;
   stick = {
     x: 0,
     y: 0,
@@ -139,6 +142,13 @@ function updateSound() {
   $('sound').setAttribute('aria-label', sound ? '소리 끄기' : '소리 켜기');
   $('sound').setAttribute('aria-pressed', String(sound));
 }
+function requestBurst() {
+  if(!canBurst(game))return;
+  burstRequest={
+    x:(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+stick.x,
+    y:(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+stick.y
+  };
+}
 function notice(text) {
   $('notice').textContent = text;
   noticeUntil = performance.now() + 2600;
@@ -146,7 +156,7 @@ function notice(text) {
 }
 function showReceipt(receipt) {
   if (!receipt) return;
-  earnedReceipt = {game, receipt, pendingChoice: game.phase === 'upgrade', until: game.time + (receipt.kind === 'evolution' || receipt.kind === 'relic' ? 4.5 : 3.2)};
+  earnedReceipt = {game, receipt, pendingChoice: game.xp >= game.xpNeed, until: game.time + (receipt.kind === 'evolution' || receipt.kind === 'relic' ? 4.5 : 3.2)};
   const node = $('reward-notice');
   node.dataset.kind = receipt.kind;
   node.innerHTML = `<span class="receipt-art" aria-hidden="true">${collectionArt(receipt.art)}</span><span><small>${receipt.label}</small><strong>${receipt.name}</strong><span>${receipt.detail}</span></span>`;
@@ -777,7 +787,7 @@ function updateHud() {
   $('level-badge').textContent = `LV ${game.level}`;
   $('clock').textContent = formatTime(Math.max(0, RUN_SECONDS - game.time));
   $('kills').textContent = game.kills;
-  $('xp-label').textContent = `다음 성장 · LV ${game.level + 1}`;
+  $('xp-label').textContent = `${game.xp >= game.xpNeed ? '성장 준비' : '다음 성장'} · LV ${game.level + 1}`;
   $('xp-text').textContent = `${Math.round(game.xp * 10) / 10} / ${game.xpNeed}`;
   $('xp-bar').firstElementChild.style.width = `${Math.min(100, game.xp / game.xpNeed * 100)}%`;
   $('xp-bar').setAttribute('aria-valuenow', String(Math.round(Math.min(100, game.xp / game.xpNeed * 100))));
@@ -785,7 +795,12 @@ function updateHud() {
   const pacing = combatPacing(game);
   $('phase-label').textContent = championStatus(game) ?? (['rest', 'evolution', 'surge', 'champion', 'harvest'].includes(pacing.kind) ? `${pacing.label} · ${Math.ceil(pacing.remaining)}초` : pacing.label);
   $('phase-label').dataset.pacing = pacing.kind;
-  $('coach').textContent = game.time < 5 ? (matchMedia('(pointer:coarse)').matches ? '왼쪽 스틱으로 이동 · 공격은 자동' : 'WASD / 방향키 이동 · Esc / P 일시정지') : `공격은 자동 · ${SIGNATURES[game.characterId].action}`;
+  const remaining=burstCooldown(game),ready=canBurst(game),burst=$('burst');
+  burst.disabled=!ready;burst.classList.toggle('is-ready',ready);
+  burst.style.setProperty('--burst-ready',String(1-Math.min(1,remaining/BURST.cooldown)));
+  $('burst-state').textContent=remaining>0?`${remaining.toFixed(1)}초`:matchMedia('(pointer:coarse)').matches?'준비':'Space';
+  burst.setAttribute('aria-label',ready?'돌파 · Space':`돌파 준비 중 · ${remaining.toFixed(1)}초`);
+  $('coach').textContent = game.time < 5 ? (matchMedia('(pointer:coarse)').matches ? '왼쪽 스틱 이동 · 오른쪽 돌파 · 공격은 자동' : 'WASD 이동 · Space 돌파 · Esc 일시정지') : `공격은 자동 · ${SIGNATURES[game.characterId].action}`;
   $('coach').hidden = game.time >= 14 || needsRecovery;
   const guidance = evolutionGuidance(game);
   const trackedGoal = goalProgress(game);
@@ -816,7 +831,8 @@ function tick(now) {
       y: (keys.has('s') || keys.has('arrowdown') ? 1 : 0) - (keys.has('w') || keys.has('arrowup') ? 1 : 0) + stick.y
     };
     while (accumulator >= 1 / 60 && game.phase === 'playing') {
-      const input = qaPilot ? qaPilot.move(game) : manualInput;
+      let input = qaPilot ? qaPilot.move(game) : manualInput;
+      if(!qaPilot&&burstRequest){input={...manualInput,burst:burstRequest};burstRequest=null;}
       updateGame(game, 1 / 60, input);
       accumulator -= 1 / 60;
     }
@@ -880,12 +896,22 @@ document.addEventListener('keydown', event => {
     choose((game.phase === 'relic' ? game.relicChoices : game.choices)[Number(key) - 1]);
     return;
   }
+  // A breakthrough tap made as growth opens must not buy the focused card.
+  // Choices still accept the advertised 1–3 keys, Enter and pointer input.
+  if(['upgrade','relic'].includes(game.phase)&&key===' '&&event.target.closest?.('[data-upgrade],[data-relic]')){event.preventDefault();return;}
+  if(game.phase==='playing'&&key===' '&&!event.repeat){
+    if(event.target.closest?.('button')&&event.target!==$('burst'))return;
+    event.preventDefault();requestBurst();return;
+  }
   if (game.phase === 'playing' && ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'].includes(key)) {
     event.preventDefault();
     keys.add(key);
   }
 });
-document.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
+document.addEventListener('keyup', event => {
+  keys.delete(event.key.toLowerCase());
+  if(!appDialog?.open&&!branchDialog?.open&&['upgrade','relic'].includes(game.phase)&&event.key===' '&&event.target.closest?.('[data-upgrade],[data-relic]'))event.preventDefault();
+});
 window.addEventListener('blur', () => {
   resetInput();
   pause();
@@ -900,6 +926,7 @@ document.addEventListener('visibilitychange', () => {
 $('open-chest').onclick = () => { if (openChest(game)) { resetInput(); lastPhase=null; syncPhase(); } };
 $('preview-rewards').onclick = () => { if (inspectEncounter(game)) { audio.suspend(); resetInput(); lastPhase=null; syncPhase(); } };
 $('pause').onclick = pause;
+$('burst').onclick = requestBurst;
 $('pause').innerHTML = icon('pause');
 $('sound').onclick = () => setSound(!sound);
 $('weapons').onclick = event => {
@@ -1010,6 +1037,8 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       player: {
         ...game.player
       },
+      burst: {...game.burst,hitIds:[...game.burst.hitIds]},
+      growthResumeAt: game.growthResumeAt,
       enemies: game.enemies.length,
       shots: game.shots.length,
       damageDealt: {
@@ -1352,6 +1381,11 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
         game.nextElite = 999;
         game.player.hp = 40;
         updateGame(game, 1 / 60);
+      } else if (name === 'burst-lane') {
+        game.player.invincible=0;game.swordClock=999;game.xpNeed=99999;game.nextElite=999;
+        for(const [x,y] of [[35,0],[80,0],[125,0],[80,110]]){
+          const e=spawnEnemy(game,0,false,{x,y});e.speed=0;
+        }
       } else if (name === 'combat') {
         spawnEnemy(game, 0, false, {
           x: 62,

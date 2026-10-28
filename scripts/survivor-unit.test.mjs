@@ -80,7 +80,23 @@ test('contact invulnerability prevents overlapping enemies draining HP in one st
 test('level up freezes gameplay and only an offered upgrade applies',()=>{const g=playing();g.gems.push({x:0,y:0,value:10,age:0});frames(g,1);assert.equal(g.phase,'upgrade');assert.equal(g.level,2);assert.equal(g.choices.length,3);assert.equal(new Set(g.choices).size,3);const t=g.time;frames(g,60);assert.equal(g.time,t);assert.equal(chooseUpgrade(g,'not-an-upgrade'),false);assert.equal(chooseUpgrade(g,'ember'),true);assert.equal(g.ranks.ember,1);assert.equal(g.phase,'playing');assert.equal(chooseUpgrade(g,'ember'),false);});
 test('ember and orbit unlocks cause real damage',()=>{for(const weapon of ['ember','orbit']){const g=playing();g.ranks[weapon]=1;g.swordClock=999;const e=spawnEnemy(g,2,false,{x:weapon==='ember'?160:60,y:0});e.speed=0;frames(g,150);assert.ok(g.damageDealt[weapon]>0,weapon);}});
 test('ember follows a target that changes position after launch',()=>{const g=playing();g.ranks.ember=1;g.emberClock=0;g.swordClock=999;const e=spawnEnemy(g,2,false,{x:220,y:0});e.speed=0;frames(g,1);assert.equal(g.shots.length,1);e.y=140;frames(g,1);assert.ok(g.shots[0].vy>100);frames(g,60);assert.ok(g.damageDealt.ember>0);});
-test('surplus XP queues another choice without discarding experience',()=>{const g=playing();g.gems.push({x:0,y:0,value:30,age:0});frames(g,1);assert.equal(g.level,2);chooseUpgrade(g,'ember');assert.equal(g.phase,'upgrade');assert.equal(g.level,3);assert.equal(g.xp,7);assert.ok(g.choices.includes('orbit'));chooseUpgrade(g,'orbit');assert.equal(g.phase,'playing');});
+test('surplus XP waits for real combat after a choice without discarding experience',()=>{
+ const g=playing();g.gems.push({x:0,y:0,value:30,age:0});frames(g,1);
+ assert.equal(g.level,2);assert.equal(g.xp,22);chooseUpgrade(g,'ember');
+ assert.equal(g.phase,'playing');frames(g,100,{x:1,y:0});
+ assert.equal(g.level,2);assert.equal(g.xp,22);assert.equal(g.player.invincible,0);assert.ok(g.player.x>200);
+ pauseGame(g);const frozen=JSON.stringify(g);frames(g,180);assert.equal(JSON.stringify(g),frozen);resumeGame(g);
+ frames(g,100);assert.equal(g.phase,'upgrade');assert.equal(g.level,3);assert.equal(g.xp,7);
+ assert.ok(g.choices.includes('orbit'));assert.equal(g.choices.length,3);
+ chooseUpgrade(g,'orbit');assert.equal(g.phase,'playing');
+});
+test('an evolution gets four combat seconds and cannot postpone the chapter ending',()=>{
+ const g=playing();Object.assign(g.ranks,{sword:3,orbit:1});g.eliteKills=1;g.xp=500;g.phase='upgrade';g.choices=['dawn'];
+ chooseUpgrade(g,'dawn');frames(g,210);assert.equal(g.phase,'playing');assert.equal(g.xp,500);assert.equal(g.player.invincible,0);
+ frames(g,40);assert.equal(g.phase,'upgrade');assert.equal(g.level,2);assert.equal(g.xp,492);
+ const end=playing();Object.assign(end.ranks,{sword:3,orbit:1});end.eliteKills=1;end.xp=500;end.phase='upgrade';end.choices=['dawn'];end.time=RUN_SECONDS-.01;
+ chooseUpgrade(end,'dawn');frames(end,1);assert.equal(end.phase,'ended');assert.equal(end.outcome,'survived');assert.equal(end.level,1);
+});
 test('maxed upgrade drafts fall back to repeatable recovery',()=>{const g=playing();Object.assign(g.ranks,{sword:6,ember:5,orbit:5,fleet:4,magnet:4,vitality:4});g.phase='upgrade';g.choices=draftUpgrades(g);assert.deepEqual(g.choices,['heal']);g.player.hp=10;assert.equal(chooseUpgrade(g,'heal'),true);assert.equal(g.player.hp,50);});
 test('time limit with a living boss is survival rather than a boss victory',()=>{const g=playing();g.time=RUN_SECONDS-.005;frames(g,1);assert.equal(g.outcome,'survived');assert.equal(g.time,RUN_SECONDS);assert.equal(createGame().kills,0);assert.equal(createGame().ranks.ember,0);});
 test('death takes precedence over attacks and rewards',()=>{const g=playing();g.player.hp=1;spawnEnemy(g,0,false,{x:0,y:0});frames(g,1);assert.equal(g.phase,'ended');assert.equal(g.outcome,'defeat');assert.equal(g.player.hp,0);});
@@ -292,6 +308,16 @@ test('early drafts offer commitment, one rotating new weapon and a survival alte
     }
     assert.equal(new Set([...first,...second].filter(key=>['sword','ember','orbit'].includes(key))).size,3);
   }
+});
+test('owned support weapon offers rotate instead of repeatedly hiding one family',()=>{
+ for(const character of ['ash','ember','grove']) for(let seed=1;seed<=12;seed++) {
+  const g=createGame(seed,character),primary={ash:'sword',ember:'ember',grove:'orbit'}[character];
+  Object.assign(g.ranks,{sword:1,ember:1,orbit:1});
+  const offers=Array.from({length:6},()=>draftUpgrades(g).find(key=>['sword','ember','orbit'].includes(key)&&key!==primary));
+  for(let i=1;i<offers.length;i++) assert.notEqual(offers[i],offers[i-1]);
+  g.ranks[offers[0]]={sword:6,ember:5,orbit:5}[offers[0]];
+  for(let i=0;i<4;i++)assert.ok(!draftUpgrades(g).includes(offers[0]));
+ }
 });
 test('comet explosion hits nearby enemies once without reaching a distant enemy',()=>{
   const g=playing();g.swordClock=999;

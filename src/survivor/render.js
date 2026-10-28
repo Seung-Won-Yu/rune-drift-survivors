@@ -1,4 +1,5 @@
 import { reduceMotion } from './preferences.js';
+import { drawBurst } from './burst-art.js';
 import { SIGNATURES } from './signature.js';
 import { impactPose, attackPose, companionActionPose, hurtFeedback, companionFacing, combatKick } from './impact.js';
 import { GIANT, huntRule } from './enemies.js';
@@ -212,6 +213,7 @@ export function createRenderer(canvas, art, preferences = {motion: 'system', dam
   function drawPlayer(game, hurt) {
     const p = game.player;
     const facing = companionFacing(game);
+    drawBurst(ctx,game,reduced.matches);
     shadow(p.x, p.y, 20, 7);
     drawFootfall(ctx, game, reduced.matches);
     ctx.strokeStyle = '#b7e5c887';

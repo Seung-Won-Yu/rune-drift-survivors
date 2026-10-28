@@ -59,7 +59,7 @@ test('early growth boosts real collected XP before 60 seconds, ends at the bound
  const paused=collect('bookmark',59.9);paused.phase='paused';const before={time:paused.time,xp:paused.xp};
  updateGame(paused,1);assert.equal(paused.time,before.time);assert.equal(paused.xp,before.xp);
 });
-test('growth reaches exact level thresholds for every order of the same collected XP', () => {
+test('banked growth reaches exact thresholds for every order of the same collected XP after combat resumes', () => {
  // 35 base XP becomes 42 XP: precisely enough for levels 2, 3 and 4 (8 + 15 + 19).
  for(let i=0;i<17;i++) {
   const values=Array(16).fill(2);values.splice(i,0,3);
@@ -67,6 +67,12 @@ test('growth reaches exact level thresholds for every order of the same collecte
   for(const value of values) {
    g.gems.push({x:0,y:0,value,age:0});updateGame(g,1/60);
    if(g.phase==='upgrade')assert.ok(chooseUpgrade(g,g.choices[0]));
+  }
+  // Resolve earned choices through real combat time rather than expecting
+  // several levels to open inside the same chooseUpgrade call.
+  for(let frame=0;frame<600&&(g.phase==='upgrade'||g.xp>=g.xpNeed);frame++) {
+   if(g.phase==='upgrade')assert.ok(chooseUpgrade(g,g.choices[0]));
+   updateGame(g,1/60);
   }
   assert.equal(g.level,4,`three-point gem at position ${i}`);assert.equal(g.xp,0);
  }

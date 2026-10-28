@@ -1,4 +1,5 @@
 import { CHAMPIONS, updateChampionBloom } from './champions.js';
+import { BURST, createBurst, startBurst, advanceBurst, burstDistance } from './burst.js';
 import { createSignature, advanceSignature, chargeBlade, chargeRune, consumeSignature, absorbDamage } from './signature.js';
 import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact, recordBossDamage } from './impact.js';
 import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy } from './enemies.js';
@@ -212,6 +213,8 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', exp
     level: 1,
     xp: 0,
     xpNeed: 8,
+    growthResumeAt: 0,
+    burst: createBurst(),
     kills: 0,
     eliteKills: 0,
     player: {
@@ -349,9 +352,8 @@ export function draftUpgrades(game) {
   // Rotate discovery across drafts. Skipping a new weapon does not hide the
   // other one, and committing to a weapon leaves a real survival alternative.
   const alternates = ['sword', 'ember', 'orbit'].filter(key => key !== primary);
-  const discovery = alternates[game.weaponOfferCursor++ % alternates.length];
-  const secondary = pick(available.filter(key => ['sword', 'ember', 'orbit'].includes(key) && key !== primary && game.ranks[key] > 0));
-  const flank = !game.ranks[discovery] ? discovery : secondary || pick(unowned);
+  const ordered = alternates.map((_, offset) => alternates[(game.weaponOfferCursor + offset) % alternates.length]);
+  const flank = ordered.find(key => available.includes(key)) ?? null;
   const utility = game.player.hp < game.player.maxHp * .5 && available.includes('vitality') ? 'vitality' : pick(available.filter(key => ['fleet', 'magnet', 'vitality'].includes(key)));
   if (branches.length && chosen.length <= 1) {
     for (const key of branches) if (chosen.length < 3) chosen.push(key);
@@ -363,6 +365,9 @@ export function draftUpgrades(game) {
   const remaining = available.filter(key => !chosen.includes(key) && (!unowned.includes(key) || key === flank));
   while (chosen.length < 3 && remaining.length) chosen.push(remaining.splice(Math.floor(game.draftRng() * remaining.length), 1)[0]);
   if (chosen.length < 3) chosen.push('heal');
+  // Advance only after a real offer. Owned support weapons keep rotating too,
+  // so skipping one draft cannot strand the other family behind repeated rolls.
+  if (flank && chosen.includes(flank)) game.weaponOfferCursor = (alternates.indexOf(flank) + 1) % alternates.length;
   return chosen;
 }
 function rerollPool(game) {
@@ -392,7 +397,7 @@ export function rerollUpgrades(game) {
   return true;
 }
 function checkLevel(game) {
-  if (game.xp < game.xpNeed) return;
+  if (game.burst.active || game.time < game.growthResumeAt || game.xp < game.xpNeed) return;
   game.xp -= game.xpNeed;
   game.level++;
   game.xpNeed = xpForLevel(game.level);
@@ -419,7 +424,9 @@ export function chooseUpgrade(game, key) {
   game.phase = 'playing';
   game.player.invincible = Math.max(game.player.invincible, .8);
   game.events.push('choose');
-  checkLevel(game);
+  // Keep earned XP banked while the selected attack actually plays. This uses
+  // combat time and grants no additional invulnerability or enemy relief.
+  game.growthResumeAt = game.time + (EVOLUTIONS[key] ? 4 : 3);
   return true;
 }
 export function startGame(game) {
@@ -900,7 +907,7 @@ function updateWeapons(game, dt, s) {
 }
 function hurtPlayer(game, damage, source = 'contact', origin) {
   const p = game.player;
-  if (p.invincible > 0) return;
+  if (p.invincible > 0 || game.time < game.burst.iframesUntil) return;
   damage *= (1 - getCharacter(game.characterId).armor) * (game.ranks.bulwark ? .85 : 1) * vowStats(game.vow).damage;
   damage = absorbDamage(game, damage);
   if (damage <= 0) { p.invincible = .85; return; }
@@ -971,6 +978,8 @@ export function updateGame(game, dt, input = {
 }) {
   if (game.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   dt = Math.min(dt, 1 / 30);
+  // A request made during the short contact stop remains a real queued action.
+  if (input.burst) startBurst(game,input.burst);
   if (game.impactStop > 0) {
     const stopped = Math.min(dt, game.impactStop);
     game.impactStop -= stopped; dt -= stopped;
@@ -984,16 +993,18 @@ export function updateGame(game, dt, input = {
     length = Math.hypot(input.x, input.y) || 1;
   const ix = (Number.isFinite(input.x) ? input.x : 0) / Math.max(1, length),
     iy = (Number.isFinite(input.y) ? input.y : 0) / Math.max(1, length);
-  p.x += ix * s.speed * dt;
-  p.y += iy * s.speed * dt;
-  p.moving = Math.hypot(ix, iy) > .05;
+  if(Math.hypot(ix,iy)>.05&&!game.burst.active){game.burst.aimX=ix;game.burst.aimY=iy;}
+  const burstStep=advanceBurst(game,dt);
+  if(!burstStep){p.x += ix * s.speed * dt;p.y += iy * s.speed * dt;}
+  const moveX=burstStep?.x??ix,moveY=burstStep?.y??iy;
+  p.moving = !!burstStep || Math.hypot(ix, iy) > .05;
   // Travel and aim can differ while kiting; ground marks follow travel.
-  p.moveX = ix;
-  p.moveY = iy;
-  advanceSignature(game, Math.hypot(ix, iy) * s.speed * dt);
+  p.moveX = moveX;
+  p.moveY = moveY;
+  advanceSignature(game, burstStep ? 0 : Math.hypot(ix, iy) * s.speed * dt);
   // Animation follows travelled distance, including partial touch-stick input.
-  if (p.moving) p.walk += Math.hypot(ix, iy) * s.speed * dt / 168;
-  if (Math.abs(ix) > .05 && !game.swing) p.facing = ix > 0 ? 1 : -1;
+  if (p.moving) p.walk += (burstStep?.distance ?? Math.hypot(ix, iy) * s.speed * dt) / 168;
+  if (Math.abs(moveX) > .05 && !game.swing) p.facing = moveX > 0 ? 1 : -1;
   p.invincible = Math.max(0, p.invincible - dt);
   p.hurt = Math.max(0, p.hurt - dt);
   p.cast = Math.max(0, p.cast - dt);
@@ -1074,6 +1085,15 @@ export function updateGame(game, dt, input = {
   updateThorns(game, dt, hurtPlayer);
   if (game.phase === 'ended') return;
   const killsBefore = game.kills, elitesBefore = game.eliteKills;
+  if (burstStep) {
+    const source=getCharacter(game.characterId).weapon,b=game.burst;
+    const damage=s[`${source}Damage`]*BURST.damage;
+    for(const enemy of game.enemies) if(enemy.hp>0&&!b.hitIds.includes(enemy.id)&&burstDistance(b,enemy.x,enemy.y)<=BURST.width+enemy.radius) {
+      const before=game.kills;
+      if(hitEnemy(game,enemy,damage,source,b.x*1.6,b.y*1.6)>0)b.hitIds.push(enemy.id);
+      b.kills+=game.kills-before;
+    }
+  }
   updateWeapons(game, dt, s);
   const burstKills = game.kills - killsBefore;
   if ((burstKills >= 5 || game.eliteKills > elitesBefore) && game.time - (game.combatImpact?.at ?? -10) >= .6) {

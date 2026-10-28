@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "qa:survivor": "node --test scripts/survivor-field-guide.test.mjs scripts/survivor-unit.test.mjs scripts/survivor-progression.test.mjs scripts/survivor-presentation.test.mjs scripts/survivor-profile.test.mjs scripts/survivor-field.test.mjs scripts/survivor-expansion.test.mjs scripts/survivor-journey.test.mjs scripts/survivor-codex.test.mjs scripts/survivor-enemies.test.mjs scripts/survivor-pacing.test.mjs scripts/survivor-experiments.test.mjs scripts/survivor-rhythm.test.mjs && playwright test --config scripts/playwright-survivor.config.mjs",
+    "qa:survivor": "node --test scripts/survivor-field-guide.test.mjs scripts/survivor-unit.test.mjs scripts/survivor-burst.test.mjs scripts/survivor-progression.test.mjs scripts/survivor-presentation.test.mjs scripts/survivor-profile.test.mjs scripts/survivor-field.test.mjs scripts/survivor-expansion.test.mjs scripts/survivor-journey.test.mjs scripts/survivor-codex.test.mjs scripts/survivor-enemies.test.mjs scripts/survivor-pacing.test.mjs scripts/survivor-experiments.test.mjs scripts/survivor-rhythm.test.mjs && playwright test --config scripts/playwright-survivor.config.mjs",
     "qa:survivor:production": "node scripts/survivor-production-smoke.mjs",
     "qa:survivor:fullrun": "node scripts/survivor-fullrun.mjs",
     "preview": "vite preview --host 0.0.0.0",

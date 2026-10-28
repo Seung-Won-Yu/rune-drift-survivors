@@ -371,6 +371,22 @@ button,select,input { font-family: var(--ui-font); }
 .hud-shell .reward-notice :is(small,span>span) { color: var(--ui-muted); }
 .weapon-belt .weapon-slot { background: #152a39de; border-color: #7f9ca564; border-radius: 5px; }
 .weapon-belt .weapon-slot.is-evolved { border-color: #e8c078; }
+.burst-control { --burst-ready:1; position:fixed; right:max(24px,env(safe-area-inset-right)); bottom:max(24px,env(safe-area-inset-bottom)); z-index:12; width:76px; height:84px; display:grid; grid-template-rows:24px 18px 16px; place-content:center; justify-items:center; gap:2px; padding:8px; border:1px solid var(--ui-rim); border-radius:9px; background:#152331f0; color:var(--ui-muted); pointer-events:auto; touch-action:manipulation; overflow:hidden; }
+.burst-control svg { width:23px; height:23px; }
+.burst-control strong { font:800 13px var(--ui-font); }
+.burst-control > span { font:650 10px var(--ui-font); }
+.burst-control > i { position:absolute; left:0; bottom:0; width:calc(var(--burst-ready)*100%); height:3px; background:var(--ui-amber); }
+.burst-control.is-ready { color:var(--ui-amber); border-color:var(--ui-amber); box-shadow:inset 0 0 14px #f1bf7114,0 3px 12px #030b1466; }
+.burst-control:disabled { cursor:default; opacity:1; }
+.burst-control.is-ready:active { background:#405060; }
+.burst-control:focus-visible { outline:2px solid var(--ui-cold); outline-offset:3px; }
+.hud-bottom .chapter { display:none; }
+@media(max-width:680px),(max-height:570px) {
+ .burst-control { width:64px; height:70px; right:max(16px,env(safe-area-inset-right)); bottom:max(16px,env(safe-area-inset-bottom)); grid-template-rows:20px 16px 14px; padding:6px; }
+ .burst-control svg { width:20px; height:20px; }
+ .burst-control strong { font-size:12px; }
+ #coach { max-width:calc(100% - 88px); }
+}
 .evolution-hint,.recovery-hint { background: #132333df; border-color: #7f9ca564; color: var(--ui-muted); border-radius: 5px; }
 .panel.is-result { background: #152331; border-color: var(--ui-rim); border-radius: 9px; }
 .is-result .result-body { background: #132333; }

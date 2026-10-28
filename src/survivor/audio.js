@@ -1,4 +1,4 @@
-const IMPORTANT = ['hurt', 'guard-block', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'elite-break', 'crowd-break', 'evolve', 'signature-ash', 'signature-ember', 'signature-grove', 'level', 'heal', 'choose', 'slam', 'warning', 'elite'];
+const IMPORTANT = ['hurt', 'guard-block', 'boss-arrival', 'boss-warning', 'boss-charge', 'boss-thorns', 'boss-defeated', 'elite-break', 'crowd-break', 'evolve', 'signature-ash', 'signature-ember', 'signature-grove', 'burst', 'level', 'heal', 'choose', 'slam', 'warning', 'elite'];
 const IMPACTS = ['blade-impact', 'ember-impact', 'rune-hit', 'pulse'];
 
 export function selectAudioEvents(events) {
@@ -76,6 +76,9 @@ export function createAudio() {
       transient(now, .075, .08, 950);
       note(145, 42, 'triangle', now, .2, .06);
       note(72, 38, 'sine', now + .015, .22, .035);
+    } else if (event === 'burst') {
+      transient(now,.09,.035,1400);
+      note(180,420,'triangle',now,.1,.025);
     } else if (event === 'guard-block') {
       note(390, 810, 'sine', now, .13, .03);
       transient(now, .04, .035, 2400);
