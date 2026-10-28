@@ -2016,7 +2016,9 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:32
 test('journey growth context reflects current ranks and a ready evolution',async({page})=>{
   await scenario(page,'recovery-choice');
   await expect(page.locator('.growth-recipe')).toContainText('황동 검 1/3');
-  await expect(page.locator('[data-upgrade="sword"] .recipe-link')).toContainText('여명의 검');
+  await expect(page.locator('.growth-recipe')).toContainText('여명의 검');
+  await expect(page.locator('[data-upgrade="sword"] .recipe-link')).toContainText('2단계 · 레벨 3부터 전투법 후보');
+  await expect(page.locator('[data-upgrade="sword"] .recipe-link')).toContainText('반월 검법 · 일점 검법');
   await scenario(page,'evolution');
   await expect(page.locator('.growth-recipe')).toContainText('조건 완성 · 아래에서 진화하세요');
   await expect(page.locator('.growth-recipe .recipe-parts')).toHaveCount(0);
