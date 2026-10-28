@@ -1615,19 +1615,36 @@ test('hurt sound cuts through foreground cooldown and briefly reserves contact a
   await page.getByRole('button',{name:'일시정지',exact:true}).click();
   const record=await page.evaluate(async()=>{
     const {createAudio}=await import('/src/survivor/audio.js');
-    const notes=[];const original=AudioParam.prototype.setValueAtTime;
-    AudioParam.prototype.setValueAtTime=function(value,...args){notes.push(value);return original.call(this,value,...args);};
-    const audio=createAudio();audio.unlock();
-    for(let i=0;i<20&&audio.state()!=='running';i++)await new Promise(r=>setTimeout(r,20));
-    audio.play('level');audio.play('hurt');audio.play('blade-impact');
-    const immediate=[...notes];
-    await new Promise(r=>setTimeout(r,220));audio.play('blade-impact');
-    const resumed=[...notes];audio.suspend();
-    AudioParam.prototype.setValueAtTime=original;
-    return {immediate,resumed};
+    const NativeContext=window.AudioContext,context=new NativeContext(),notes=[];
+    let audio;
+    // Isolate this emitter; observing every AudioParam also observes the game.
+    try {
+      window.AudioContext=function(){return context;};
+      audio=createAudio();audio.unlock();
+    } finally { window.AudioContext=NativeContext; }
+    try {
+      for(let i=0;i<20&&audio.state()!=='running';i++)await new Promise(r=>setTimeout(r,20));
+      if(audio.state()!=='running')throw new Error('Audio context did not unlock');
+      const createOscillator=context.createOscillator.bind(context);
+      context.createOscillator=()=>{
+        const voice=createOscillator(),set=voice.frequency.setValueAtTime.bind(voice.frequency);
+        voice.frequency.setValueAtTime=(value,...args)=>{notes.push(value);return set(value,...args);};
+        return voice;
+      };
+      // The hardware clock can advance during native node creation on a busy
+      // runner. Verify the gate's time boundaries, not that setup took <180ms.
+      const start=context.currentTime;let now=start;
+      Object.defineProperty(context,'currentTime',{configurable:true,get:()=>now});
+      audio.play('level');audio.play('hurt');
+      await new Promise(r=>setTimeout(r,220)); // Wall time alone cannot expire this clock's window.
+      audio.play('blade-impact');const immediate=[...notes];
+      now=start+.179;audio.play('blade-impact');const reserved=[...notes];
+      now=start+.181;audio.play('blade-impact');const resumed=[...notes];
+      return {immediate,reserved,resumed};
+    } finally { await context.close(); }
   });
   expect(record.immediate).toContain(145);expect(record.immediate).toContain(72);
-  expect(record.immediate).not.toContain(150);expect(record.resumed).toContain(150);
+  expect(record.immediate).not.toContain(150);expect(record.reserved).not.toContain(150);expect(record.resumed).toContain(150);
 });
 
 test('long player damage labels fit the narrow HUD',async({page})=>{
