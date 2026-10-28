@@ -1,5 +1,7 @@
 import { CHAMPIONS, updateChampionBloom } from './champions.js';
 import { BLADE_END, bladeFollowups, bladeGrowth } from './blade-chain.js';
+import { emberHops, emberGrowth, continueEmber } from './ember-chain.js';
+import { ORBIT_IDENTITY, advanceOrbitShape, orbitOffset, orbitGrowth } from './orbit-shape.js';
 import { BURST, createBurst, startBurst, advanceBurst, burstDistance } from './burst.js';
 import { createSignature, advanceSignature, chargeBlade, chargeRune, consumeSignature, absorbDamage } from './signature.js';
 import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact, recordBossDamage } from './impact.js';
@@ -282,6 +284,7 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', exp
     swordClock: 0.2,
     emberClock: 0.8,
     pulseClock: 1.2,
+    orbitShape: {...ORBIT_IDENTITY},
     spawnClock: 0.4,
     championBreatherUntil: 0,
     championsDefeated: [],
@@ -315,7 +318,8 @@ export const stats = game => modifyBuildStats(game, {
   orbitRadius: 53 + game.ranks.orbit * 7 + (game.ranks.lunar ? 12 : 0)
 });
 export function upgradeChange(game, key) {
-  if (SPECIALIZATIONS[key]) return SPECIALIZATIONS[key].change;
+  if (SPECIALIZATIONS[key]) return key==='wildfire' && game.relics.includes('coal')
+    ? SPECIALIZATIONS[key].change.replace('초당 12','초당 18') : SPECIALIZATIONS[key].change;
   const rank = game.ranks[key],
     s = stats(game);
   switch (key) {
@@ -332,10 +336,14 @@ export function upgradeChange(game, key) {
       const growth = bladeGrowth(rank + 1);
       return `피해 ${Math.round(s.swordDamage)} → ${Math.round(next.swordDamage)} · 범위 +14 · 공격 간격 ${seconds(s.swordCooldown)} → ${seconds(next.swordCooldown)}초${growth ? ` · ${growth}` : ''}`;
     }
-    case 'ember':
-      return rank === 0 ? '새 무기 · 추적 불씨 1발' : `피해 ${Math.round(s.emberDamage)} → ${Math.round(s.emberDamage + 7 * (game.ranks.wildfire ? .7 : game.ranks.detonation ? 1.15 : 1))}${(rank + 1) % 2 === 0 ? ' · 투사체 +1' : ''}`;
-    case 'orbit':
-      return rank === 0 ? '새 무기 · 회전 룬 1개' : `피해 ${Math.round(s.orbitDamage)} → ${Math.round(s.orbitDamage + 6 * (game.ranks.horizon ? 1.35 : 1))}${(rank + 1) % 2 === 0 ? ' · 룬 +1' : game.ranks.bulwark ? ' · 근거리 결계 유지' : ' · 회전 반경 +7'}`;
+    case 'ember': {
+      const growth=emberGrowth(rank+1);
+      return rank === 0 ? '새 무기 · 추적 불씨 1발' : `피해 ${Math.round(s.emberDamage)} → ${Math.round(s.emberDamage + 7 * (game.ranks.wildfire ? .7 : game.ranks.detonation ? 1.15 : 1))}${(rank + 1) % 2 === 0 ? ' · 투사체 +1' : ''}${growth?` · ${growth}`:''}`;
+    }
+    case 'orbit': {
+      const growth=orbitGrowth(rank+1);
+      return rank === 0 ? '새 무기 · 회전 룬 1개' : `피해 ${Math.round(s.orbitDamage)} → ${Math.round(s.orbitDamage + 6 * (game.ranks.horizon ? 1.35 : 1))}${(rank + 1) % 2 === 0 ? ' · 룬 +1' : game.ranks.bulwark ? ' · 근거리 결계 유지' : ' · 회전 반경 +7'}${growth?` · ${growth}`:''}`;
+    }
     case 'fleet':
       return `이동 속도 ${Math.round(s.speed)} → ${Math.round(s.speed + getCharacter(game.characterId).speed * .08)}`;
     case 'magnet':
@@ -675,9 +683,12 @@ export function orbitPositions(game) {
     length: s.orbitCount
   }, (_, i) => {
     const a = game.time * 2.8 + i * Math.PI * 2 / s.orbitCount;
+    const shape=game.ranks.orbit>=3?game.orbitShape??ORBIT_IDENTITY:ORBIT_IDENTITY;
+    const offset=orbitOffset(a,s.orbitRadius,shape);
     return {
-      x: game.player.x + Math.cos(a) * s.orbitRadius,
-      y: game.player.y + Math.sin(a) * s.orbitRadius
+      x: game.player.x + offset.x,
+      y: game.player.y + offset.y,
+      angle:a,radius:s.orbitRadius,shape
     };
   });
 }
@@ -817,6 +828,7 @@ function updateWeapons(game, dt, s) {
             empowered, evolved: !!game.ranks.comet, life: .12
           });
           game.shots.push({
+            ...(i>0 && emberHops(game.ranks.ember) ? {hopsLeft:emberHops(game.ranks.ember),hitIds:[]} : {}),
             empowered,
             x: p.x,
             y: p.y,
@@ -843,8 +855,9 @@ function updateWeapons(game, dt, s) {
     const target = game.enemies.find(e => e.id === shot.targetId && e.hp > 0);
     if (target) {
       const a = Math.atan2(target.y - shot.y, target.x - shot.x);
-      shot.vx = Math.cos(a) * 290;
-      shot.vy = Math.sin(a) * 290;
+      const speed=shot.kind==='ember-hop'?360:290;
+      shot.vx = Math.cos(a) * speed;
+      shot.vy = Math.sin(a) * speed;
     }
     shot.x += shot.vx * dt;
     shot.y += shot.vy * dt;
@@ -852,7 +865,7 @@ function updateWeapons(game, dt, s) {
     if (shot.life <= 0) continue;
     for (const enemy of game.enemies) {
       const wave = shot.kind === 'crescent', rune = shot.kind === 'rune-burst', piercing = wave || rune;
-      if (enemy.hp > 0 && enemy.id !== shot.ignoreId && (!piercing || shot.hitIds.length < (rune ? 3 : 8) && !shot.hitIds.includes(enemy.id)) && Math.hypot(shot.x - enemy.x, shot.y - enemy.y) < enemy.radius + (wave ? 22 : rune ? 14 : 7)) {
+      if (enemy.hp > 0 && enemy.id !== shot.ignoreId && (shot.hopsLeft===undefined || !shot.hitIds.includes(enemy.id)) && (!piercing || shot.hitIds.length < (rune ? 3 : 8) && !shot.hitIds.includes(enemy.id)) && Math.hypot(shot.x - enemy.x, shot.y - enemy.y) < enemy.radius + (wave ? 22 : rune ? 14 : 7)) {
         if (shot.blast) {
           effect(game, {
             kind: 'ember-burst',
@@ -863,8 +876,9 @@ function updateWeapons(game, dt, s) {
             life: .3
           });
           if (game.ranks.detonation) game.events.push('ember-impact');
-          for (const other of game.enemies) {
-            if (other.id === shot.ignoreId) continue;
+          const victims=game.enemies.filter(other=>other.id!==shot.ignoreId && Math.hypot(other.x-shot.x,other.y-shot.y)<=(shot.blastRadius??56)+other.radius);
+          if(shot.hopsLeft!==undefined)shot.hitIds.push(...victims.map(other=>other.id));
+          for (const other of victims) {
             const dx = other.x - shot.x, dy = other.y - shot.y, distance = Math.hypot(dx, dy);
             if (distance > (shot.blastRadius ?? 56) + other.radius) continue;
             // A blast reacts away from its center. This is visual direction;
@@ -872,7 +886,11 @@ function updateWeapons(game, dt, s) {
             const angle = distance > .01 ? Math.atan2(dy, dx) : Math.atan2(shot.vy, shot.vx);
             hitEnemy(game, other, shot.damage, 'ember', 0, 0, false, angle);
           }
-        } else hitEnemy(game, enemy, shot.damage, rune ? 'orbit' : wave ? 'sword' : 'ember', shot.vx / (wave ? 330 : rune ? 260 : 290), shot.vy / (wave ? 330 : rune ? 260 : 290));
+        } else {
+          const speed=wave?330:rune?260:shot.kind==='ember-hop'?360:290;
+          if(shot.hopsLeft!==undefined)shot.hitIds.push(enemy.id);
+          hitEnemy(game, enemy, shot.damage, rune ? 'orbit' : wave ? 'sword' : 'ember', shot.vx/speed,shot.vy/speed);
+        }
         if (shot.empowered && !piercing) {
           const angle = Math.atan2(shot.vy, shot.vx);
           for (const offset of [0, -.55, .55]) {
@@ -893,6 +911,7 @@ function updateWeapons(game, dt, s) {
           shot.hitIds.push(enemy.id);
           if (shot.turnAt || shot.hitIds.length < (rune ? 3 : 8)) continue;
         }
+        if(continueEmber(game,shot))break;
         shot.life = 0;
         break;
       }
@@ -1052,6 +1071,7 @@ export function updateGame(game, dt, input = {
   // Travel and aim can differ while kiting; ground marks follow travel.
   p.moveX = moveX;
   p.moveY = moveY;
+  advanceOrbitShape(game,dt,ix,iy,!!burstStep);
   advanceSignature(game, burstStep ? 0 : Math.hypot(ix, iy) * s.speed * dt);
   // Animation follows travelled distance, including partial touch-stick input.
   if (p.moving) p.walk += (burstStep?.distance ?? Math.hypot(ix, iy) * s.speed * dt) / 168;

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame, spawnEnemy, updateGame, SLAM } from '../src/survivor/game.js';
+import { createGame, spawnEnemy, updateGame, orbitPositions, SLAM } from '../src/survivor/game.js';
+import {advanceOrbitShape} from '../src/survivor/orbit-shape.js';
 import { HOUND, GIANT, SPORE } from '../src/survivor/enemies.js';
 import { ashFrame, companionFrame, creatureFrame, remnantFrame, bossFrame, bossRemnantFrame } from '../src/survivor/actor-animation.js';
 import { BOSS } from '../src/survivor/boss.js';
@@ -143,6 +144,17 @@ test('rune wakes follow the rear of the actual orbit without becoming a range ri
     assert.deepEqual(drawingCalls(ctx => drawOrbitWake(ctx,orb,player,true)),[]);
   }
   assert.deepEqual(drawingCalls(ctx => drawOrbitWake(ctx,player,player)),[]);
+});
+
+test('stretched rune wakes stay on the same ellipse as the real collision heads without mutating it',()=>{
+  const g=createGame(42,'grove');g.ranks.orbit=5;advanceOrbitShape(g,3,1,0);g.time=.23;
+  const before=JSON.stringify(g),radius=orbitPositions(g)[0].radius;
+  for(const orb of orbitPositions(g)) {
+    const calls=drawingCalls(ctx=>drawOrbitWake(ctx,orb,g.player));
+    for(const c of calls.filter(c=>c[0]==='moveTo'))assert.ok(Math.abs(Math.hypot(c[1]/g.orbitShape.xx,c[2]/g.orbitShape.yy)-radius)<1e-7);
+    assert.deepEqual(drawingCalls(ctx=>drawOrbitWake(ctx,orb,g.player,true)),[]);
+  }
+  assert.equal(JSON.stringify(g),before);
 });
 
 test('painted companions carry bounded body weight at the real strike and settle without moving gameplay', () => {

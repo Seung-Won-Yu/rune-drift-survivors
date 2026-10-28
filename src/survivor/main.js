@@ -24,7 +24,7 @@ import './journey-finish.css';
 import './branch-preview.css';
 import './app-shell.css';
 import { BOSS, bossAttackLabel } from './boss.js';
-import { createGame, startGame, updateGame, chooseUpgrade, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, RUN_SECONDS } from './game.js';
+import { createGame, startGame, updateGame, chooseUpgrade, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, orbitPositions, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, RUN_SECONDS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
 import { getCharacter, isUnlocked } from './characters.js';
 import { loadProfile, saveProfile, recordRun } from './profile.js';
@@ -55,7 +55,8 @@ const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
   'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane',
   'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
-  'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third'
+  'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third',
+  'growth-ember-three','growth-ember-five','growth-orbit-three','growth-orbit-five','motion-ember-five','motion-orbit-five'
 ].includes(previewScene);
 try {
   storage = visualPreview ? { getItem: () => null, setItem: () => {} } : window.localStorage;
@@ -1042,6 +1043,9 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       burst: {...game.burst,hitIds:[...game.burst.hitIds]},
       bladeChain: game.swing ? {age:game.swing.age, hitIds:[...(game.swing.hitIds ?? [])], followups:structuredClone(game.swing.followups ?? [])} : null,
       bladeTargets: game.enemies.filter(enemy=>enemy.chainTarget!==undefined).map(enemy=>({id:enemy.id,hp:enemy.hp,x:enemy.x,y:enemy.y})),
+      orbitShape:{...game.orbitShape},
+      orbitHeads:orbitPositions(game),
+      emberHops:game.shots.filter(shot=>shot.hopsLeft!==undefined).map(shot=>({kind:shot.kind,x:shot.x,y:shot.y,life:shot.life,hitIds:[...shot.hitIds],hopsLeft:shot.hopsLeft})),
       growthResumeAt: game.growthResumeAt,
       enemies: game.enemies.length,
       shots: game.shots.length,
@@ -1051,7 +1055,9 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
     }),
     scenario(name) {
       resetInput();
-      const character = name.startsWith('character-') ? name.slice(10) : ['ember-coal','record-secondary','spectacle-flame'].includes(name) ? 'ember' : name === 'spectacle-rune' ? 'grove' : name === 'experiment-offer' ? game.characterId : 'ash';
+      const character = ['growth-ember-three','growth-ember-five','motion-ember-five'].includes(name)?'ember'
+        : ['growth-orbit-three','growth-orbit-five','motion-orbit-five'].includes(name)?'grove'
+        : name.startsWith('character-') ? name.slice(10) : ['ember-coal','record-secondary','spectacle-flame'].includes(name) ? 'ember' : name === 'spectacle-rune' ? 'grove' : name === 'experiment-offer' ? game.characterId : 'ash';
       game = createGame(42, character, 'none', profile.experiment, runPreparation(profile, character));
       game.phase = 'playing';
       game.spawnClock = 999;
@@ -1385,6 +1391,18 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
         game.nextElite = 999;
         game.player.hp = 40;
         updateGame(game, 1 / 60);
+      } else if (name.startsWith('growth-') || name.startsWith('motion-')) {
+        const family=name.includes('-ember-')?'ember':'orbit',rank=name.endsWith('five')?5:3;
+        for(const key of Object.keys(game.ranks))game.ranks[key]=0;
+        game.ranks[family]=rank;game.nextElite=999;game.xpNeed=99999;
+        if(name.startsWith('growth-')) {
+          game.ranks[family]=rank-1;game.phase='upgrade';game.choices=[family,'fleet','vitality'];
+        } else if(family==='ember') {
+          game.emberClock=.1;
+          for(const [x,y] of [[80,0],[100,80],[210,40],[280,-50]]) {
+            const enemy=spawnEnemy(game,0,false,{x,y});Object.assign(enemy,{speed:0,damage:0,hp:50000,maxHp:50000});
+          }
+        }
       } else if (name.startsWith('chain-')) {
         const rank = name.includes('five') ? 5 : 3;
         game.enemies=[];game.swordClock=.08;game.nextElite=999;game.xpNeed=99999;

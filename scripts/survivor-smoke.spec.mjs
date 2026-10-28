@@ -2609,3 +2609,35 @@ test('authored blade contact scenes show actual fresh-target damage and pause-sa
   await page.waitForTimeout(80);expect((await snapshot(page)).bladeChain).toEqual(contact.bladeChain);
  }
 });
+
+for(const width of [1280,390,320,740]) for(const family of ['ember','orbit']) for(const [stage,rank] of [['three',3],['five',5]]) {
+ test(`secondary growth ${family} ${rank} exposes its action and tradeoff at ${width}`,async({page})=>{
+  await page.setViewportSize({width,height:width===740?360:width===320?568:720});await scenario(page,`growth-${family}-${stage}`);
+  const card=page.locator(`[data-upgrade="${family}"]`);
+  const text=family==='ember'?(rank===3?'1회 도약':'1 → 2회'):(rank===3?'옆으로 -25%':'옆으로 -40%');
+  await expect(card.locator('.upgrade-change')).toContainText(text);
+  await card.scrollIntoViewIfNeeded();await expect(card).toBeInViewport({ratio:.5});
+  expect(await card.locator('.upgrade-change').evaluate(el=>el.clientHeight===el.scrollHeight)).toBe(true);
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  await page.screenshot({path:`output/playwright/survivor/secondary-growth-${family}-${rank}-${width}.png`});
+  await card.press('Enter');expect((await snapshot(page)).ranks[family]).toBe(rank);await expect(page.locator('#reward-notice')).toContainText(text);
+  await page.keyboard.press('Escape');await expect(page.locator('.field-loadout')).toContainText(family==='ember'?'도약마다 피해는 절반':'멈추면 원형');
+ });
+}
+
+test('moving rune heads use the physical stretched geometry and freeze with the pause journal',async({page})=>{
+ await scenario(page,'motion-orbit-five');await page.keyboard.down('d');
+ await expect.poll(async()=>(await snapshot(page)).orbitShape.xx).toBeGreaterThan(1.4);
+ await page.keyboard.up('d');await page.keyboard.press('Escape');
+ const frozen=await snapshot(page);expect(frozen.orbitShape.yy).toBeLessThan(.75);expect(frozen.orbitHeads).toHaveLength(4);
+ await page.waitForTimeout(80);expect((await snapshot(page)).orbitHeads).toEqual(frozen.orbitHeads);
+ await page.screenshot({path:'output/playwright/survivor/moving-rune-physical.png'});
+ await page.keyboard.press('Escape');await expect.poll(async()=>(await snapshot(page)).orbitShape.xx).toBeLessThan(1.02);
+});
+
+test('flame leap is a real moving continuation with a visited target and pause-safe lifetime',async({page})=>{
+ await scenario(page,'motion-ember-five');
+ await expect.poll(async()=>(await snapshot(page)).emberHops.some(s=>s.kind==='ember-hop'&&s.hitIds.length>0),{intervals:[20],timeout:3000}).toBe(true);
+ await page.keyboard.press('Escape');const frozen=await snapshot(page);expect(frozen.emberHops.some(s=>s.kind==='ember-hop')).toBe(true);
+ await page.waitForTimeout(80);expect((await snapshot(page)).emberHops).toEqual(frozen.emberHops);
+});

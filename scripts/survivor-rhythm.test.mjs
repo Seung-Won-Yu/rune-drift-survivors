@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGame, startGame, updateGame, spawnEnemy, spawnBoss, spawnChampion, draftUpgrades, chooseUpgrade, stats, LIMITS} from '../src/survivor/game.js';
+import {createGame, startGame, updateGame, spawnEnemy, spawnBoss, spawnChampion, draftUpgrades, chooseUpgrade, stats, orbitPositions, upgradeChange, LIMITS} from '../src/survivor/game.js';
+import {advanceOrbitShape, orbitOffset, ORBIT_IDENTITY} from '../src/survivor/orbit-shape.js';
+import {weaponPresentation} from '../src/survivor/weapon-presentation.js';
 import {advanceSignature, chargeBlade, chargeRune, signatureState} from '../src/survivor/signature.js';
 import {CHAMPIONS, CHAMPION_HUNT, CHAMPION_SPORE, updateChampionBloom, championStatus} from '../src/survivor/champions.js';
 import {updateHound, updateSpores, huntRule, sporeRule, SPORE} from '../src/survivor/enemies.js';
@@ -190,4 +192,124 @@ test('switching to a saved inheritance cannot block a still-undiscovered primary
   assert.equal(profile.inheritances.ember,'detonation');
   const preparation=runPreparation(profile,'ember');
   assert.equal(preparation.goal,'branch:wildfire');assert.equal(preparation.inheritance,null);
+});
+
+function secondaryFlame(rank,branch=null,comet=false) {
+  const g=arena('ember');g.ranks.ember=rank;if(branch)g.ranks[branch]=1;if(comet)g.ranks.comet=1;
+  target(g,50);target(g,60,60);g.emberClock=0;g.xpNeed=1e6;step(g);
+  const shot=g.shots[1],victim=g.enemies.find(e=>e.id===shot.targetId);
+  g.shots=[shot];g.emberClock=999;
+  for(const [i,e] of g.enemies.entries())Object.assign(e,{x:1000+i*200,y:1000,knockX:0,knockY:0});
+  Object.assign(victim,{x:60,y:0});Object.assign(shot,{x:0,y:0,vx:290,vy:0});
+  return {g,shot,victim,damage:stats(g).emberDamage};
+}
+
+test('fire milestones change only secondary shots and preserve real volley counts and first-shot charge',()=>{
+  for(const rank of [1,2,3,4,5]) {
+    const g=arena('ember');g.ranks.ember=rank;target(g,100);g.emberClock=0;g.signature.charge=1;step(g);
+    assert.equal(g.shots.length,1+Math.floor(rank/2));
+    assert.equal(g.signature.activations,1);assert.equal(g.shots[0].empowered,true);
+    assert.equal(g.shots[0].hopsLeft,undefined);
+    for(const s of g.shots.slice(1))assert.equal(s.hopsLeft,rank>=5?2:rank>=3?1:undefined);
+  }
+});
+
+test('secondary flames actually fly to one or two fresh targets with diminishing direct damage',()=>{
+  for(const rank of [3,5]) {
+    const {g,shot,victim,damage}=secondaryFlame(rank),second=target(g,150),third=target(g,245);
+    let previousX=shot.x;
+    for(let i=0;i<80;i++) {
+      step(g);assert.ok(g.shots.length<=1,'a hop reuses its projectile');
+      if(g.shots.includes(shot)) {assert.ok(shot.x>=previousX-1e-6);previousX=shot.x;}
+    }
+    assert.ok(Math.abs(victim.hp-(1e5-damage))<1e-7);
+    assert.ok(Math.abs(second.hp-(1e5-damage*.5))<1e-7);
+    assert.ok(Math.abs(third.hp-(1e5-(rank===5?damage*.25:0)))<1e-7);
+    assert.equal(new Set(shot.hitIds).size,rank===5?3:2);
+  }
+});
+
+test('flame continuation excludes the entire first blast and never repeats explosions or loses burn identity',()=>{
+  for(const [branch,comet] of [['detonation',false],[null,true],['wildfire',false],['wildfire',true]]) {
+    const {g,shot,victim}=secondaryFlame(5,branch,comet);
+    const adjacent=target(g,70,35),fresh=target(g,220);
+    if(branch!=='wildfire')adjacent.hp=1;
+    for(let i=0;i<40&&shot.kind!=='ember-hop';i++)step(g);
+    assert.equal(shot.kind,'ember-hop');assert.equal(shot.blast,false);
+    assert.ok(shot.hitIds.includes(victim.id));
+    if(branch!=='wildfire')assert.ok(shot.hitIds.includes(adjacent.id),'dead blast victims are retained in the visited snapshot');
+    assert.equal(shot.targetId,branch==='wildfire'?adjacent.id:fresh.id);
+    const firstBlastCount=g.effects.filter(e=>e.kind==='ember-burst').length;
+    assert.equal(firstBlastCount,branch==='wildfire'?0:1);
+    g.effects=[];step(g,75);
+    assert.ok(fresh.hp<1e5);assert.equal(g.effects.some(e=>e.kind==='ember-burst'),false);
+    if(branch==='wildfire')assert.ok(fresh.burn&&fresh.burn.until>g.time);
+  }
+});
+
+test('hops cannot repeat damage on a single boss, jump beyond reach or multiply charged fragments',()=>{
+  const {g,shot,damage}=secondaryFlame(5);g.enemies=[];
+  const boss=spawnBoss(g);Object.assign(boss,{x:60,y:0,entrance:0,attackClock:999});shot.targetId=boss.id;
+  const hp=boss.hp;step(g,60);assert.ok(Math.abs(hp-boss.hp-damage)<1e-7);assert.equal(shot.hitIds.length,1);
+  const far=secondaryFlame(3);const outside=target(far.g,500);step(far.g,90);assert.equal(outside.hp,1e5);assert.equal(far.g.shots.length,0);
+  const charged=arena('ember');charged.ranks.ember=5;charged.signature.charge=1;target(charged,100);charged.emberClock=0;step(charged);
+  charged.shots=charged.shots.slice(0,1);charged.emberClock=999;step(charged,24);
+  assert.equal(charged.signature.activations,1);assert.equal(charged.shots.length,3);
+  for(const s of charged.shots){assert.equal(s.kind,'ember-splinter');assert.equal(s.hopsLeft,undefined);}
+});
+
+test('moving rune shapes share one smooth physical transform and reverse without teleporting',()=>{
+  for(const rank of [2,3,5]) {
+    const g=arena('grove');g.ranks.orbit=rank;step(g,120,{x:1,y:0});
+    const major=rank<3?1:rank===3?1.30:1.55,minor=rank<3?1:rank===3?.75:.60;
+    assert.ok(Math.abs(g.orbitShape.xx-major)<1e-4);assert.ok(Math.abs(g.orbitShape.yy-minor)<1e-4);
+    const r=stats(g).orbitRadius,before=JSON.stringify(g),positions=orbitPositions(g);
+    for(const orb of positions){const offset=orbitOffset(orb.angle,r,g.orbitShape);assert.ok(Math.hypot(orb.x-g.player.x-offset.x,orb.y-g.player.y-offset.y)<1e-8);}
+    assert.equal(JSON.stringify(g),before,'collision/render reads never advance smoothing');
+    const original={...g.orbitShape};advanceOrbitShape(g,1/60,-1,0);
+    assert.ok(Math.abs(g.orbitShape.xx-original.xx)<1e-5);
+    const from=orbitOffset(.7,r,g.orbitShape);advanceOrbitShape(g,1/60,0,1);const to=orbitOffset(.7,r,g.orbitShape);
+    assert.ok(Math.hypot(to.x-from.x,to.y-from.y)<12,'a turn blends the physical head position');
+    step(g,150);for(const key of ['xx','xy','yy'])assert.ok(Math.abs(g.orbitShape[key]-ORBIT_IDENTITY[key])<1e-5);
+  }
+});
+
+test('rune extension hits farther along travel while leaving a real side gap and retaining branch radii',()=>{
+  for(const branch of ['bulwark','horizon']) {
+    const stretched=arena('grove'),circle=arena('grove');
+    for(const g of [stretched,circle]){g.ranks.orbit=5;g.ranks[branch]=1;g.xpNeed=1e6;}
+    advanceOrbitShape(stretched,2,1,0);
+    const r=stats(stretched).orbitRadius;
+    assert.equal(stats(circle).orbitRadius,r);assert.equal(orbitPositions(circle).length,orbitPositions(stretched).length);
+    // Small test radii isolate the exact collision path, including Bulwark's close orbit.
+    const frontA=target(stretched,r*1.46),frontB=target(circle,r*1.46);
+    const sideA=target(stretched,0,r),sideB=target(circle,0,r);
+    for(const e of [frontA,frontB,sideA,sideB])e.radius=2;
+    step(stretched);step(circle);
+    assert.ok(frontA.hp<1e5);assert.equal(frontB.hp,1e5);
+    assert.equal(sideA.hp,1e5);assert.ok(sideB.hp<1e5);
+    assert.ok(stretched.signature.charge<=1/6+1e-8,'new geometry does not bypass rune charge gating');
+  }
+});
+
+test('continuations and rune shapes freeze in menus, keep their shape through a breakthrough and reset cleanly',()=>{
+  const {g,shot}=secondaryFlame(5);target(g,150);for(let i=0;i<40&&shot.kind!=='ember-hop';i++)step(g);
+  g.ranks.orbit=5;advanceOrbitShape(g,2,1,0);
+  for(const phase of ['paused','upgrade','relic','preview','event','ended']) {
+    g.phase=phase;const before=JSON.stringify({shot:g.shots,shape:g.orbitShape,time:g.time});step(g,30,{x:0,y:1});
+    assert.equal(JSON.stringify({shot:g.shots,shape:g.orbitShape,time:g.time}),before);
+  }
+  g.phase='playing';const frozen={...g.orbitShape};updateGame(g,1/60,{x:0,y:1,burst:{x:0,y:1}});
+  assert.deepEqual(g.orbitShape,frozen);assert.equal(g.burst.active,true);
+  const fresh=arena('grove');assert.deepEqual(fresh.orbitShape,ORBIT_IDENTITY);assert.deepEqual(fresh.shots,[]);
+});
+
+test('milestone cards and equipped descriptions disclose the actual new rules and existing coal synergy',()=>{
+  const fire=arena('ember');fire.ranks.ember=2;assert.match(upgradeChange(fire,'ember'),/1회 도약/);
+  fire.ranks.ember=4;assert.match(upgradeChange(fire,'ember'),/1 → 2회/);fire.ranks.ember=5;
+  assert.match(weaponPresentation(fire,'ember').description,/새 적 2명/);
+  fire.relics=['coal'];assert.match(upgradeChange(fire,'wildfire'),/초당 18/);
+  const rune=arena('grove');rune.ranks.orbit=2;assert.match(upgradeChange(rune,'orbit'),/옆으로 -25%/);
+  rune.ranks.orbit=4;assert.match(upgradeChange(rune,'orbit'),/옆으로 -40%/);rune.ranks.orbit=5;
+  assert.match(weaponPresentation(rune,'orbit').description,/옆은 40% 좁아/);
 });

@@ -1,3 +1,5 @@
+import { orbitOffset } from './orbit-shape.js';
+
 // Action marks follow actual attack events and projectile velocities. They are
 // shaped like attacks rather than diagrams of damage ranges.
 export function actionEffectFrame(effect, game) {
@@ -109,7 +111,7 @@ export function drawSlash(ctx, effect, reduced = false) {
 
 export function drawProjectile(ctx, shot, reduced = false, evolved = false) {
   const angle = Math.atan2(shot.vy, shot.vx), crescent = shot.kind === 'crescent', rune = shot.kind === 'rune-burst';
-  const age = Math.max(0, (rune ? .65 : shot.kind === 'ember-splinter' ? .6 : crescent ? shot.turnAt ? 1.4 : .85 : 2) - shot.life);
+  const age = Math.max(0, (rune || shot.kind==='ember-hop' ? .65 : shot.kind === 'ember-splinter' ? .6 : crescent ? shot.turnAt ? 1.4 : .85 : 2) - shot.life);
   const speed = Math.hypot(shot.vx, shot.vy);
   const wake = Math.min(shot.charged ? 92 : 62, speed * .2, speed * age);
   ctx.save(); ctx.translate(shot.x, shot.y - (crescent ? 8 : 14)); ctx.rotate(angle);
@@ -139,8 +141,8 @@ export function drawProjectile(ctx, shot, reduced = false, evolved = false) {
     ctx.quadraticCurveTo(reach * .48, 0, -2, -reach); ctx.closePath(); ctx.stroke(); ctx.fill();
     ctx.strokeStyle = '#fffbed'; ctx.lineWidth = shot.charged ? 4 : 2.5; ctx.beginPath(); ctx.moveTo(1, -reach * .74); ctx.quadraticCurveTo(reach * .96, 0, 1, reach * .74); ctx.stroke();
   } else {
-    const size = shot.kind === 'ember-splinter' ? 6 : shot.empowered ? 13 : shot.blast ? 11 : 8;
-    const tail = reduced ? 16 : (shot.blast ? 46 : 34) + Math.sin(age * 44) * 2;
+    const size = ['ember-splinter','ember-hop'].includes(shot.kind) ? 6 : shot.empowered ? 13 : shot.blast ? 11 : 8;
+    const tail = reduced ? 16 : (shot.blast ? 46 : shot.kind==='ember-hop'?27:34) + Math.sin(age * 44) * 2;
     // A tapered flame, bright leading core and dark rim survive grass/crowds.
     ctx.fillStyle = shot.blast ? '#ed824b' : '#df9c50'; ctx.strokeStyle = '#583222'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(size + 2, 0);
@@ -165,15 +167,16 @@ export function drawOrbitWake(ctx, orb, player, reduced = false, evolved = false
   if (reduced) return;
   const dx = orb.x - player.x, dy = orb.y - player.y, radius = Math.hypot(dx, dy);
   if (radius < 1) return;
-  const angle = Math.atan2(dy, dx), span = Math.min(.36, (evolved ? 45 : 34) / radius);
+  const angle = orb.angle??Math.atan2(dy, dx), span = Math.min(.36, (evolved ? 45 : 34) / radius);
+  const at=angle=>orbitOffset(angle,orb.radius??radius,orb.shape);
   ctx.save(); ctx.translate(player.x, player.y - 12);
   ctx.strokeStyle = horizon ? '#b8daff80' : '#a9eed780'; ctx.lineCap = 'round';
   for (let i = 0; i < 2; i++) {
     const from = angle - span * (1 + i * .9), to = from + span * .68;
     ctx.lineWidth = (evolved ? 6 : 4) - i * 1.5;
-    ctx.beginPath(); ctx.moveTo(Math.cos(from) * radius, Math.sin(from) * radius);
-    const middle = (from + to) / 2;
-    ctx.quadraticCurveTo(Math.cos(middle) * radius, Math.sin(middle) * radius, Math.cos(to) * radius, Math.sin(to) * radius);
+    const start=at(from),middle=at((from+to)/2),end=at(to);
+    ctx.beginPath(); ctx.moveTo(start.x,start.y);
+    ctx.quadraticCurveTo(middle.x,middle.y,end.x,end.y);
     ctx.stroke();
   }
   ctx.restore();

@@ -3,7 +3,7 @@
 The active interface uses **Ash Interface**, a self-hosted variable subset of
 Noto Sans KR, with a 100–900 weight axis. The outpost title, character names,
 controls and combat UI share this plain Korean-capable family. The delivered
-WOFF2 is 68,476 bytes and covers every Hangul syllable in the game UI sources.
+WOFF2 is 69,076 bytes and covers every Hangul syllable in the game UI sources.
 No font CDN or runtime external network dependency is used.
 
 - Upstream: [Google Fonts / Noto Sans KR](https://github.com/google/fonts/tree/main/ofl/notosanskr).
