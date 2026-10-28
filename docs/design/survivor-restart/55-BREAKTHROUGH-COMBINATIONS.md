@@ -59,3 +59,18 @@ Grove changed0/3 to1/3, with the win at299.15 seconds. All samples stayed within
 entity caps. Grove's remaining time-limit results are an unresolved limitation,
 not evidence of overall balance. Ordinary play and release evidence are kept
 separately in `output/playwright/survivor/landing-combo-*`.
+
+An ordinary Ash run on10f09fd used free departure, Bookmark and Calm, acquiring
+Ember at about8 seconds and Orbit at18 seconds before choosing Sweep,
+Bulwark and Detonation. It finished with a4:15 victory, level19,1081 kills and
+31/120 HP; two discoveries and one mastery badge appeared in the result.
+Cumulative damage was74% Sword,25% Ember and1% Orbit. The defensive close-range
+Bulwark choice and different acquisition times prevent interpreting this as a
+controlled damage-share comparison. Browser errors and outer overflow were
+absent. Recognizing the new deliberate action and wanting another run still
+require player feedback.
+
+The first successful release ran255 existing Node cases and301 browser cases;
+the new nine rules were initially missing from the explicit npm CI list despite
+passing locally. The follow-up adds that file to the same QA command. Its exact
+Node command passes264 cases; subsequent CI evidence records the corrected gate.
