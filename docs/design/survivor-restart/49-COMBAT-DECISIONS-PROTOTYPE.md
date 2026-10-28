@@ -112,3 +112,40 @@ were mixed: Ash 4V/2S/0D → 6V/0S/0D, Ember unchanged at 4V/0S/2D, Grove
 4V/2S/0D → 3V/3S/0D. First growth remained about 5.25 seconds and first evolution
 about 83 seconds. Grove timeouts and Ember defeats remain explicit concerns;
 the comparison is not a claim of universal balance or improved enjoyment.
+
+## Ordinary-play follow-up and growth disclosure
+
+Release `d242661` passed the exact-head GitHub Actions run `40664343568`:
+222 Node checks, 251 browser cases and the public production smoke. Both public
+entry paths served the expected assets and the breakthrough control appeared
+after actual departure.
+
+A separate local origin kept the player's real save untouched. An initial Ash
+run ended at 1:09 after tool/inspection delays; it is not a useful skill or
+balance measure. The retry used ordinary inputs, no QA scene, pilot, forced
+clock, inherited style or keepsake. Deliberate UI pauses between observations
+prevented idle damage, so this was not an uninterrupted human-like session.
+It defeated Root Warden and Thorn Hound, evolved Dawn at 1:16, and ended in
+defeat at 3:11, level 16, 707 kills. The final sovereign was not reached.
+The run produced no console warnings/errors.
+
+The directional breakthrough created actual paths through crowds and helped
+recover dropped XP. Healing fruit and champion recovery kept the run alive,
+but several levels went into health rather than attack growth. That observation
+does not by itself establish a balance defect or improved fun.
+
+One concrete information gap was visible: sword ranks sped up the actual
+attack clock, but the card listed only damage and range. Its `선택하면` preview
+now obtains the next interval from the same `stats()` calculation used in
+combat, including the chosen branch, and shows the rounded seconds before and
+after. Dawn's Ash-only charged five-way return is also disclosed; other
+companions are not promised Ash's signature. The existing receipt uses this
+same comparison. Damage-only fire ranks remain honestly described as damage
+growth; no attack, cooldown, healing or draft rule changed in this follow-up.
+
+The updated copy was rendered in the in-app browser at desktop, 320×568 and
+740×360. Text stayed within its card, page overflow remained zero, and choosing
+Dawn returned to play with the same effect in its receipt. Existing focused
+browser regressions passed 15 cases; the 222 Node checks passed. Human feedback
+on the breakthrough and growth rhythm is still needed before calling the
+combat loop satisfying.

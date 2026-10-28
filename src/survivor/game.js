@@ -319,13 +319,17 @@ export function upgradeChange(game, key) {
     s = stats(game);
   switch (key) {
     case 'dawn':
-      return `검 피해 +${game.ranks.sweep ? 16 : game.ranks.duelist ? 33 : 20} · 범위 +38 · 관통 검기 추가`;
+      return `검 피해 +${game.ranks.sweep ? 16 : game.ranks.duelist ? 33 : 20} · 범위 +38 · 관통 검기 추가${game.characterId === 'ash' ? ' · 충전 적중 시 5갈래 왕복' : ''}`;
     case 'comet':
       return game.ranks.wildfire ? `직격 피해 +8.4 · 연소 초당 ${game.relics.includes('coal') ? '18 → 33' : '12 → 22'}` : `불씨 피해 +${game.ranks.detonation ? 13.8 : 12} · 적중 시 반경 ${game.ranks.detonation ? 90 : 56} 폭발`;
     case 'lunar':
       return '룬 +1 · 2.8초마다 반경 130 밀어내기';
-    case 'sword':
-      return rank === 0 ? '새 무기 · 자동 검격' : `피해 ${Math.round(s.swordDamage)} → ${Math.round(s.swordDamage + 9 * (game.ranks.sweep ? .8 : game.ranks.duelist ? 1.65 : 1))} · 범위 +14`;
+    case 'sword': {
+      if (rank === 0) return '새 무기 · 자동 검격';
+      const next = stats({...game, ranks: {...game.ranks, sword: rank + 1}});
+      const seconds = value => (Math.round((value + Number.EPSILON) * 100) / 100).toFixed(2);
+      return `피해 ${Math.round(s.swordDamage)} → ${Math.round(next.swordDamage)} · 범위 +14 · 공격 간격 ${seconds(s.swordCooldown)} → ${seconds(next.swordCooldown)}초`;
+    }
     case 'ember':
       return rank === 0 ? '새 무기 · 추적 불씨 1발' : `피해 ${Math.round(s.emberDamage)} → ${Math.round(s.emberDamage + 7 * (game.ranks.wildfire ? .7 : game.ranks.detonation ? 1.15 : 1))}${(rank + 1) % 2 === 0 ? ' · 투사체 +1' : ''}`;
     case 'orbit':
