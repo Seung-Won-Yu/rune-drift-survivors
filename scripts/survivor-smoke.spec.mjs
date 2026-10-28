@@ -2417,3 +2417,94 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:640
   await expect(page.locator('#start-game')).toBeInViewport({ratio:1});
  });
 }
+
+for (const viewport of [{width:1280,height:720},{width:390,height:844}]) {
+ test(`camp preparation stays in place through equipment and journal selection at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);
+  await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,bestTime:300,totalKills:500,wins:1,altarRuns:1,buildDiscoveries:['sweep','wildfire'],discoveries:['dawn'],goal:'evolution:lunar'})));
+  await page.reload();
+  await expect.poll(()=>page.locator('.camp-portrait').evaluate(el=>el.complete&&el.naturalWidth>0)).toBe(true);
+  const scene=await page.locator('.camp-scene').elementHandle(), art=await page.locator('.camp-portrait').elementHandle();
+  await page.locator('[data-preparation-tab="keepsake"]').click();
+  await page.locator('[data-keepsake="bookmark"]').scrollIntoViewIfNeeded();
+  const scroll=await page.locator('.preparation-editor').evaluate(el=>el.scrollTop);
+  await page.locator('[data-keepsake="bookmark"]').click();
+  await expect(page.locator('[data-keepsake="bookmark"]')).toBeFocused();
+  expect(await scene.evaluate(el=>el===document.querySelector('.camp-scene'))).toBe(true);
+  expect(await art.evaluate(el=>el===document.querySelector('.camp-portrait'))).toBe(true);
+  const position=await page.locator('.preparation-editor').evaluate(el=>({top:el.scrollTop,max:el.scrollHeight-el.clientHeight}));
+  expect(Math.abs(position.top-Math.min(scroll,position.max))).toBeLessThanOrEqual(1);
+  const tab=await page.locator('[data-preparation-tab="keepsake"]').elementHandle();
+  await page.locator('[data-preparation-tab="vow"]').click();
+  await page.locator('[data-preparation-tab="keepsake"]').click();
+  expect(await tab.evaluate(el=>el===document.activeElement)).toBe(true);
+  expect(await page.locator('.preparation-editor').evaluate(el=>el.scrollTop)).toBe(position.top);
+  await page.locator('.camp-tabs [data-camp-section="journal"]').click();
+  await page.locator('.camp-tabs [data-camp-section="prepare"]').click();
+  expect(await scene.evaluate(el=>el===document.querySelector('.camp-scene'))).toBe(true);
+  expect(await art.evaluate(el=>el===document.querySelector('.camp-portrait'))).toBe(true);
+  if(viewport.width===1280) {
+   const hint=await page.locator('.camp-mission small').evaluate(el=>({width:el.scrollWidth,client:el.clientWidth}));
+   expect(hint.width).toBeLessThanOrEqual(hint.client+1);
+  }
+  await page.screenshot({path:`output/playwright/survivor/camp-selection-${viewport.width}.png`,animations:'disabled'});
+ });
+}
+
+test('a delayed portrait keeps the current stage and cannot undo a later companion choice',async({page})=>{
+ await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,bestTime:90,totalKills:300})));
+ await page.reload();
+ await expect.poll(()=>page.locator('.camp-portrait').evaluate(el=>el.complete&&el.naturalWidth>0)).toBe(true);
+ const art=await page.locator('.camp-portrait').elementHandle();
+ let held;
+ await page.route('**/portrait-ember-v1.webp',route=>{held=route;});
+ try {
+  await page.locator('[data-character="ember"]').click();
+  await expect.poll(()=>!!held).toBe(true);
+  await expect(page.locator('[data-character="ember"]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('[data-character="ember"]')).toBeFocused();
+  expect(await art.evaluate(el=>el===document.querySelector('.camp-portrait'))).toBe(true);
+  await expect(page.locator('.camp-scene')).toHaveAttribute('data-loading','true');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.locator('[data-character="grove"]').click();
+  await expect(page.locator('.camp-portrait')).toHaveAttribute('src','/art/survivor/portrait-grove-v1.webp');
+  expect(await page.locator('.camp-scene').evaluate(el=>el.getAnimations({subtree:true}).length)).toBe(0);
+  const response=page.waitForResponse('**/portrait-ember-v1.webp');
+  await held.continue();held=null;await response;
+  // Give the older response time to decode; it must not repaint the new choice.
+  await page.waitForTimeout(300);
+  await expect(page.locator('.camp-portrait')).toHaveAttribute('src','/art/survivor/portrait-grove-v1.webp');
+  expect((await snapshot(page)).characterId).toBe('grove');
+  await expect(page.locator('[data-character="grove"]')).toBeFocused();
+ } finally {if(held)await held.abort();}
+});
+
+test('a failed large portrait falls back to the selected companion without blocking departure',async({page})=>{
+ await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,bestTime:90,totalKills:300})));
+ await page.reload();
+ await page.route('**/portrait-grove-v1.webp',route=>route.abort());
+ await page.locator('[data-character="grove"]').click();
+ await expect(page.locator('.camp-fallback')).toBeVisible();
+ expect(await page.locator('.camp-fallback').evaluate(el=>getComputedStyle(el).backgroundImage)).toContain('hero-grove.png');
+ await expect(page.locator('[data-character="grove"]')).toBeFocused();
+ await page.locator('#start-game').click();
+ const started=await snapshot(page);expect(started.phase).toBe('playing');expect(started.characterId).toBe('grove');expect(started.ranks.orbit).toBe(1);
+});
+
+test('departure takes the latest choice immediately while portrait loading cannot steal combat focus',async({page})=>{
+ await page.evaluate(()=>localStorage.setItem('ash-profile-v1',JSON.stringify({version:1,bestTime:90,totalKills:300})));
+ await page.reload();
+ let held;
+ await page.route('**/portrait-ember-v1.webp',route=>{held=route;});
+ try {
+  await page.locator('[data-character="ember"]').click();
+  await expect.poll(()=>!!held).toBe(true);
+  await page.evaluate(()=>document.querySelector('#start-game').click());
+  const started=await snapshot(page);
+  expect(started.phase).toBe('playing');expect(started.characterId).toBe('ember');expect(started.ranks.ember).toBe(1);expect(started.level).toBe(1);
+  await held.continue();held=null;
+  await page.waitForTimeout(300);
+  expect(await page.locator('#overlay').evaluate(el=>el.contains(document.activeElement))).toBe(false);
+  expect((await snapshot(page)).profile.runs).toBe(0);
+ } finally {if(held)await held.abort();}
+});

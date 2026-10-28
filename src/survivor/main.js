@@ -1,5 +1,6 @@
 import { choiceReceipt } from './choice-feedback.js';
 import { openBranchPreview } from './branch-preview.js';
+import { reuseCampScene } from './camp-presentation.js';
 import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice, evolutionGuidance, goalGuidanceMarkup } from './field-guide.js';
 import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
@@ -60,7 +61,9 @@ const loaded = loadProfile(storage);
 const preferences = loadPreferences(storage);
 const systemMotion = matchMedia('(prefers-reduced-motion: reduce)');
 function applyPreferences() {
-  document.body.classList.toggle('reduce-motion', reduceMotion(preferences, systemMotion.matches));
+  const reduced = reduceMotion(preferences, systemMotion.matches);
+  document.body.classList.toggle('reduce-motion', reduced);
+  if (reduced) for (const animation of $('panel')?.getAnimations({subtree:true}) ?? []) animation.cancel();
 }
 applyPreferences();
 systemMotion.addEventListener('change', applyPreferences);
@@ -170,27 +173,33 @@ function restart() {
   accumulator = 0;
   lastHud = 0;
 }
-function camp() {
+function focusCamp(selector, feedback = false) {
+  if (game.phase !== 'ready' || campView !== 'prepare') return;
+  const control = $('panel').querySelector(selector);
+  control?.focus({preventScroll:true});
+  if (control && feedback && !reduceMotion(preferences, systemMotion.matches)) {
+    control.animate([{transform:'scale(.985)'},{transform:'none'}],{duration:140,easing:'ease-out'});
+  }
+}
+function camp(focusSelector) {
   rememberCamp();
   resultReturn = null;
   campView = 'prepare';
   game = createGame(++seed, profile.selected, profile.keepsake, profile.experiment, runPreparation(profile));
   lastPhase = null;
   syncPhase();
+  if (focusSelector) focusCamp(focusSelector, true);
   last = 0;
   accumulator = 0;
 }
 function selectCharacter(id) {
   if (game.phase !== 'ready' || !isUnlocked(profile, id)) return;
+  if (profile.selected === id) { focusCamp(`[data-character="${id}"]`); return; }
   profile.selected = id;
   profile.inheritances[id] = runPreparation(profile, id).inheritance;
   profile.experiment = validExperiment(id, profile.experiment);
   persist();
-  camp();
-  $('panel').querySelector('.camp-portrait')?.classList.add('is-arriving');
-  requestAnimationFrame(() => $('panel').querySelector(`[data-character="${id}"]`)?.focus({
-    preventScroll: true
-  }));
+  camp(`[data-character="${id}"]`);
 }
 function prepareExperiment(key) {
   if (game.phase !== 'ended' || !isUnlocked(profile, game.characterId) || key !== nextExperiment(game, profile)) return;
@@ -211,25 +220,17 @@ function clearExperiment() {
 }
 function selectInheritance(key, id = game.characterId) {
   if (game.phase !== 'ready' || key !== 'none' && !validInheritance(profile, id, key)) return;
-  const scroll = $('panel').querySelector('.preparation-editor')?.scrollTop ?? 0;
   profile.selected = id; campView = 'prepare'; campSection = 'prepare'; preparation = 'inheritance';
   profile.inheritances[id] = key === 'none' ? null : key;
   profile.experiment = null;
   if (profile.goal?.startsWith('branch:') && primaryBranches(id).includes(profile.goal.slice(7))) profile.goal = null;
-  persist(); camp();
-  $('panel').querySelector('.preparation-editor').scrollTop = scroll;
-  requestAnimationFrame(() => $('panel').querySelector(`[data-inheritance="${key}"]`)?.focus({preventScroll: true}));
+  persist(); camp(`[data-inheritance="${key}"]`);
 }
 function selectKeepsake(id) {
   if (game.phase !== 'ready' || !canEquipKeepsake(profile, id)) return;
-  const scrollTop = $('panel').querySelector('.preparation-editor')?.scrollTop ?? 0;
-  const journeyOpen = $('panel').querySelector('.journey-board')?.open;
   profile.keepsake = id;
   persist();
-  camp();
-  $('panel').querySelector('.journey-board').open = journeyOpen;
-  $('panel').querySelector('.preparation-editor').scrollTop = scrollTop;
-  requestAnimationFrame(() => $('panel').querySelector(`[data-keepsake="${id}"]`)?.focus({preventScroll:true}));
+  camp(`[data-keepsake="${id}"]`);
 }
 function openCodex() {
   if (campView === 'codex') return;
@@ -253,8 +254,13 @@ function changePreparation(section) {
   if (game.phase !== 'ready' || !['inheritance','keepsake','vow'].includes(section)) return;
   rememberCamp();
   preparation = section;
-  lastPhase = null; syncPhase();
-  requestAnimationFrame(() => $('panel').querySelector(`[data-preparation-tab="${section}"]`)?.focus({preventScroll:true}));
+  for (const tab of $('panel').querySelectorAll('[data-preparation-tab]')) {
+    const selected = tab.dataset.preparationTab === section;
+    tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1;
+    $(tab.getAttribute('aria-controls')).hidden = !selected;
+  }
+  restoreCamp();
+  focusCamp(`[data-preparation-tab="${section}"]`);
 }
 function bindPreparation() {
   const tabs = [...$('panel').querySelectorAll('[data-preparation-tab]')];
@@ -362,10 +368,7 @@ function bindPauseTabs() {
 }
 function selectVow(id) {
   if (game.phase !== 'ready' || !canTakeVow(profile, id)) return;
-  const scroll = $('panel').querySelector('.preparation-editor')?.scrollTop ?? 0;
-  profile.vow = id; persist(); camp();
-  $('panel').querySelector('.preparation-editor').scrollTop = scroll;
-  requestAnimationFrame(() => $('panel').querySelector(`[data-vow="${id}"]`)?.focus({preventScroll: true}));
+  profile.vow = id; persist(); camp(`[data-vow="${id}"]`);
 }
 function selectGoal(id) {
   if (game.phase !== 'ready' || id !== null && (!validGoal(id) || goalFound(profile, id))) return;
@@ -399,9 +402,16 @@ function closeCodex() {
 function changeCampSection(section) {
   if (game.phase !== 'ready' || !['prepare', 'journal'].includes(section)) return;
   rememberCamp();
+  const inCamp = campView === 'prepare';
   campView = 'prepare'; resultReturn = null; campSection = section;
-  lastPhase = null; syncPhase();
-  requestAnimationFrame(() => $('panel').querySelector(`.camp-tabs [data-camp-section="${section}"]`)?.focus({preventScroll: true}));
+  if (inCamp) {
+    $('panel').querySelector('.camp-controls').hidden = section !== 'prepare';
+    $('panel').querySelector('.camp-journal').hidden = section !== 'journal';
+    for (const tab of $('panel').querySelectorAll('.camp-tabs [data-camp-section]')) tab.setAttribute('aria-pressed',String(tab.dataset.campSection === section));
+    panelRoute = `prepare:${section}`;
+    restoreCamp();
+  } else { lastPhase = null; syncPhase(); }
+  focusCamp(`.camp-tabs [data-camp-section="${section}"]`);
 }
 function updateCodex(filter, entry) {
   if (game.phase !== 'ready' || campView !== 'codex') return;
@@ -486,8 +496,10 @@ function choose(key) {
   }
 }
 function panel(html, compact = false) {
+  const scene = game.phase === 'ready' && campView === 'prepare' ? $('panel').querySelector('.camp-scene') : null;
   $('panel').className = `panel phase-${game.phase}${compact ? ' is-compact' : ''}`;
   $('panel').innerHTML = html;
+  if (scene) reuseCampScene(scene, $('panel').querySelector('.camp-scene'), () => reduceMotion(preferences, systemMotion.matches), () => game.phase === 'ready' && campView === 'prepare');
   const route = game.phase === 'ready' ? `${campView}:${campView === 'prepare' ? campSection : ''}` : game.phase;
   if (route !== panelRoute) $('panel').classList.add('is-entering');
   panelRoute = route;
@@ -513,6 +525,7 @@ function panel(html, compact = false) {
   }
   $('panel').scrollTop = 0;
   requestAnimationFrame(() => {
+    if ($('overlay').hidden || game.phase === 'playing') return;
     // An early keyboard/tab action takes precedence over the default entry focus.
     if ($('panel').contains(document.activeElement)) return;
     ($('panel').querySelector('#start-game, #restart-game, #resume-game') ?? $('panel').querySelector('[data-codex-filter][aria-pressed="true"]') ?? $('panel').querySelector('button:not(:disabled)'))?.focus({
