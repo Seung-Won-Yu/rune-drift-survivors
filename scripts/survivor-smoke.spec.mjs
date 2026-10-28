@@ -2323,3 +2323,64 @@ test('codex previews replacing a prepared experiment and another collection goal
   await expect(page.locator('.goal-replacement')).toContainText('기존 ‘이슬 씨앗’ 목표');
   await expect(page.locator('.codex-target')).toContainText('필요한 무기: 회전 룬');
 });
+
+for (const viewport of [{width:1280,height:720},{width:390,height:844}]) for (const [name,selector,key] of [['upgrade','data-upgrade','sword'],['ember-coal','data-relic','coal']]) {
+ test(`field selection carries artwork without delaying input and respects reduced motion: ${name} at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await scenario(page,name);
+  await page.screenshot({path:`output/playwright/survivor/field-choice-${name}-${viewport.width}.png`,animations:'disabled'});
+  const before=await snapshot(page);
+  await page.locator(`[${selector}="${key}"]`).click();
+  const chosen=await snapshot(page);
+  expect(chosen.phase).toBe('playing');
+  if(selector==='data-relic') expect(chosen.relics).toEqual(['coal']);
+  else expect(chosen.ranks[key]).toBe(before.ranks[key]+1);
+  await expect(page.locator('.choice-flight')).toHaveCount(1);
+  await expect(page.locator('.choice-flight')).toHaveAttribute('aria-hidden','true');
+  expect(await page.locator('.choice-flight').evaluate(el=>getComputedStyle(el).pointerEvents)).toBe('none');
+  const destination=await page.locator('.choice-flight').evaluate(el=>{
+   const frame=el.getAnimations()[0].effect.getKeyframes().at(-1),matrix=new DOMMatrix(frame.transform);
+   return {x:parseFloat(el.style.left)+25+matrix.m41,y:parseFloat(el.style.top)+25+matrix.m42};
+  });
+  const target=await page.locator(selector==='data-relic'?'.health-pocket':'[data-weapon="sword"]').boundingBox();
+  expect(target.width).toBeGreaterThan(0);expect(target.height).toBeGreaterThan(0);
+  expect(destination.x).toBeGreaterThanOrEqual(target.x);expect(destination.x).toBeLessThanOrEqual(target.x+target.width);
+  expect(destination.y).toBeGreaterThanOrEqual(target.y);expect(destination.y).toBeLessThanOrEqual(target.y+target.height);
+  await page.keyboard.down('d');
+  await expect.poll(async()=>(await snapshot(page)).player.x).toBeGreaterThan(chosen.player.x+2);
+  await page.keyboard.up('d');
+  await expect(page.locator('.choice-flight')).toHaveCount(0);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await expect(page.locator('body')).toHaveClass(/reduce-motion/);
+  await scenario(page,name);
+  await page.locator(`[${selector}="${key}"]`).click();
+  expect((await snapshot(page)).phase).toBe('playing');
+  await expect(page.locator('.choice-flight')).toHaveCount(0);
+ });
+}
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]) {
+ test(`next build keeps earned rewards first on phones and prepares a fresh run at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport); await scenario(page,'record-experiment');
+  const plan=page.locator(`${viewport.width===1280 ? '.result-summary' : '.result-ledger'} .next-experiment`);
+  await expect(plan).toHaveCount(1); await expect(page.locator('.next-experiment')).toHaveCount(1);
+  const result=await snapshot(page);
+  if(viewport.width===1280) await expect(plan.locator('[data-experiment]')).toBeInViewport();
+  await page.screenshot({path:`output/playwright/survivor/field-result-${viewport.width}.png`,animations:'disabled'});
+  await plan.locator('[data-experiment]').click();
+  const ready=await snapshot(page);expect(ready.phase).toBe('ready');expect(ready.experiment).toBe('duelist');expect(ready.ranks.duelist).toBe(0);
+  expect(ready.profile.runs).toBe(result.profile.runs); expect(ready.profile.history).toEqual(result.profile.history);
+  await expect(page.locator('#start-game')).toBeInViewport();
+ });
+}
+test('resizing a result keeps one next-build control, keyboard focus and the same earned run',async({page})=>{
+ await scenario(page,'record-experiment');
+ const control=page.locator('.result-summary [data-experiment]');await control.focus();
+ const before=await snapshot(page);
+ await page.setViewportSize({width:320,height:568});
+ await expect(page.locator('.next-experiment')).toHaveCount(1);
+ await expect(page.locator('.result-ledger [data-experiment]')).toBeFocused();
+ await page.setViewportSize({width:1280,height:720});
+ await expect(control).toBeFocused();await expect(control).toBeInViewport();
+ expect((await snapshot(page)).profile).toEqual(before.profile);
+});

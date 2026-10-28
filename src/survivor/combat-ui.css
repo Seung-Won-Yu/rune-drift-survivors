@@ -178,3 +178,23 @@
   .hud-shell .notice { padding: 6px 9px; font-size: 10px; }
   .recovery-hint { top: auto; bottom: 76px; left: 172px; max-width: 180px; }
 }
+
+/* Desktop growth belongs with character status, leaving the field open. */
+@media (min-width:900px) and (min-height:571px) {
+  .hud-shell .xp-pocket { grid-column: 1; gap: 8px; padding: 2px 3px; }
+  .hud-shell .xp-pocket #xp-label { font-size: 9px; }
+  .hud-shell .xp-pocket small { font-size: 9px; }
+  .hud-shell .xp-pocket .meter { height: 3px; }
+  .hud-shell .health-pocket { background: #13261fce; box-shadow: 0 5px 18px #07100d24; }
+  .hud-shell .clock-pocket { padding-top: 4px; }
+  .hud-shell .clock-pocket > strong { font-family: var(--display); font-size: 38px; font-weight: 700; }
+}
+
+/* An optional objective is a compact field control, not another menu panel. */
+.hud-shell .encounter-hud { display: grid; grid-template-columns: minmax(0,1fr); align-items: center; gap: 8px; padding: 8px 10px; border-color: #94b19755; background: #142b25ed; }
+.hud-shell .encounter-hud:has(button:not([hidden])) { grid-template-columns: minmax(0,1fr) 84px; }
+.hud-shell .encounter-hud > div { min-width: 0; }
+.hud-shell .encounter-hud strong { font-size: 11px; }
+.hud-shell .encounter-hud span { font-size: 10px; line-height: 1.5; }
+.hud-shell .encounter-hud button { grid-column: 2; grid-row: 1; min-height: 44px; padding: 5px 8px; margin: 0; border: 1px solid #94b19770; border-radius: 3px; background: #365644; color: #f4ecd7; font-size: 10px; line-height: 1.5; white-space: normal; }
+.hud-shell .encounter-hud button:is(:hover,:focus-visible) { background: #44694f; }

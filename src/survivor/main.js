@@ -92,6 +92,8 @@ const campMemory = {scroll: {}, details: {}, returnFocus: '[data-open-codex]'};
 let panelRoute = '';
 let appDialog = null;
 let branchDialog = null, previewArt = null;
+const resultLayout = matchMedia('(min-width:681px) and (min-height:571px)');
+resultLayout.addEventListener('change', placeResultPlan);
 const campDetailSelectors = ['.companion-guide', '.mastery-board', '.journey-board', '.camp-records'];
 function rememberCamp() {
   if (game.phase !== 'ready' || campView !== 'prepare') return;
@@ -445,11 +447,33 @@ function leaveChest() {
   initAudio(); resetInput(); last = 0; accumulator = 0;
   lastPhase = null; syncPhase();
 }
+// Only the artwork moves. The valid choice takes effect immediately and input
+// resumes through syncPhase; this never delays or replays a gameplay mutation.
+function captureChoice(key) {
+  if (reduceMotion(preferences, systemMotion.matches)) return null;
+  const art = $('panel').querySelector(`[data-upgrade="${key}"], [data-relic="${key}"]`)?.querySelector('.upgrade-icon');
+  if (!art) return null;
+  return {art:art.innerHTML,from:art.getBoundingClientRect(),family:EVOLUTIONS[key]?.weapon ?? SPECIALIZATIONS[key]?.weapon ?? (['sword','ember','orbit'].includes(key) ? key : null),relic:game.phase === 'relic'};
+}
+function carryChoice(flight) {
+  if (!flight || game.phase !== 'playing' || reduceMotion(preferences, systemMotion.matches)) return;
+  const target = flight.family ? $('weapons').querySelector(`[data-weapon="${flight.family}"]`) : flight.relic ? document.querySelector('.health-pocket') : $('hp-bar');
+  if (!target || target.hidden) return;
+  const to = target.getBoundingClientRect();
+  if (!to.width || !to.height) return;
+  const node = document.createElement('span');
+  node.className = 'choice-flight'; node.setAttribute('aria-hidden','true'); node.innerHTML = flight.art;
+  const x = flight.from.x + flight.from.width / 2 - 25, y = flight.from.y + flight.from.height / 2 - 25;
+  node.style.left = `${x}px`; node.style.top = `${y}px`; document.body.append(node);
+  const animation = node.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${to.x + to.width / 2 - 25 - x}px,${to.y + to.height / 2 - 25 - y}px) scale(.4)`,opacity:0}],{duration:420,easing:'cubic-bezier(.22,.8,.25,1)'});
+  animation.finished.then(()=>node.remove(),()=>node.remove());
+}
 function choose(key) {
   initAudio();
   const receipt = choiceReceipt(game, key);
+  const flight = receipt ? captureChoice(key) : null;
   if (game.phase === 'relic') {
-    if (chooseRelic(game, key)) { resetInput(); showReceipt(receipt); lastPhase = null; syncPhase(); }
+    if (chooseRelic(game, key)) { resetInput(); showReceipt(receipt); lastPhase = null; syncPhase(); carryChoice(flight); }
     return;
   }
   if (chooseUpgrade(game, key)) {
@@ -458,6 +482,7 @@ function choose(key) {
     showReceipt(receipt);
     lastPhase = null;
     syncPhase();
+    carryChoice(flight);
   }
 }
 function panel(html, compact = false) {
@@ -495,6 +520,17 @@ function panel(html, compact = false) {
     });
   });
 }
+// Wide results have room for a next-run plan beside the loot. On phones,
+// earned equipment comes first. Reparent the same control on rotation/resize.
+function placeResultPlan() {
+  if (game.phase !== 'ended' || !$('panel').classList.contains('is-result')) return;
+  const plan = $('panel').querySelector('.next-experiment');
+  if (!plan) return;
+  const focused = plan.contains(document.activeElement) ? document.activeElement : null;
+  if (resultLayout.matches) $('panel').querySelector('.result-summary').append(plan);
+  else $('panel').querySelector('.result-ledger .run-notes').before(plan);
+  focused?.focus({preventScroll:true});
+}
 function buildGuide() {
   return `<details class="build-guide"><summary>무기 진화 조건 보기</summary>${Object.entries(EVOLUTIONS).map(([key, recipe]) => `<div><strong>${UPGRADE_META[key].name}</strong><span>${game.ranks[key] ? '진화 완료' : recipe.requirement}</span></div>`).join('')}</details>`;
 }
@@ -513,6 +549,7 @@ function syncPhase() {
   }
   if (lastPhase === game.phase) return;
   lastPhase = game.phase;
+  document.body.dataset.phase = game.phase;
   $('overlay').dataset.screen = game.phase === 'ready' ? campView : game.phase;
   resetInput();
   accumulator = 0;
@@ -568,7 +605,7 @@ function syncPhase() {
     const recoveryOffered = game.choices.some(key => key === 'heal' || key === 'vitality');
     const choosingBranch = game.choices.some(key => SPECIALIZATIONS[key]);
     const previous = earnedReceipt?.game === game && earnedReceipt.pendingChoice ? earnedReceipt.receipt : null;
-    panel(`<div class="upgrade-top"><div><p class="eyebrow">성장의 갈림길</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">하나의 힘을 골라 전투를 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${growthContext(game)}${previous ? `<div class="previous-choice" role="status" data-kind="${previous.kind}"><span class="receipt-art" aria-hidden="true">${collectionArt(previous.art)}</span><span><small>방금 선택</small><strong>${previous.name}</strong><span>${previous.detail}</span></span><span class="receipt-check" aria-hidden="true">✓</span></div>` : ''}${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<p class="choice-instruction"><span>${game.choices.length}개의 선택 · 전투 일시정지</span><span class="choice-shortcuts">키보드 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></p><div class="upgrade-grid">${game.choices.map((key, i) => {
+    panel(`<div class="upgrade-top"><div class="decision-companion" aria-hidden="true">${portrait(game.characterId, true)}</div><div><p class="eyebrow">${getCharacter(game.characterId).name} · 성장의 갈림길</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">하나의 힘을 골라 전투를 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${growthContext(game)}${previous ? `<div class="previous-choice" role="status" data-kind="${previous.kind}"><span class="receipt-art" aria-hidden="true">${collectionArt(previous.art)}</span><span><small>방금 선택</small><strong>${previous.name}</strong><span>${previous.detail}</span></span><span class="receipt-check" aria-hidden="true">✓</span></div>` : ''}${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<p class="choice-instruction"><span>${game.choices.length}개의 선택 · 전투 일시정지</span><span class="choice-shortcuts">키보드 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></p><div class="upgrade-grid">${game.choices.map((key, i) => {
       const weapon = weaponPresentation(game, key), choice = growthChoice(game, key), recipe = upgradeRecipeHint(game, key);
       const m = ['sword', 'ember', 'orbit'].includes(key) ? {
         ...UPGRADE_META[key],
@@ -596,7 +633,7 @@ function syncPhase() {
     };
     for (const button of document.querySelectorAll('[data-upgrade]')) button.onclick = () => choose(button.dataset.upgrade);
   } else if (game.phase === 'relic') {
-    panel(`<p class="eyebrow">숲이 남긴 선물</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">${ENCOUNTERS[game.rewardFrom].name} 완료 · 이번 판 내내 함께할 힘 하나를 고르세요.</p>${goalGuidanceMarkup(game)}<p class="choice-instruction"><span>하나를 획득 · 전투 일시정지</span><span class="choice-shortcuts">키보드 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key], context = relicContext(game, key); return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small class="relic-fit is-${context.kind}">${context.label}</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p class="relic-decision">${context.detail}</p><span class="upgrade-change"><small>이번 여정의 효과</small>${relicEffect(game, key, true)}</span><span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
+    panel(`<div class="upgrade-top relic-top"><div class="decision-companion" aria-hidden="true">${portrait(game.characterId, true)}</div><div><p class="eyebrow">${ENCOUNTERS[game.rewardFrom].name} 완료 · 숲이 남긴 선물</p><h1 id="panel-title">숲의 유물을 선택하세요</h1><p class="panel-lead">이번 판 내내 함께할 힘 하나를 고르세요.</p></div><span class="decision-earned" aria-hidden="true">${icon('star')}</span></div>${goalGuidanceMarkup(game)}<p class="choice-instruction"><span>하나를 획득 · 전투 일시정지</span><span class="choice-shortcuts">키보드 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></p><div class="upgrade-grid">${game.relicChoices.map((key, i) => { const m = RELICS[key], context = relicContext(game, key); return `<button class="upgrade-card relic-card${goalRelevant(game, key) ? ' is-experiment' : ''}" data-relic="${key}" style="--tone:${m.color}">${goalRelevant(game, key) ? '<span class="experiment-badge">이번 판의 목표</span>' : ''}<small class="relic-fit is-${context.kind}">${context.label}</small><span class="upgrade-icon">${collectionArt(key) || icon(m.icon)}</span><strong>${m.name}</strong><p class="relic-decision">${context.detail}</p><span class="upgrade-change"><small>이번 여정의 효과</small>${relicEffect(game, key, true)}</span><span class="pick-label">이 유물 선택 <kbd>${i+1}</kbd></span></button>`; }).join('')}</div>`);
     for (const button of document.querySelectorAll('[data-relic]')) button.onclick = () => choose(button.dataset.relic);
   } else if (game.phase === 'preview') {
     const event = game.encounters.find(event => event.kind === game.previewEncounter);
@@ -630,6 +667,7 @@ function syncPhase() {
       </section><section class="result-ledger" aria-label="발견과 여정 기록">${resultDetails(game, profile, rewards.unlocked, storageWarning, rewards.challenges, rewards.discoveries, rewards.mastery)}<p class="result-best">${rewards.record ? '새로운 처치 기록! · ' : ''}최고 기록 ${profile.bestKills} 처치</p></section>
     </div><div class="panel-actions"><button id="restart-game" class="primary" title="현재 선택한 동료와 출발 준비로 다시 시작">다시 숲으로 <span aria-hidden="true">→</span></button><button id="camp-game" class="secondary">출발 준비</button></div>`, true);
     $('panel').classList.add('is-result');
+    placeResultPlan();
     $('restart-game').onclick = restart;
     const reviewEntry = (id, focus) => {
       const entry = codexEntries(profile).find(e => e.id === id);
