@@ -1104,7 +1104,7 @@ for (const heldImage of ['forest-ground-v1','hero-ash-motion-v1','hound-motion-v
   await expect(page.locator('#start-game')).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   // Engines serialize CSS family names with or without surrounding quotes.
-  expect(await page.evaluate(() => [...document.fonts].some(font => font.family.replace(/^["']|["']$/g,'') === 'Ash Journal' && font.status === 'loaded'))).toBe(true);
+  expect(await page.evaluate(() => [...document.fonts].some(font => font.family.replace(/^["']|["']$/g,'') === 'Ash Interface' && font.status === 'loaded'))).toBe(true);
   await page.locator('#start-game').click();
   expect((await snapshot(page)).phase).toBe('playing');
 });
@@ -1685,12 +1685,21 @@ for (const viewport of [{width:1280,height:720},{width:1280,height:600},{width:3
     await expect(roster).toBeInViewport({ratio:1});
     for (const id of ['ash','ember','grove']) await expect(roster.locator(`[data-character="${id}"]`)).toBeInViewport({ratio:1});
     await page.locator('[data-preparation-tab="inheritance"]').click();
-    const readable = await page.locator('.companion-signature').evaluate(el => ({size:parseFloat(getComputedStyle(el).fontSize),color:getComputedStyle(el).color}));
+    const readable = await page.locator('.companion-signature').evaluate(el => {
+      const channels=value=>value.match(/[\d.]+/g).map(Number);
+      const foreground=channels(getComputedStyle(el).color),surface=channels(getComputedStyle(el.closest('.camp-controls')).backgroundColor),alpha=surface[3]??1;
+      // A white backing is the least favorable backdrop for this light text
+      // on a translucent dark panel; no exact palette value is required.
+      const background=surface.slice(0,3).map(c=>c*alpha+255*(1-alpha));
+      const luminance=rgb=>rgb.slice(0,3).map(c=>{c/=255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4;}).reduce((sum,c,i)=>sum+c*[.2126,.7152,.0722][i],0);
+      const light=luminance(foreground),dark=luminance(background);
+      return {size:parseFloat(getComputedStyle(el).fontSize),contrast:(Math.max(light,dark)+.05)/(Math.min(light,dark)+.05)};
+    });
     expect(readable.size).toBeGreaterThanOrEqual(12);
-    expect(readable.color).toBe('rgb(82, 96, 68)');
+    expect(readable.contrast).toBeGreaterThanOrEqual(4.5);
     if(viewport.width>680) {
       const hero=await page.locator('.camp-scene .hero-art').boundingBox(),caption=await page.locator('.camp-stage-caption').boundingBox();
-      expect(hero.y+hero.height).toBeLessThanOrEqual(caption.y);
+      expect(Math.min(hero.x+hero.width,caption.x+caption.width)-Math.max(hero.x,caption.x)<=0||Math.min(hero.y+hero.height,caption.y+caption.height)-Math.max(hero.y,caption.y)<=0).toBe(true);
     } else if(viewport.height>viewport.width) {
       const caption=await page.locator('.camp-stage-caption').boundingBox(), rosterBox=await roster.boundingBox();
       expect(caption.y+caption.height).toBeLessThanOrEqual(rosterBox.y+1);
@@ -1931,7 +1940,8 @@ for (const viewport of [{width:1280,height:720},{width:390,height:844},{width:32
       await expect(page.locator(`[data-preparation-tab="${section}"]`)).toBeFocused();
       await expect(page.locator(`[data-preparation-tab="${section}"]`)).toHaveAttribute('aria-selected','true');
       await expect(page.locator('[role="tabpanel"]:visible')).toHaveCount(1);
-      await expect(page.locator(`[data-preparation-section="${section}"] h2`)).toBeInViewport();
+      await expect(page.locator(`[data-preparation-section="${section}"]`)).toBeVisible();
+      await expect(page.locator(`[data-preparation-section="${section}"] button`).first()).toBeInViewport({ratio:.5});
       await expect(page.locator('#start-game')).toBeInViewport({ratio:1});
       await expect(page.locator('.camp-mission')).toBeInViewport({ratio:1});
     }
@@ -2384,3 +2394,26 @@ test('resizing a result keeps one next-build control, keyboard focus and the sam
  await expect(control).toBeFocused();await expect(control).toBeInViewport();
  expect((await snapshot(page)).profile).toEqual(before.profile);
 });
+
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:640,height:360},{width:320,height:568}]) {
+ test(`outpost lobby keeps navigation clear of settings and departure reachable at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);
+  await expect(page.locator('#start-game')).toBeInViewport({ratio:1});
+  const geometry=await page.evaluate(()=>{
+   const box=selector=>document.querySelector(selector).getBoundingClientRect().toJSON();
+   return {nav:box('.app-navigation'),tools:box('.app-tools'),start:box('#start-game'),outer:[document.documentElement.scrollWidth-innerWidth,document.documentElement.scrollHeight-innerHeight]};
+  });
+  const {nav,tools,start}=geometry;
+  expect(Math.min(nav.right,tools.right)-Math.max(nav.left,tools.left)<=0||Math.min(nav.bottom,tools.bottom)-Math.max(nav.top,tools.top)<=0).toBe(true);
+  expect(start.height).toBeGreaterThanOrEqual(44);expect(geometry.outer).toEqual([0,0]);
+  await expect(page.locator('[data-character="ash"]')).toHaveAttribute('aria-pressed','true');
+  await page.screenshot({path:`output/playwright/survivor/outpost-lobby-${viewport.width}.png`,animations:'disabled'});
+  const before=await snapshot(page);
+  await page.locator('[data-open-codex]').click();
+  await expect(page.locator('.codex-workspace')).toBeVisible();
+  await page.screenshot({path:`output/playwright/survivor/outpost-codex-${viewport.width}.png`,animations:'disabled'});
+  await page.locator('[data-close-codex]').click();
+  expect((await snapshot(page)).profile).toEqual(before.profile);
+  await expect(page.locator('#start-game')).toBeInViewport({ratio:1});
+ });
+}

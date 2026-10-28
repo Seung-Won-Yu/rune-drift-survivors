@@ -42,9 +42,9 @@ try{
   await page.getByRole('button',{name:'일시정지',exact:true}).click();
   await page.getByRole('button',{name:'전투 계속하기'}).waitFor();
   assert.equal(await page.evaluate(()=>typeof window.__ASH_QA__),'undefined');
-  for(const name of ['hero-ash.png','hero-ember.png','hero-grove.png','enemies.png','ash-sovereign.png','forest-sanctuary-v2.webp','forest-ground-v1.webp','hero-ash-motion-v1.webp','hound-motion-v1.webp','giant-motion-v1.webp','hero-ember-motion-v1.webp','hero-grove-motion-v1.webp','ash-sovereign-motion-v1.webp'])assert.ok(assets.includes(name),name);
+  for(const name of ['hero-ash.png','hero-ember.png','hero-grove.png','enemies.png','ash-sovereign.png','forest-outpost-v1.webp','forest-ground-v1.webp','hero-ash-motion-v1.webp','hound-motion-v1.webp','giant-motion-v1.webp','hero-ember-motion-v1.webp','hero-grove-motion-v1.webp','ash-sovereign-motion-v1.webp'])assert.ok(assets.includes(name),name);
   await page.evaluate(()=>document.fonts.ready);
-  assert.ok(await page.evaluate(()=>document.fonts.check('700 24px "Ash Journal"','잿빛의 숲')),'self-hosted Korean title face loaded');
+  assert.ok(await page.evaluate(()=>document.fonts.check('700 24px "Ash Interface"','잿빛의 숲')),'self-hosted Korean title face loaded');
   // Model an existing save at the bookmarked entry, then visit the new default.
   // The isolated browser context never touches a player's real browser profile.
   const profile={...createProfile(),selected:'ember',runs:3,bestTime:90,totalKills:400,
