@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BURST,canBurst,burstCooldown} from '../src/survivor/burst.js';
-import {createGame,startGame,updateGame,pauseGame,resumeGame,spawnEnemy,spawnBoss,stats} from '../src/survivor/game.js';
+import {createGame,startGame,updateGame,chooseUpgrade,pauseGame,resumeGame,spawnEnemy,spawnBoss,stats,RUN_SECONDS} from '../src/survivor/game.js';
 
 const run=(id='ash')=>{const g=createGame(42,id);startGame(g);g.spawnClock=999;g.swordClock=999;g.emberClock=999;g.pulseClock=999;g.xpNeed=99999;return g;};
 const frames=(g,n,input)=>{for(let i=0;i<n;i++)updateGame(g,1/60,input);};
@@ -86,4 +86,74 @@ test('breakthrough records actual boss damage once while preserving the entrance
   if(entrance) {assert.equal(boss.hp,before);assert.equal(g.burst.hitIds.length,0);}
   else {assert.ok(Math.abs(before-boss.hp-22.8)<1e-8);assert.equal(g.burst.hitIds.length,1);assert.equal(boss.healthLoss.length,1);}
  }
+});
+
+test('landing recalls earned loot inside 220 once, without sweeping the starting area',()=>{
+ const g=run(),edge={x:340,y:0,value:2,age:0},outside={x:340.1,y:0,value:3,age:0},behind={x:-80,y:160,value:4,age:0};
+ g.gems.push(edge,outside,behind);
+ updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});frames(g,10);
+ assert.equal(g.burst.active,true);assert.ok(g.gems.every(gem=>!gem.recalled));
+ pauseGame(g);const paused=JSON.stringify(g);frames(g,30);assert.equal(JSON.stringify(g),paused);resumeGame(g);
+ frames(g,1);assert.equal(g.burst.active,false);assert.ok(Math.abs(g.player.x-120)<1e-8);
+ assert.equal(edge.recalled,true);assert.ok(edge.x<340);assert.ok(!outside.recalled);assert.ok(!behind.recalled);
+ const late={x:340,y:0,value:5,age:0};g.gems.push(late);frames(g,1);
+ assert.ok(!late.recalled,'landing is not a lasting vacuum aura');
+ assert.equal(g.xp+g.gems.reduce((sum,gem)=>sum+gem.value,0),14);
+ assert.equal(g.player.hp,100);assert.equal(g.player.invincible,0);
+});
+
+test('a last-step breakthrough kill recalls only its normal earned XP',()=>{
+ const g=run(),enemy=spawnEnemy(g,0,false,{x:157,y:0});Object.assign(enemy,{speed:0,damage:0});
+ updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});frames(g,10);
+ assert.equal(g.kills,0);frames(g,1);
+ assert.equal(g.kills,1);assert.equal(g.burst.kills,1);assert.equal(g.gems[0].recalled,true);
+ assert.equal(g.xp+g.gems.reduce((sum,gem)=>sum+gem.value,0),2);
+});
+
+test('landing recall never slows a stronger ordinary pickup pull',()=>{
+ const g=run();g.ranks.magnet=4;
+ updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});frames(g,10);
+ const gem={x:150,y:0,value:2,age:0};g.gems.push(gem);frames(g,1);
+ assert.equal(gem.recalled,true);assert.equal(g.xp,2);assert.equal(g.gems.length,0);
+ assert.equal(g.player.hp,100);assert.ok(burstCooldown(g)>3.9);
+});
+
+test('a recalled gem retains normal raw-XP healing and cannot be collected twice',()=>{
+ const g=run();g.player.hp=50;g.relics=['dew'];
+ g.gems.push({x:240,y:0,value:60,age:0});
+ updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});frames(g,40);
+ assert.equal(g.xp,60);assert.equal(g.player.hp,56);assert.equal(g.gems.length,0);
+ frames(g,270);updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});frames(g,40);
+ assert.equal(g.xp,60);assert.equal(g.player.hp,56);
+});
+
+test('earned landing XP opens one boss-time choice and respects the existing combat interval',()=>{
+ const g=run();g.time=240;g.nextElite=999;g.nextRecovery=999;g.xpNeed=8;g.player.hp=30;
+ const boss=spawnBoss(g);Object.assign(boss,{x:600,y:0,entrance:0,pattern:{kind:'charge',x:600,y:0,angle:0,length:72,age:0}});
+ g.thorns.push({x:1000,y:300,vx:200,vy:0,age:0,life:3.8});
+ g.gems.push({x:240,y:0,value:1000,age:0});
+ updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});
+ for(let i=0;i<100&&g.phase==='playing';i++)updateGame(g,1/60);
+ assert.equal(g.phase,'upgrade');assert.equal(g.level,2);assert.equal(g.xp,992);assert.equal(g.burst.active,false);
+ assert.equal(g.player.hp,30);assert.equal(g.player.invincible,0);assert.equal(g.thorns.length,1);assert.ok(g.enemies.includes(boss));
+ const paused=JSON.stringify(g);frames(g,90);assert.equal(JSON.stringify(g),paused);
+ const selectedAt=g.time;assert.ok(chooseUpgrade(g,g.choices[0]));assert.equal(g.growthResumeAt,selectedAt+3);
+ assert.ok(g.player.invincible<=.8);frames(g,90,{x:0,y:-1});assert.equal(g.phase,'playing');assert.equal(g.level,2);
+ frames(g,95,{x:0,y:-1});assert.equal(g.phase,'upgrade');assert.equal(g.level,3);assert.equal(g.player.hp,30);
+ assert.ok(g.time>=selectedAt+3);assert.equal(g.player.invincible,0);
+});
+
+test('landing at the chapter deadline does not start another loot recall',()=>{
+ const g=run(),gem={x:340,y:0,value:2,age:0};g.gems.push(gem);
+ updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});frames(g,10);
+ g.time=RUN_SECONDS-1/60;g.nextElite=999;frames(g,1);
+ assert.equal(g.phase,'ended');assert.equal(g.outcome,'survived');assert.ok(!gem.recalled);
+});
+
+test('a last-step boss victory keeps its result ahead of landing loot',()=>{
+ const g=run(),gem={x:340,y:0,value:2,age:0};g.gems.push(gem);
+ const boss=spawnBoss(g);Object.assign(boss,{x:177.9,y:0,hp:1,entrance:0,pattern:{kind:'thorns',x:177.9,y:0,angle:0,age:1.1,released:true}});
+ updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});frames(g,10);
+ assert.equal(g.bossDefeated,false);frames(g,1);
+ assert.equal(g.phase,'ended');assert.equal(g.outcome,'victory');assert.ok(!gem.recalled);assert.equal(g.xp,0);
 });

@@ -1,5 +1,5 @@
 // One deliberate action, measured in the same simulation time as every threat.
-export const BURST = Object.freeze({distance:120,duration:.2,cooldown:4.2,invulnerable:.11,width:26,damage:1.2});
+export const BURST = Object.freeze({distance:120,duration:.2,cooldown:4.2,invulnerable:.11,width:26,damage:1.2,recallRadius:220});
 export const createBurst = () => ({active:false,age:0,readyAt:0,startedAt:-10,aimX:1,aimY:0,x:1,y:0,fromX:0,fromY:0,toX:0,toY:0,iframesUntil:0,hitIds:[],uses:0,kills:0});
 export const canBurst = game => game.phase === 'playing' && !game.burst.active && game.time >= game.burst.readyAt;
 export const burstCooldown = game => Math.max(0,game.burst.readyAt-game.time);

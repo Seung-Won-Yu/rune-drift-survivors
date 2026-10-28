@@ -1169,6 +1169,12 @@ export function updateGame(game, dt, input = {
       b.kills+=game.kills-before;
     }
   }
+  // Harvest the landing, once. Confirmed breakthrough kills have already
+  // dropped their normal loot; automatic attacks below do not join this pulse.
+  if (burstStep && !game.burst.active && !game.bossDefeated && game.time < RUN_SECONDS) {
+    for (const gem of game.gems)
+      if (Math.hypot(gem.x-p.x,gem.y-p.y) <= BURST.recallRadius) gem.recalled=true;
+  }
   updateWeapons(game, dt, s);
   const burstKills = game.kills - killsBefore;
   if ((burstKills >= 5 || game.eliteKills > elitesBefore) && game.time - (game.combatImpact?.at ?? -10) >= .6) {
@@ -1192,7 +1198,8 @@ export function updateGame(game, dt, input = {
       dy = p.y - gem.y,
       d = Math.hypot(dx, dy);
     if (gem.recalled || d < s.magnet) {
-      const step = Math.min(d, (gem.recalled ? 500 : 220 + (s.magnet - d) * 5) * dt);
+      const pull = 220 + (s.magnet - d) * 5;
+      const step = Math.min(d, (gem.recalled ? Math.max(500,pull) : pull) * dt);
       gem.x += dx / (d || 1) * step;
       gem.y += dy / (d || 1) * step;
     }

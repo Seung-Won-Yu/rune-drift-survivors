@@ -53,7 +53,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane',
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest',
   'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
   'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third',
   'continuation-sword','continuation-ember','continuation-orbit',
@@ -807,7 +807,7 @@ function updateHud() {
   burst.style.setProperty('--burst-ready',String(1-Math.min(1,remaining/BURST.cooldown)));
   $('burst-state').textContent=remaining>0?`${remaining.toFixed(1)}초`:matchMedia('(pointer:coarse)').matches?'준비':'Space';
   burst.setAttribute('aria-label',ready?'돌파 · Space':`돌파 준비 중 · ${remaining.toFixed(1)}초`);
-  $('coach').textContent = game.time < 5 ? (matchMedia('(pointer:coarse)').matches ? '왼쪽 스틱 이동 · 오른쪽 돌파 · 공격은 자동' : 'WASD 이동 · Space 돌파 · Esc 일시정지') : `공격은 자동 · ${SIGNATURES[game.characterId].action}`;
+    $('coach').textContent = game.time < 5 ? (matchMedia('(pointer:coarse)').matches ? '왼쪽 스틱 이동 · 오른쪽 돌파 · 공격은 자동' : 'WASD 이동 · Space 돌파 · Esc 일시정지') : game.time < 12 ? '돌파한 곳 주변의 경험치가 모입니다' : `공격은 자동 · ${SIGNATURES[game.characterId].action}`;
   $('coach').hidden = game.time >= 14 || needsRecovery;
   const guidance = evolutionGuidance(game);
   const trackedGoal = goalProgress(game);
@@ -1429,6 +1429,13 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
           const frames={first:17,second:24,third:32}[name.split('-').at(-1)];
           for(let frame=0;frame<frames;frame++)updateGame(game,1/60);
           game.phase='paused';
+        }
+      } else if (name === 'burst-harvest') {
+        game.swordClock=999;game.nextElite=999;game.nextRecovery=999;
+        for(const [x,y] of [[240,-60],[240,0],[240,60],[260,-30],[260,30],[270,0]])
+          game.gems.push({x,y,value:2,age:0});
+        for(const x of [35,80,125]) {
+          const enemy=spawnEnemy(game,0,false,{x,y:0});enemy.speed=0;
         }
       } else if (name === 'burst-lane') {
         game.player.invincible=0;game.swordClock=999;game.xpNeed=99999;game.nextElite=999;

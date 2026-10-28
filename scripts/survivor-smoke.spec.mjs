@@ -7,6 +7,35 @@ const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
 for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+ test(`landing harvest connects a real breakthrough to earned growth at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);
+  if(viewport.width===740)await page.emulateMedia({reducedMotion:'reduce'});
+  await scenario(page,'burst-harvest');await page.waitForTimeout(300);
+  const before=await snapshot(page);expect(before.level).toBe(1);expect(before.xp).toBe(0);
+  await expect(page.locator('#burst')).toHaveAttribute('title',/주변의 경험치/);
+  await page.keyboard.press('Space');
+  await expect.poll(async()=>(await snapshot(page)).phase,{timeout:4000}).toBe('upgrade');
+  const earned=await snapshot(page);expect(earned.level).toBe(2);expect(earned.kills).toBe(3);
+  expect(earned.burst.active).toBe(false);expect(earned.burst.uses).toBe(1);expect(earned.player.x).toBeCloseTo(120);
+  expect(earned.player.hp).toBe(before.player.hp);expect(earned.profile).toEqual(before.profile);
+  await page.keyboard.press('Space');await page.waitForTimeout(100);
+  expect((await snapshot(page)).ranks).toEqual(earned.ranks);expect((await snapshot(page)).time).toBe(earned.time);
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  await page.screenshot({path:`output/playwright/survivor/burst-harvest-growth-${viewport.width}.png`});
+ });
+}
+
+test.describe('touch landing harvest',()=>{
+ test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
+ test('a thumb breakthrough pulls existing loot into its next choice',async({page})=>{
+  await scenario(page,'burst-harvest');await page.locator('#burst').tap();
+  await expect.poll(async()=>(await snapshot(page)).phase).toBe('upgrade');
+  const earned=await snapshot(page);expect(earned.level).toBe(2);expect(earned.burst.uses).toBe(1);
+  expect(earned.kills).toBe(3);await expect(page.locator('[data-upgrade]')).toHaveCount(3);
+ });
+});
+
+for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
  for(const [family,branches] of [['sword',['sweep','duelist']],['ember',['wildfire','detonation']],['orbit',['bulwark','horizon']]]) {
   test(`started secondary ${family} previews its next combat fork without buying it at ${viewport.width}`,async({page})=>{
    await page.setViewportSize(viewport);await scenario(page,`continuation-${family}`);
