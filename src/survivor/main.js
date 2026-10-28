@@ -2,6 +2,7 @@ import { choiceReceipt } from './choice-feedback.js';
 import { openBranchPreview } from './branch-preview.js';
 import { reuseCampScene } from './camp-presentation.js';
 import { BURST, canBurst, burstCooldown } from './burst.js';
+import { landingComboHint } from './landing-combo.js';
 import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice, evolutionGuidance, goalGuidanceMarkup, specializationPreview } from './field-guide.js';
 import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
@@ -53,7 +54,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest',
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo',
   'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
   'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third',
   'continuation-sword','continuation-ember','continuation-orbit',
@@ -636,6 +637,7 @@ function syncPhase() {
     const previous = earnedReceipt?.game === game && earnedReceipt.pendingChoice ? earnedReceipt.receipt : null;
     panel(`<div class="upgrade-top"><div class="decision-companion" aria-hidden="true">${portrait(game.characterId, true)}</div><div><p class="eyebrow">${getCharacter(game.characterId).name} · 성장의 갈림길</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">하나의 힘을 골라 전투를 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${growthContext(game)}${previous ? `<div class="previous-choice" role="status" data-kind="${previous.kind}"><span class="receipt-art" aria-hidden="true">${collectionArt(previous.art)}</span><span><small>방금 선택</small><strong>${previous.name}</strong><span>${previous.detail}</span></span><span class="receipt-check" aria-hidden="true">✓</span></div>` : ''}${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<p class="choice-instruction"><span>${game.choices.length}개의 선택 · 전투 일시정지</span><span class="choice-shortcuts">키보드 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></p><div class="upgrade-grid">${game.choices.map((key, i) => {
       const weapon = weaponPresentation(game, key), choice = growthChoice(game, key), path = specializationPreview(game,key);
+      const comboHint=game.ranks[key]===0?landingComboHint(game,key):'';
       const recipe = path ? `${path.requirement}<br>${path.names}` : upgradeRecipeHint(game,key);
       const m = ['sword', 'ember', 'orbit'].includes(key) ? {
         ...UPGRADE_META[key],
@@ -643,7 +645,7 @@ function syncPhase() {
         color: weapon.color,
         description: weapon.description
       } : UPGRADE_META[key];
-      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-choice-kind="${choice.kind}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? `<span class="experiment-badge">${goalChoiceLabel(game,key) || '이번 판의 목표'}</span>` : ''}<span class="choice-heading"><b>${choice.label}</b><small>${choice.step}</small></span><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change"><small>선택하면</small>${upgradeChange(game, key)}</span>${recipe ? `<span class="recipe-link">${recipe}</span>` : ''}<span class="pick-label">${choice.action} <kbd>${i + 1}</kbd></span></button>`;
+      return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-choice-kind="${choice.kind}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? `<span class="experiment-badge">${goalChoiceLabel(game,key) || '이번 판의 목표'}</span>` : ''}<span class="choice-heading"><b>${choice.label}</b><small>${choice.step}</small></span><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change"><small>선택하면</small>${upgradeChange(game, key)}${comboHint ? `<br><span data-combo-hint>${comboHint}</span>` : ''}</span>${recipe ? `<span class="recipe-link">${recipe}</span>` : ''}<span class="pick-label">${choice.action} <kbd>${i + 1}</kbd></span></button>`;
     }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button>${previewBranches?.length ? `<button class="secondary" data-preview-branches>${choosingBranch ? '전투법 비교' : `${UPGRADE_META[upcomingBranch.weapon].name} 전투법 보기`}</button>` : ''}<p role="status">${rerollFeedback ? '후보가 바뀌었습니다. ' : ''}${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '진화 후보는 유지됩니다.'}</p></div>`);
     $('panel').querySelector('[data-preview-branches]')?.addEventListener('click',event=>{
       if(branchDialog?.open) return;
@@ -1045,6 +1047,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
         ...game.player
       },
       burst: {...game.burst,hitIds:[...game.burst.hitIds]},
+      landingCombo:structuredClone(game.landingCombo),
       bladeChain: game.swing ? {age:game.swing.age, hitIds:[...(game.swing.hitIds ?? [])], followups:structuredClone(game.swing.followups ?? [])} : null,
       bladeTargets: game.enemies.filter(enemy=>enemy.chainTarget!==undefined).map(enemy=>({id:enemy.id,hp:enemy.hp,x:enemy.x,y:enemy.y})),
       orbitShape:{...game.orbitShape},
@@ -1429,6 +1432,14 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
           const frames={first:17,second:24,third:32}[name.split('-').at(-1)];
           for(let frame=0;frame<frames;frame++)updateGame(game,1/60);
           game.phase='paused';
+        }
+      } else if (name === 'landing-combo') {
+        Object.assign(game.ranks,{sword:3,ember:3,orbit:3,horizon:1});
+        game.swordClock=game.emberClock=game.pulseClock=game.nextElite=game.nextRecovery=999;
+        game.xpNeed=99999;
+        for(const [x,y] of [[230,0],[260,65],[290,-70],[120,105],[70,-105]]) {
+          const enemy=spawnEnemy(game,0,false,{x,y});
+          Object.assign(enemy,{speed:0,damage:0,hp:50000,maxHp:50000});
         }
       } else if (name === 'burst-harvest') {
         game.swordClock=999;game.nextElite=999;game.nextRecovery=999;

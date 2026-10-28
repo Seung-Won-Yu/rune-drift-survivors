@@ -1,6 +1,7 @@
 import { EVOLUTIONS, UPGRADE_META, canEvolve } from './game.js';
 import { SPECIALIZATIONS, specializationFor } from './expansion.js';
 import { emberHops } from './ember-chain.js';
+import { landingComboHint } from './landing-combo.js';
 
 export const WEAPON_FAMILIES = ['sword', 'ember', 'orbit'];
 
@@ -22,7 +23,8 @@ export function weaponPresentation(game, family) {
       ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.'
       : meta.description) + (family==='ember' && rank>=3
         ? ` 보조 불씨는 새 적 ${emberHops(rank)}명까지 도약합니다. 도약마다 피해는 절반이며 폭발은 반복하지 않습니다.`
-        : family==='orbit' && rank>=3 ? ` 이동 중 앞뒤 궤도는 ${rank>=5?'55':'30'}% 길어지고 옆은 ${rank>=5?'40':'25'}% 좁아집니다. 멈추면 원형으로 돌아옵니다.` : ''),
+        : family==='orbit' && rank>=3 ? ` 이동 중 앞뒤 궤도는 ${rank>=5?'55':'30'}% 길어지고 옆은 ${rank>=5?'40':'25'}% 좁아집니다. 멈추면 원형으로 돌아옵니다.` : '')
+        + (rank && landingComboHint(game,family) ? ` ${landingComboHint(game,family)}.` : ''),
     stage: evolution ? 'evolved' : branch ? 'specialized' : 'basic',
     stageLabel: evolution ? '진화' : ready ? '진화 가능' : branch ? '전문화' : '',
     branchName: branch ? SPECIALIZATIONS[branch].name : '',

@@ -3,6 +3,7 @@ import { BLADE_END, bladeFollowups, bladeGrowth } from './blade-chain.js';
 import { emberHops, emberGrowth, continueEmber } from './ember-chain.js';
 import { ORBIT_IDENTITY, advanceOrbitShape, orbitOffset, orbitGrowth } from './orbit-shape.js';
 import { BURST, createBurst, startBurst, advanceBurst, burstDistance } from './burst.js';
+import { createLandingCombo, queueLandingCombo, advanceLandingCombo, sweptOrbitHeads } from './landing-combo.js';
 import { createSignature, advanceSignature, chargeBlade, chargeRune, consumeSignature, absorbDamage } from './signature.js';
 import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact, recordBossDamage } from './impact.js';
 import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy } from './enemies.js';
@@ -285,6 +286,7 @@ export function createGame(seed = 1, characterId = 'ash', keepsake = 'none', exp
     emberClock: 0.8,
     pulseClock: 1.2,
     orbitShape: {...ORBIT_IDENTITY},
+    landingCombo: createLandingCombo(),
     spawnClock: 0.4,
     championBreatherUntil: 0,
     championsDefeated: [],
@@ -686,33 +688,55 @@ export function orbitPositions(game) {
   return Array.from({
     length: s.orbitCount
   }, (_, i) => {
-    const a = game.time * 2.8 + i * Math.PI * 2 / s.orbitCount;
+    const a = game.time * 2.8 + game.landingCombo.orbitAngle + i * Math.PI * 2 / s.orbitCount;
     const shape=game.ranks.orbit>=3?game.orbitShape??ORBIT_IDENTITY:ORBIT_IDENTITY;
     const offset=orbitOffset(a,s.orbitRadius,shape);
     return {
       x: game.player.x + offset.x,
       y: game.player.y + offset.y,
-      angle:a,radius:s.orbitRadius,shape
+      angle:a,radius:s.orbitRadius,shape,rushing:game.landingCombo.orbitRemaining>0 || game.landingCombo.orbitStep>0
     };
   });
 }
-function updateWeapons(game, dt, s) {
+function bladeSwing(game, angle, landing = false) {
+  return {age:0,angle,hit:false,hitIds:[],chargedHits:0,followups:bladeFollowups(game.ranks.sword),
+    empowered:!landing && game.characterId === 'ash' && game.signature.charge >= 1-1e-9};
+}
+function emberShot(game, s, angle, index, targetId, empowered) {
+  return {
+    ...(index>0 && emberHops(game.ranks.ember) ? {hopsLeft:emberHops(game.ranks.ember),hitIds:[]} : {}),
+    empowered,x:game.player.x,y:game.player.y,vx:Math.cos(angle)*290,vy:Math.sin(angle)*290,targetId,life:2,
+    damage:s.emberDamage*(empowered?1.45:1),
+    blast:!game.ranks.wildfire && (empowered || !!game.ranks.comet || !!game.ranks.detonation),
+    blastRadius:(game.ranks.detonation?(game.ranks.comet?90:72):56)+(empowered?18:0)
+  };
+}
+function landingAttack(game, s) {
+  const angle = queueLandingCombo(game);
+  if (angle === null || game.shots.length >= LIMITS.shots) return;
+  for (let i=0;i<s.emberCount && game.shots.length<LIMITS.shots;i++) {
+    const aim=angle+(i-(s.emberCount-1)/2)*.26;
+    game.shots.push(emberShot(game,s,aim,i,null,false));
+  }
+  game.events.push('ember-shot');
+  game.player.cast=.4;
+  game.player.castFacing=Math.cos(angle)>=0?1:-1;
+  buildFeedback(game,'ember-launch',{x:game.player.x,y:game.player.y,angle,character:game.characterId,
+    facing:Math.cos(angle)>=0?1:-1,empowered:false,evolved:!!game.ranks.comet,life:.12});
+}
+function updateWeapons(game, dt, s, beforeOrbit) {
   const p = game.player;
   game.swordClock -= dt;
+  if (game.landingCombo.sword && !game.swing) {
+    game.swing=bladeSwing(game,game.landingCombo.sword.angle,true);
+    game.landingCombo.sword=null;
+  }
   if (game.ranks.sword && !game.swing && game.swordClock <= 0) {
     const target = nearestEnemy(game, s.swordRange + 25);
     if (target) {
       const angle = Math.atan2(target.y - p.y, target.x - p.x);
       p.facing = Math.cos(angle) >= 0 ? 1 : -1;
-      game.swing = {
-        age: 0,
-        angle,
-        hit: false,
-        hitIds: [],
-        chargedHits: 0,
-        followups: bladeFollowups(game.ranks.sword),
-        empowered: game.characterId === 'ash' && game.signature.charge >= 1 - 1e-9
-      };
+      game.swing = bladeSwing(game,angle);
       game.swordClock = s.swordCooldown;
     }
   }
@@ -831,19 +855,7 @@ function updateWeapons(game, dt, s) {
             x: p.x, y: p.y, angle: a, character: game.characterId, facing: p.castFacing,
             empowered, evolved: !!game.ranks.comet, life: .12
           });
-          game.shots.push({
-            ...(i>0 && emberHops(game.ranks.ember) ? {hopsLeft:emberHops(game.ranks.ember),hitIds:[]} : {}),
-            empowered,
-            x: p.x,
-            y: p.y,
-            vx: Math.cos(a) * 290,
-            vy: Math.sin(a) * 290,
-            targetId: target.id,
-            life: 2,
-            damage: s.emberDamage * (empowered ? 1.45 : 1),
-            blast: !game.ranks.wildfire && (empowered || !!game.ranks.comet || !!game.ranks.detonation),
-            blastRadius: (game.ranks.detonation ? (game.ranks.comet ? 90 : 72) : 56) + (empowered ? 18 : 0)
-          });
+          game.shots.push(emberShot(game,s,a,i,target.id,empowered));
         }
       }
     }
@@ -921,7 +933,9 @@ function updateWeapons(game, dt, s) {
       }
     }
   }
-  for (const orb of orbitPositions(game)) {
+  const heads=orbitPositions(game);
+  const arc=game.landingCombo.orbitStep>0?dt*2.8+game.landingCombo.orbitStep:0;
+  for (const orb of sweptOrbitHeads(heads,beforeOrbit,p,arc)) {
     for (const enemy of game.enemies) {
       if (enemy.hp > 0 && game.time - enemy.orbAt > .4 && Math.hypot(orb.x - enemy.x, orb.y - enemy.y) < enemy.radius + 12) {
         const dx = enemy.x - p.x,
@@ -1059,6 +1073,9 @@ export function updateGame(game, dt, input = {
     game.impactStop -= stopped; dt -= stopped;
     if (dt < 1e-9) return;
   }
+  const beforeOrbit=game.landingCombo.orbitRemaining>0 ? {
+    x:game.player.x,y:game.player.y,heads:orbitPositions(game).map(head=>({...head,shape:{...head.shape}}))
+  } : null;
   game.time = Math.min(RUN_SECONDS, game.time + dt);
   if (game.eliteFinish && game.time - game.eliteFinish.at >= game.eliteFinish.life) game.eliteFinish = null;
   const danger = curseActive(game) ? 1.25 : 1;
@@ -1076,6 +1093,7 @@ export function updateGame(game, dt, input = {
   p.moveX = moveX;
   p.moveY = moveY;
   advanceOrbitShape(game,dt,ix,iy,!!burstStep);
+  advanceLandingCombo(game,dt);
   advanceSignature(game, burstStep ? 0 : Math.hypot(ix, iy) * s.speed * dt);
   // Animation follows travelled distance, including partial touch-stick input.
   if (p.moving) p.walk += (burstStep?.distance ?? Math.hypot(ix, iy) * s.speed * dt) / 168;
@@ -1174,8 +1192,9 @@ export function updateGame(game, dt, input = {
   if (burstStep && !game.burst.active && !game.bossDefeated && game.time < RUN_SECONDS) {
     for (const gem of game.gems)
       if (Math.hypot(gem.x-p.x,gem.y-p.y) <= BURST.recallRadius) gem.recalled=true;
+    landingAttack(game,s);
   }
-  updateWeapons(game, dt, s);
+  updateWeapons(game, dt, s, beforeOrbit);
   const burstKills = game.kills - killsBefore;
   if ((burstKills >= 5 || game.eliteKills > elitesBefore) && game.time - (game.combatImpact?.at ?? -10) >= .6) {
     game.combatImpact = {at:game.time,strength:Math.min(1,burstKills/8+.25)};

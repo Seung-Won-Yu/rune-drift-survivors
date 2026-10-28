@@ -6,6 +6,64 @@ test.afterEach(async({page})=>{expect(pageErrors.get(page)??[], 'browser runtime
 const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
+for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]){
+ test(`landing combinations join real secondary weapons and freeze with the field at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);if(viewport.width===740)await page.emulateMedia({reducedMotion:'reduce'});
+  await scenario(page,'landing-combo');const before=await snapshot(page);
+  await page.keyboard.press('Space');
+  await expect.poll(async()=>(await snapshot(page)).landingCombo.orbitAngle,{intervals:[20]}).toBeGreaterThan(0);
+  await page.keyboard.press('Escape');const frozen=await snapshot(page);
+  expect(frozen.burst.uses).toBe(1);expect(frozen.burst.active).toBe(false);
+  expect(frozen.orbitHeads.length).toBe(before.orbitHeads.length);expect(frozen.landingCombo.orbitRemaining).toBeGreaterThan(0);
+  expect(frozen.ranks).toEqual(before.ranks);expect(frozen.profile).toEqual(before.profile);
+  await page.waitForTimeout(120);const still=await snapshot(page);
+  expect(still.landingCombo).toEqual(frozen.landingCombo);expect(still.orbitHeads).toEqual(frozen.orbitHeads);
+  await page.keyboard.press('Escape');
+  await expect.poll(async()=>{const s=await snapshot(page);return s.damageDealt.ember>0&&s.damageDealt.orbit>0;}).toBe(true);
+  await page.keyboard.press('Escape');
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+ });
+}
+for(const width of [320,740]){
+ test(`a new secondary card explains its landing action without clipping at ${width}`,async({page})=>{
+  await page.setViewportSize({width,height:width===740?360:568});await scenario(page,'upgrade');
+  const card=page.locator('[data-upgrade="ember"]');await expect(card.locator('[data-combo-hint]')).toContainText('돌파 착지 방향으로 불씨 발사');
+  await card.scrollIntoViewIfNeeded();await expect(card).toBeInViewport({ratio:.5});
+  expect(await card.locator('.upgrade-change').evaluate(e=>e.scrollHeight<=e.clientHeight)).toBe(true);
+  await page.screenshot({path:`output/playwright/survivor/landing-combo-card-${width}.png`});
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+ });
+}
+test.describe('touch landing combinations',()=>{
+ test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
+ test('the existing thumb breakthrough launches its acquired secondary weapons',async({page})=>{
+  await scenario(page,'landing-combo');await page.locator('#burst').tap();
+  await expect.poll(async()=>(await snapshot(page)).damageDealt.ember).toBeGreaterThan(0);
+  const s=await snapshot(page);expect(s.burst.uses).toBe(1);expect(s.damageDealt.orbit).toBeGreaterThan(0);
+ });
+});
+
+test('maximum rendered load keeps its budgets while landing combinations turn real rune heads',async({page},testInfo)=>{
+ await scenario(page,'stress-expansion');
+ const measurement=page.evaluate(()=>new Promise(resolve=>{
+  const frames=[];let start=0,last=0;
+  const sample=now=>{if(!start)start=now;if(last)frames.push(now-last);last=now;
+   if(now-start<12000){requestAnimationFrame(sample);return;}
+   frames.sort((a,b)=>a-b);resolve({frames:frames.length,p95:frames[Math.floor(frames.length*.95)]});};
+  requestAnimationFrame(sample);
+ }));
+ await page.keyboard.press('Space');
+ await expect.poll(async()=>(await snapshot(page)).landingCombo.orbitAngle,{intervals:[20]}).toBeGreaterThan(0);
+ await page.waitForTimeout(4300);await page.keyboard.press('Space');
+ await page.waitForTimeout(4300);await page.keyboard.press('Space');
+ const timing=await measurement,s=await snapshot(page);
+ console.log('landing combination stress',JSON.stringify({timing,burstUses:s.burst.uses}));
+ await testInfo.attach('landing-combo-timing.json',{body:JSON.stringify({timing,burstUses:s.burst.uses}),contentType:'application/json'});
+ expect(s.burst.uses).toBeGreaterThanOrEqual(2);expect(s.enemies).toBe(160);expect(s.shots).toBeLessThanOrEqual(80);
+ expect(s.gems).toBeLessThanOrEqual(240);expect(s.remnants).toBeLessThanOrEqual(32);expect(s.phase).toBe('playing');
+ expect(timing.p95).toBeLessThanOrEqual(50+1e-6);
+});
+
 for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
  test(`landing harvest connects a real breakthrough to earned growth at ${viewport.width}`,async({page})=>{
   await page.setViewportSize(viewport);

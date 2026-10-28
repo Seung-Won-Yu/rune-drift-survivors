@@ -170,6 +170,16 @@ export function drawOrbitWake(ctx, orb, player, reduced = false, evolved = false
   const angle = orb.angle??Math.atan2(dy, dx), span = Math.min(.36, (evolved ? 45 : 34) / radius);
   const at=angle=>orbitOffset(angle,orb.radius??radius,orb.shape);
   ctx.save(); ctx.translate(player.x, player.y - 12);
+  if (orb.rushing) {
+    // A tapered tail joins the actual head; it never outlines a field ring.
+    for (let i=0;i<6;i++) {
+      const from=angle-.7+i*.11,to=from+.115;
+      const start=at(from),middle=at((from+to)/2),end=at(to);
+      ctx.strokeStyle=horizon?'#c3e8ff':'#b9ffe0';ctx.globalAlpha=(i+1)/8;ctx.lineWidth=1+i*.8;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(start.x,start.y);ctx.quadraticCurveTo(middle.x,middle.y,end.x,end.y);ctx.stroke();
+    }
+    ctx.restore();return;
+  }
   ctx.strokeStyle = horizon ? '#b8daff80' : '#a9eed780'; ctx.lineCap = 'round';
   for (let i = 0; i < 2; i++) {
     const from = angle - span * (1 + i * .9), to = from + span * .68;
