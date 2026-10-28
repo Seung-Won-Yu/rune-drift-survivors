@@ -75,3 +75,13 @@ All four focused browser cases pass. The production build and production
 smoke check also pass for both entry points with no asset or page errors.
 Independent review found no remaining P1/P2 issue. Ordinary play and public
 release outcomes remain separate from the comparative simulation.
+
+An ordinary Ember run with pickup92, Wildfire/Comet, Horizon/Lunar and Sail/Coal
+reached a4:28 victory at level19 with1087 kills and100/145 HP. It used normal
+offers and controls with observation pauses. A real burst was followed by the
+level6 choice, and a further level19 choice opened during the boss fight.
+Mid-run growth gaps still reached about23–26 seconds. The cumulative damage
+share was91% Ember,8% Orbit and1% Sword, including time before acquiring the
+secondary weapons. The route and choices differ from the previous ordinary
+run, so this is progression evidence, not a causal improvement or enjoyment
+claim. No browser errors or outer overflow were observed.
