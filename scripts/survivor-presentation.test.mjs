@@ -48,6 +48,16 @@ const drawingCalls = draw => {
   draw(ctx); return calls;
 };
 
+test('blade continuations alternate an asymmetric real cut and retain it with reduced motion',()=>{
+  for(const reduced of [false,true]) {
+    const paths=direction=>drawingCalls(ctx=>drawSlash(ctx,{kind:'slash',x:0,y:0,angle:.3,range:124,precise:true,direction,age:.03,life:.16},reduced))
+      .filter(call=>['moveTo','lineTo','quadraticCurveTo'].includes(call[0]));
+    const positive=paths(1),negative=paths(-1);
+    assert.notDeepEqual(positive,negative);
+    assert.deepEqual(positive,negative.map(([method,...coordinates])=>[method,...coordinates.map((value,i)=>i%2?-value:value)]));
+  }
+});
+
 test('footfall dust trails travel rather than the direction the companion faces', () => {
   for (const input of [{x:0,y:1},{x:0,y:-1},{x:-1,y:0},{x:.3,y:.4}]) {
     const game=createGame(42);game.phase='playing';game.spawnClock=999;

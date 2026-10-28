@@ -1,5 +1,6 @@
 import { reduceMotion } from './preferences.js';
 import { drawBurst } from './burst-art.js';
+import { bladeMotion } from './blade-chain.js';
 import { SIGNATURES } from './signature.js';
 import { impactPose, attackPose, companionActionPose, hurtFeedback, companionFacing, combatKick } from './impact.js';
 import { GIANT, huntRule } from './enemies.js';
@@ -229,7 +230,7 @@ export function createRenderer(canvas, art, preferences = {motion: 'system', dam
     }
     if (game.swing) {
       row = 1;
-      const age = game.swing.age;
+      const {age} = bladeMotion(game.swing);
       frame = age < .18 ? 0 : age < .26 ? 1 : age < .4 ? 2 : 3;
     }
     let pose = row === 0 ? heroGait(game, reduced.matches) : attackPose(game, reduced.matches);

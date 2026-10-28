@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGame, startGame, updateGame, spawnEnemy, spawnBoss, spawnChampion, draftUpgrades, chooseUpgrade, LIMITS} from '../src/survivor/game.js';
+import {createGame, startGame, updateGame, spawnEnemy, spawnBoss, spawnChampion, draftUpgrades, chooseUpgrade, stats, LIMITS} from '../src/survivor/game.js';
 import {advanceSignature, chargeBlade, chargeRune, signatureState} from '../src/survivor/signature.js';
 import {CHAMPIONS, CHAMPION_HUNT, CHAMPION_SPORE, updateChampionBloom, championStatus} from '../src/survivor/champions.js';
 import {updateHound, updateSpores, huntRule, sporeRule, SPORE} from '../src/survivor/enemies.js';
@@ -8,6 +8,9 @@ import {combatPacing} from '../src/survivor/pacing.js';
 import {SPECIALIZATIONS} from '../src/survivor/expansion.js';
 import {createProfile, normalizeProfile, recordRun} from '../src/survivor/profile.js';
 import {runPreparation, validInheritance, primaryBranches} from '../src/survivor/progression.js';
+import {bladeMotion} from '../src/survivor/blade-chain.js';
+import {ashFrame} from '../src/survivor/actor-animation.js';
+import {attackPose} from '../src/survivor/impact.js';
 
 function arena(id = 'ash') {
   const g = createGame(42, id); startGame(g); g.spawnClock = 1e6; g.nextElite = 1e6;
@@ -15,6 +18,90 @@ function arena(id = 'ash') {
 }
 const step = (g, n = 1, input = {x:0,y:0}) => { for(let i=0;i<n;i++) updateGame(g, 1/60, input); };
 function target(g, x=50, y=0) { const e=spawnEnemy(g,0,false,{x,y}); Object.assign(e,{hp:1e5,maxHp:1e5,speed:0,damage:0});return e; }
+
+function chainArena(rank, branch='duelist') {
+  const g=arena();g.enemies=[];g.ranks.sword=rank;if(branch)g.ranks[branch]=1;
+  g.swordClock=0;g.xpNeed=1e6;g.player.invincible=999;
+  return g;
+}
+
+test('blade milestones preserve the opening hit and follow only one fresh target per later beat',()=>{
+  for(const [rank,contacts] of [[1,1],[2,1],[3,2],[4,2],[5,3],[6,3]]) {
+    const g=chainArena(rank), enemies=[target(g,60),target(g,60,75),target(g,60,-75),target(g,30,100)];
+    const damage=stats(g).swordDamage;step(g,12);
+    assert.equal(enemies[0].hp,1e5-damage,'the first hit keeps its full damage');
+    assert.equal(enemies.filter(e=>e.hp<1e5).length,1);
+    step(g,21);
+    assert.equal(enemies.filter(e=>e.hp<1e5).length,contacts);
+    for(const e of enemies)assert.ok(Math.abs(e.hp-(e.hp<1e5?1e5-damage:1e5))<1e-8,'each target is struck once');
+    assert.equal(g.events.filter(e=>e==='swing').length,contacts);
+    assert.ok(Math.abs(g.signature.charge-contacts/6)<1e-8);
+  }
+});
+
+test('blade followups preserve one-target boss damage and emit no empty extra attacks',()=>{
+  for(const rank of [3,5,6]) {
+    const g=chainArena(rank), boss=spawnBoss(g);Object.assign(boss,{x:60,y:0,entrance:0,attackClock:999});
+    const hp=boss.hp,damage=stats(g).swordDamage;step(g,33);
+    assert.ok(Math.abs(hp-boss.hp-damage)<1e-8);
+    assert.equal(g.events.filter(e=>e==='swing').length,1);
+    assert.equal(g.signature.charge,1/6);
+  }
+});
+
+test('wide cleaves keep their crowd coverage and each combo earns at most three unique contacts',()=>{
+  const g=chainArena(5,'sweep'), enemies=Array.from({length:8},(_,i)=>target(g,60,i-4));
+  const damage=stats(g).swordDamage;step(g,33);
+  for(const e of enemies)assert.ok(Math.abs(e.hp-(1e5-damage))<1e-8);
+  assert.equal(g.signature.charge,.5);assert.equal(g.events.filter(e=>e==='swing').length,1);
+});
+
+test('blade continuation locks a real target that can enter or leave between strikes',()=>{
+  const enters=chainArena(3);target(enters,60);const fresh=target(enters,400,75);step(enters,12);
+  fresh.x=65;step(enters,12);assert.ok(fresh.hp<1e5);
+  const leaves=chainArena(3);target(leaves,60);const escaped=target(leaves,60,75);step(leaves,16);
+  assert.equal(leaves.swing.followups[0].targetId,escaped.id);
+  escaped.y=300;step(leaves,8);assert.equal(escaped.hp,1e5);assert.equal(leaves.signature.charge,1/6);
+  const behind=chainArena(5);target(behind,60);const rear=target(behind,-60,60);step(behind,33);assert.equal(rear.hp,1e5);
+});
+
+test('empowered blade chains consume once, never recharge and emit the Dawn fan only once',()=>{
+  const g=chainArena(5);g.ranks.dawn=1;g.signature.charge=1;
+  for(const [x,y] of [[60,0],[60,75],[60,-75]])target(g,x,y);
+  step(g,33);
+  assert.equal(g.signature.activations,1);assert.equal(g.signature.charge,0);
+  assert.equal(g.events.filter(e=>e==='signature-ash').length,1);
+  assert.equal(g.shots.filter(shot=>shot.kind==='crescent').length,5);
+  const miss=chainArena(3);miss.signature.charge=1;const first=target(miss,60);target(miss,60,75);
+  step(miss,6);first.x=500;step(miss,20);
+  assert.equal(miss.signature.activations,0);assert.equal(miss.signature.charge,1,'a missed charged opening remains available');
+});
+
+test('pending blade followups freeze across menus, survive ordinary growth and reset with a new run',()=>{
+  const g=chainArena(3);target(g,60);const fresh=target(g,60,75);step(g,13);
+  for(const phase of ['paused','upgrade','relic','preview','event','ended']) {
+    g.phase=phase;const before=JSON.stringify(g.swing),time=g.time;step(g,60);
+    assert.equal(JSON.stringify(g.swing),before);assert.equal(g.time,time);assert.equal(fresh.hp,1e5);
+  }
+  g.phase='upgrade';g.choices=['fleet'];assert.ok(chooseUpgrade(g,'fleet'));step(g,20);
+  assert.ok(fresh.hp<1e5);assert.equal(g.events.filter(e=>e==='swing').length,2);
+  assert.equal(createGame(43).swing,null);
+});
+
+test('blade regrips stay continuous and contact poses follow actual later-hit thresholds',()=>{
+  for(const rank of [3,5]) {
+    const g=chainArena(rank);target(g,60);target(g,60,75);target(g,60,-75);step(g,16);
+    const swing=g.swing,beat=swing.followups[0];assert.notEqual(beat.targetId,null);
+    swing.age=beat.at-.00001;assert.ok(ashFrame(g)<11);
+    swing.age=beat.at;assert.equal(ashFrame(g),11);assert.equal(bladeMotion(swing).age,.18);
+    swing.age=beat.prepareAt-.000001;const before=attackPose(g);
+    swing.age=beat.prepareAt+.000001;const after=attackPose(g);
+    assert.ok(Math.abs(before.x-after.x)<.01);assert.ok(Math.abs(before.y-after.y)<.01);
+    swing.age=.55;assert.ok(Math.abs(attackPose(g).x)<1e-8);
+    const snapshot=JSON.stringify(g);bladeMotion(swing);ashFrame(g);attackPose(g);
+    assert.equal(JSON.stringify(g),snapshot);assert.deepEqual(attackPose(g,true),{});
+  }
+});
 
 test('ash charges from real direct blade contacts, caps each swing, spends once and never recharges from empowered hits', () => {
   const g=arena();for(let i=0;i<8;i++)target(g,60,i-4);

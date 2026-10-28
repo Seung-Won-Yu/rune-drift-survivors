@@ -70,7 +70,18 @@ export function drawSlash(ctx, effect, reduced = false) {
   const reach = Math.min(270, effect.range * .94);
   ctx.save(); ctx.translate(effect.x, effect.y - 28); ctx.rotate(effect.angle);
   ctx.fillStyle = effect.empowered || effect.evolved ? '#fff0c5' : '#edc17d';
-  if (effect.branch === 'duelist') {
+  if (effect.precise) {
+    const side = effect.direction ?? 1;
+    const tip = reach * (reduced ? 1 : .86 + Math.min(1, progress * 3) * .14);
+    ctx.beginPath(); ctx.moveTo(18, -side * 10);
+    ctx.quadraticCurveTo(tip * .52, -side * 17, tip, side * 8);
+    ctx.lineTo(tip - 12, -side * 2);
+    ctx.quadraticCurveTo(tip * .48, -side * 9, 18, -side * 10);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#fff9e0'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(tip * .5, -side * 10);
+    ctx.quadraticCurveTo(tip * .76, -side * 6, tip - 3, side * 6); ctx.stroke();
+  } else if (effect.branch === 'duelist') {
     const tip = reach * (reduced ? 1 : .78 + Math.min(1, progress * 3) * .22);
     ctx.beginPath(); ctx.moveTo(16, 0); ctx.lineTo(tip - 12, -5); ctx.lineTo(tip, 0); ctx.lineTo(tip - 12, 5); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#fff9e0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(24, 0); ctx.lineTo(tip - 4, 0); ctx.stroke();

@@ -2581,3 +2581,31 @@ test.describe('explicit touch breakthrough',()=>{
   expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
  });
 });
+
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:740,height:360}]) {
+ for(const [stage,rank,count] of [['three',3,1],['five',5,2]]) {
+  test(`blade growth ${rank} discloses fresh-target continuation and stays selectable at ${viewport.width}`,async({page})=>{
+   await page.setViewportSize(viewport);await scenario(page,`chain-growth-${stage}`);
+   const card=page.locator('[data-upgrade="sword"]'),text=`새 적 ${count}명까지 이어 베기`;
+   await expect(card.locator('.upgrade-change')).toContainText(text);
+   await card.scrollIntoViewIfNeeded();await expect(card).toBeInViewport({ratio:.5});
+   expect(await card.locator('.upgrade-change').evaluate(el=>el.scrollHeight===el.clientHeight)).toBe(true);
+   expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+   await page.screenshot({path:`output/playwright/survivor/blade-growth-${rank}-${viewport.width}.png`});
+   await card.press('Enter');expect((await snapshot(page)).ranks.sword).toBe(rank);
+   expect((await snapshot(page)).phase).toBe('playing');await expect(page.locator('#reward-notice')).toContainText(text);
+   await page.keyboard.press('Escape');const paused=await snapshot(page);await page.waitForTimeout(80);expect((await snapshot(page)).time).toBe(paused.time);
+  });
+ }
+}
+
+test('authored blade contact scenes show actual fresh-target damage and pause-safe continuation state',async({page})=>{
+ for(const [stage,count] of [['first',1],['second',2],['third',3]]) {
+  await scenario(page,`chain-five-contact-${stage}`);const contact=await snapshot(page);
+  expect(contact.phase).toBe('paused');expect(contact.bladeTargets.filter(e=>e.hp<50000)).toHaveLength(count);
+  const damage=contact.bladeTargets.filter(e=>e.hp<50000).map(e=>50000-e.hp);
+  expect(new Set(damage).size).toBe(1);
+  expect(contact.signature.charge).toBeCloseTo(count/6,8);
+  await page.waitForTimeout(80);expect((await snapshot(page)).bladeChain).toEqual(contact.bladeChain);
+ }
+});

@@ -1,6 +1,6 @@
 // Each companion earns a different automatic payoff through play, never menu time.
 export const SIGNATURES = {
-  ash: { name: '잿빛 결의', action: '검을 맞혀 결의를 쌓으세요', description: '검 적중 6회마다 피해 ×1.6 · 범위 +25의 검격과 세 갈래 관통 검기. 진화 후 다섯 갈래 검기가 왕복하며 다시 벱니다. 한 검격은 최대 3회 충전합니다.', ready: '세 갈래 검기 준비', color: '#f2ca80' },
+  ash: { name: '잿빛 결의', action: '검을 맞혀 결의를 쌓으세요', description: '검 적중 6회마다 피해 ×1.6 · 범위 +25의 검격과 세 갈래 관통 검기. 진화 후 다섯 갈래 검기가 왕복하며 다시 벱니다. 한 번의 공격은 최대 3회 충전합니다.', ready: '세 갈래 검기 준비', color: '#f2ca80' },
   ember: { name: '잔불 걸음', action: '이동해서 강화 불씨를 준비하세요', description: '이동으로 힘을 모아 다음 첫 불씨의 피해 ×1.45 · 폭발 확대 · 적중 후 세 갈래 불꽃 파편. 번지는 불꽃은 주변에도 연소를 붙입니다.', ready: '분열 불씨 준비', color: '#ffac80' },
   grove: { name: '숲의 수호', action: '회전 룬을 맞혀 수호를 쌓으세요', description: '회전 룬 적중 6회마다 보호막 20을 4초간 얻고, 여덟 방향으로 관통 룬을 방출합니다. 발동 뒤 5초간 다시 준비합니다.', ready: '수호 준비', color: '#a1e4ce' }
 };

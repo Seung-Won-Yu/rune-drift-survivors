@@ -1,4 +1,5 @@
 import { CHAMPIONS, updateChampionBloom } from './champions.js';
+import { BLADE_END, bladeFollowups, bladeGrowth } from './blade-chain.js';
 import { BURST, createBurst, startBurst, advanceBurst, burstDistance } from './burst.js';
 import { createSignature, advanceSignature, chargeBlade, chargeRune, consumeSignature, absorbDamage } from './signature.js';
 import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact, recordBossDamage } from './impact.js';
@@ -328,7 +329,8 @@ export function upgradeChange(game, key) {
       if (rank === 0) return '새 무기 · 자동 검격';
       const next = stats({...game, ranks: {...game.ranks, sword: rank + 1}});
       const seconds = value => (Math.round((value + Number.EPSILON) * 100) / 100).toFixed(2);
-      return `피해 ${Math.round(s.swordDamage)} → ${Math.round(next.swordDamage)} · 범위 +14 · 공격 간격 ${seconds(s.swordCooldown)} → ${seconds(next.swordCooldown)}초`;
+      const growth = bladeGrowth(rank + 1);
+      return `피해 ${Math.round(s.swordDamage)} → ${Math.round(next.swordDamage)} · 범위 +14 · 공격 간격 ${seconds(s.swordCooldown)} → ${seconds(next.swordCooldown)}초${growth ? ` · ${growth}` : ''}`;
     }
     case 'ember':
       return rank === 0 ? '새 무기 · 추적 불씨 1발' : `피해 ${Math.round(s.emberDamage)} → ${Math.round(s.emberDamage + 7 * (game.ranks.wildfire ? .7 : game.ranks.detonation ? 1.15 : 1))}${(rank + 1) % 2 === 0 ? ' · 투사체 +1' : ''}`;
@@ -691,6 +693,9 @@ function updateWeapons(game, dt, s) {
         age: 0,
         angle,
         hit: false,
+        hitIds: [],
+        chargedHits: 0,
+        followups: bladeFollowups(game.ranks.sword),
         empowered: game.characterId === 'ash' && game.signature.charge >= 1 - 1e-9
       };
       game.swordClock = s.swordCooldown;
@@ -724,11 +729,17 @@ function updateWeapons(game, dt, s) {
         const angle = Math.atan2(dy, dx) - swing.angle;
         if (d <= range + enemy.radius && Math.cos(angle) > Math.cos(s.swordHalfAngle)) {
           const push = swing.empowered ? 2 : 1;
-          if (hitEnemy(game, enemy, damage, 'sword', dx / (d || 1) * push, dy / (d || 1) * push) > 0) hits++;
+          if (hitEnemy(game, enemy, damage, 'sword', dx / (d || 1) * push, dy / (d || 1) * push) > 0) {
+            hits++;
+            swing.hitIds.push(enemy.id);
+          }
         }
       }
       if (swing.empowered && hits > 0) consumeSignature(game, 'ash');
-      else if (!swing.empowered) chargeBlade(game, hits);
+      else if (!swing.empowered) {
+        swing.chargedHits = Math.min(3, hits);
+        chargeBlade(game, swing.chargedHits);
+      }
       const fan = swing.empowered && hits > 0;
       const angles = fan ? game.ranks.dawn ? [0, -.3, .3, -.6, .6] : [0, -.32, .32] : game.ranks.dawn ? [0] : [];
       for (const offset of angles) {
@@ -749,7 +760,43 @@ function updateWeapons(game, dt, s) {
         });
       }
     }
-    if (swing.age > .55) game.swing = null;
+    for (const beat of swing.followups ?? []) {
+      if (!beat.prepared && swing.age >= beat.prepareAt) {
+        beat.prepared = true;
+        const target = game.enemies.filter(enemy => {
+          if (enemy.hp <= 0 || enemy.boss && enemy.entrance > 0 || swing.hitIds.includes(enemy.id)) return false;
+          const dx = enemy.x - p.x, dy = enemy.y - p.y;
+          return Math.hypot(dx, dy) <= s.swordRange + enemy.radius && Math.cos(Math.atan2(dy, dx) - swing.angle) >= 0;
+        }).sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+        if (target) {
+          beat.targetId = target.id;
+          beat.angle = Math.atan2(target.y - p.y, target.x - p.x);
+          p.facing = Math.cos(beat.angle) >= 0 ? 1 : -1;
+        }
+      }
+      if (!beat.resolved && swing.age >= beat.at) {
+        beat.resolved = true;
+        if (beat.targetId === null) continue;
+        const target = game.enemies.find(enemy => enemy.id === beat.targetId);
+        const halfAngle = Math.min(.38, s.swordHalfAngle);
+        game.events.push('swing');
+        effect(game, {kind: 'slash', x: p.x, y: p.y, angle: beat.angle,
+          range: s.swordRange, halfAngle, precise: true, direction: beat.direction,
+          evolved: !!game.ranks.dawn, life: .16});
+        if (!target || target.hp <= 0 || swing.hitIds.includes(target.id)) continue;
+        const dx = target.x - p.x, dy = target.y - p.y, distance = Math.hypot(dx, dy);
+        // The aim locks during the visible regrip; a target can leave its path.
+        if (distance > s.swordRange + target.radius || Math.cos(Math.atan2(dy, dx) - beat.angle) <= Math.cos(halfAngle)) continue;
+        if (hitEnemy(game, target, s.swordDamage, 'sword', dx / (distance || 1), dy / (distance || 1)) > 0) {
+          swing.hitIds.push(target.id);
+          if (!swing.empowered && swing.chargedHits < 3) {
+            swing.chargedHits++;
+            chargeBlade(game, 1);
+          }
+        }
+      }
+    }
+    if (swing.age > BLADE_END) game.swing = null;
   }
   if (game.ranks.ember) {
     game.emberClock -= dt * (game.relics.includes('sail') && p.moving ? 1.35 : 1);

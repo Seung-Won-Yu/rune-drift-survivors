@@ -53,7 +53,9 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane'
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane',
+  'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
+  'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third'
 ].includes(previewScene);
 try {
   storage = visualPreview ? { getItem: () => null, setItem: () => {} } : window.localStorage;
@@ -1038,6 +1040,8 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
         ...game.player
       },
       burst: {...game.burst,hitIds:[...game.burst.hitIds]},
+      bladeChain: game.swing ? {age:game.swing.age, hitIds:[...(game.swing.hitIds ?? [])], followups:structuredClone(game.swing.followups ?? [])} : null,
+      bladeTargets: game.enemies.filter(enemy=>enemy.chainTarget!==undefined).map(enemy=>({id:enemy.id,hp:enemy.hp,x:enemy.x,y:enemy.y})),
       growthResumeAt: game.growthResumeAt,
       enemies: game.enemies.length,
       shots: game.shots.length,
@@ -1381,6 +1385,23 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
         game.nextElite = 999;
         game.player.hp = 40;
         updateGame(game, 1 / 60);
+      } else if (name.startsWith('chain-')) {
+        const rank = name.includes('five') ? 5 : 3;
+        game.enemies=[];game.swordClock=.08;game.nextElite=999;game.xpNeed=99999;
+        for(const key of Object.keys(game.ranks))game.ranks[key]=0;
+        Object.assign(game.ranks,{sword:rank,duelist:1});
+        for(const [index,[x,y]] of [[80,0],[60,95],[60,-95]].entries()) {
+          const enemy=spawnEnemy(game,0,false,{x,y});
+          Object.assign(enemy,{speed:0,damage:0,hp:50000,maxHp:50000,chainTarget:index});
+        }
+        if(name.includes('-growth-')) {
+          game.ranks.sword=rank-1;game.phase='upgrade';game.choices=['sword','fleet','vitality'];
+        }
+        if(name.includes('-contact-')) {
+          const frames={first:17,second:24,third:32}[name.split('-').at(-1)];
+          for(let frame=0;frame<frames;frame++)updateGame(game,1/60);
+          game.phase='paused';
+        }
       } else if (name === 'burst-lane') {
         game.player.invincible=0;game.swordClock=999;game.xpNeed=99999;game.nextElite=999;
         for(const [x,y] of [[35,0],[80,0],[125,0],[80,110]]){
@@ -1411,7 +1432,7 @@ loadArt(import.meta.env.BASE_URL, (loaded, total) => {
   if (import.meta.env.DEV) {
     if (visualPreview) {
       window.__ASH_QA__.scenario(previewScene);
-      if (['action-readability', 'projectile-readability'].includes(previewScene)) $('overlay').style.visibility = 'hidden';
+      if (['action-readability', 'projectile-readability'].includes(previewScene) || previewScene.startsWith('chain-five-contact-')) $('overlay').style.visibility = 'hidden';
     }
     const scene = new URLSearchParams(location.search).get('scene');
     if (window.__ASH_QA__ && ['action-readability', 'projectile-readability', 'boss-practice'].includes(scene)) {

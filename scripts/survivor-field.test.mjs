@@ -47,6 +47,8 @@ test('killed enemies leave bounded, non-colliding remnants that expire',()=>{
   for(let i=0;i<16;i++)updateGame(game,1/60);
   assert.ok(game.kills>LIMITS.remnants);assert.equal(game.enemies.length,60-game.kills);assert.equal(game.player.hp,100);
   assert.ok(game.remnants.length>0);assert.ok(game.remnants.length<=LIMITS.remnants);
+  // Observe expiry without another attack producing a new remnant meanwhile.
+  game.ranks.sword=0;game.swing=null;
   for(let i=0;i<20;i++)updateGame(game,1/60);
   assert.equal(game.remnants.length,0);
 });

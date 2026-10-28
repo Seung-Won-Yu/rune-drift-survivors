@@ -1,3 +1,5 @@
+import { bladeMotion } from './blade-chain.js';
+
 // Presentation only: never move collision bodies or delay simulation clocks.
 export const IMPACT_LIFE = .18;
 export const ELITE_FINISH_LIFE = .48;
@@ -73,22 +75,15 @@ export function attackPose(game, reduced = false) {
   const p = game.player;
   if (reduced || p.hurt > 0 || game.outcome === 'defeat') return {};
   if (game.swing) {
-    const { age, angle } = game.swing;
     const weight = (game.ranks.dawn ? 1.15 : 1) * (game.characterId === 'grove' ? .9 : game.characterId === 'ember' ? .92 : 1);
-    if (age < .18) {
-      const tension = (age / .18) ** 2;
-      return { x: -Math.cos(angle) * 8 * tension, y: -Math.sin(angle) * 5 * tension + 2 * tension,
-        tilt: -.14 * tension, sx: 1 + .06 * tension, sy: 1 - .07 * tension };
+    const motion = bladeMotion(game.swing);
+    if (motion.regrip) {
+      const from = bladePose(motion.regrip.age, motion.regrip.angle, weight, motion.regrip.direction);
+      const to = bladePose(.18 - 1e-8, motion.angle, weight, motion.direction);
+      const t = motion.regrip.progress, blend = t * t * (3 - 2 * t);
+      return Object.fromEntries(Object.keys(from).map(key => [key, from[key] + (to[key] - from[key]) * blend]));
     }
-    // Four authored poses: impact at .18, follow-through at .26, settle at .40.
-    // This changes the illustration only; the hit and swing clocks stay intact.
-    const smooth = t => { const v = Math.max(0, Math.min(1, t)); return v * v * (3 - 2 * v); };
-    const contact = age < .26;
-    const release = contact ? 1 - .07 * smooth((age - .18) / .08)
-      : age < .4 ? .93 - .77 * smooth((age - .26) / .14)
-      : .16 * (1 - smooth((age - .4) / .15));
-    return { x: Math.cos(angle) * 14 * release * weight, y: Math.sin(angle) * 8 * release * weight,
-      tilt: (contact ? .19 : .16) * release, sx: 1 - .05 * release, sy: 1 + .05 * release };
+    return bladePose(motion.age, motion.angle, weight, motion.direction);
   }
   if (p.cast > 0) {
     // Casting already emits at the start of this clock; animate the release, not a delayed windup.
@@ -99,6 +94,21 @@ export function attackPose(game, reduced = false) {
   }
   if(game.burst?.active)return {y:-2,tilt:.12*game.burst.x,sx:1.03,sy:.97};
   return {};
+}
+
+function bladePose(age, angle, weight, direction = 1) {
+  if (age < .18) {
+    const tension = (age / .18) ** 2;
+    return {x: -Math.cos(angle) * 8 * tension, y: -Math.sin(angle) * 5 * tension + 2 * tension,
+      tilt: -.14 * tension * direction, sx: 1 + .06 * tension, sy: 1 - .07 * tension};
+  }
+  const smooth = t => { const v = Math.max(0, Math.min(1, t)); return v * v * (3 - 2 * v); };
+  const contact = age < .26;
+  const release = contact ? 1 - .07 * smooth((age - .18) / .08)
+    : age < .4 ? .93 - .77 * smooth((age - .26) / .14)
+    : .16 * (1 - smooth((age - .4) / .15));
+  return {x: Math.cos(angle) * 14 * release * weight, y: Math.sin(angle) * 8 * release * weight,
+    tilt: (contact ? .19 : .16) * release * direction, sx: 1 - .05 * release, sy: 1 + .05 * release};
 }
 
 // Authored frames already move the limbs; add body weight, not a second gait.

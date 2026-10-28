@@ -2,6 +2,7 @@ import { GIANT, huntRule } from './enemies.js';
 import { SLAM } from './game.js';
 import { IMPACT_LIFE } from './impact.js';
 import { BOSS } from './boss.js';
+import { bladeMotion } from './blade-chain.js';
 
 const step = (progress, count) => Math.max(0, Math.min(count - 1, Math.floor(progress * count)));
 
@@ -12,7 +13,7 @@ export function ashFrame(game, reduced = false) {
   if (game.outcome === 'defeat') return reduced ? 23 : 20 + step((p.deathAge ?? 0) / .55, 4);
   if (p.hurt > 0) return reduced ? 16 : 16 + step((.24 - p.hurt) / .24, 4);
   if (game.swing) {
-    const age = game.swing.age;
+    const {age} = bladeMotion(game.swing);
     if (age < .18) return reduced ? 10 : 8 + step(age / .18, 3);
     // Frames 12–13 overlap and 13 lacks a blade. Hold the intact contact,
     // then recover; neither defective source rectangle enters the game.
@@ -32,7 +33,7 @@ export function companionFrame(game, reduced = false) {
   const blockAge = signature ? game.time - signature.blockedAt : 1;
   if (game.characterId === 'grove' && blockAge >= 0 && blockAge < .3) return reduced ? 12 : 12 + step(blockAge / .3, 4);
   if (game.swing) {
-    const age = game.swing.age;
+    const {age} = bladeMotion(game.swing);
     return age < .18 ? 11 : reduced ? 8 : 8 + step((age - .18) / .37, 4);
   }
   if (p.cast > 0) {
