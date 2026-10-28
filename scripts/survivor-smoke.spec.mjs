@@ -2641,3 +2641,25 @@ test('flame leap is a real moving continuation with a visited target and pause-s
  await page.keyboard.press('Escape');const frozen=await snapshot(page);expect(frozen.emberHops.some(s=>s.kind==='ember-hop')).toBe(true);
  await page.waitForTimeout(80);expect((await snapshot(page)).emberHops).toEqual(frozen.emberHops);
 });
+
+for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+ test(`boss pair shows a recovery cue then re-aims a fully warned thorn followup at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);if(viewport.width===740)await page.emulateMedia({reducedMotion:'reduce'});
+  await scenario(page,'boss');await page.keyboard.down('s');await page.waitForTimeout(900);await page.keyboard.up('s');
+  await expect(page.locator('#boss-caption')).toContainText('돌진 후 빈틈 · 가시 공격 대비');
+  await page.keyboard.press('Escape');const recovery=await snapshot(page);
+  expect(recovery.boss.pattern.kind).toBe('charge');expect(recovery.boss.pattern.age).toBeGreaterThanOrEqual(1.65);
+  await page.waitForTimeout(80);expect((await snapshot(page)).boss.pattern).toEqual(recovery.boss.pattern);
+  await page.keyboard.press('Escape');
+  await expect.poll(async()=>(await snapshot(page)).boss.pattern?.kind,{intervals:[30],timeout:1500}).toBe('thorns');
+  await expect(page.locator('#boss-caption')).toContainText('가시 예고');
+  await page.keyboard.press('Escape');const followup=await snapshot(page);
+  expect(followup.time-recovery.time).toBeLessThan(1);expect(followup.boss.pattern.age).toBeLessThan(1);
+  expect(Math.abs(followup.boss.pattern.angle-recovery.boss.pattern.angle)).toBeGreaterThan(.5);
+  expect(followup.thorns).toBe(0);
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  await page.screenshot({path:`output/playwright/survivor/boss-pair-warning-${viewport.width}.png`});
+  await page.keyboard.press('Escape');await expect.poll(async()=>(await snapshot(page)).thorns).toBeGreaterThan(0);
+  await expect(page.locator('#boss-caption')).toContainText('가시 잔류');
+ });
+}

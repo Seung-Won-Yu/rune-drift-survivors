@@ -109,7 +109,7 @@ export function createPilot(route) {
             s = Math.sin(pattern.angle);
           const along = x * c + y * s,
             across = -x * s + y * c;
-          if (along > -45 && along < BOSS.chargeLength + 45 && Math.abs(across) < BOSS.chargeWidth / 2 + 26) {
+          if (along > -45 && along < (pattern.length ?? BOSS.chargeLength) + 45 && Math.abs(across) < BOSS.chargeWidth / 2 + 26) {
             const side = across < 0 ? -1 : 1;
             dx = -s * side;
             dy = c * side;

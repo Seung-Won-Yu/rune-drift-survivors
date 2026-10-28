@@ -56,7 +56,7 @@ for(const [route,priorities] of Object.entries(routes)) for (const seed of [12, 
       if(enemy.boss&&pattern?.kind==='charge'&&pattern.age>=.2&&pattern.age<BOSS.windup+BOSS.chargeDuration){
         const x=player.x-pattern.x,y=player.y-pattern.y,c=Math.cos(pattern.angle),s=Math.sin(pattern.angle);
         const along=x*c+y*s,across=-x*s+y*c;
-        if(along>-45&&along<BOSS.chargeLength+45&&Math.abs(across)<BOSS.chargeWidth/2+26){const side=across<0?-1:1;dx=-s*side;dy=c*side;break;}
+        if(along>-45&&along<(pattern.length??BOSS.chargeLength)+45&&Math.abs(across)<BOSS.chargeWidth/2+26){const side=across<0?-1:1;dx=-s*side;dy=c*side;break;}
       }
     }
     updateGame(game, 1 / 60, { x: dx, y: dy });

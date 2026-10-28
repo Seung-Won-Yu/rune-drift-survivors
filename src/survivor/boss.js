@@ -11,6 +11,7 @@ export const BOSS = {
   recovery: .8,
   cooldown: 2.6,
   chargeLength: 270,
+  chargeOvershoot: 72,
   chargeWidth: 64,
   chargeDuration: .65,
   chargeDamage: 28,
@@ -19,6 +20,7 @@ export const BOSS = {
   thornRadius: 8,
   maxThorns: 96
 };
+export const bossChargeLength = pattern => pattern?.length ?? BOSS.chargeLength;
 export function bossAttackLabel(boss, thornsActive = false) {
   if (!boss) return '';
   if (boss.entrance > 0) return '재의 군주가 깨어납니다';
@@ -26,7 +28,9 @@ export function bossAttackLabel(boss, thornsActive = false) {
   if ((!boss.pattern || boss.pattern.age >= BOSS.windup) && thornsActive &&
     !(boss.pattern?.kind === 'charge' && boss.pattern.age < BOSS.windup + BOSS.chargeDuration)) return '가시 잔류 · 탄 사이로 이동하세요';
   if (!boss.pattern) return boss.hp <= boss.maxHp / 2 ? '격노 · 다음 공격 대비' : '다음 공격 대비';
-  if (boss.pattern.age >= BOSS.windup) return boss.pattern.kind === 'charge' && boss.pattern.age < BOSS.windup + BOSS.chargeDuration ? '돌진 중 · 경로에서 벗어나세요' : '공격 후 빈틈';
+  if (boss.pattern.age >= BOSS.windup) return boss.pattern.kind === 'charge'
+    ? boss.pattern.age < BOSS.windup + BOSS.chargeDuration ? '돌진 중 · 경로에서 벗어나세요' : '돌진 후 빈틈 · 가시 공격 대비'
+    : '공격 후 빈틈';
   return boss.pattern.kind === 'charge' ? '돌진 예고 · 선 옆으로 피하세요' : '가시 예고 · 탄 사이로 이동하세요';
 }
 export function updateBoss(game, boss, dt, hurt, effect) {
@@ -50,6 +54,7 @@ export function updateBoss(game, boss, dt, hurt, effect) {
       age: 0,
       fired: false
     };
+    if(kind==='charge')boss.pattern.length=Math.min(BOSS.chargeLength,distance+BOSS.chargeOvershoot);
     game.events.push('boss-warning');
   }
   const pattern = boss.pattern;
@@ -65,8 +70,8 @@ export function updateBoss(game, boss, dt, hurt, effect) {
   if (pattern.age < BOSS.windup) return;
   if (pattern.kind === 'charge') {
     const progress = Math.min(1, (pattern.age - BOSS.windup) / BOSS.chargeDuration);
-    boss.x = pattern.x + Math.cos(pattern.angle) * BOSS.chargeLength * progress;
-    boss.y = pattern.y + Math.sin(pattern.angle) * BOSS.chargeLength * progress;
+    boss.x = pattern.x + Math.cos(pattern.angle) * bossChargeLength(pattern) * progress;
+    boss.y = pattern.y + Math.sin(pattern.angle) * bossChargeLength(pattern) * progress;
     if (previousAge < BOSS.windup + BOSS.chargeDuration && Math.hypot(p.x - boss.x, p.y - boss.y) < BOSS.chargeWidth / 2 + 12) hurt(game, BOSS.chargeDamage, 'charge', boss);
     if (!pattern.fired) {
       pattern.fired = true;
@@ -98,7 +103,9 @@ export function updateBoss(game, boss, dt, hurt, effect) {
   const duration = BOSS.windup + (pattern.kind === 'charge' ? BOSS.chargeDuration : 0) + BOSS.recovery;
   if (pattern.age >= duration) {
     boss.pattern = null;
-    boss.attackClock = BOSS.cooldown * (boss.enraged ? .7 : 1);
+    // A sidestep opens a short attack window, then a fresh, fully warned aim.
+    // The longer rest belongs to the end of the whole charge/thorn pair.
+    boss.attackClock = pattern.kind === 'charge' ? 0 : BOSS.cooldown * (boss.enraged ? .7 : 1);
   }
 }
 export function updateThorns(game, dt, hurt) {

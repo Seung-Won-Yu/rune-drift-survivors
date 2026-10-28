@@ -157,6 +157,7 @@ test('boss captions keep travelling thorns dangerous without hiding the next cha
   boss.pattern={kind:'charge',age:.1};assert.match(bossAttackLabel(boss,true),/돌진 예고/);
   boss.pattern.age=BOSS.windup+.1;assert.match(bossAttackLabel(boss,true),/돌진 중/);
   boss.pattern.age=BOSS.windup+BOSS.chargeDuration+.1;assert.match(bossAttackLabel(boss,true),/가시 잔류/);
+  assert.match(bossAttackLabel(boss,false),/가시 공격 대비/);
 });
 
 test('field notes track real evolution requirements without changing the run', () => {

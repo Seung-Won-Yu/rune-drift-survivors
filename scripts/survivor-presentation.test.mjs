@@ -157,6 +157,21 @@ test('stretched rune wakes stay on the same ellipse as the real collision heads 
   assert.equal(JSON.stringify(g),before);
 });
 
+test('short boss lanes draw their actual locked endpoint in both ground fill and warning edges',()=>{
+  const g=createGame(42);g.enemies=[{boss:true,x:80,y:0,entrance:0,pattern:{kind:'charge',x:80,y:0,angle:Math.PI,age:.4,length:152}}];
+  const before=JSON.stringify(g);
+  const ground=drawingCalls(ctx=>drawEnemyGround(ctx,g,false));
+  assert.ok(ground.some(c=>c[0]==='lineTo'&&c[1]===152));
+  assert.ok(ground.some(c=>c[0]==='lineCap'&&c[1]==='round'));
+  for(const reduced of [false,true]) {
+    const warnings=drawingCalls(ctx=>drawEnemyWarnings(ctx,g,reduced));
+    assert.ok(warnings.some(c=>c[0]==='lineTo'&&c[1]===152));
+    assert.ok(warnings.some(c=>c[0]==='arc'&&c[1]===152&&c[2]===0&&c[3]===BOSS.chargeWidth/2),'the warning covers the swept body at its endpoint');
+    assert.ok(!warnings.some(c=>c[0]==='lineTo'&&c[1]===270));
+  }
+  assert.equal(JSON.stringify(g),before);
+});
+
 test('painted companions carry bounded body weight at the real strike and settle without moving gameplay', () => {
   for (const id of ['ash','ember','grove']) {
     const game=createGame(42,id);game.swing={age:.16,angle:0};

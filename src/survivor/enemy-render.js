@@ -1,5 +1,5 @@
 import { GIANT, sporeRule, huntRule } from './enemies.js';
-import { BOSS } from './boss.js';
+import { BOSS, bossChargeLength } from './boss.js';
 import { SLAM } from './game.js';
 
 function warningStroke(ctx, color, width = 2) {
@@ -35,8 +35,8 @@ export function drawEnemyGround(ctx, game) {
     const pattern = enemy.boss && enemy.pattern;
     if (pattern?.kind === 'charge' && pattern.age < BOSS.windup) {
       ctx.save(); ctx.translate(pattern.x, pattern.y); ctx.rotate(pattern.angle);
-      ctx.strokeStyle = '#cf70443b'; ctx.lineWidth = BOSS.chargeWidth; ctx.lineCap = 'butt';
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(BOSS.chargeLength, 0); ctx.stroke(); ctx.restore();
+      ctx.strokeStyle = '#cf70443b'; ctx.lineWidth = BOSS.chargeWidth; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(bossChargeLength(pattern), 0); ctx.stroke(); ctx.restore();
     }
   }
   ctx.restore();
@@ -56,14 +56,16 @@ export function drawEnemyWarnings(ctx, game, reduced) {
       const progress = pattern.age / BOSS.windup;
       ctx.save(); ctx.translate(pattern.x, pattern.y); ctx.rotate(pattern.angle);
       if (pattern.kind === 'charge') {
-        ctx.lineCap = 'butt'; ctx.beginPath();
-        ctx.moveTo(0, -BOSS.chargeWidth / 2); ctx.lineTo(BOSS.chargeLength, -BOSS.chargeWidth / 2);
-        ctx.moveTo(0, BOSS.chargeWidth / 2); ctx.lineTo(BOSS.chargeLength, BOSS.chargeWidth / 2);
+        const length=bossChargeLength(pattern);
+        const half=BOSS.chargeWidth/2;
+        ctx.beginPath();ctx.moveTo(0,-half);ctx.lineTo(length,-half);
+        ctx.arc(length,0,half,-Math.PI/2,Math.PI/2);ctx.lineTo(0,half);
+        ctx.arc(0,0,half,Math.PI/2,Math.PI*1.5);ctx.closePath();
         warningStroke(ctx, '#f4c59a');
         ctx.setLineDash([8, 9]); ctx.beginPath();
-        ctx.moveTo(0, 0); ctx.lineTo(BOSS.chargeLength * progress, 0); warningStroke(ctx, '#ffb57a', 3); ctx.setLineDash([]);
+        ctx.moveTo(0, 0); ctx.lineTo(length * progress, 0); warningStroke(ctx, '#ffb57a', 3); ctx.setLineDash([]);
         ctx.fillStyle = '#ffe4bc'; ctx.beginPath();
-        ctx.moveTo(BOSS.chargeLength + 10, 0); ctx.lineTo(BOSS.chargeLength - 8, -9); ctx.lineTo(BOSS.chargeLength - 8, 9);
+        ctx.moveTo(length + 10, 0); ctx.lineTo(length - 8, -9); ctx.lineTo(length - 8, 9);
         ctx.closePath(); warningStroke(ctx, '#15231f', 3); ctx.fill();
       } else {
         const count = enemy.enraged ? 11 : 7;

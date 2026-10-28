@@ -241,11 +241,64 @@ test('boss windup fixes a charge lane and lateral movement avoids the hit',()=>{
   assert.equal(boss.pattern.angle,angle);assert.equal(g.player.hp,100);
   assert.ok(boss.x<180);
 });
-test('a boss charge hits the marked lane and waits before attacking again',()=>{
+test('a boss charge hits the marked lane then warns before its followup',()=>{
   const g=playing();g.swordClock=999;const boss=spawnBoss(g);
   Object.assign(boss,{x:180,y:0,entrance:0,attackClock:0});frames(g,55);assert.equal(g.player.hp,100);
   frames(g,50);assert.equal(g.player.hp,100-BOSS.chargeDamage);assert.equal(g.damageTaken.charge,BOSS.chargeDamage);
-  frames(g,45);assert.equal(boss.pattern,null);assert.ok(boss.attackClock>0);
+  frames(g,45);assert.equal(boss.pattern.kind,'thorns');assert.ok(boss.pattern.age<.15);assert.equal(g.thorns.length,0);
+});
+test('near charges lock a shorter lane and keep their endpoint independently of later player motion',()=>{
+  for(const [distance,length] of [[80,152],[180,252],[420,270]]) {
+    const g=playing();g.ranks.sword=0;const boss=spawnBoss(g);
+    Object.assign(boss,{x:distance,y:0,entrance:0,attackClock:0});frames(g,1);
+    assert.equal(boss.pattern.length,length);
+    g.player.x=distance-length-80;g.player.y=0;
+    frames(g,100);assert.equal(g.player.hp,100,'a point beyond the rounded end cap is outside the actual charge');
+    assert.ok(Math.abs(boss.x-(distance-length))<1e-7);assert.equal(boss.pattern.length,length,'later player motion cannot change the locked lane');
+  }
+});
+test('a charge rounded end cap hits a touching player and misses a player beyond its combined radius',()=>{
+  for(const [beyond,damage] of [[20,BOSS.chargeDamage],[45,0]]) {
+    const g=playing();g.ranks.sword=0;const boss=spawnBoss(g);
+    Object.assign(boss,{x:80,y:0,entrance:0,attackClock:0});frames(g,1);
+    g.player.x=80-boss.pattern.length-beyond;
+    frames(g,100);assert.equal(g.damageTaken.charge,damage);assert.equal(g.player.hp,100-damage);
+  }
+});
+
+function pairedBoss(enraged=false) {
+  const g=playing();g.ranks.sword=0;g.xpNeed=99999;
+  const boss=spawnBoss(g);Object.assign(boss,{x:180,y:0,entrance:0,attackClock:0});
+  if(enraged)boss.hp=boss.maxHp*.45;
+  frames(g,1);const chargeAngle=boss.pattern.angle;
+  frames(g,70,{x:0,y:1});frames(g,80);
+  return {g,boss,chargeAngle};
+}
+test('charge recovery leads to a newly aimed followup with a full thorn warning and final recovery',()=>{
+  for(const enraged of [false,true]) {
+    const {g,boss,chargeAngle}=pairedBoss(enraged);
+    assert.equal(g.damageTaken.charge,0);
+    assert.equal(boss.pattern?.kind,'thorns');assert.ok(boss.pattern.age<.15);
+    assert.ok(Math.abs(boss.pattern.angle-chargeAngle)>.5,'the followup aims at the later position');
+    const angle=boss.pattern.angle;
+    while(boss.pattern.age<BOSS.windup-1/30)frames(g,1);
+    assert.equal(g.thorns.length,0);assert.equal(boss.pattern.angle,angle);
+    frames(g,3);assert.equal(g.thorns.length,enraged?11:7);
+    const before=JSON.stringify({boss,thorns:g.thorns,time:g.time});pauseGame(g);frames(g,60);
+    assert.equal(JSON.stringify({boss,thorns:g.thorns,time:g.time}),before);resumeGame(g);
+    frames(g,60);assert.equal(boss.pattern,null);assert.ok(boss.attackClock>0,'the complete pair keeps its normal rest');
+    assert.ok(g.thorns.length<=BOSS.maxThorns);
+  }
+});
+test('stopping after the first dodge risks the next real thorn while a second lateral move avoids it',()=>{
+  for(const enraged of [false,true]) {
+    const stay=pairedBoss(enraged),evade=pairedBoss(enraged);
+    assert.equal(stay.boss.pattern?.kind,'thorns');assert.equal(evade.boss.pattern?.kind,'thorns');
+    frames(stay.g,180);assert.equal(stay.g.damageTaken.thorns,BOSS.thornDamage);
+    const angle=evade.boss.pattern.angle+Math.PI/2;
+    frames(evade.g,12);frames(evade.g,210,{x:Math.cos(angle),y:Math.sin(angle)});
+    assert.equal(evade.g.damageTaken.thorns,0);assert.equal(evade.g.player.hp,100);
+  }
 });
 test('late charge feedback points at the colliding boss instead of the distant windup origin',async()=>{
   const {hurtFeedback}=await import('../src/survivor/impact.js');
