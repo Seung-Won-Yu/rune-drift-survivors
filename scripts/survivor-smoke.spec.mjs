@@ -6,6 +6,30 @@ test.afterEach(async({page})=>{expect(pageErrors.get(page)??[], 'browser runtime
 const snapshot = page => page.evaluate(() => window.__ASH_QA__.snapshot());
 const scenario = (page, name) => page.evaluate(name => window.__ASH_QA__.scenario(name), name);
 
+for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740,height:360}]) {
+ for(const [family,branches] of [['sword',['sweep','duelist']],['ember',['wildfire','detonation']],['orbit',['bulwark','horizon']]]) {
+  test(`started secondary ${family} previews its next combat fork without buying it at ${viewport.width}`,async({page})=>{
+   await page.setViewportSize(viewport);await scenario(page,`continuation-${family}`);
+   const before=await snapshot(page),card=page.locator(`[data-upgrade="${family}"]`);
+   expect(before.choices[0]).toBe(family);expect(before.ranks[family]).toBe(1);
+   await expect(card.locator('.recipe-link')).toContainText('2단계 · 레벨 3부터 전투법 후보');
+   const trigger=page.locator('[data-preview-branches]');await expect(trigger).toContainText('전투법 보기');
+   await expect(trigger).toBeInViewport({ratio:1});await trigger.click();
+   const dialog=page.getByRole('dialog',{name:'전투법 비교'});await expect(dialog).toBeVisible();
+   expect(await dialog.locator('[data-demo-branch]').evaluateAll(els=>els.map(el=>el.dataset.demoBranch))).toEqual(branches);
+   await dialog.getByRole('tab').last().click();await expect(dialog.locator('canvas')).toHaveAttribute('data-branch',branches[1]);
+   await page.waitForTimeout(120);const unchanged=await snapshot(page);
+   for(const key of ['phase','time','ranks','choices','xp','player','profile','rerolls'])expect(unchanged[key]).toEqual(before[key]);
+   await page.keyboard.press('Escape');await expect(trigger).toBeFocused();
+   expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+   await page.screenshot({path:`output/playwright/survivor/secondary-fork-${family}-${viewport.width}.png`});
+   await card.scrollIntoViewIfNeeded();await card.press('Enter');
+   const selected=await snapshot(page);expect(selected.ranks[family]).toBe(2);
+   expect(branches.every(key=>selected.ranks[key]===0)).toBe(true);expect(selected.phase).toBe('playing');
+  });
+ }
+}
+
 for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]) {
  test(`ordinary opening choices lead into a breakable swarm and earned harvest at ${viewport.width}`,async({page})=>{
   test.setTimeout(90_000);

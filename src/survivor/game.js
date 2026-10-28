@@ -361,17 +361,21 @@ export function draftUpgrades(game) {
   const pick = pool => pool.length ? pool[Math.floor(game.draftRng() * pool.length)] : null;
   const unowned = ['sword', 'ember', 'orbit'].filter(key => game.ranks[key] === 0);
   const primary = getCharacter(game.characterId).weapon;
-  const recipe = Object.values(EVOLUTIONS).find(path => path.weapon === primary);
-  const growth = game.ranks[primary] < UPGRADE_META[primary].max ? primary : game.ranks[recipe.support] === 0 ? recipe.support : null;
+  const [evolution, recipe] = Object.entries(EVOLUTIONS).find(([,path]) => path.weapon === primary);
   // Rotate discovery across drafts. Skipping a new weapon does not hide the
   // other one, and committing to a weapon leaves a real survival alternative.
   const alternates = ['sword', 'ember', 'orbit'].filter(key => key !== primary);
   const ordered = alternates.map((_, offset) => alternates[(game.weaponOfferCursor + offset) % alternates.length]);
+  // Once the main weapon is finished, keep a started second weapon within
+  // reach of its first combat fork. This is an offer, never an automatic rank.
+  const continuation = game.ranks[primary] >= UPGRADE_META[primary].max && game.ranks[evolution]
+    ? ordered.find(key => game.ranks[key] === 1 && available.includes(key)) : null;
+  const growth = game.ranks[primary] < UPGRADE_META[primary].max ? primary : game.ranks[recipe.support] === 0 ? recipe.support : continuation;
   const flank = ordered.find(key => available.includes(key)) ?? null;
   const utility = game.player.hp < game.player.maxHp * .5 && available.includes('vitality') ? 'vitality' : pick(available.filter(key => ['fleet', 'magnet', 'vitality'].includes(key)));
   if (branches.length && chosen.length <= 1) {
     for (const key of branches) if (chosen.length < 3) chosen.push(key);
-    const alternative = flank || utility || growth;
+    const alternative = continuation || flank || utility || growth;
     if (alternative && chosen.length < 3 && !chosen.includes(alternative)) chosen.push(alternative);
   }
   if (growth && chosen.length < 3 && !chosen.includes(growth)) chosen.push(growth);

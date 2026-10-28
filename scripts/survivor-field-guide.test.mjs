@@ -7,7 +7,7 @@ import { vowStats } from '../src/survivor/progression.js';
 import { createProfile, recordRun } from '../src/survivor/profile.js';
 import { campMission, nextGoal, resultTakeaway, resultOverview } from '../src/survivor/camp.js';
 import { inheritanceHint } from '../src/survivor/codex.js';
-import { evolutionProgress, evolutionGuidance, upgradeRecipeHint, growthContext, fieldLoadout, growthChoice, goalGuidance, goalGuidanceMarkup } from '../src/survivor/field-guide.js';
+import { evolutionProgress, evolutionGuidance, upgradeRecipeHint, growthContext, fieldLoadout, growthChoice, goalGuidance, goalGuidanceMarkup, specializationPreview } from '../src/survivor/field-guide.js';
 import { goalChoiceLabel } from '../src/survivor/goals.js';
 import { relicEffect } from '../src/survivor/expansion.js';
 import { loadPreferences, savePreferences, reduceMotion, PREFERENCES_KEY } from '../src/survivor/preferences.js';
@@ -147,6 +147,19 @@ test('recipe hints cover secondary weapons and only promise evolution after all 
   g.eliteKills=1;
   assert.match(upgradeRecipeHint(g,'sword'),/2 → 3\/3 · 다음 성장에 진화 가능/);
   g.ranks.dawn=1;assert.equal(upgradeRecipeHint(g,'sword'),'');
+});
+
+test('early weapon previews disclose both combat paths without promising an immediate selection',()=>{
+ const g=createGame(42);const before=JSON.stringify(g);
+ for(const [weapon,branches] of [['sword',['sweep','duelist']],['ember',['wildfire','detonation']],['orbit',['bulwark','horizon']]]) {
+  const preview=specializationPreview(g,weapon);
+  assert.deepEqual(preview.branches,branches);assert.match(preview.requirement,/2단계 · 레벨 3부터 전투법 후보/);
+  assert.doesNotMatch(preview.requirement,/다음 성장|즉시|해금/);
+ }
+ assert.equal(JSON.stringify(g),before);
+ assert.equal(specializationPreview(g,'fleet'),null);assert.equal(specializationPreview(g,'dawn'),null);
+ g.ranks.sword=2;assert.equal(specializationPreview(g,'sword'),null);
+ g.ranks.orbit=1;g.ranks.bulwark=1;assert.equal(specializationPreview(g,'orbit'),null,'an inherited branch is already committed');
 });
 
 test('boss captions keep travelling thorns dangerous without hiding the next charge', () => {

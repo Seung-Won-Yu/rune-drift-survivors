@@ -372,6 +372,37 @@ test('owned support weapon offers rotate instead of repeatedly hiding one family
   for(let i=0;i<4;i++)assert.ok(!draftUpgrades(g).includes(offers[0]));
  }
 });
+test('a finished primary keeps a started second weapon available for its combat fork',()=>{
+ for(const [character,primary,evolution,support,secondary] of [
+  ['ash','sword','dawn','orbit','orbit'],['ember','ember','comet','fleet','orbit'],['grove','orbit','lunar','vitality','ember']
+ ]) for(let seed=1;seed<=12;seed++) {
+  const g=createGame(seed,character);g.level=12;g.eliteKills=1;
+  Object.assign(g.ranks,{[primary]:primary==='sword'?6:5,[evolution]:1,[support]:1,[secondary]:1,[{ash:'sweep',ember:'wildfire',grove:'bulwark'}[character]]:1});
+  const choices=draftUpgrades(g);
+  assert.equal(choices[0],secondary);assert.ok(choices.some(key=>['fleet','magnet','vitality'].includes(key)));
+  assert.equal(new Set(choices).size,3);assert.equal(g.ranks[secondary],1,'an offer must not grant the rank');
+  g.phase='upgrade';g.choices=choices;assert.equal(chooseUpgrade(g,secondary),true);
+  const branches=draftUpgrades(g).filter(key=>['sweep','duelist','wildfire','detonation','bulwark','horizon'].includes(key));
+  assert.equal(branches.length,2);assert.ok(branches.every(key=>!g.ranks[key]));
+ }
+});
+test('continuation waits for the primary evolution and never displaces eligible evolutions',()=>{
+ const g=createGame(42,'ash');g.level=12;g.ranks.sword=6;g.ranks.sweep=1;g.ranks.orbit=1;
+ assert.equal(draftUpgrades(g)[0],'ember','an unfinished evolution preserves discovery order');
+ g.ranks.dawn=1;assert.equal(draftUpgrades(g)[0],'orbit');
+ const h=createGame(42,'grove');h.level=12;h.eliteKills=1;
+ Object.assign(h.ranks,{orbit:5,lunar:1,bulwark:1,vitality:1,sword:1,ember:3,fleet:1});
+ assert.deepEqual(draftUpgrades(h),['comet','wildfire','detonation']);
+});
+test('two started secondary weapons alternate priority without losing the survival choice',()=>{
+ for(const [character,primary,evolution,support] of [['ash','sword','dawn','orbit'],['ember','ember','comet','fleet'],['grove','orbit','lunar','vitality']]) {
+  const g=createGame(42,character);g.level=12;g.eliteKills=1;
+  Object.assign(g.ranks,{sword:1,ember:1,orbit:1,[primary]:primary==='sword'?6:5,[evolution]:1,[support]:1,[{ash:'sweep',ember:'wildfire',grove:'bulwark'}[character]]:1});
+  const first=draftUpgrades(g),second=draftUpgrades(g),third=draftUpgrades(g);
+  assert.notEqual(first[0],second[0]);assert.equal(first[0],third[0]);
+  for(const choices of [first,second,third])assert.ok(choices.some(key=>['fleet','magnet','vitality'].includes(key)));
+ }
+});
 test('comet explosion hits nearby enemies once without reaching a distant enemy',()=>{
   const g=playing();g.swordClock=999;
   const a=spawnEnemy(g,2,false,{x:160,y:0}),b=spawnEnemy(g,2,false,{x:160,y:45}),c=spawnEnemy(g,2,false,{x:160,y:140});

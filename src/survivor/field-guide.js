@@ -1,5 +1,5 @@
 import { EVOLUTIONS, UPGRADE_META, canEvolve, nextEvolution } from './game.js';
-import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL } from './expansion.js';
+import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL, specializationFor } from './expansion.js';
 import { weaponLoadout } from './weapon-presentation.js';
 import { collectionArt } from './collection-art.js';
 import { goalProgress } from './goals.js';
@@ -21,6 +21,12 @@ export function growthChoice(game, key) {
   if (['sword','ember','orbit'].includes(key) && !game.ranks[key]) return {kind:'new',label:'새로운 무기',step:'1단계로 획득',action:'새 공격 추가'};
   if (key === 'heal') return {kind:'recovery',label:'즉시 회복',step:'현재 체력 회복',action:'체력 회복하기'};
   return {kind:key === 'vitality' ? 'recovery' : 'upgrade',label:key === 'vitality' ? '생존 강화' : '능력 강화',step:`${game.ranks[key]} → ${game.ranks[key]+1}단계`,action:'이 힘 강화'};
+}
+export function specializationPreview(game, key) {
+  const branches = Object.keys(SPECIALIZATIONS).filter(id => SPECIALIZATIONS[id].weapon === key);
+  if (!branches.length || game.ranks[key] >= SPECIALIZATION_RANK || specializationFor(game,key)) return null;
+  return {weapon:key, branches, names:branches.map(id=>SPECIALIZATIONS[id].name).join(' · '),
+    requirement:`${SPECIALIZATION_RANK}단계 · 레벨 ${SPECIALIZATION_LEVEL}부터 전투법 후보`};
 }
 export function upgradeRecipeHint(game, key) {
   if (EVOLUTIONS[key]) return '';

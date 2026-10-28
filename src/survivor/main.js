@@ -2,7 +2,7 @@ import { choiceReceipt } from './choice-feedback.js';
 import { openBranchPreview } from './branch-preview.js';
 import { reuseCampScene } from './camp-presentation.js';
 import { BURST, canBurst, burstCooldown } from './burst.js';
-import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice, evolutionGuidance, goalGuidanceMarkup } from './field-guide.js';
+import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice, evolutionGuidance, goalGuidanceMarkup, specializationPreview } from './field-guide.js';
 import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
 import { SIGNATURES, signatureState } from './signature.js';
@@ -24,7 +24,7 @@ import './journey-finish.css';
 import './branch-preview.css';
 import './app-shell.css';
 import { BOSS, bossAttackLabel } from './boss.js';
-import { createGame, startGame, updateGame, chooseUpgrade, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, orbitPositions, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, RUN_SECONDS } from './game.js';
+import { createGame, startGame, updateGame, chooseUpgrade, draftUpgrades, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, orbitPositions, UPGRADE_META, upgradeChange, xpForLevel, canEvolve, weaponName, EVOLUTIONS, RUN_SECONDS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
 import { getCharacter, isUnlocked } from './characters.js';
 import { loadProfile, saveProfile, recordRun } from './profile.js';
@@ -56,6 +56,7 @@ const visualPreview = [
   'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane',
   'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
   'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third',
+  'continuation-sword','continuation-ember','continuation-orbit',
   'growth-ember-three','growth-ember-five','growth-orbit-three','growth-orbit-five','motion-ember-five','motion-orbit-five'
 ].includes(previewScene);
 try {
@@ -630,9 +631,12 @@ function syncPhase() {
     const lowHealth = game.player.hp <= game.player.maxHp * .4;
     const recoveryOffered = game.choices.some(key => key === 'heal' || key === 'vitality');
     const choosingBranch = game.choices.some(key => SPECIALIZATIONS[key]);
+    const upcomingBranch = game.choices.map(key=>specializationPreview(game,key)).find(path=>path && game.ranks[path.weapon] === 1);
+    const previewBranches = choosingBranch ? game.choices.filter(key=>SPECIALIZATIONS[key]) : upcomingBranch?.branches;
     const previous = earnedReceipt?.game === game && earnedReceipt.pendingChoice ? earnedReceipt.receipt : null;
     panel(`<div class="upgrade-top"><div class="decision-companion" aria-hidden="true">${portrait(game.characterId, true)}</div><div><p class="eyebrow">${getCharacter(game.characterId).name} · 성장의 갈림길</p><h1 id="panel-title">다음 힘을 선택하세요</h1><p class="panel-lead">하나의 힘을 골라 전투를 이어가세요.</p><p class="upgrade-health${lowHealth ? ' is-low' : ''}"><span>현재 체력</span><strong>${Math.ceil(game.player.hp)} / ${game.player.maxHp}</strong>${lowHealth ? `<small>${recoveryOffered ? '회복 선택 가능' : '체력 낮음'}</small>` : ''}</p></div><div class="level-medal"><small>LEVEL</small><b>${game.level}</b></div></div>${growthContext(game)}${previous ? `<div class="previous-choice" role="status" data-kind="${previous.kind}"><span class="receipt-art" aria-hidden="true">${collectionArt(previous.art)}</span><span><small>방금 선택</small><strong>${previous.name}</strong><span>${previous.detail}</span></span><span class="receipt-check" aria-hidden="true">✓</span></div>` : ''}${choosingBranch ? '<p class="upgrade-commitment">전문화는 무기마다 이번 판에 한 갈래만 선택합니다. 진화 후에도 유지됩니다.</p>' : ''}<p class="choice-instruction"><span>${game.choices.length}개의 선택 · 전투 일시정지</span><span class="choice-shortcuts">키보드 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></p><div class="upgrade-grid">${game.choices.map((key, i) => {
-      const weapon = weaponPresentation(game, key), choice = growthChoice(game, key), recipe = upgradeRecipeHint(game, key);
+      const weapon = weaponPresentation(game, key), choice = growthChoice(game, key), path = specializationPreview(game,key);
+      const recipe = path ? `${path.requirement}<br>${path.names}` : upgradeRecipeHint(game,key);
       const m = ['sword', 'ember', 'orbit'].includes(key) ? {
         ...UPGRADE_META[key],
         name: weapon.name,
@@ -640,11 +644,11 @@ function syncPhase() {
         description: weapon.description
       } : UPGRADE_META[key];
       return `<button class="upgrade-card${(key === game.experiment || goalRelevant(game, key)) ? ' is-experiment' : ''}${lowHealth && ['heal', 'vitality'].includes(key) ? ' is-recovery' : ''}" data-upgrade="${key}" data-choice-kind="${choice.kind}" data-growth="${["heal", "vitality"].includes(key) ? "recovery" : ["ember", "comet", "wildfire", "detonation"].includes(key) ? "flame" : ["orbit", "lunar", "bulwark", "horizon"].includes(key) ? "rune" : ["sword", "dawn", "sweep", "duelist", "might"].includes(key) ? "blade" : "support"}" data-weapon-art="${weapon?.art ?? key}" style="--tone:${m.color}">${(key === game.experiment || goalRelevant(game, key)) ? `<span class="experiment-badge">${goalChoiceLabel(game,key) || '이번 판의 목표'}</span>` : ''}<span class="choice-heading"><b>${choice.label}</b><small>${choice.step}</small></span><span class="upgrade-icon">${collectionArt(weapon?.art ?? key) || icon(m.icon)}</span><strong>${m.name}</strong>${weapon?.branch ? `<span class="upgrade-path">${weapon.branchName} 유지</span>` : ''}<p>${key === 'comet' && game.ranks.wildfire ? '연소 전문화를 유지하며 불의 지속 피해를 강화합니다.' : m.description}</p><span class="upgrade-change"><small>선택하면</small>${upgradeChange(game, key)}</span>${recipe ? `<span class="recipe-link">${recipe}</span>` : ''}<span class="pick-label">${choice.action} <kbd>${i + 1}</kbd></span></button>`;
-    }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button>${choosingBranch ? '<button class="secondary" data-preview-branches>전투법 비교</button>' : ''}<p role="status">${rerollFeedback ? '후보가 바뀌었습니다. ' : ''}${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '진화 후보는 유지됩니다.'}</p></div>`);
+    }).join('')}</div><div class="reroll-row"><button class="secondary" data-reroll ${canReroll(game) ? '' : 'disabled'}>성장 다시 뽑기 · ${game.rerolls}회 남음</button>${previewBranches?.length ? `<button class="secondary" data-preview-branches>${choosingBranch ? '전투법 비교' : `${UPGRADE_META[upcomingBranch.weapon].name} 전투법 보기`}</button>` : ''}<p role="status">${rerollFeedback ? '후보가 바뀌었습니다. ' : ''}${game.rerolls === 0 ? '이번 판의 기회를 모두 사용했어요' : '진화 후보는 유지됩니다.'}</p></div>`);
     $('panel').querySelector('[data-preview-branches]')?.addEventListener('click',event=>{
       if(branchDialog?.open) return;
       const trigger=event.currentTarget;
-      branchDialog=openBranchPreview({branches:game.choices.filter(key=>SPECIALIZATIONS[key]),characterId:game.characterId,art:previewArt,preferences,onClose:()=>{
+      branchDialog=openBranchPreview({branches:previewBranches,characterId:game.characterId,art:previewArt,preferences,onClose:()=>{
         branchDialog=null;
         if(trigger.isConnected) trigger.focus({preventScroll:true});
       }});
@@ -1056,7 +1060,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
     scenario(name) {
       resetInput();
       const character = ['growth-ember-three','growth-ember-five','motion-ember-five'].includes(name)?'ember'
-        : ['growth-orbit-three','growth-orbit-five','motion-orbit-five'].includes(name)?'grove'
+        : ['growth-orbit-three','growth-orbit-five','motion-orbit-five','continuation-sword','continuation-ember'].includes(name)?'grove'
         : name.startsWith('character-') ? name.slice(10) : ['ember-coal','record-secondary','spectacle-flame'].includes(name) ? 'ember' : name === 'spectacle-rune' ? 'grove' : name === 'experiment-offer' ? game.characterId : 'ash';
       game = createGame(42, character, 'none', profile.experiment, runPreparation(profile, character));
       game.phase = 'playing';
@@ -1391,6 +1395,12 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
         game.nextElite = 999;
         game.player.hp = 40;
         updateGame(game, 1 / 60);
+      } else if (name.startsWith('continuation-')) {
+        const family=name.slice('continuation-'.length);
+        for(const key of Object.keys(game.ranks))game.ranks[key]=0;
+        Object.assign(game.ranks, family==='orbit' ? {sword:6,dawn:1,sweep:1,orbit:1} : {orbit:5,lunar:1,bulwark:1,vitality:1,[family]:1});
+        game.time=95;game.level=12;game.eliteKills=1;game.phase='upgrade';
+        game.weaponOfferCursor=family==='ember'?1:0;game.choices=draftUpgrades(game);
       } else if (name.startsWith('growth-') || name.startsWith('motion-')) {
         const family=name.includes('-ember-')?'ember':'orbit',rank=name.endsWith('five')?5:3;
         for(const key of Object.keys(game.ranks))game.ranks[key]=0;
