@@ -139,3 +139,43 @@ of universally better balance. All runs ended within300s and entity caps.
 Evidence: `guardian-kill-charge-*` and `guardian-support-build-*` under the
 same ignored output directory. A normal run with this final charging rule
 and further human feedback remain distinct from the earlier full chapter.
+
+
+## Ember forward launch correction
+
+An ordinary, frozen35720bd Ember run used actual Wildfire/Comet offers,
+Sail, a late Bulwark support and Book/Calm. It reached the sovereign and
+lost at4:19/LV14/1133 kills with23 explicit releases,190 damage received
+and105 healed. No debug scenario, selected seed, pilot, injected progress
+or reload was used. Long key holds/observation pauses limit reaction-speed
+and fun conclusions. Most damage was Ember(98%); the support was acquired
+later. The boss reached about67% before defeat. This is not a claimed clear.
+
+Small off-axis misses motivated a bounded control change after that run:
+Ember E/button release may correct its launch toward an alive enemy within
+420 units and ±22.5° of the requested direction. Prefer the smallest angle
+correction, then distance for an angular tie. Outside that cone/range it
+fires exactly as requested. The whole manual volley shares that centre;
+only its first shot is empowered. All shots retain null initial targetId:
+no steering is added after launch. A moving enemy can leave the trajectory.
+Ordinary homing fire and breakthrough landing volleys keep their rules.
+The cast pose/launch effect use the corrected angle, and ability help tells
+the player about launch-only correction and straight travel.
+
+291 Node rules pass, including eight-direction correction, exclusion of
+side/rear/distant/dead targets, real collision and a moving-target miss.
+Ten browser cases pass at1280/390/740 plus touch: the Ember authored scene
+now puts all initial targets slightly off-axis, so its damage assertion
+exercises actual assisted contact. The in-app authored scene shows the
+launch; it is not ordinary-run proof. Pages build and production smoke pass.
+
+A12-run automated comparison quantizes both versions' signature requests
+to eight directions, using the same current pilot, real offers and seeds
+7/42/101 for each Ember branch. Both versions finish6/6 victories, with
+varied clear times and remaining HP. Baseline2470fc6 has the same Ember
+combat rules as35720bd; its Grove-only follow-up does not affect Ember.
+The sample checks bounded simulation behavior, not human enjoyment or a
+win-rate estimate. All simulations stay finite and within entity/time caps.
+Evidence and the ordinary run report are under ignored output/playwright/
+survivor/manual-ember-*. A full ordinary run after this correction remains
+separate from the completed pre-change boss attempt.

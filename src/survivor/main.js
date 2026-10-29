@@ -1107,7 +1107,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       } else if (name.startsWith('manual-')) {
         game.signature.charge=1;game.xpNeed=99999;game.nextElite=999;
         game.swordClock=game.emberClock=game.pulseClock=999;
-        for(const [x,y] of character==='grove'?[[70,0],[125,0],[180,0]]:[[180,0],[260,25],[300,-30]]) {
+        for(const [x,y] of character==='grove'?[[70,0],[125,0],[180,0]]:character==='ember'?[[180,55],[260,85],[300,100]]:[[180,0],[260,25],[300,-30]]) {
           const enemy=spawnEnemy(game,0,false,{x,y});Object.assign(enemy,{speed:0,damage:0,hp:50000,maxHp:50000});
         }
       } else if (name === 'goal-comet') {

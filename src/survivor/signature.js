@@ -1,14 +1,14 @@
 // Earn through play, hold the charge, then choose when to release it.
 export const SIGNATURES = {
   ash: { name: '잿빛 결의', control: '결의 검격', action: '검 적중 6회 충전 · E로 원하는 방향에 검기를 쏘세요', description: '검 적중 6회로 충전합니다. E 또는 고유기 버튼을 누르면 이동 방향으로 피해 ×1.6 · 범위 +25의 검격과 세 갈래 관통 검기를 날립니다. 진화 후 다섯 갈래 왕복 검기. 한 공격은 최대 3회 충전합니다.', ready: 'E · 검기 발동', color: '#f2ca80' },
-  ember: { name: '잔불 걸음', control: '분열 불씨', action: '이동으로 충전 · E로 무리가 모였을 때 불씨를 쏘세요', description: '이동으로 충전합니다. E 또는 고유기 버튼으로 이동 방향에 피해 ×1.45의 분열 불씨를 발사합니다. 직접 겨냥하며, 적중 후 세 갈래 불꽃 파편을 만듭니다.', ready: 'E · 분열 불씨', color: '#ffac80' },
+  ember: { name: '잔불 걸음', control: '분열 불씨', action: '이동으로 충전 · E로 무리가 모였을 때 불씨를 쏘세요', description: '이동으로 충전합니다. E 또는 고유기 버튼으로 이동 방향에 피해 ×1.45의 분열 불씨를 발사합니다. 가까운 전방의 적에 발사각만 보정하고, 발사 뒤에는 직진합니다. 적중 후 세 갈래 불꽃 파편을 만듭니다.', ready: 'E · 분열 불씨', color: '#ffac80' },
   grove: { name: '숲의 수호', control: '수호 방출', action: '룬 적중·처치로 충전 · E로 보호막과 왕복 룬을 펼치세요', description: '룬 적중 또는 적 처치로 수호를 6회 모읍니다. 0.35초마다 한 번씩 충전합니다. E 또는 고유기 버튼으로 보호막 20을 4초간 얻고 여덟 방향 왕복 룬을 방출합니다. 돌아오는 룬은 현재 위치를 따라와 다시 적중합니다. 편도마다 최대 3명 관통. 발동 뒤 5초간 충전을 쉽니다.', ready: 'E · 수호 방출', color: '#a1e4ce' }
 };
 export const createSignature = () => ({ charge: 0, pending: null, guard: 0, guardUntil: 0, cooldownUntil: 0, hitAt: -1, activatedAt: -10, blockedAt: -10, activations: 0, absorbed: 0 });
 export const canReleaseSignature = game => game.phase === 'playing' && game.player.hp > 0 && game.signature.charge >= 1-1e-9 && !game.signature.pending;
 export function signatureDescription(game) {
   if (game.characterId !== 'ember') return SIGNATURES[game.characterId].description;
-  return `이동으로 충전 · E 또는 고유기 버튼으로 이동 방향에 직접 발사 · 첫 불씨의 직격 피해 ×1.45 · 적중 후 세 갈래 불꽃 파편 · ${game.ranks.wildfire
+  return `이동으로 충전 · E 또는 고유기 버튼으로 이동 방향에 직접 발사 · 가까운 전방의 적에 발사각만 보정 · 발사 뒤 직진 · 첫 불씨의 직격 피해 ×1.45 · 적중 후 세 갈래 불꽃 파편 · ${game.ranks.wildfire
     ? '적중 지점 주변에도 3초 연소를 붙입니다.' : `폭발 반경 +18${game.ranks.comet ? ' · 파편도 폭발합니다' : ''}.`}`;
 }
 export function advanceSignature(game, distance) {

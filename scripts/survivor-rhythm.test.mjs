@@ -371,6 +371,41 @@ test('a stationary signature uses the last movement direction and consumes no lo
   assert.deepEqual({xp:g.xp,readyAt:g.burst.readyAt,uses:g.burst.uses},before);
 });
 
+test('manual fire corrects only a nearby forward launch angle across all keyboard directions',()=>{
+  for(let i=0;i<8;i++) {
+    const angle=i*Math.PI/4,g=arena('ember');g.signature.charge=1;g.emberClock=999;
+    const corrected=angle+Math.PI/9;
+    target(g,Math.cos(corrected)*250,Math.sin(corrected)*250);
+    step(g,1,{signature:{x:Math.cos(angle),y:Math.sin(angle)}});
+    const shot=g.shots.find(s=>s.empowered);
+    assert.ok(Math.abs(shot.vx-Math.cos(corrected)*290)<1e-8);
+    assert.ok(Math.abs(shot.vy-Math.sin(corrected)*290)<1e-8);
+    assert.equal(shot.targetId,null,'correction never enables homing');
+    assert.equal(g.signature.activations,1);assert.equal(g.signature.charge,0);
+  }
+});
+test('manual fire ignores side, rear, distant and defeated targets and prefers the smallest correction',()=>{
+  for(const [angle,distance,dead] of [[Math.PI/8+.001,180,false],[Math.PI,80,false],[0,421,false],[.1,150,true]]) {
+    const g=arena('ember');g.signature.charge=1;g.emberClock=999;
+    const e=target(g,Math.cos(angle)*distance,Math.sin(angle)*distance);if(dead)e.hp=0;
+    step(g,1,{signature:{x:1,y:0}});
+    assert.equal(g.shots[0].vy,0);assert.equal(g.shots[0].targetId,null);
+  }
+  const g=arena('ember');g.signature.charge=1;g.emberClock=999;
+  target(g,80,25);target(g,300,30);target(g,200,20);
+  step(g,1,{signature:{x:1,y:0}});
+  assert.ok(Math.abs(Math.atan2(g.shots[0].vy,g.shots[0].vx)-Math.atan2(20,200))<1e-10);
+});
+test('a corrected fireball makes real contact but still misses a target that leaves its launch path',()=>{
+  const fire=()=>{const g=arena('ember');g.signature.charge=1;g.emberClock=999;g.player.invincible=999;return g;};
+  const g=fire(),e=target(g,200,60);step(g,1,{signature:{x:1,y:0}});step(g,45);
+  assert.ok(e.hp<1e5);assert.ok(g.damageDealt.ember>0);assert.equal(g.signature.activations,1);
+  const miss=fire(),moving=target(miss,200,60);step(miss,1,{signature:{x:1,y:0}});
+  const velocity={x:miss.shots[0].vx,y:miss.shots[0].vy};moving.y+=200;step(miss,25);
+  assert.equal(moving.hp,1e5);assert.equal(miss.shots[0].vx,velocity.x);assert.equal(miss.shots[0].vy,velocity.y);
+  assert.equal(miss.signature.charge,0);assert.equal(miss.signature.activations,1);
+});
+
 test('manual guard runes make two real passes, follow the current player and freeze in menus',()=>{
   const g=arena('grove');g.signature.charge=1;g.pulseClock=999;
   const e=target(g,90);e.orbAt=1e6;const damage=Math.round(stats(g).orbitDamage*.45);

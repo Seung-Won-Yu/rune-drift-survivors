@@ -720,6 +720,22 @@ function emberShot(game, s, angle, index, targetId, empowered) {
     blastRadius:(game.ranks.detonation?(game.ranks.comet?90:72):56)+(empowered?18:0)
   };
 }
+// Help eight-direction keyboard aim without steering a projectile after launch.
+// Prefer the smallest correction; a nearby side/rear enemy cannot steal the cast.
+function signatureEmberAngle(game, angle) {
+  let bestAngle=angle,bestError=Math.PI/8,bestDistance=Infinity;
+  for (const enemy of game.enemies) {
+    if (enemy.hp<=0) continue;
+    const x=enemy.x-game.player.x,y=enemy.y-game.player.y,distance=Math.hypot(x,y);
+    if (distance<1 || distance>420) continue;
+    const candidate=Math.atan2(y,x),error=Math.abs(Math.atan2(Math.sin(candidate-angle),Math.cos(candidate-angle)));
+    if (error>Math.PI/8) continue;
+    if (error<bestError || (Math.abs(error-bestError)<1e-10 && distance<bestDistance)) {
+      bestAngle=candidate;bestError=error;bestDistance=distance;
+    }
+  }
+  return bestAngle;
+}
 function landingAttack(game, s) {
   const angle = queueLandingCombo(game);
   if (angle === null || game.shots.length >= LIMITS.shots) return;
@@ -751,14 +767,15 @@ function releaseSignature(game, s) {
     game.swordClock=s.swordCooldown;
     p.facing=aim.x>=0?1:-1;
   } else if (id === 'ember') {
+    const fireAngle=signatureEmberAngle(game,angle);
     for (let i=0;i<s.emberCount && game.shots.length<LIMITS.shots;i++) {
-      const spread=angle+(i===0?0:(i%2?1:-1)*Math.ceil(i/2)*.26);
+      const spread=fireAngle+(i===0?0:(i%2?1:-1)*Math.ceil(i/2)*.26);
       game.shots.push(emberShot(game,s,spread,i,null,i===0));
     }
     // This is the chosen volley, so it also starts the ordinary cast interval.
     game.emberClock=game.ranks.detonation?1.25:.9;
-    game.events.push('ember-shot');p.cast=.4;p.castFacing=aim.x>=0?1:-1;
-    buildFeedback(game,'ember-launch',{x:p.x,y:p.y,angle,character:id,facing:p.castFacing,
+    game.events.push('ember-shot');p.cast=.4;p.castFacing=Math.cos(fireAngle)>=0?1:-1;
+    buildFeedback(game,'ember-launch',{x:p.x,y:p.y,angle:fireAngle,character:id,facing:p.castFacing,
       empowered:true,evolved:!!game.ranks.comet,life:.12});
   } else {
     Object.assign(game.signature,{guard:20,guardUntil:game.time+4,cooldownUntil:game.time+5});

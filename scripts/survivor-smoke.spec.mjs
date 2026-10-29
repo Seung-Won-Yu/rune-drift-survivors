@@ -2890,6 +2890,7 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740
   const held=await snapshot(page);await page.waitForTimeout(120);
   expect((await snapshot(page)).signature.activations).toBe(0);
   await expect(page.locator('#coach')).toContainText('고유기 충전 완료');
+  if(character==='ember')await expect(skill).toHaveAttribute('title',/발사각만 보정.*발사 뒤 직진/);
   const box=await skill.boundingBox(),burst=await page.locator('#burst').boundingBox();
   expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
   expect(box.y+box.height<=burst.y || box.x+box.width<=burst.x).toBe(true);
