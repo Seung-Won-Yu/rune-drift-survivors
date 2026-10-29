@@ -1225,8 +1225,11 @@ export function updateGame(game, dt, input = {
     const dx = p.x - gem.x,
       dy = p.y - gem.y,
       d = Math.hypot(dx, dy);
-    if (gem.recalled || d < s.magnet) {
-      const pull = 220 + (s.magnet - d) * 5;
+    // Once ordinary pickup catches a gem, a fast build cannot strand it by
+    // stepping outside the radius. This creates no new loot or wider pickup.
+    if (d < s.magnet) gem.attracted = true;
+    if (gem.recalled || gem.attracted) {
+      const pull = Math.max(s.speed + 60, 220 + (s.magnet - d) * 5);
       const step = Math.min(d, (gem.recalled ? Math.max(500,pull) : pull) * dt);
       gem.x += dx / (d || 1) * step;
       gem.y += dy / (d || 1) * step;

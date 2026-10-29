@@ -157,3 +157,32 @@ test('a last-step boss victory keeps its result ahead of landing loot',()=>{
  assert.equal(g.bossDefeated,false);frames(g,1);
  assert.equal(g.phase,'ended');assert.equal(g.outcome,'victory');assert.ok(!gem.recalled);assert.equal(g.xp,0);
 });
+
+test('earned pickup stays attached when a fast build runs away from a caught gem',()=>{
+ for(const character of ['ash','ember','grove'])for(const fleet of [0,4]){
+  const g=run();g.characterId=character;g.ranks.sword=g.ranks.ember=g.ranks.orbit=0;g.ranks.fleet=fleet;g.xpNeed=99999;
+  g.gems=[{x:-63,y:0,value:5,age:0}];updateGame(g,1/60);
+  assert.equal(g.gems[0].attracted,true);
+  for(let i=0;i<180;i++)updateGame(g,1/60,{x:1,y:0});
+  assert.equal(g.xp,5);assert.equal(g.gems.length,0);
+ }
+});
+
+test('sticky pickup does not attract untouched gems outside the actual range',()=>{
+ const g=run();g.ranks.sword=0;g.ranks.fleet=4;g.xpNeed=99999;
+ const outside={x:-70,y:0,value:5,age:0};g.gems=[outside];
+ for(let i=0;i<120;i++)updateGame(g,1/60,{x:1,y:0});
+ assert.equal(outside.x,-70);assert.equal(outside.attracted,undefined);assert.equal(g.xp,0);
+});
+
+test('ordinary attraction freezes in menus and preserves raw loot healing exactly once',()=>{
+ const g=run();g.ranks.sword=0;g.ranks.fleet=4;g.xpNeed=99999;g.relics=['dew'];g.player.hp=30;
+ g.gems=[{x:-63,y:0,value:30,age:0}];updateGame(g,1/60);
+ const before=structuredClone(g.gems);
+ for(const phase of ['paused','upgrade','relic','event','ended']){
+  g.phase=phase;updateGame(g,1/30,{x:1,y:0});assert.deepEqual(g.gems,before);assert.equal(g.xp,0);
+ }
+ g.phase='playing';for(let i=0;i<180;i++)updateGame(g,1/60,{x:1,y:0});
+ assert.equal(g.xp,30);assert.equal(g.player.hp,33);assert.equal(g.dewXp,0);assert.equal(g.gems.length,0);
+ for(let i=0;i<120;i++)updateGame(g,1/60);assert.equal(g.xp,30);assert.equal(g.player.hp,33);
+});

@@ -54,7 +54,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front',
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front', 'pickup-chase',
   'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
   'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third',
   'continuation-sword','continuation-ember','continuation-orbit',
@@ -1065,7 +1065,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
     }),
     scenario(name) {
       resetInput();
-      const character = ['growth-ember-three','growth-ember-five','motion-ember-five'].includes(name)?'ember'
+      const character = ['growth-ember-three','growth-ember-five','motion-ember-five','pickup-chase'].includes(name)?'ember'
         : ['growth-orbit-three','growth-orbit-five','motion-orbit-five','continuation-sword','continuation-ember'].includes(name)?'grove'
         : name.startsWith('character-') ? name.slice(10) : ['ember-coal','record-secondary','spectacle-flame'].includes(name) ? 'ember' : name === 'spectacle-rune' ? 'grove' : name === 'experiment-offer' ? game.characterId : 'ash';
       game = createGame(42, character, 'none', profile.experiment, runPreparation(profile, character));
@@ -1086,6 +1086,9 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       } else if (name === 'experiment-offer') {
         game.level = 4; game.ranks[getCharacter(character).weapon] = 3;
         game.gems.push({x:0,y:0,value:9,age:0}); updateGame(game,1/60);
+      } else if (name === 'pickup-chase') {
+        game.ranks.ember=0;game.ranks.fleet=4;game.nextElite=999;game.xpNeed=99999;
+        game.gems=[{x:-63,y:0,value:5,age:0}];updateGame(game,1/60);game.phase='paused';
       } else if (name === 'march-front') {
         game.time=153.99;game.nextElite=999;game.spawnClock=999;game.xpNeed=99999;
         updateGame(game,1/30,{x:1,y:0});game.phase='paused';

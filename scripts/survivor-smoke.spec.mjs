@@ -2854,3 +2854,14 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844}]) {
   expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
  });
 }
+
+test('a caught gem follows a fast character through real movement and pause',async({page})=>{
+ await scenario(page,'pickup-chase');await expect(page.getByRole('button',{name:'전투 계속하기',exact:true})).toBeVisible();
+ const before=await snapshot(page);expect(before.gems).toBe(1);expect(before.xp).toBe(0);
+ await page.waitForTimeout(100);expect((await snapshot(page)).time).toBe(before.time);
+ await page.getByRole('button',{name:'전투 계속하기',exact:true}).click();
+ await page.keyboard.down('d');
+ try{await expect.poll(async()=>(await snapshot(page)).gems).toBe(0);}finally{await page.keyboard.up('d');}
+ const collected=await snapshot(page);expect(collected.xp).toBe(5);expect(collected.level).toBe(before.level);expect(collected.kills).toBe(0);
+ await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'전투 계속하기',exact:true})).toBeVisible();
+});
