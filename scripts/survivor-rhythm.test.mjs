@@ -70,13 +70,13 @@ test('blade continuation locks a real target that can enter or leave between str
 test('empowered blade chains consume once, never recharge and emit the Dawn fan only once',()=>{
   const g=chainArena(5);g.ranks.dawn=1;g.signature.charge=1;
   for(const [x,y] of [[60,0],[60,75],[60,-75]])target(g,x,y);
-  step(g,33);
+  step(g,33,{signature:{x:1,y:0}});
   assert.equal(g.signature.activations,1);assert.equal(g.signature.charge,0);
   assert.equal(g.events.filter(e=>e==='signature-ash').length,1);
   assert.equal(g.shots.filter(shot=>shot.kind==='crescent').length,5);
   const miss=chainArena(3);miss.signature.charge=1;const first=target(miss,60);target(miss,60,75);
-  step(miss,6);first.x=500;step(miss,20);
-  assert.equal(miss.signature.activations,0);assert.equal(miss.signature.charge,1,'a missed charged opening remains available');
+  step(miss,6,{signature:{x:-1,y:0}});first.x=500;step(miss,20);
+  assert.equal(miss.signature.activations,1);assert.equal(miss.signature.charge,0,'an explicitly fired attack spends its charge even when aimed away');
 });
 
 test('pending blade followups freeze across menus, survive ordinary growth and reset with a new run',()=>{
@@ -109,7 +109,8 @@ test('ash charges from real direct blade contacts, caps each swing, spends once 
   const g=arena();for(let i=0;i<8;i++)target(g,60,i-4);
   step(g,26);assert.equal(g.signature.charge,.5);assert.equal(g.signature.activations,0);
   step(g,58);assert.equal(g.signature.charge,1);
-  step(g,58);assert.equal(g.signature.activations,1);assert.equal(g.signature.charge,0);
+  step(g,58);assert.equal(g.signature.activations,0);assert.equal(g.signature.charge,1,'ordinary attacks must hold the ready charge');
+  step(g,13,{signature:{x:1,y:0}});assert.equal(g.signature.activations,1);assert.equal(g.signature.charge,0);
   assert.ok(g.effects.some(e=>e.kind==='slash'&&e.empowered)||g.events.includes('signature-ash'));
   const miss=arena();miss.signature.charge=1;const victim=target(miss);step(miss,13);victim.hp=0;step(miss,15);assert.equal(miss.signature.charge,1);assert.equal(miss.signature.activations,0);
   const empty=arena();step(empty,200);assert.equal(empty.signature.charge,0);
@@ -121,12 +122,13 @@ test('ember movement earns only one empowered shot per volley; menus, standing a
   g.phase='paused';const before=JSON.stringify(g.signature);step(g,100,{x:1,y:0});assert.equal(JSON.stringify(g.signature),before);
   g.phase='playing';advanceSignature(g,1000);g.ranks.ember=5;target(g,g.player.x+300);
   g.shots=Array.from({length:LIMITS.shots},()=>({x:1e4,y:1e4,vx:0,vy:0,life:20}));step(g);assert.equal(g.signature.charge,1);
-  g.shots=[];g.emberClock=0;step(g);assert.equal(g.shots.filter(s=>s.empowered).length,1);assert.equal(g.signature.activations,1);assert.equal(g.signature.charge,0);
+  step(g,1,{signature:{x:1,y:0}});assert.equal(g.signature.charge,1);assert.equal(g.signature.activations,0);
+  g.shots=[];g.emberClock=0;step(g,1,{signature:{x:1,y:0}});assert.equal(g.shots.filter(s=>s.empowered).length,1);assert.equal(g.signature.activations,1);assert.equal(g.signature.charge,0);
 });
 test('ember signature description matches empowered projectiles for each specialization', () => {
   for (const branch of ['wildfire','detonation']) {
     const g=arena('ember');Object.assign(g.ranks,{ember:5,comet:1,[branch]:1});
-    target(g,300);advanceSignature(g,1000);g.emberClock=0;step(g);
+    target(g,300);advanceSignature(g,1000);g.emberClock=0;step(g,1,{signature:{x:1,y:0}});
     const shot=g.shots.find(s=>s.empowered);
     assert.ok(shot);assert.equal(shot.blast,branch==='detonation');
     const description=signatureState(g).description;
@@ -138,7 +140,8 @@ test('ember signature description matches empowered projectiles for each special
 });
 test('grove needs spaced actual orbit contacts; shield absorbs before HP feedback, expires and cannot stack', () => {
   const g=arena('grove');for(let i=0;i<6;i++){g.time=i*.4;chargeRune(g);chargeRune(g);}
-  assert.equal(g.signature.guard,20);assert.equal(g.signature.activations,1);chargeRune(g);assert.equal(g.signature.charge,0);
+  assert.ok(Math.abs(g.signature.charge-1)<1e-9);assert.equal(g.signature.guard,0);assert.equal(g.signature.activations,0);
+  step(g,1,{signature:{x:1,y:0}});assert.equal(g.signature.guard,20);assert.equal(g.signature.activations,1);chargeRune(g);assert.equal(g.signature.charge,0);
   g.relics=['briar'];g.ranks.orbit=0;const e=target(g,0,0);e.damage=10;step(g);
   assert.equal(g.player.hp,125);assert.equal(g.signature.absorbed,8.5);assert.equal(g.damageTaken.contact,0);assert.equal(g.lastHurt,null);assert.equal(g.player.impact,null);assert.ok(!g.events.includes('hurt'));assert.equal(g.damageDealt.relic,0);
   g.player.invincible=0;e.damage=20;step(g);assert.equal(g.player.hp,119.5);assert.equal(g.damageTaken.contact,5.5);assert.equal(g.signature.absorbed,20);assert.ok(g.events.includes('hurt'));
@@ -206,7 +209,7 @@ function secondaryFlame(rank,branch=null,comet=false) {
 
 test('fire milestones change only secondary shots and preserve real volley counts and first-shot charge',()=>{
   for(const rank of [1,2,3,4,5]) {
-    const g=arena('ember');g.ranks.ember=rank;target(g,100);g.emberClock=0;g.signature.charge=1;step(g);
+    const g=arena('ember');g.ranks.ember=rank;target(g,100);g.emberClock=0;g.signature.charge=1;step(g,1,{signature:{x:1,y:0}});
     assert.equal(g.shots.length,1+Math.floor(rank/2));
     assert.equal(g.signature.activations,1);assert.equal(g.shots[0].empowered,true);
     assert.equal(g.shots[0].hopsLeft,undefined);
@@ -252,7 +255,7 @@ test('hops cannot repeat damage on a single boss, jump beyond reach or multiply 
   const boss=spawnBoss(g);Object.assign(boss,{x:60,y:0,entrance:0,attackClock:999});shot.targetId=boss.id;
   const hp=boss.hp;step(g,60);assert.ok(Math.abs(hp-boss.hp-damage)<1e-7);assert.equal(shot.hitIds.length,1);
   const far=secondaryFlame(3);const outside=target(far.g,500);step(far.g,90);assert.equal(outside.hp,1e5);assert.equal(far.g.shots.length,0);
-  const charged=arena('ember');charged.ranks.ember=5;charged.signature.charge=1;target(charged,100);charged.emberClock=0;step(charged);
+  const charged=arena('ember');charged.ranks.ember=5;charged.signature.charge=1;target(charged,100);charged.emberClock=0;step(charged,1,{signature:{x:1,y:0}});
   charged.shots=charged.shots.slice(0,1);charged.emberClock=999;step(charged,24);
   assert.equal(charged.signature.activations,1);assert.equal(charged.shots.length,3);
   for(const s of charged.shots){assert.equal(s.kind,'ember-splinter');assert.equal(s.hopsLeft,undefined);}
@@ -312,4 +315,79 @@ test('milestone cards and equipped descriptions disclose the actual new rules an
   const rune=arena('grove');rune.ranks.orbit=2;assert.match(upgradeChange(rune,'orbit'),/옆으로 -25%/);
   rune.ranks.orbit=4;assert.match(upgradeChange(rune,'orbit'),/옆으로 -40%/);rune.ranks.orbit=5;
   assert.match(weaponPresentation(rune,'orbit').description,/옆은 40% 좁아/);
+});
+
+
+test('ready signatures are held through ordinary attacks and a breakthrough until an explicit release',()=>{
+  for(const id of ['ash','ember','grove']) {
+    const g=arena(id);g.signature.charge=1;target(g,65);g.xpNeed=1e6;g.player.invincible=999;
+    step(g,90);assert.equal(g.signature.activations,0);assert.equal(g.signature.charge,1);assert.equal(g.signature.guard,0);
+    step(g,20,{burst:{x:1,y:0}});assert.equal(g.signature.activations,0);assert.equal(g.signature.charge,1);
+    step(g,1,{signature:{x:1,y:0}});assert.equal(g.signature.activations,1);assert.equal(g.signature.charge,0);
+  }
+});
+test('explicit offensive signatures aim into real space and can miss without refunding their charge',()=>{
+  for(const id of ['ash','ember']) {
+    const g=arena(id);g.signature.charge=1;g.swordClock=g.emberClock=999;
+    const ahead=target(g,180),behind=target(g,-180);g.player.invincible=999;
+    step(g,1,{signature:{x:10,y:0}});step(g,40);
+    assert.equal(g.signature.activations,1);assert.ok(ahead.hp<1e5);assert.equal(behind.hp,1e5);
+    assert.ok(g.damageDealt[id==='ash'?'sword':'ember']>0);assert.equal(g.xp,0);
+    const miss=arena(id);miss.signature.charge=1;miss.swordClock=miss.emberClock=999;
+    const rear=target(miss,-230);step(miss,1,{signature:{x:1,y:0}});step(miss,40);
+    assert.equal(rear.hp,1e5);assert.equal(miss.signature.charge,0);assert.equal(miss.signature.activations,1);
+  }
+});
+test('manual signatures reject menus and the terminal boundary, retain requests through hit stop and reset on retry',()=>{
+  for(const id of ['ash','ember','grove']) {
+    for(const phase of ['paused','upgrade','relic','preview','event','ended']) {
+      const g=arena(id);g.signature.charge=1;g.phase=phase;const before=JSON.stringify(g);
+      step(g,1,{signature:{x:1,y:0}});assert.equal(JSON.stringify(g),before);
+    }
+    const g=arena(id);g.signature.charge=1;g.impactStop=.04;
+    step(g,1,{signature:{x:0,y:1}});assert.equal(g.signature.activations,0);assert.deepEqual(g.signature.pending,{x:0,y:1});
+    step(g,4);assert.equal(g.signature.activations,1);assert.equal(g.signature.pending,null);
+    const fresh=createGame(43,id);assert.equal(fresh.signature.charge,0);assert.equal(fresh.signature.pending,null);assert.equal(fresh.signature.guard,0);
+    const limit=arena(id);limit.signature.charge=1;limit.time=300-1/120;
+    step(limit,1,{signature:{x:1,y:0}});assert.equal(limit.signature.activations,0);assert.equal(limit.signature.charge,1);assert.equal(limit.phase,'ended');
+    const dead=arena(id);dead.player.hp=0;dead.signature.charge=1;step(dead,1,{signature:{x:1,y:0}});assert.equal(dead.signature.activations,0);
+  }
+});
+test('full projectile capacity retains offensive charge while a manual guard can still protect',()=>{
+  for(const id of ['ash','ember','grove']) {
+    const g=arena(id);g.signature.charge=1;g.swordClock=g.emberClock=999;
+    g.shots=Array.from({length:LIMITS.shots},()=>({x:10000,y:10000,vx:0,vy:0,life:20}));
+    step(g,1,{signature:{x:1,y:0}});assert.equal(g.shots.length,LIMITS.shots);
+    assert.equal(g.signature.activations,id==='grove'?1:0);
+    assert.equal(g.signature.charge,id==='grove'?0:1);
+    assert.equal(g.signature.guard,id==='grove'?20:0);
+  }
+});
+test('a stationary signature uses the last movement direction and consumes no loot or breakthrough cooldown',()=>{
+  const g=arena('ember');g.signature.charge=1;g.emberClock=999;g.burst.aimX=0;g.burst.aimY=-1;
+  const before={xp:g.xp,readyAt:g.burst.readyAt,uses:g.burst.uses};
+  step(g,1,{signature:{x:Infinity,y:NaN}});
+  assert.ok(g.shots[0].vy<0);assert.ok(Math.abs(g.shots[0].vx)<1e-8);assert.equal(g.shots[0].targetId,null);
+  assert.deepEqual({xp:g.xp,readyAt:g.burst.readyAt,uses:g.burst.uses},before);
+});
+
+test('manual guard runes make two real passes, follow the current player and freeze in menus',()=>{
+  const g=arena('grove');g.signature.charge=1;g.pulseClock=999;
+  const e=target(g,90);e.orbAt=1e6;const damage=Math.round(stats(g).orbitDamage*.45);
+  step(g,1,{signature:{x:1,y:0}});step(g,52);
+  assert.equal(e.hp,1e5-damage*2,'one outgoing and one returning contact, without ordinary orbit damage');
+  const steer=arena('grove');steer.signature.charge=1;steer.pulseClock=999;
+  step(steer,1,{signature:{x:1,y:0}});step(steer,25);
+  const ray=steer.shots.find(s=>s.kind==='rune-burst'&&s.vx<0&&Math.abs(s.y)<1);
+  assert.ok(ray?.returning);step(steer,2,{x:0,y:1});assert.ok(ray.vy>0);
+  steer.phase='paused';const before=JSON.stringify(steer);step(steer,60);assert.equal(JSON.stringify(steer),before);
+});
+
+test('a returning guard rune respects three distinct victims per leg',()=>{
+  const g=arena('grove');g.signature.charge=1;g.pulseClock=999;
+  const victims=[50,75,100,125,150].map(x=>{const e=target(g,x);e.orbAt=1e6;e.interruptedUntil=999;return e;});
+  const damage=Math.round(stats(g).orbitDamage*.45);
+  step(g,1,{signature:{x:1,y:0}});step(g,60);
+  for(const e of victims.slice(0,3))assert.ok(e.hp<=1e5-damage && e.hp>=1e5-damage*2);
+  for(const e of victims.slice(3))assert.equal(e.hp,1e5);
 });

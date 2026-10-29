@@ -4,7 +4,7 @@ import { emberHops, emberGrowth, continueEmber } from './ember-chain.js';
 import { ORBIT_IDENTITY, advanceOrbitShape, orbitOffset, orbitGrowth } from './orbit-shape.js';
 import { BURST, createBurst, startBurst, advanceBurst, burstDistance } from './burst.js';
 import { createLandingCombo, queueLandingCombo, advanceLandingCombo, sweptOrbitHeads } from './landing-combo.js';
-import { createSignature, advanceSignature, chargeBlade, chargeRune, consumeSignature, absorbDamage } from './signature.js';
+import { createSignature, advanceSignature, chargeBlade, chargeRune, consumeSignature, canReleaseSignature, absorbDamage } from './signature.js';
 import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact, recordBossDamage } from './impact.js';
 import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy, interruptWindup } from './enemies.js';
 import { updateEncounters, curseActive } from './encounters.js';
@@ -704,9 +704,9 @@ export function orbitPositions(game) {
     };
   });
 }
-function bladeSwing(game, angle, landing = false) {
+function bladeSwing(game, angle, empowered = false) {
   return {age:0,angle,hit:false,hitIds:[],chargedHits:0,followups:bladeFollowups(game.ranks.sword),
-    empowered:!landing && game.characterId === 'ash' && game.signature.charge >= 1-1e-9};
+    empowered};
 }
 function emberShot(game, s, angle, index, targetId, empowered) {
   return {
@@ -730,11 +730,48 @@ function landingAttack(game, s) {
   buildFeedback(game,'ember-launch',{x:game.player.x,y:game.player.y,angle,character:game.characterId,
     facing:Math.cos(angle)>=0?1:-1,empowered:false,evolved:!!game.ranks.comet,life:.12});
 }
+function releaseSignature(game, s) {
+  const aim=game.signature.pending;
+  if (!aim) return;
+  game.signature.pending=null;
+  if (!canReleaseSignature(game) || game.time >= RUN_SECONDS || game.bossDefeated) return;
+  const id=game.characterId,p=game.player;
+  // Keep a capped offensive pool from spending a charge without an attack.
+  if (id !== 'grove' && game.shots.length >= LIMITS.shots) {
+    game.events.push('signature-blocked'); return;
+  }
+  if (!consumeSignature(game,id)) return;
+  const angle=Math.atan2(aim.y,aim.x);
+  if (id === 'ash') {
+    // An explicit strike takes priority over an unfinished automatic opening.
+    game.swing=bladeSwing(game,angle,true);
+    game.swordClock=s.swordCooldown;
+    p.facing=aim.x>=0?1:-1;
+  } else if (id === 'ember') {
+    for (let i=0;i<s.emberCount && game.shots.length<LIMITS.shots;i++) {
+      const spread=angle+(i===0?0:(i%2?1:-1)*Math.ceil(i/2)*.26);
+      game.shots.push(emberShot(game,s,spread,i,null,i===0));
+    }
+    // This is the chosen volley, so it also starts the ordinary cast interval.
+    game.emberClock=game.ranks.detonation?1.25:.9;
+    game.events.push('ember-shot');p.cast=.4;p.castFacing=aim.x>=0?1:-1;
+    buildFeedback(game,'ember-launch',{x:p.x,y:p.y,angle,character:id,facing:p.castFacing,
+      empowered:true,evolved:!!game.ranks.comet,life:.12});
+  } else {
+    Object.assign(game.signature,{guard:20,guardUntil:game.time+4,cooldownUntil:game.time+5});
+    p.cast=.4;
+    for (let i=0;i<8 && game.shots.length<LIMITS.shots;i++) {
+      const a=angle+i*Math.PI/4,vx=Math.cos(a),vy=Math.sin(a);
+      game.shots.push({kind:'rune-burst',x:p.x+vx*24,y:p.y+vy*24,vx:vx*260,vy:vy*260,
+        life:1.2,turnAt:game.time+.4,damage:Math.round(s.orbitDamage*.45),hitIds:[]});
+    }
+  }
+}
 function updateWeapons(game, dt, s, beforeOrbit) {
   const p = game.player;
   game.swordClock -= dt;
   if (game.landingCombo.sword && !game.swing) {
-    game.swing=bladeSwing(game,game.landingCombo.sword.angle,true);
+    game.swing=bladeSwing(game,game.landingCombo.sword.angle);
     game.landingCombo.sword=null;
   }
   if (game.ranks.sword && !game.swing && game.swordClock <= 0) {
@@ -780,12 +817,11 @@ function updateWeapons(game, dt, s, beforeOrbit) {
           }
         }
       }
-      if (swing.empowered && hits > 0) consumeSignature(game, 'ash');
-      else if (!swing.empowered) {
+      if (!swing.empowered) {
         swing.chargedHits = Math.min(3, hits);
         chargeBlade(game, swing.chargedHits);
       }
-      const fan = swing.empowered && hits > 0;
+      const fan = swing.empowered;
       const angles = fan ? game.ranks.dawn ? [0, -.3, .3, -.6, .6] : [0, -.32, .32] : game.ranks.dawn ? [0] : [];
       for (const offset of angles) {
         if (game.shots.length >= LIMITS.shots) break;
@@ -856,7 +892,7 @@ function updateWeapons(game, dt, s, beforeOrbit) {
         for (let i = 0; i < s.emberCount && game.shots.length < LIMITS.shots; i++) {
           const target = targets[i % targets.length],
             a = Math.atan2(target.y - p.y, target.x - p.x);
-          const empowered = i === 0 && consumeSignature(game, 'ember');
+          const empowered = false;
           if (i === 0) buildFeedback(game, 'ember-launch', {
             x: p.x, y: p.y, angle: a, character: game.characterId, facing: p.castFacing,
             empowered, evolved: !!game.ranks.comet, life: .12
@@ -931,6 +967,12 @@ function updateWeapons(game, dt, s, beforeOrbit) {
         }
         if (piercing) {
           shot.hitIds.push(enemy.id);
+          // A guard rune can strike three targets on each leg. Reaching that
+          // cap turns it back early; returning never revisits the same victim.
+          if (rune && shot.turnAt && shot.hitIds.length >= 3) {
+            if (!shot.returning) shot.turnAt=game.time; else shot.life=0;
+            break;
+          }
           if (shot.turnAt || shot.hitIds.length < (rune ? 3 : 8)) continue;
         }
         if(continueEmber(game,shot))break;
@@ -949,14 +991,7 @@ function updateWeapons(game, dt, s, beforeOrbit) {
           d = Math.hypot(dx, dy) || 1;
         enemy.orbAt = game.time;
         if (hitEnemy(game, enemy, s.orbitDamage, 'orbit', dx / d * (game.ranks.bulwark ? 3.24 : 1.8), dy / d * (game.ranks.bulwark ? 3.24 : 1.8)) > 0) {
-          const activations = game.signature.activations;
           chargeRune(game);
-          if (game.signature.activations > activations) {
-            for (let i=0;i<8 && game.shots.length+fragments.length<LIMITS.shots;i++) {
-              const a=game.time*2.8+i*Math.PI/4,vx=Math.cos(a),vy=Math.sin(a);
-              game.shots.push({kind:'rune-burst',x:p.x+vx*24,y:p.y+vy*24,vx:vx*260,vy:vy*260,life:.65,damage:Math.round(s.orbitDamage*.45),hitIds:[]});
-            }
-          }
           buildFeedback(game, 'rune-touch', { x: orb.x, y: orb.y, angle: Math.atan2(orb.y - p.y, orb.x - p.x) + Math.PI / 2,
             branch: specializationFor(game, 'orbit'), life: .14 }, .055);
         }
@@ -1072,6 +1107,13 @@ export function updateGame(game, dt, input = {
 }) {
   if (game.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   dt = Math.min(dt, 1 / 30);
+  if (input.signature && canReleaseSignature(game)) {
+    let x=Number.isFinite(input.signature.x)?input.signature.x:0,
+      y=Number.isFinite(input.signature.y)?input.signature.y:0;
+    if (Math.hypot(x,y)<.01) {x=game.burst.aimX;y=game.burst.aimY;}
+    const length=Math.hypot(x,y)||1;
+    game.signature.pending={x:x/length,y:y/length};
+  }
   // A request made during the short contact stop remains a real queued action.
   if (input.burst) startBurst(game,input.burst);
   if (game.impactStop > 0) {
@@ -1083,6 +1125,7 @@ export function updateGame(game, dt, input = {
     x:game.player.x,y:game.player.y,heads:orbitPositions(game).map(head=>({...head,shape:{...head.shape}}))
   } : null;
   game.time = Math.min(RUN_SECONDS, game.time + dt);
+  releaseSignature(game,stats(game));
   if (game.eliteFinish && game.time - game.eliteFinish.at >= game.eliteFinish.life) game.eliteFinish = null;
   const danger = curseActive(game) ? 1.25 : 1;
   const p = game.player,

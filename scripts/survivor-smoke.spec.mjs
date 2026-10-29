@@ -2879,3 +2879,38 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740
   expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
  });
 }
+
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}])for(const character of ['ash','ember','grove']) {
+ test(`manual signature ${character} holds charge and accepts a distinct action at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,`manual-${character}`);
+  const skill=page.locator('#release-signature');await expect(skill).toBeEnabled();
+  const held=await snapshot(page);await page.waitForTimeout(120);
+  expect((await snapshot(page)).signature.activations).toBe(0);
+  await expect(page.locator('#coach')).toContainText('고유기 충전 완료');
+  const box=await skill.boundingBox(),burst=await page.locator('#burst').boundingBox();
+  expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
+  expect(box.y+box.height<=burst.y || box.x+box.width<=burst.x).toBe(true);
+  await expect(skill).toBeInViewport({ratio:1});
+  if(viewport.width===1280)await page.keyboard.press('e');else await skill.click();
+  await expect.poll(async()=>(await snapshot(page)).signature.activations).toBe(1);
+  expect((await snapshot(page)).burst.uses).toBe(held.burst.uses);
+  if(character==='grove')expect((await snapshot(page)).signature.guard).toBe(20);
+  else await expect.poll(async()=>(await snapshot(page)).damageDealt[character==='ash'?'sword':'ember']).toBeGreaterThan(0);
+  await page.keyboard.press('Escape');const paused=await snapshot(page);
+  await page.keyboard.press('e');await page.waitForTimeout(80);
+  expect((await snapshot(page)).signature).toEqual(paused.signature);expect((await snapshot(page)).time).toBe(paused.time);
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  await page.screenshot({path:`output/playwright/survivor/manual-signature-${character}-${viewport.width}.png`});
+ });
+}
+test.describe('manual signature touch input',()=>{
+ test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
+ test('the signature thumb target fires independently of movement and breakthrough',async({page})=>{
+  await scenario(page,'manual-ember');const skill=page.locator('#release-signature');
+  const stick=await page.locator('#touch').boundingBox(),box=await skill.boundingBox();
+  expect(stick.x+stick.width).toBeLessThan(box.x);
+  await skill.tap();await expect.poll(async()=>(await snapshot(page)).signature.activations).toBe(1);
+  expect((await snapshot(page)).burst.uses).toBe(0);await expect(skill).toBeDisabled();
+  await page.keyboard.press('Escape');
+ });
+});

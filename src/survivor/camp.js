@@ -17,9 +17,9 @@ const outcomeName = {
   defeat: '쓰러짐'
 };
 const companionRhythm = {
-  ash: '검을 맞혀 충전하고, 다음 검격으로 돌파하세요.',
-  ember: '움직여 충전하고, 강화 불씨를 날리세요.',
-  grove: '룬을 맞혀 충전하고, 보호막으로 버티세요.'
+  ash: '검을 맞혀 충전한 뒤, E로 무리를 관통하세요.',
+  ember: '움직여 충전한 뒤, E로 무리가 모인 곳을 겨냥하세요.',
+  grove: '룬을 맞혀 충전한 뒤, E로 위험한 순간을 버티세요.'
 };
 export function portrait(id, large = false) {
   const c = getCharacter(id);
@@ -133,7 +133,7 @@ export function campScreen(game, profile, warning, section = 'prepare', preparat
   ${game.goal || game.experiment ? `<div class="camp-objective">${goalPlan(game, profile)}${experimentPlan(game)}</div>` : ''}</div></section>
   <section class="camp-journal camp-section" aria-label="숙련과 여정 기록" ${section === 'journal' ? '' : 'hidden'}><div class="journal-heading"><p class="eyebrow">여정의 기록</p><h2>지난 여정이 다음 힘이 됩니다</h2><p>발견과 해금은 쓰러져도 남습니다.</p></div>${masteryBoard(game, profile)}${journeyScreen(profile)}
   <details class="camp-records"><summary>여정 기록 <span>${profile.runs}회 도전 · ${profile.wins}회 군주 격파</span></summary><p class="next-goal">${nextGoal(profile)}</p><p class="record-line">전문화 발견 ${profile.buildDiscoveries.length}/6 · 유물 발견 ${profile.relicDiscoveries.length}/6</p><p class="record-line">${c.name} · 최고 ${record.bestKills} 처치 · 최장 ${formatTime(record.bestTime)}${record.fastestWin === null ? '' : ` · 최단 격파 ${formatTime(record.fastestWin)}`}</p><div class="discoveries">${Object.keys(EVOLUTIONS).map(id => `<span class="${profile.discoveries.includes(id) ? 'found' : ''}">${profile.discoveries.includes(id) ? '발견' : '미발견'} · ${UPGRADE_META[id].name}</span>`).join('')}</div>${profile.history.length ? `<ol class="run-history">${profile.history.map(row => `<li><span>${getCharacter(row.character).name} · ${outcomeName[row.outcome]}${row.vow === 'mist' ? ' · 짙은 안개' : ''}</span><span>${formatTime(row.time)} · ${row.kills} 처치</span></li>`).join('')}</ol>` : '<p class="record-line">첫 여정을 시작하면 기록이 남습니다.</p>'}</details></section></div>${storageNotice(warning)}
-  <footer class="camp-departure"><button class="camp-mission" data-open-entry="${mission.id}"><span>${mission.label}</span><strong>${mission.title}</strong><small>${mission.detail}</small><b aria-hidden="true">→</b></button><p class="departure-summary"><strong>${c.name} · 체력 ${game.player.maxHp} · 이동 ${c.speed + k.speed}</strong><span>${game.inheritance ? SPECIALIZATIONS[game.inheritance].name : '자유로운 출발'} · ${k.name}</span></p><div><button id="start-game" class="primary">숲에 들어가기 <span aria-hidden="true">→</span></button><p class="controls-note"><span class="keyboard-copy">WASD / 방향키 이동 · Esc 일시정지</span><span class="touch-copy">왼쪽 조이스틱 이동 · 공격은 자동</span></p></div></footer>`;
+  <footer class="camp-departure"><button class="camp-mission" data-open-entry="${mission.id}"><span>${mission.label}</span><strong>${mission.title}</strong><small>${mission.detail}</small><b aria-hidden="true">→</b></button><p class="departure-summary"><strong>${c.name} · 체력 ${game.player.maxHp} · 이동 ${c.speed + k.speed}</strong><span>${game.inheritance ? SPECIALIZATIONS[game.inheritance].name : '자유로운 출발'} · ${k.name}</span></p><div><button id="start-game" class="primary">숲에 들어가기 <span aria-hidden="true">→</span></button><p class="controls-note"><span class="keyboard-copy">WASD 이동 · E 고유기 · Space 돌파 · Esc 일시정지</span><span class="touch-copy">왼쪽 스틱 이동 · 오른쪽 고유기 / 돌파 · 기본 공격 자동</span></p></div></footer>`;
 }
 export function buildSummary(game) {
   const branches = Object.keys(SPECIALIZATIONS).filter(key => game.ranks[key]);

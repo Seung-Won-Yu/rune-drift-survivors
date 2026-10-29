@@ -12,6 +12,8 @@ The lobby image shows a fresh profile. Companions, combat styles and keepsakes u
 
 The combat image uses a development-only boss scenario to show the warning clearly; ordinary runs reach the sovereign after four minutes.
 
+- **Choose when to use your companion's power:** basic attacks stay automatic, while earned signature charge is held until E/the signature touch button. Aim Ash's piercing blades or Ember's splitting volley with movement; time Grove's guard and steer its eight returning runes by repositioning. Breakthrough stays separate. [Controls, combat rules and playtest limits](./docs/design/survivor-restart/60-CHOOSE-THE-SIGNATURE.md).
+
 - **A deliberate action inside the fight:** Space or the separate touch button makes a short directional breakthrough with real primary-weapon hits and a 4.2-second cooldown. Growth now returns to combat for three seconds (four after evolution), preserving banked XP; owned support weapon families rotate between actual offers. These are playable experiments in combat decisions and rhythm, with an 18-run comparison per version and explicit limits on what testing proves. [Rules, references and verification](./docs/design/survivor-restart/49-COMBAT-DECISIONS-PROTOTYPE.md).
 
 - **Sword growth changes the attack:** rank 3 adds one fresh-target follow-up, and rank 5 adds two. The full opening cleave remains; later cuts lock their own nearby target before contact, with matching regrip poses and alternating curved trails. An enemy takes at most one direct hit per combo, and Ash gains at most three charges. These milestones work with both sword branches and Dawn. [Rules and playtest limits](./docs/design/survivor-restart/50-BLADE-GROWTH-MILESTONES.md).
@@ -91,7 +93,7 @@ npm ci
 npm run dev
 ```
 
-Open **[the local game](http://127.0.0.1:5173/)**. Move with WASD/arrows or the touch stick. Attacks are automatic; use Space/the right touch button for a directional breakthrough, Escape/P to pause and 1–3, Enter or a card to choose an upgrade. No backend, account, or environment secrets are required.
+Open **[the local game](http://127.0.0.1:5173/)**. Move with WASD/arrows or the touch stick. Basic attacks are automatic. Earn and hold each companion’s signature charge, then use E/the signature touch button to release it (aim with your movement direction; standing keeps the last direction). Use Space/the breakthrough touch button for a directional breakthrough, Escape/P to pause and 1–3, Enter or a card to choose an upgrade. No backend, account, or environment secrets are required.
 
 ## Verify and deploy
 

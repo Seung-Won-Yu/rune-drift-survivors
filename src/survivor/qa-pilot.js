@@ -1,9 +1,10 @@
 import { SPORE, HOUND, GIANT, sporeRule, huntRule } from './enemies.js';
 import { trackedEncounter, encounterDistance } from './encounters.js';
 // Development-only input driver. Uses ordinary upgrades and simulation time; never changes combat stats.
-import { SLAM } from './game.js';
+import { SLAM, stats } from './game.js';
 import { BOSS } from './boss.js';
 import { goalProgress, goalRelevant } from './goals.js';
+import { canReleaseSignature } from './signature.js';
 export const routes = {
   blade: ['sweep', 'horizon', 'detonation', 'dawn', 'sword', 'orbit', 'vitality', 'fleet', 'magnet', 'comet', 'lunar', 'ember', 'heal'],
   comet: ['wildfire', 'duelist', 'horizon', 'comet', 'ember', 'fleet', 'magnet', 'vitality', 'orbit', 'sword', 'lunar', 'dawn', 'heal'],
@@ -116,6 +117,16 @@ export function createPilot(route) {
             break;
           }
         }
+      }
+      // Diagnostic input uses the same turn-and-release available on a stick:
+      // aim toward a visible nearby foe for this frame, then resume navigation.
+      const aim=canReleaseSignature(game) && game.enemies.filter(e=>e.hp>0 && (!e.boss || e.entrance<=0))
+        .sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y))[0];
+      const releaseRange=game.characterId==='ash'?stats(game).swordRange+25:game.characterId==='grove'?160:500;
+      if (aim && Math.hypot(aim.x-player.x,aim.y-player.y)<releaseRange) {
+        const distance=Math.hypot(aim.x-player.x,aim.y-player.y)||1;
+        const direction={x:(aim.x-player.x)/distance,y:(aim.y-player.y)/distance};
+        return {...direction,signature:direction};
       }
       return {
         x: dx,

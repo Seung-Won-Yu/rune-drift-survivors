@@ -6,7 +6,7 @@ import { landingComboHint } from './landing-combo.js';
 import { growthContext, fieldLoadout, upgradeRecipeHint, growthChoice, evolutionGuidance, goalGuidanceMarkup, specializationPreview } from './field-guide.js';
 import { loadPreferences, savePreferences, preferenceControls, reduceMotion } from './preferences.js';
 import { CHAMPIONS, championStatus } from './champions.js';
-import { SIGNATURES, signatureState } from './signature.js';
+import { SIGNATURES, signatureState, canReleaseSignature } from './signature.js';
 import { attackPose, isEvolvedWeapon, hurtFeedback, bossHealthTrail } from './impact.js';
 import { GIANT } from './enemies.js';
 import { combatPacing } from './pacing.js';
@@ -54,7 +54,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front', 'pickup-chase', 'interrupt-giant',
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front', 'pickup-chase', 'interrupt-giant', 'manual-ash', 'manual-ember', 'manual-grove',
   'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
   'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third',
   'continuation-sword','continuation-ember','continuation-orbit',
@@ -95,6 +95,7 @@ let stick = {
 const audio = createAudio();
 const keys = new Set();
 let burstRequest = null;
+let signatureRequest = null;
 let campView = 'prepare', campSection = 'prepare', codexFilter = 'all', codexSelection = null, preparation = 'inheritance';
 let earnedReceipt = null, rerollFeedback = false, codexDetailOpen = false;
 let resultReturn = null, pauseSection = 'equipment';
@@ -124,6 +125,7 @@ try {
 function resetInput() {
   keys.clear();
   burstRequest = null;
+  signatureRequest = null;
   stick = {
     x: 0,
     y: 0,
@@ -150,6 +152,13 @@ function updateSound() {
 function requestBurst() {
   if(!canBurst(game))return;
   burstRequest={
+    x:(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+stick.x,
+    y:(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+stick.y
+  };
+}
+function requestSignature() {
+  if (!canReleaseSignature(game)) return;
+  signatureRequest={
     x:(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+stick.x,
     y:(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+stick.y
   };
@@ -758,6 +767,16 @@ function updateHud() {
   $('signature-meter').setAttribute('aria-valuenow', String(Math.round(ability.value * 100)));
   $('signature-meter').setAttribute('aria-valuetext', `${ability.name} · ${ability.label} · ${ability.action}`);
   $('signature').title = ability.description;
+  const skill=$('release-signature'),skillReady=canReleaseSignature(game);
+  skill.disabled=!skillReady;skill.classList.toggle('is-ready',skillReady);
+  skill.style.setProperty('--signature-color',ability.color);
+  skill.style.setProperty('--burst-ready',String(game.signature.charge));
+  $('signature-control-name').textContent=ability.control;
+  $('signature-control-state').textContent=skillReady?(matchMedia('(pointer:coarse)').matches?'발동':'E'):ability.state==='rest'?'회복 중':ability.state==='guard'?'보호 중':`${Math.floor(game.signature.charge*100)}%`;
+  const skillWeapon=getCharacter(game.characterId).weapon;
+  if(skill.dataset.weapon!==skillWeapon){$('signature-control-icon').innerHTML=icon(skillWeapon);skill.dataset.weapon=skillWeapon;}
+  skill.title=ability.description;
+  skill.setAttribute('aria-label',skillReady?`고유기 · ${ability.control} · E`:`${ability.control} 충전 중 · ${Math.floor(game.signature.charge*100)}%`);
   const encounter = trackedEncounter(game);
   $('encounter-hud').hidden = !encounter || game.phase !== 'playing';
   if (encounter) {
@@ -812,8 +831,9 @@ function updateHud() {
   burst.style.setProperty('--burst-ready',String(1-Math.min(1,remaining/BURST.cooldown)));
   $('burst-state').textContent=remaining>0?`${remaining.toFixed(1)}초`:matchMedia('(pointer:coarse)').matches?'준비':'Space';
   burst.setAttribute('aria-label',ready?'돌파 · Space':`돌파 준비 중 · ${remaining.toFixed(1)}초`);
-    $('coach').textContent = game.time < 5 ? (matchMedia('(pointer:coarse)').matches ? '왼쪽 스틱 이동 · 오른쪽 돌파 · 공격은 자동' : 'WASD 이동 · Space 돌파 · Esc 일시정지') : game.time < 12 ? '돌파한 곳 주변의 경험치가 모입니다' : `공격은 자동 · ${SIGNATURES[game.characterId].action}`;
-  $('coach').hidden = game.time >= 14 || needsRecovery;
+  const firstSkill=skillReady && game.signature.activations===0;
+  $('coach').textContent = firstSkill ? (matchMedia('(pointer:coarse)').matches ? '고유기 충전 완료 · 오른쪽 고유기 버튼으로 발동하세요' : '고유기 충전 완료 · 방향을 잡고 E로 발동하세요') : game.time < 5 ? (matchMedia('(pointer:coarse)').matches ? '왼쪽 스틱 이동 · 오른쪽 고유기와 돌파 · 기본 공격 자동' : 'WASD 이동 · E 고유기 · Space 돌파') : game.time < 12 ? '돌파한 곳 주변의 경험치가 모입니다' : `기본 공격 자동 · ${SIGNATURES[game.characterId].action}`;
+  $('coach').hidden = (game.time >= 14 && !firstSkill) || needsRecovery;
   const guidance = evolutionGuidance(game);
   const trackedGoal = goalProgress(game);
   $('evolution-hint').hidden = needsRecovery && game.phase === 'playing';
@@ -845,6 +865,7 @@ function tick(now) {
     while (accumulator >= 1 / 60 && game.phase === 'playing') {
       let input = qaPilot ? qaPilot.move(game) : manualInput;
       if(!qaPilot&&burstRequest){input={...manualInput,burst:burstRequest};burstRequest=null;}
+      if(!qaPilot&&signatureRequest){input={...input,signature:signatureRequest};signatureRequest=null;}
       updateGame(game, 1 / 60, input);
       accumulator -= 1 / 60;
     }
@@ -859,6 +880,7 @@ function tick(now) {
     else if (events.has('learn-hound')) notice('사냥개 준비 · 옆으로 피하거나 몸을 향해 돌파해 끊으세요');
     else if (events.has('learn-giant')) notice('거인 준비 · 원 밖으로 피하거나 몸을 향해 돌파해 끊으세요');
     if (events.has('interrupt') && !events.has('boss-arrival') && !events.has('elite-break')) notice('공격 끊음 · 일반 적의 준비를 돌파로 끊었습니다');
+    if (events.has('signature-blocked')) notice('고유기 충전 유지 · 투사체가 지나간 뒤 다시 발동하세요');
     if (events.has('relic-ready')) events.add('evolve');
     for (const event of selectAudioEvents(events)) tone(event);
     game.events.length = 0;
@@ -916,6 +938,7 @@ document.addEventListener('keydown', event => {
     if(event.target.closest?.('button')&&event.target!==$('burst'))return;
     event.preventDefault();requestBurst();return;
   }
+  if(game.phase==='playing'&&key==='e'&&!event.repeat){event.preventDefault();requestSignature();return;}
   if (game.phase === 'playing' && ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'].includes(key)) {
     event.preventDefault();
     keys.add(key);
@@ -940,6 +963,7 @@ $('open-chest').onclick = () => { if (openChest(game)) { resetInput(); lastPhase
 $('preview-rewards').onclick = () => { if (inspectEncounter(game)) { audio.suspend(); resetInput(); lastPhase=null; syncPhase(); } };
 $('pause').onclick = pause;
 $('burst').onclick = requestBurst;
+$('release-signature').onclick = requestSignature;
 $('pause').innerHTML = icon('pause');
 $('sound').onclick = () => setSound(!sound);
 $('weapons').onclick = event => {
@@ -1066,7 +1090,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
     }),
     scenario(name) {
       resetInput();
-      const character = ['growth-ember-three','growth-ember-five','motion-ember-five','pickup-chase'].includes(name)?'ember'
+      const character = name.startsWith('manual-')?name.slice(7):['growth-ember-three','growth-ember-five','motion-ember-five','pickup-chase'].includes(name)?'ember'
         : ['growth-orbit-three','growth-orbit-five','motion-orbit-five','continuation-sword','continuation-ember'].includes(name)?'grove'
         : name.startsWith('character-') ? name.slice(10) : ['ember-coal','record-secondary','spectacle-flame'].includes(name) ? 'ember' : name === 'spectacle-rune' ? 'grove' : name === 'experiment-offer' ? game.characterId : 'ash';
       game = createGame(42, character, 'none', profile.experiment, runPreparation(profile, character));
@@ -1074,7 +1098,13 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name === 'goal-comet') {
+      if (name.startsWith('manual-')) {
+        game.signature.charge=1;game.xpNeed=99999;game.nextElite=999;
+        game.swordClock=game.emberClock=game.pulseClock=999;
+        for(const [x,y] of character==='grove'?[[70,0],[125,0],[180,0]]:[[180,0],[260,25],[300,-30]]) {
+          const enemy=spawnEnemy(game,0,false,{x,y});Object.assign(enemy,{speed:0,damage:0,hp:50000,maxHp:50000});
+        }
+      } else if (name === 'goal-comet') {
         game.goal='evolution:comet';game.level=4;game.ranks.sword=3;game.ranks.ember=1;
         game.phase='upgrade';game.choices=['ember','fleet','sword'];
       } else if (name === 'ember-coal') {

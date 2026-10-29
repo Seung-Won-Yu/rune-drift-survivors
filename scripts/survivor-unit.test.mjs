@@ -119,14 +119,14 @@ test('evolved crescent pierces targets beyond the sword without repeat hits',()=
 test('a charged sword cleave releases three real piercing blades from the first weapon',()=>{
   const g=playing();g.ranks.sword=2;g.signature.charge=1;g.swordClock=0;
   const e=spawnEnemy(g,2,false,{x:75,y:0});e.hp=e.maxHp=1000;e.speed=0;
-  frames(g,13);
+  frames(g,13,{signature:{x:1,y:0}});
   assert.equal(g.signature.activations,1);assert.equal(g.shots.length,3);
   assert.ok(g.shots.every(s=>s.kind==='crescent'&&s.charged&&!s.turnAt));
   assert.ok(g.damageDealt.sword>stats(g).swordDamage*1.6,'blades must cause real damage beyond the cleave');
   const capped=playing();capped.signature.charge=1;capped.swordClock=0;
   const target=spawnEnemy(capped,2,false,{x:70,y:0});target.hp=target.maxHp=1000;target.speed=0;
   for(let i=0;i<LIMITS.shots-1;i++) capped.shots.push({x:5000,y:0,vx:0,vy:0,life:9,damage:0});
-  frames(capped,13);assert.equal(capped.shots.length,LIMITS.shots);
+  frames(capped,13,{signature:{x:1,y:0}});assert.equal(capped.shots.length,LIMITS.shots);
   const blade=capped.shots.find(s=>s.kind==='crescent');assert.ok(blade);assert.equal(blade.vy,0,'the centre blade gets the final slot');
 });
 test('a returning crescent hits once per pass, follows the current player and freezes on pause',()=>{
@@ -144,7 +144,7 @@ test('a returning crescent hits once per pass, follows the current player and fr
 test('evolution expands the charged fan to five returning blades',()=>{
   const g=playing();g.ranks.sword=3;g.ranks.dawn=1;g.signature.charge=1;g.swordClock=0;
   const e=spawnEnemy(g,2,false,{x:70,y:0});e.hp=e.maxHp=1000;e.speed=0;
-  frames(g,13);assert.equal(g.shots.length,5);
+  frames(g,13,{signature:{x:1,y:0}});assert.equal(g.shots.length,5);
   assert.ok(g.shots.every(s=>s.charged&&s.turnAt>g.time));
 });
 test('a crowd break briefly stops the whole simulation and pause preserves the remaining stop',()=>{
@@ -180,7 +180,7 @@ test('charged fire splits once into damaging fragments without striking its orig
   const g=createGame(42,'ember');startGame(g);g.spawnClock=999;g.emberClock=0;g.signature.charge=1;g.ranks.wildfire=1;
   const front=spawnEnemy(g,2,false,{x:80,y:0}),back=spawnEnemy(g,2,false,{x:170,y:0});
   for(const e of [front,back]) {e.hp=e.maxHp=1000;e.speed=0;}
-  frames(g,30);
+  frames(g,30,{signature:{x:1,y:0}});
   assert.equal(g.signature.activations,1);
   assert.ok(g.shots.some(s=>s.kind==='ember-splinter'));
   assert.ok(g.shots.filter(s=>s.kind==='ember-splinter').every(s=>!s.empowered&&s.ignoreId===front.id));
@@ -192,7 +192,7 @@ test('evolved fire fragments explode once and exclude their original victim from
   const g=createGame(42,'ember');startGame(g);g.spawnClock=999;g.emberClock=0;g.signature.charge=1;g.ranks.comet=1;
   const front=spawnEnemy(g,2,false,{x:80,y:0}),back=spawnEnemy(g,2,false,{x:115,y:0});
   for(const e of [front,back]) {e.hp=e.maxHp=1000;e.speed=0;}
-  frames(g,30);
+  frames(g,30,{signature:{x:1,y:0}});
   const initial=stats(g).emberDamage*1.45;
   assert.ok(Math.abs(front.hp-(1000-initial))<1e-6);
   assert.ok(back.hp<1000-initial,'secondary blasts deal actual additional crowd damage');
@@ -204,7 +204,8 @@ test('real rune contacts release a capped eight-way piercing volley when the gua
     const close=spawnEnemy(g,2,false,{x:70,y:0}),far=spawnEnemy(g,2,false,{x:140,y:0});
     for(const e of [close,far]) {e.hp=e.maxHp=1000;e.speed=0;}
     for(let i=0;i<LIMITS.shots-room;i++)g.shots.push({x:5000,y:0,vx:0,vy:0,life:9,damage:0});
-    frames(g,1);assert.equal(g.signature.activations,1);assert.equal(g.signature.guard,20);
+    frames(g,1);assert.equal(g.signature.charge,1);assert.equal(g.signature.guard,0);
+    frames(g,1,{signature:{x:1,y:0}});assert.equal(g.signature.activations,1);assert.equal(g.signature.guard,20);
     assert.equal(g.shots.filter(s=>s.kind==='rune-burst').length,room);
     assert.equal(g.shots.length,LIMITS.shots);
     frames(g,30);
