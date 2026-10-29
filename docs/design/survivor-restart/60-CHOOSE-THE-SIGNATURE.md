@@ -40,7 +40,10 @@ automatic signature trigger; it is not another passive damage proc.
   identities remain. The release starts the normal cast interval, preventing
   an immediate duplicate automatic volley. No charge is required for ordinary
   automatic fire.
-- Grove earns six spaced real orbit contacts. Release grants the existing
+- Grove earns six spaced real orbit contacts or confirmed non-boss kills,
+  including supporting weapons. They share the same0.35s charge gate, so a
+  lethal rune contact is not counted twice and a crowd kill cannot fill the
+  meter in one instant. The five-second rest blocks both sources. Release grants the existing
  20-point/four-second guard and eight real piercing runes. Runes turn toward
   the current player after0.4s (or after three outward contacts), can hit again
   on return, and expire after1.2s. Each leg is capped at three distinct victims.
@@ -55,7 +58,7 @@ automatic signature trigger; it is not another passive damage proc.
 
 ## Verification and known limits
 
-All284 Node rules pass, including holding ready charge across ordinary attacks
+The initial manual-release slice passed284 Node rules, including holding ready charge across ordinary attacks
 and breakthrough, actual aimed hits/misses, menu/hit-stop/deadline behavior,
 capacity, shield absorption and real returning-rune collision/steering/caps.
 28 focused browser cases pass, covering E, the real touch target, three
@@ -95,7 +98,8 @@ absorbed. A full charge was deliberately held into boss arrival and released
 on approach. No preview, pilot, chosen seed, stat injection or reload was used.
 Observation pauses/long key holds limit this as a reaction-speed playtest.
 Different seeds/builds/decisions prevent a causal balance comparison. Strong
-secondary Sword still slowed rune-contact charging in some stretches.
+secondary Sword still slowed rune-contact charging in some stretches;
+this observation motivated the charging follow-up below.
 
 The first complete CI exposed an integration error missed by focused cases:
 the signature icon cache reused equipment's `data-weapon`, making weapon-slot
@@ -104,3 +108,34 @@ one equipped slot per family. Update the old automatic-guide expectation to
 require charging and E/button release. The repair changes no combat rules;
 the ordinary-run evidence remains applicable. Full CI/deployment must be
 verified for the repair commit before calling the public release complete.
+
+## Guardian charge through support kills
+
+Human feedback accepted keeping and refining direct release. The next bounded
+change fixes a build interaction observed above: a strong supporting Sword
+could finish foes before close orbit contact, leaving the guardian's own
+power unavailable. Confirmed non-boss kills now also call the existing shared
+charge gate. Removing/recycling an enemy does not count. No XP, healing,
+damage, charge capacity or shield amount is added; readiness still requires
+E/button input. The signature's own short-lived volley cannot bypass its
+five-second recharge rest. Victory stops further rune charge, including a
+later ordinary victim in the same piercing pass.
+
+All288 Node rules pass. New cases use real support-weapon kills, preserve the
+victims' actual total loot, hold earned charge, cap an eight-enemy clear to one
+charge, avoid double-counting lethal orbit contact, reject corpse credit,
+respect recharge rest and preserve victory precedence. Thirteen browser
+cases pass: the existing ten manual/touch cases plus actual support-kill
+readiness/release at1280/390/740px. The in-app disposable scene confirmed
+the same visible transition, not normal-run balance or fun.
+
+Two controlled comparisons use the same current pilot, actual offers and
+seeds7/42/101 on2470fc6 and the charging follow-up. The six Sword-first
+Grove runs kept3/3 victories in each version; power uses20/21/21 became
+26/26/27. The12 Rune-first runs had Bulwark1/3→1/3 and Horizon3/3→2/3,
+with uses around30→31/32. Changing readiness changes subsequent movement
+and encounters, so this small sample is not an estimated win rate or a claim
+of universally better balance. All runs ended within300s and entity caps.
+Evidence: `guardian-kill-charge-*` and `guardian-support-build-*` under the
+same ignored output directory. A normal run with this final charging rule
+and further human feedback remain distinct from the earlier full chapter.

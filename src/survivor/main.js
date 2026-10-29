@@ -54,7 +54,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front', 'pickup-chase', 'interrupt-giant', 'manual-ash', 'manual-ember', 'manual-grove',
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front', 'pickup-chase', 'interrupt-giant', 'manual-ash', 'manual-ember', 'manual-grove', 'guardian-kills',
   'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
   'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third',
   'continuation-sword','continuation-ember','continuation-orbit',
@@ -1090,7 +1090,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
     }),
     scenario(name) {
       resetInput();
-      const character = name.startsWith('manual-')?name.slice(7):['growth-ember-three','growth-ember-five','motion-ember-five','pickup-chase'].includes(name)?'ember'
+      const character = name==='guardian-kills'?'grove':name.startsWith('manual-')?name.slice(7):['growth-ember-three','growth-ember-five','motion-ember-five','pickup-chase'].includes(name)?'ember'
         : ['growth-orbit-three','growth-orbit-five','motion-orbit-five','continuation-sword','continuation-ember'].includes(name)?'grove'
         : name.startsWith('character-') ? name.slice(10) : ['ember-coal','record-secondary','spectacle-flame'].includes(name) ? 'ember' : name === 'spectacle-rune' ? 'grove' : name === 'experiment-offer' ? game.characterId : 'ash';
       game = createGame(42, character, 'none', profile.experiment, runPreparation(profile, character));
@@ -1098,7 +1098,13 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name.startsWith('manual-')) {
+      if (name === 'guardian-kills') {
+        for(const key of Object.keys(game.ranks))game.ranks[key]=0;
+        Object.assign(game.ranks,{sword:3,dawn:1,orbit:1,bulwark:1});
+        game.signature.charge=5/6;game.xpNeed=99999;game.nextElite=999;
+        game.swordClock=1;game.emberClock=game.pulseClock=999;
+        const enemy=spawnEnemy(game,0,false,{x:140,y:0});Object.assign(enemy,{speed:0,damage:0,hp:1,maxHp:1});
+      } else if (name.startsWith('manual-')) {
         game.signature.charge=1;game.xpNeed=99999;game.nextElite=999;
         game.swordClock=game.emberClock=game.pulseClock=999;
         for(const [x,y] of character==='grove'?[[70,0],[125,0],[180,0]]:[[180,0],[260,25],[300,-30]]) {

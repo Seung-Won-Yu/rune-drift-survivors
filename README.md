@@ -12,7 +12,7 @@ The lobby image shows a fresh profile. Companions, combat styles and keepsakes u
 
 The combat image uses a development-only boss scenario to show the warning clearly; ordinary runs reach the sovereign after four minutes.
 
-- **Choose when to use your companion's power:** basic attacks stay automatic, while earned signature charge is held until E/the signature touch button. Aim Ash's piercing blades or Ember's splitting volley with movement; time Grove's guard and steer its eight returning runes by repositioning. Breakthrough stays separate. [Controls, combat rules and playtest limits](./docs/design/survivor-restart/60-CHOOSE-THE-SIGNATURE.md).
+- **Choose when to use your companion's power:** basic attacks stay automatic, while earned signature charge is held until E/the signature touch button. Aim Ash's piercing blades or Ember's splitting volley with movement; time Grove's guard and steer its eight returning runes by repositioning. Grove charges through rune contacts and confirmed kills, so supporting weapons help prepare its power. Breakthrough stays separate. [Controls, combat rules and playtest limits](./docs/design/survivor-restart/60-CHOOSE-THE-SIGNATURE.md).
 
 - **A deliberate action inside the fight:** Space or the separate touch button makes a short directional breakthrough with real primary-weapon hits and a 4.2-second cooldown. Growth now returns to combat for three seconds (four after evolution), preserving banked XP; owned support weapon families rotate between actual offers. These are playable experiments in combat decisions and rhythm, with an 18-run comparison per version and explicit limits on what testing proves. [Rules, references and verification](./docs/design/survivor-restart/49-COMBAT-DECISIONS-PROTOTYPE.md).
 

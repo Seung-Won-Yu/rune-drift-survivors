@@ -2917,3 +2917,20 @@ test.describe('manual signature touch input',()=>{
   await page.keyboard.press('Escape');
  });
 });
+
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]) {
+ test(`a real support-weapon kill readies held guardian power at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'guardian-kills');
+  await expect(page.locator('#signature')).toHaveAttribute('title',/적 처치/);
+  await expect.poll(async()=>(await snapshot(page)).kills).toBe(1);
+  await expect(page.locator('#release-signature')).toBeEnabled();
+  const ready=await snapshot(page);expect(ready.damageDealt.sword).toBeGreaterThan(0);expect(ready.damageDealt.orbit).toBe(0);
+  expect(ready.signature.activations).toBe(0);expect(ready.xp).toBe(0);
+  await page.locator('#release-signature').click();
+  await expect.poll(async()=>(await snapshot(page)).signature.activations).toBe(1);
+  expect((await snapshot(page)).signature.guard).toBe(20);
+  await page.keyboard.press('Escape');const paused=await snapshot(page);await page.waitForTimeout(80);
+  expect((await snapshot(page)).signature).toEqual(paused.signature);
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+ });
+}

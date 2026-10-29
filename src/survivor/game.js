@@ -642,6 +642,9 @@ function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false,
       if (spread.length) game.events.push('fire-spread');
     }
     game.kills++;
+    // Supporting weapons should help the guardian prepare its own power,
+    // rather than starving it by finishing foes outside the ordinary orbit.
+    if (!enemy.boss && game.time < RUN_SECONDS) chargeRune(game);
     if (enemy.boss) {
       game.bossDefeated = true;
       game.events.push('boss-defeated');

@@ -19,7 +19,7 @@ const outcomeName = {
 const companionRhythm = {
   ash: '검을 맞혀 충전한 뒤, E로 무리를 관통하세요.',
   ember: '움직여 충전한 뒤, E로 무리가 모인 곳을 겨냥하세요.',
-  grove: '룬을 맞혀 충전한 뒤, E로 위험한 순간을 버티세요.'
+  grove: '룬 적중과 처치로 충전한 뒤, E로 위험한 순간을 버티세요.'
 };
 export function portrait(id, large = false) {
   const c = getCharacter(id);

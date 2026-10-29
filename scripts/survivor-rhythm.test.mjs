@@ -391,3 +391,39 @@ test('a returning guard rune respects three distinct victims per leg',()=>{
   for(const e of victims.slice(0,3))assert.ok(e.hp<=1e5-damage && e.hp>=1e5-damage*2);
   for(const e of victims.slice(3))assert.equal(e.hp,1e5);
 });
+
+test('guardian support kills earn stored charge without stealing loot or auto-releasing it',()=>{
+  const g=arena('grove');Object.assign(g.ranks,{sword:3,dawn:1});g.xpNeed=1e6;let loot=0;
+  for(let i=0;i<6;i++) {
+    const e=target(g,140);e.hp=1;loot+=e.xp;g.swordClock=0;g.swing=null;
+    step(g,13);step(g,24);
+  }
+  assert.equal(g.kills,6);assert.ok(Math.abs(g.signature.charge-1)<1e-9);assert.equal(g.signature.activations,0);
+  assert.equal(g.gems.reduce((sum,e)=>sum+e.value,0),loot);assert.equal(g.xp,0);
+  step(g,1,{signature:{x:1,y:0}});assert.equal(g.signature.activations,1);assert.equal(g.signature.guard,20);
+});
+test('guardian kill credit shares the real rune-hit gate and cannot multiply a crowd clear',()=>{
+  const crowd=arena('grove');Object.assign(crowd.ranks,{sword:3,dawn:1,sweep:1});crowd.swordClock=0;
+  for(let i=0;i<8;i++){const e=target(crowd,140,i-4);e.hp=1;}
+  step(crowd,13);assert.equal(crowd.kills,8);assert.equal(crowd.signature.charge,1/6);
+  step(crowd,30);assert.equal(crowd.kills,8);assert.equal(crowd.signature.charge,1/6,'corpses cannot grant delayed credit');
+  const orbit=arena('grove');const e=target(orbit,orbitPositions(orbit)[0].x);e.hp=1;
+  step(orbit);assert.equal(orbit.kills,1);assert.equal(orbit.signature.charge,1/6,'a lethal rune hit is not both a hit and a kill charge');
+});
+test('guardian recharge rest also blocks support and signature kill credit',()=>{
+  const rest=arena('grove');Object.assign(rest.ranks,{sword:3,dawn:1});rest.signature.cooldownUntil=5;rest.swordClock=0;
+  const first=target(rest,140);first.hp=1;step(rest,13);assert.equal(rest.kills,1);assert.equal(rest.signature.charge,0);
+  step(rest,300);const later=target(rest,140);later.hp=1;rest.swordClock=0;step(rest,13);assert.equal(rest.kills,2);assert.equal(rest.signature.charge,1/6);
+  const power=arena('grove');power.signature.charge=1;power.swordClock=999;
+  for(let i=0;i<8;i++){const e=target(power,Math.cos(i*Math.PI/4)*90,Math.sin(i*Math.PI/4)*90);e.hp=1;}
+  step(power,1,{signature:{x:1,y:0}});step(power,70);
+  assert.ok(power.kills>0);assert.equal(power.signature.activations,1);assert.equal(power.signature.charge,0);
+});
+
+
+test('a defeated sovereign cannot grant a new guardian kill charge after victory',()=>{
+  const g=arena('grove'),boss=spawnBoss(g);Object.assign(boss,{x:250,y:0,hp:1,entrance:0,attackClock:999});
+  const other=target(g,260);other.hp=1;
+  g.shots=[{kind:'crescent',x:240,y:0,vx:330,vy:0,damage:10,life:1,hitIds:[]}];
+  step(g);assert.equal(g.outcome,'victory');assert.equal(g.kills,2);assert.equal(g.signature.charge,0);assert.equal(g.signature.activations,0);
+});
