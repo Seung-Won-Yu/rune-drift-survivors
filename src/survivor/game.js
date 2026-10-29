@@ -319,6 +319,12 @@ export const stats = game => modifyBuildStats(game, {
   orbitCount: 1 + Number(game.characterId === 'grove') + Math.floor(game.ranks.orbit / 2) + (game.ranks.lunar ? 1 : 0),
   orbitRadius: 53 + game.ranks.orbit * 7 + (game.ranks.lunar ? 12 : 0)
 });
+// Share the real rank thresholds with the choice view; this never grants a rank.
+export function upgradePattern(game, key) {
+  const next = game.ranks[key] + 1;
+  return key === 'sword' ? bladeGrowth(next) : key === 'ember' ? emberGrowth(next)
+    : key === 'orbit' ? orbitGrowth(next) : '';
+}
 export function upgradeChange(game, key) {
   if (SPECIALIZATIONS[key]) return key==='wildfire' && game.relics.includes('coal')
     ? SPECIALIZATIONS[key].change.replace('초당 12','초당 18') : SPECIALIZATIONS[key].change;

@@ -2754,6 +2754,10 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:320
    await page.setViewportSize(viewport);await scenario(page,`chain-growth-${stage}`);
    const card=page.locator('[data-upgrade="sword"]'),text=`새 적 ${count}명까지 이어 베기`;
    await expect(card.locator('.upgrade-change')).toContainText(text);
+   await expect(card.locator('[data-pattern-change]')).toContainText(text);
+   await expect(card.locator('.choice-heading b')).toHaveText('공격 변화');
+   await expect(card.locator('.pattern-stats')).toContainText('피해');
+   expect(await card.locator('.upgrade-change').evaluate(el=>el.querySelector('[data-pattern-change]').getBoundingClientRect().bottom <= el.querySelector('.pattern-stats').getBoundingClientRect().top)).toBe(true);
    await card.scrollIntoViewIfNeeded();await expect(card).toBeInViewport({ratio:.5});
    expect(await card.locator('.upgrade-change').evaluate(el=>el.scrollHeight===el.clientHeight)).toBe(true);
    expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
@@ -2782,6 +2786,10 @@ for(const width of [1280,390,320,740]) for(const family of ['ember','orbit']) fo
   const card=page.locator(`[data-upgrade="${family}"]`);
   const text=family==='ember'?(rank===3?'1회 도약':'1 → 2회'):(rank===3?'옆으로 -25%':'옆으로 -40%');
   await expect(card.locator('.upgrade-change')).toContainText(text);
+   await expect(card.locator('[data-pattern-change]')).toContainText(text);
+   await expect(card.locator('.choice-heading b')).toHaveText('공격 변화');
+   await expect(card.locator('.pattern-stats')).toContainText('피해');
+   expect(await card.locator('.upgrade-change').evaluate(el=>el.querySelector('[data-pattern-change]').getBoundingClientRect().bottom <= el.querySelector('.pattern-stats').getBoundingClientRect().top)).toBe(true);
   await card.scrollIntoViewIfNeeded();await expect(card).toBeInViewport({ratio:.5});
   expect(await card.locator('.upgrade-change').evaluate(el=>el.clientHeight===el.scrollHeight)).toBe(true);
   expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});

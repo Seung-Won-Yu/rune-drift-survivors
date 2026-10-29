@@ -124,3 +124,7 @@
 @media (prefers-reduced-motion:reduce) {
   .reward-notice, .earned-tokens li { animation: none; }
 }
+
+/* On a real attack milestone, describe the changed action before its numbers. */
+.upgrade-change .pattern-change { display: block; color: inherit; font-weight: 700; }
+.upgrade-change .pattern-stats { display: block; margin-top: 6px; color: var(--muted, #b5c1cb); font-size: .9em; font-weight: 400; }

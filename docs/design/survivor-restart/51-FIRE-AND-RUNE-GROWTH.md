@@ -72,3 +72,20 @@ These small samples do not establish overall balance or improved fun. The
 Bulwark timeout and the effect of a narrower side on ordinary play remain
 explicit checks. Full CI/public checks and ordinary-play observations are
 recorded separately after execution.
+
+## Make the existing attack milestone readable before choosing
+
+The ordinary play review found attack changes trailing damage, radius and
+cooldown numbers. Rank3/5 Sword, Ember and Orbit cards now label the offer
+`공격 변화`, lead with the real continuation/stretch description and place the
+unchanged numeric comparison beneath it. The descriptions share the same
+bladeGrowth/emberGrowth/orbitGrowth functions as existing rank disclosure;
+ordinary upgrades retain their normal labels. Choosing still grants exactly
+one offered rank. No damage, draft weight, combat gate or reward is changed.
+
+All269 Node cases and24 existing milestone browser cases pass. The latter
+cover three weapon families, both milestones and1280/390/320/740px screens,
+checking the leading effect, retained numeric detail, clipping/outer overflow,
+keyboard selection, actual acquired rank and receipt. An in-app browser check
+also confirmed the desktop presentation. These prove disclosure and selection,
+not that the combat is now enjoyable; the open fun goal remains unchanged.
