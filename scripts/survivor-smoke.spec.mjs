@@ -1898,7 +1898,8 @@ test('all illustrated companions load, follow selection and keep motion optional
   await page.locator('[data-character="ash"]').click();
   expect(await page.locator('.camp-portrait').evaluate(el => getComputedStyle(el).animationName)).toBe('none');
   await page.locator('.companion-guide summary').click();
-  await expect(page.locator('.companion-guide')).toContainText('검 적중 6회마다');
+  await expect(page.locator('.companion-guide')).toContainText('검 적중 6회로 충전');
+  await expect(page.locator('.companion-guide')).toContainText('E 또는 고유기 버튼');
   await page.locator('#start-game').click();expect((await snapshot(page)).characterId).toBe('ash');
 });
 
@@ -2884,6 +2885,8 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740
  test(`manual signature ${character} holds charge and accepts a distinct action at ${viewport.width}`,async({page})=>{
   await page.setViewportSize(viewport);await scenario(page,`manual-${character}`);
   const skill=page.locator('#release-signature');await expect(skill).toBeEnabled();
+  expect(await skill.getAttribute('data-weapon')).toBeNull();
+  await expect(page.locator(`[data-weapon="${character==='ash'?'sword':character==='ember'?'ember':'orbit'}"]`)).toHaveCount(1);
   const held=await snapshot(page);await page.waitForTimeout(120);
   expect((await snapshot(page)).signature.activations).toBe(0);
   await expect(page.locator('#coach')).toContainText('고유기 충전 완료');

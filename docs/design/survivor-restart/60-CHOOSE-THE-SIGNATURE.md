@@ -83,3 +83,24 @@ decision players want to make, whether E/touch is discoverable without reading
 the guide, and whether a missed shot feels fair. Ability use counts and a
 successful boss clear alone cannot close the fun objective. Evidence is under
 `output/playwright/survivor/manual-signature-*`.
+
+## Ordinary play and integration follow-up
+
+Two plain in-app Grove runs kept combat frozen at b4c96c4, using the earned
+profile, Book/Calm and actual offers. Horizon lost at1:25/LV9 after prolonged
+altar defense:6 releases/29 absorbed. The actual result recommendation then
+prepared Bulwark at weapon rank1. That retry, with early Sword/Duelist, no
+Ember, Fang/Dew and both weapon evolutions, won at4:10/LV20:10 releases/75
+absorbed. A full charge was deliberately held into boss arrival and released
+on approach. No preview, pilot, chosen seed, stat injection or reload was used.
+Observation pauses/long key holds limit this as a reaction-speed playtest.
+Different seeds/builds/decisions prevent a causal balance comparison. Strong
+secondary Sword still slowed rune-contact charging in some stretches.
+
+The first complete CI exposed an integration error missed by focused cases:
+the signature icon cache reused equipment's `data-weapon`, making weapon-slot
+selectors ambiguous. Use `data-signature-weapon` for that cache and assert
+one equipped slot per family. Update the old automatic-guide expectation to
+require charging and E/button release. The repair changes no combat rules;
+the ordinary-run evidence remains applicable. Full CI/deployment must be
+verified for the repair commit before calling the public release complete.

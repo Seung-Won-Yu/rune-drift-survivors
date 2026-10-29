@@ -774,7 +774,7 @@ function updateHud() {
   $('signature-control-name').textContent=ability.control;
   $('signature-control-state').textContent=skillReady?(matchMedia('(pointer:coarse)').matches?'발동':'E'):ability.state==='rest'?'회복 중':ability.state==='guard'?'보호 중':`${Math.floor(game.signature.charge*100)}%`;
   const skillWeapon=getCharacter(game.characterId).weapon;
-  if(skill.dataset.weapon!==skillWeapon){$('signature-control-icon').innerHTML=icon(skillWeapon);skill.dataset.weapon=skillWeapon;}
+  if(skill.dataset.signatureWeapon!==skillWeapon){$('signature-control-icon').innerHTML=icon(skillWeapon);skill.dataset.signatureWeapon=skillWeapon;}
   skill.title=ability.description;
   skill.setAttribute('aria-label',skillReady?`고유기 · ${ability.control} · E`:`${ability.control} 충전 중 · ${Math.floor(game.signature.charge*100)}%`);
   const encounter = trackedEncounter(game);
