@@ -2907,6 +2907,21 @@ for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740
   await page.screenshot({path:`output/playwright/survivor/manual-signature-${character}-${viewport.width}.png`});
  });
 }
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]) {
+ test(`full loot capacity keeps a fresh kill collectible at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'loot-cap');
+  await page.getByRole('button',{name:'전투 계속하기',exact:true}).click();
+  await expect.poll(async()=>(await snapshot(page)).kills).toBe(1);
+  const drop=await snapshot(page);expect(drop.gems).toBe(240);expect(drop.xp).toBe(0);
+  await page.keyboard.down('d');
+  try{await expect.poll(async()=>(await snapshot(page)).xp).toBe(2);}finally{await page.keyboard.up('d');}
+  await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'전투 계속하기',exact:true})).toBeVisible();
+  const collected=await snapshot(page);expect(collected.gems).toBe(239);expect(collected.level).toBe(drop.level);
+  await page.waitForTimeout(80);expect((await snapshot(page)).xp).toBe(2);
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+  await page.screenshot({path:`output/playwright/survivor/local-loot-cap-${viewport.width}.png`});
+ });
+}
 test.describe('manual signature touch input',()=>{
  test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
  test('the signature thumb target fires independently of movement and breakthrough',async({page})=>{

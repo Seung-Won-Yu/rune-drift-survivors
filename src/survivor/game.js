@@ -568,16 +568,33 @@ export function spawnBoss(game) {
   return boss;
 }
 function addGem(game, x, y, value) {
-  if (game.gems.length < LIMITS.gems) game.gems.push({
-    x,
-    y,
-    value,
-    age: 0
-  });else {
-    let nearest = game.gems[0];
-    for (const gem of game.gems) if (Math.hypot(gem.x - x, gem.y - y) < Math.hypot(nearest.x - x, nearest.y - y)) nearest = gem;
-    nearest.value += value;
+  if (game.gems.length >= LIMITS.gems) {
+    // A local unclaimed pile can represent another nearby kill. Never attach
+    // new distant loot to a gem already flying toward the player.
+    let nearby=null,distance=32*32;
+    for (const gem of game.gems) {
+      if (gem.attracted || gem.recalled) continue;
+      const d=(gem.x-x)**2+(gem.y-y)**2;
+      if (d<=distance) {nearby=gem;distance=d;}
+    }
+    if (nearby) {nearby.value+=value;return;}
+    // Compact the closest old pair with matching pickup state, then leave the
+    // fresh reward at its actual death position. At 240 gems four flag states
+    // always contain a pair. This bounded search runs only on distant overflow.
+    let left=0,right=1,best=Infinity;
+    for(let i=0;i<game.gems.length-1;i++)for(let j=i+1;j<game.gems.length;j++) {
+      const a=game.gems[i],b=game.gems[j];
+      if (!!a.attracted!==!!b.attracted || !!a.recalled!==!!b.recalled) continue;
+      const d=(a.x-b.x)**2+(a.y-b.y)**2;
+      if(d<best) {best=d;left=i;right=j;}
+    }
+    const a=game.gems[left],b=game.gems[right],total=a.value+b.value;
+    a.x=(a.x*a.value+b.x*b.value)/total;
+    a.y=(a.y*a.value+b.y*b.value)/total;
+    a.value=total;a.age=Math.min(a.age,b.age);
+    game.gems.splice(right,1);
   }
+  game.gems.push({x,y,value,age:0});
 }
 function hitEnemy(game, enemy, damage, source, nx = 0, ny = 0, periodic = false, impactAngle) {
   if (enemy.hp <= 0 || enemy.boss && enemy.entrance > 0) return 0;

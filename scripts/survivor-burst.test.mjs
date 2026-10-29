@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BURST,canBurst,burstCooldown} from '../src/survivor/burst.js';
-import {createGame,startGame,updateGame,chooseUpgrade,pauseGame,resumeGame,spawnEnemy,spawnBoss,stats,RUN_SECONDS} from '../src/survivor/game.js';
+import {createGame,startGame,updateGame,chooseUpgrade,pauseGame,resumeGame,spawnEnemy,spawnBoss,stats,RUN_SECONDS,LIMITS} from '../src/survivor/game.js';
 
 const run=(id='ash')=>{const g=createGame(42,id);startGame(g);g.spawnClock=999;g.swordClock=999;g.emberClock=999;g.pulseClock=999;g.xpNeed=99999;return g;};
 const frames=(g,n,input)=>{for(let i=0;i<n;i++)updateGame(g,1/60,input);};
@@ -185,6 +185,47 @@ test('ordinary attraction freezes in menus and preserves raw loot healing exactl
  g.phase='playing';for(let i=0;i<180;i++)updateGame(g,1/60,{x:1,y:0});
  assert.equal(g.xp,30);assert.equal(g.player.hp,33);assert.equal(g.dewXp,0);assert.equal(g.gems.length,0);
  for(let i=0;i<120;i++)updateGame(g,1/60);assert.equal(g.xp,30);assert.equal(g.player.hp,33);
+});
+
+function fullLootField(state=()=>({})) {
+ const g=run('ember');g.nextElite=999;
+ g.gems=Array.from({length:LIMITS.gems},(_,i)=>({x:-2000+(i%20)*12,y:Math.floor(i/20)*12,value:2,age:30,...state(i)}));
+ return g;
+}
+function dropThroughRealKill(g,x=100,y=0,xp=2) {
+ const e=spawnEnemy(g,0,false,{x,y});Object.assign(e,{hp:1,maxHp:1,speed:0,damage:0,xp});
+ g.emberClock=0;frames(g,45);assert.ok(e.hp<=0);
+}
+const floorXp=g=>g.gems.reduce((total,gem)=>total+gem.value,0);
+
+test('a full old loot field still leaves the next real kill collectible at the fight',()=>{
+ const g=fullLootField();dropThroughRealKill(g);
+ assert.equal(g.kills,1);assert.equal(g.gems.length,LIMITS.gems);assert.equal(floorXp(g),482);
+ assert.ok(g.gems.some(gem=>Math.hypot(gem.x-100,gem.y)<1 && gem.value===2));
+ assert.equal(g.xp,0,'a kill outside pickup range is not an automatic reward');
+ frames(g,45,{x:1,y:0});assert.equal(g.xp,2);assert.equal(floorXp(g),480);
+});
+test('overflow can join an unclaimed local pile without moving remote loot',()=>{
+ const g=fullLootField(),local=g.gems[0];Object.assign(local,{x:105,y:5});
+ const remote=g.gems.slice(1).map(e=>({x:e.x,y:e.y,value:e.value}));
+ dropThroughRealKill(g);assert.equal(local.value,4);assert.equal(g.gems.length,LIMITS.gems);
+ assert.deepEqual(g.gems.slice(1).map(e=>({x:e.x,y:e.y,value:e.value})),remote);
+ frames(g,45,{x:1,y:0});assert.equal(g.xp,4);assert.equal(floorXp(g),478);
+});
+test('overflow keeps fresh loot separate from returning pickups and preserves each pickup state',()=>{
+ for(const state of [()=>({attracted:true}),()=>({recalled:true}),i=>({attracted:!!(i&1),recalled:!!(i&2)})]) {
+  const g=fullLootField(state),totals=()=>g.gems.reduce((groups,gem)=>{const key=Number(!!gem.attracted)*2+Number(!!gem.recalled);groups[key]+=gem.value;return groups;},[0,0,0,0]);
+  const expected=totals();expected[0]+=2;dropThroughRealKill(g);
+  assert.equal(g.gems.length,LIMITS.gems);assert.deepEqual(totals(),expected);assert.equal(g.xp,0);
+  const fresh=g.gems.find(gem=>Math.hypot(gem.x-100,gem.y)<1);
+  assert.equal(fresh.value,2);assert.ok(!fresh.attracted && !fresh.recalled);
+ }
+});
+test('compacted loot preserves raw XP healing and applies pickup bonuses only on actual collection',()=>{
+ const g=fullLootField();g.relics=['dew'];g.player.hp=30;g.keepsake='bookmark';
+ dropThroughRealKill(g,100,0,30);assert.equal(g.xp,0);assert.equal(g.player.hp,30);assert.equal(floorXp(g),510);
+ frames(g,45,{x:1,y:0});assert.equal(g.xp,36);assert.equal(g.player.hp,33);assert.equal(g.dewXp,0);assert.equal(floorXp(g),480);
+ frames(g,120);assert.equal(g.xp,36);assert.equal(g.player.hp,33);
 });
 
 function interruptArena(type, age=.2) {

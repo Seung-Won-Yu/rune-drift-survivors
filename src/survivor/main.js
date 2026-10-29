@@ -25,7 +25,7 @@ import './journey-finish.css';
 import './branch-preview.css';
 import './app-shell.css';
 import { BOSS, bossAttackLabel } from './boss.js';
-import { createGame, startGame, updateGame, chooseUpgrade, draftUpgrades, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, orbitPositions, UPGRADE_META, upgradeChange, upgradePattern, xpForLevel, canEvolve, weaponName, EVOLUTIONS, RUN_SECONDS } from './game.js';
+import { createGame, startGame, updateGame, chooseUpgrade, draftUpgrades, canReroll, rerollUpgrades, pauseGame, resumeGame, spawnEnemy, spawnBoss, orbitPositions, UPGRADE_META, upgradeChange, upgradePattern, xpForLevel, canEvolve, weaponName, EVOLUTIONS, RUN_SECONDS, LIMITS } from './game.js';
 import { loadArt, createRenderer } from './render.js';
 import { getCharacter, isUnlocked } from './characters.js';
 import { loadProfile, saveProfile, recordRun } from './profile.js';
@@ -54,7 +54,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front', 'pickup-chase', 'interrupt-giant', 'manual-ash', 'manual-ember', 'manual-grove', 'guardian-kills',
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front', 'pickup-chase', 'loot-cap', 'interrupt-giant', 'manual-ash', 'manual-ember', 'manual-grove', 'guardian-kills',
   'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
   'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third',
   'continuation-sword','continuation-ember','continuation-orbit',
@@ -1090,7 +1090,7 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
     }),
     scenario(name) {
       resetInput();
-      const character = name==='guardian-kills'?'grove':name.startsWith('manual-')?name.slice(7):['growth-ember-three','growth-ember-five','motion-ember-five','pickup-chase'].includes(name)?'ember'
+      const character = name==='guardian-kills'?'grove':name.startsWith('manual-')?name.slice(7):['growth-ember-three','growth-ember-five','motion-ember-five','pickup-chase','loot-cap'].includes(name)?'ember'
         : ['growth-orbit-three','growth-orbit-five','motion-orbit-five','continuation-sword','continuation-ember'].includes(name)?'grove'
         : name.startsWith('character-') ? name.slice(10) : ['ember-coal','record-secondary','spectacle-flame'].includes(name) ? 'ember' : name === 'spectacle-rune' ? 'grove' : name === 'experiment-offer' ? game.characterId : 'ash';
       game = createGame(42, character, 'none', profile.experiment, runPreparation(profile, character));
@@ -1098,7 +1098,12 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       game.spawnClock = 999;
       game.player.invincible = 999;
       lastPhase = null;
-      if (name === 'guardian-kills') {
+      if (name === 'loot-cap') {
+        game.nextElite=999;game.xpNeed=99999;game.emberClock=.8;
+        game.gems=Array.from({length:LIMITS.gems},(_,i)=>({x:-2000+(i%20)*12,y:Math.floor(i/20)*12,value:2,age:30}));
+        const enemy=spawnEnemy(game,0,false,{x:100,y:0});Object.assign(enemy,{hp:1,maxHp:1,speed:0,damage:0});
+        game.phase='paused';
+      } else if (name === 'guardian-kills') {
         for(const key of Object.keys(game.ranks))game.ranks[key]=0;
         Object.assign(game.ranks,{sword:3,dawn:1,orbit:1,bulwark:1});
         game.signature.charge=5/6;game.xpNeed=99999;game.nextElite=999;
