@@ -76,3 +76,19 @@ export function updateHound(game, enemy, dt, hurt) {
   }
   return true;
 }
+
+// A committed breakthrough can stop preparation, never an attack already released.
+// Champions and the sovereign retain their own attack contracts.
+export function interruptWindup(game, enemy) {
+  if (enemy.hp <= 0 || enemy.elite || enemy.champion || enemy.boss) return false;
+  if (enemy.type === 1 && enemy.hunt && enemy.hunt.age < huntRule(enemy).windup) {
+    enemy.hunt = null;
+    enemy.huntClock = huntRule(enemy).cooldown;
+  } else if (enemy.type === 2 && enemy.slam && !enemy.slam.hit && enemy.slam.age < GIANT.windup) {
+    enemy.slam = null;
+    enemy.attackClock = GIANT.cooldown;
+  } else return false;
+  enemy.interruptedUntil = game.time + .35;
+  enemy.hit = Math.max(enemy.hit, .18);
+  return true;
+}

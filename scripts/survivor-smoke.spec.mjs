@@ -2865,3 +2865,17 @@ test('a caught gem follows a fast character through real movement and pause',asy
  const collected=await snapshot(page);expect(collected.xp).toBe(5);expect(collected.level).toBe(before.level);expect(collected.kills).toBe(0);
  await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'전투 계속하기',exact:true})).toBeVisible();
 });
+
+for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:740,height:360}]){
+ test(`a deliberate breakthrough stops an ordinary preparation at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'interrupt-giant');
+  const before=await snapshot(page);expect(before.slams).toHaveLength(1);expect(before.burst.interrupts).toBe(0);
+  await page.getByRole('button',{name:'전투 계속하기',exact:true}).click();
+  await page.locator('#burst').click();await expect.poll(async()=>(await snapshot(page)).burst.interrupts).toBe(1);
+  await expect(page.locator('#notice')).toContainText('공격 끊음');
+  const hit=await snapshot(page);expect(hit.slams).toHaveLength(0);expect(hit.kills).toBe(0);expect(hit.xp).toBe(0);expect(hit.burst.uses).toBe(1);
+  await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'전투 계속하기',exact:true})).toBeVisible();
+  const paused=await snapshot(page);await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(paused.time);
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+ });
+}

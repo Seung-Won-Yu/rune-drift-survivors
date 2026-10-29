@@ -652,7 +652,7 @@ export function createRenderer(canvas, art, preferences = {motion: 'system', dam
           ctx.save(); ctx.translate(e.x, e.y - e.range * .42);
           drawWeaponMotif(ctx, 'lunar', 16); ctx.restore();
         }
-      } else if (e.kind === 'damage') {
+      } else if (e.kind === 'damage' || e.kind === 'interrupt') {
         ctx.font = 'bold 13px system-ui';
         ctx.textAlign = 'center';
         ctx.strokeStyle = '#182219';

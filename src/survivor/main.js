@@ -54,7 +54,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front', 'pickup-chase',
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front', 'pickup-chase', 'interrupt-giant',
   'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
   'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third',
   'continuation-sword','continuation-ember','continuation-orbit',
@@ -856,8 +856,9 @@ function tick(now) {
     else if (events.has('swarm-cleared')) notice('무리 돌파 · 경험치가 모입니다 · 다음 전투를 준비하세요');
     else if (events.has('swarm-arrival') && !events.has('elite') && !events.has('boss-arrival')) notice(game.swarms.active?.marching ? '대열이 길을 가로막습니다 · 틈으로 피하거나 공격으로 뚫으세요' : '무리가 몰려옵니다 · 빈 쪽으로 피하거나 한꺼번에 베어내세요');
     if (events.has('learn-spore')) notice('버섯의 포자 · 점선 원이 차오르면 밖으로 이동하세요');
-    else if (events.has('learn-hound')) notice('사냥개 돌진 · 달려오는 방향 옆으로 피하세요');
-    else if (events.has('learn-giant')) notice('거인의 내려찍기 · 고정된 원 밖으로 이동하세요');
+    else if (events.has('learn-hound')) notice('사냥개 준비 · 옆으로 피하거나 몸을 향해 돌파해 끊으세요');
+    else if (events.has('learn-giant')) notice('거인 준비 · 원 밖으로 피하거나 몸을 향해 돌파해 끊으세요');
+    if (events.has('interrupt') && !events.has('boss-arrival') && !events.has('elite-break')) notice('공격 끊음 · 일반 적의 준비를 돌파로 끊었습니다');
     if (events.has('relic-ready')) events.add('evolve');
     for (const event of selectAudioEvents(events)) tone(event);
     game.events.length = 0;
@@ -1086,6 +1087,11 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       } else if (name === 'experiment-offer') {
         game.level = 4; game.ranks[getCharacter(character).weapon] = 3;
         game.gems.push({x:0,y:0,value:9,age:0}); updateGame(game,1/60);
+      } else if (name === 'interrupt-giant') {
+        game.nextElite=999;game.xpNeed=99999;game.swordClock=999;game.player.invincible=0;
+        const enemy=spawnEnemy(game,2,false,{x:90,y:0});enemy.hp=enemy.maxHp=999;
+        enemy.slam={x:0,y:0,age:.2,hit:false,radius:GIANT.radius,windup:GIANT.windup};
+        game.phase='paused';
       } else if (name === 'pickup-chase') {
         game.ranks.ember=0;game.ranks.fleet=4;game.nextElite=999;game.xpNeed=99999;
         game.gems=[{x:-63,y:0,value:5,age:0}];updateGame(game,1/60);game.phase='paused';

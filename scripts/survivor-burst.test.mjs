@@ -186,3 +186,56 @@ test('ordinary attraction freezes in menus and preserves raw loot healing exactl
  assert.equal(g.xp,30);assert.equal(g.player.hp,33);assert.equal(g.dewXp,0);assert.equal(g.gems.length,0);
  for(let i=0;i<120;i++)updateGame(g,1/60);assert.equal(g.xp,30);assert.equal(g.player.hp,33);
 });
+
+function interruptArena(type, age=.2) {
+ const g=run(),e=spawnEnemy(g,type,false,{x:45,y:0});
+ e.hp=e.maxHp=999;e.speed=0;
+ if(type===1)e.hunt={x:45,y:0,angle:Math.PI,age,hit:false};
+ else e.slam={x:0,y:0,age,hit:false,radius:62,windup:1.15};
+ return {g,e};
+}
+test('only a real breakthrough contact interrupts a surviving ordinary windup',()=>{
+ for(const type of [1,2]) {
+  const {g,e}=interruptArena(type);const hp=e.hp;
+  updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});
+  assert.equal(e.hunt??e.slam,null);assert.equal(g.burst.interrupts,1);
+  assert.ok(e.interruptedUntil>g.time);assert.equal(g.kills,0);assert.equal(g.xp,0);
+  assert.ok(Math.abs(hp-e.hp-stats(g).swordDamage*BURST.damage)<1e-8);
+  frames(g,10);assert.equal(g.burst.interrupts,1);assert.equal(g.events.filter(e=>e==='interrupt').length,1);
+ }
+});
+test('released attacks, off-path targets and champions cannot be interrupted',()=>{
+ for(const type of [1,2])for(const condition of ['released','off-path','elite','champion']){
+  const {g,e}=interruptArena(type,condition==='released'?(type===1?.8:1.15):.2);
+  if(condition==='off-path'){e.y=300;if(e.hunt)e.hunt.y=300;}
+  if(condition==='elite')e.elite=true;
+  if(condition==='champion')e.champion=type===1?'fang':'root';
+  updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});
+  assert.equal(g.burst.interrupts,0,`${type}/${condition}`);assert.equal(e.interruptedUntil,undefined);
+ }
+});
+test('a dead target grants only its ordinary kill and a passive hit never cancels preparation',()=>{
+ const dead=interruptArena(2);dead.e.hp=1;updateGame(dead.g,1/60,{x:0,y:0,burst:{x:1,y:0}});
+ assert.equal(dead.g.kills,1);assert.equal(dead.g.burst.interrupts,0);
+ const passive=interruptArena(2);passive.g.swordClock=0;frames(passive.g,15);
+ assert.ok(passive.e.hp<999);assert.ok(passive.e.slam);assert.equal(passive.e.interruptedUntil,undefined);
+});
+test('interruption freezes in menus and permits movement and future attacks after recovery',()=>{
+ const {g,e}=interruptArena(2);e.speed=35;updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});
+ const interrupted=structuredClone(e);pauseGame(g);frames(g,90);assert.deepEqual(e,interrupted);
+ resumeGame(g);frames(g,10);assert.equal(e.x,interrupted.x);assert.equal(e.y,interrupted.y);
+ frames(g,25);assert.ok(Math.hypot(e.x-interrupted.x,e.y-interrupted.y)>0);
+ assert.equal(g.player.invincible,0);assert.equal(g.burst.interrupts,1);
+ frames(g,400);assert.ok(g.events.includes('warning'),'the same enemy can prepare a later attack');
+ assert.equal(createGame().burst.interrupts,0);
+});
+
+test('sovereign preparation and the final deadline keep their interruption boundaries',()=>{
+ const g=run(),boss=spawnBoss(g);Object.assign(boss,{x:45,y:0,entrance:0,pattern:{kind:'charge',x:45,y:0,angle:0,length:72,age:.2}});
+ updateGame(g,1/60,{x:0,y:0,burst:{x:1,y:0}});
+ assert.equal(g.burst.interrupts,0);assert.equal(boss.pattern.kind,'charge');assert.equal(boss.interruptedUntil,undefined);
+ const final=interruptArena(2);final.g.time=RUN_SECONDS-1/60;
+ updateGame(final.g,1/60,{x:0,y:0,burst:{x:1,y:0}});
+ assert.equal(final.g.phase,'ended');assert.equal(final.g.outcome,'survived');
+ assert.equal(final.g.burst.interrupts,0);assert.equal(final.e.interruptedUntil,undefined);
+});

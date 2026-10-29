@@ -6,7 +6,7 @@ import { BURST, createBurst, startBurst, advanceBurst, burstDistance } from './b
 import { createLandingCombo, queueLandingCombo, advanceLandingCombo, sweptOrbitHeads } from './landing-combo.js';
 import { createSignature, advanceSignature, chargeBlade, chargeRune, consumeSignature, absorbDamage } from './signature.js';
 import { IMPACT_LIFE, ELITE_FINISH_LIFE, isEvolvedWeapon, recordPlayerImpact, recordBossDamage } from './impact.js';
-import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy } from './enemies.js';
+import { GIANT, enemyTypeAt, leaveSpores, updateSpores, updateHound, activeThreats, teachEnemy, interruptWindup } from './enemies.js';
 import { updateEncounters, curseActive } from './encounters.js';
 import { SPECIALIZATIONS, SPECIALIZATION_RANK, SPECIALIZATION_LEVEL, specializationFor, specializationOffers, modifyBuildStats } from './expansion.js';
 import { BOSS, updateBoss, updateThorns } from './boss.js';
@@ -1143,7 +1143,7 @@ export function updateGame(game, dt, input = {
       if (game.phase === 'ended') return;
       continue;
     }
-    const attacking = updateChampionBloom(game, e, dt) || updateHound(game, e, dt, hurtPlayer) || updateSlam(game, e, dt, d);
+    const attacking = e.interruptedUntil > game.time || updateChampionBloom(game, e, dt) || updateHound(game, e, dt, hurtPlayer) || updateSlam(game, e, dt, d);
     if (game.phase === 'ended') return;
     const gx = Math.floor(e.x / 56),
       gy = Math.floor(e.y / 56);
@@ -1192,7 +1192,13 @@ export function updateGame(game, dt, input = {
     const damage=s[`${source}Damage`]*BURST.damage;
     for(const enemy of game.enemies) if(enemy.hp>0&&!b.hitIds.includes(enemy.id)&&burstDistance(b,enemy.x,enemy.y)<=BURST.width+enemy.radius) {
       const before=game.kills;
-      if(hitEnemy(game,enemy,damage,source,b.x*1.6,b.y*1.6)>0)b.hitIds.push(enemy.id);
+      if(hitEnemy(game,enemy,damage,source,b.x*1.6,b.y*1.6)>0) {
+        b.hitIds.push(enemy.id);
+        if (game.time < RUN_SECONDS && interruptWindup(game,enemy)) {
+          b.interrupts++; game.events.push('interrupt');
+          effect(game,{kind:'interrupt',x:enemy.x,y:enemy.y-enemy.size*.9-26,text:'끊음',tone:'#fff0c2',life:.5});
+        }
+      }
       b.kills+=game.kills-before;
     }
   }
