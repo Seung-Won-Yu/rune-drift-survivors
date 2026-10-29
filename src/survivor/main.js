@@ -54,7 +54,7 @@ let storage;
 const previewScene = import.meta.env.DEV ? new URLSearchParams(location.search).get('preview') : null;
 const visualPreview = [
   'upgrade', 'overflow', 'branch-sword', 'branch-ember', 'branch-orbit', 'recovery-choice', 'evolution', 'record-experiment', 'victory', 'survived', 'defeat', 'event-altar',
-  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo',
+  'action-readability', 'projectile-readability', 'feel-sweep', 'feel-detonation', 'feel-horizon', 'boss-practice', 'field-practice', 'ember-coal', 'record-secondary', 'goal-comet', 'spectacle-blade', 'spectacle-flame', 'spectacle-rune', 'burst-lane', 'burst-harvest', 'landing-combo', 'march-front',
   'chain-three', 'chain-five', 'chain-growth-three', 'chain-growth-five',
   'chain-five-contact-first', 'chain-five-contact-second', 'chain-five-contact-third',
   'continuation-sword','continuation-ember','continuation-orbit',
@@ -852,7 +852,7 @@ function tick(now) {
     if (events.has('event-ready')) notice('숲의 사건 발견 · 방향 안내를 따라가 보세요');else if (events.has('event-expired')) notice('미완료 사건이 사라졌습니다 · 다음 대결을 준비하세요');else if (events.has('curse')) notice('저주 시작 · 18초 동안 살아남으세요');else if (events.has('recovery-ready')) notice('숲의 열매가 열렸습니다 · 가까이 가면 체력 +25');else if (events.has('boss-arrival')) notice('재의 군주 출현 · 공격 예고를 보고 빈틈을 노리세요');else if (events.has('elite')) notice(`${game.enemies.find(e => e.champion && e.hp > 0)?.name ?? '정예'} 출현 · ${CHAMPIONS.find(c => c.id === game.enemies.find(e => e.champion && e.hp > 0)?.champion)?.tip ?? '처치하면 체력 회복'}`);
     if (events.has('elite-break')) notice('정예 격파 · 체력 +15 · 주변 경험치가 모입니다');
     else if (events.has('swarm-cleared')) notice('무리 돌파 · 경험치가 모입니다 · 다음 전투를 준비하세요');
-    else if (events.has('swarm-arrival') && !events.has('elite') && !events.has('boss-arrival')) notice('무리가 몰려옵니다 · 빈 쪽으로 피하거나 한꺼번에 베어내세요');
+    else if (events.has('swarm-arrival') && !events.has('elite') && !events.has('boss-arrival')) notice(game.swarms.active?.marching ? '대열이 길을 가로막습니다 · 틈으로 피하거나 공격으로 뚫으세요' : '무리가 몰려옵니다 · 빈 쪽으로 피하거나 한꺼번에 베어내세요');
     if (events.has('learn-spore')) notice('버섯의 포자 · 점선 원이 차오르면 밖으로 이동하세요');
     else if (events.has('learn-hound')) notice('사냥개 돌진 · 달려오는 방향 옆으로 피하세요');
     else if (events.has('learn-giant')) notice('거인의 내려찍기 · 고정된 원 밖으로 이동하세요');
@@ -1084,6 +1084,9 @@ if (import.meta.env.DEV && (visualPreview || new URLSearchParams(location.search
       } else if (name === 'experiment-offer') {
         game.level = 4; game.ranks[getCharacter(character).weapon] = 3;
         game.gems.push({x:0,y:0,value:9,age:0}); updateGame(game,1/60);
+      } else if (name === 'march-front') {
+        game.time=153.99;game.nextElite=999;game.spawnClock=999;game.xpNeed=99999;
+        updateGame(game,1/30,{x:1,y:0});game.phase='paused';
       } else if (name === 'pacing-surge' || name === 'pacing-rest' || name === 'pacing-boss') {
         game.time = name === 'pacing-surge' ? 54 : name === 'pacing-rest' ? 82 : 239.9;
         game.nextElite = 999;

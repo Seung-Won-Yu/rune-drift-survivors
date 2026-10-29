@@ -2830,3 +2830,19 @@ for(const viewport of [{width:1280,height:720},{width:320,height:568},{width:740
   await expect(page.locator('#boss-caption')).toContainText('가시 잔류');
  });
 }
+
+for(const viewport of [{width:1280,height:720},{width:390,height:844}]) {
+ test(`late marching front freezes and resumes through the real field at ${viewport.width}`,async({page})=>{
+  await page.setViewportSize(viewport);await scenario(page,'march-front');
+  const before=await snapshot(page);expect(before.swarms.active.marching).toBe(true);
+  await expect(page.getByRole('button',{name:'전투 계속하기',exact:true})).toBeVisible();
+  await page.waitForTimeout(150);expect((await snapshot(page)).time).toBe(before.time);
+  await page.getByRole('button',{name:'전투 계속하기',exact:true}).click();
+  await expect(page.locator('#phase-label')).toContainText('무리 돌파');
+  await page.waitForTimeout(300);
+  expect((await snapshot(page)).time).toBeGreaterThan(before.time);
+  await page.screenshot({path:`output/playwright/survivor/march-front-${viewport.width}.png`});
+  await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'전투 계속하기',exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight}))).toEqual({x:0,y:0});
+ });
+}

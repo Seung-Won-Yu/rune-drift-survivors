@@ -169,3 +169,59 @@ test('relief never postpones a scheduled elite and frozen choice screens consume
     assert.equal(g.time, time); assert.equal(combatPacing(g).remaining, remaining);
   }
 });
+
+test('late formations commit across the travel route with an open, offset corridor', () => {
+  for (const time of [154,212]) for (const input of [{x:1,y:0},{x:0,y:-1}]) {
+    const g=swarmGame();g.time=time-.01;g.ranks.sword=0;
+    updateGame(g,1/30,input);
+    const pack=g.enemies.filter(e=>e.swarm===time), count=SWARMS.find(b=>b.at===time).count;
+    assert.equal(pack.length,count);assert.equal(g.swarms.active.marching,true);
+    const lateral=pack.map(e=>(e.x-g.player.x)*-input.y+(e.y-g.player.y)*input.x).sort((a,b)=>a-b);
+    assert.ok(lateral.some((n,i)=>i>0&&n-lateral[i-1]>130),'a real corridor remains between columns');
+    assert.ok(pack.every(e=>Math.hypot(e.x-g.player.x,e.y-g.player.y)>300),'no spawning on top of the player');
+    const original=pack.map(e=>({x:e.x,y:e.y,march:{...e.march}}));
+    updateGame(g,1/30,{x:-input.x,y:-input.y});
+    pack.forEach((e,i)=>{
+      assert.deepEqual(e.march,original[i].march,'turning does not retarget the front');
+      assert.ok((e.x-original[i].x)*input.x+(e.y-original[i].y)*input.y<0,'the front crosses its committed direction');
+    });
+    assert.equal(g.xp,0);assert.equal(g.kills,0);
+  }
+});
+
+test('marching freezes in menus, respects slowing and returns to pursuit after five combat seconds',()=>{
+  const g=swarmGame();g.time=153.99;g.ranks.sword=0;updateGame(g,1/30,{x:1,y:0});
+  const e=g.enemies[0], before={x:e.x,y:e.y,until:e.march.until};
+  pauseGame(g);advance(g,3);assert.equal(e.x,before.x);assert.equal(e.y,before.y);assert.equal(e.march.until,before.until);
+  resumeGame(g);e.slowUntil=g.time+2;
+  const start=e.x;updateGame(g,1/60);assert.ok(Math.abs(start-e.x-140*.7/60)<1e-6);
+  g.time=e.march.until;updateGame(g,1/60);assert.equal(e.march,null);
+  assert.equal(g.swarms.cleared,0);assert.equal(g.xp,0);
+});
+
+test('late fronts stay breakable and the boss cancels their directional movement',()=>{
+  const g=swarmGame();g.time=153.99;g.ranks.sword=0;updateGame(g,1/30,{x:1,y:0});
+  const pack=g.enemies.slice();
+  for(const e of pack){e.x=60;e.y=0;e.speed=0;e.march=null;}
+  g.ranks.sword=3;g.ranks.sweep=1;g.swordClock=0;advance(g,.25);
+  assert.equal(g.kills,pack.length);assert.equal(g.swarms.cleared,1);
+  assert.ok(g.gems.length>0,'only real kills produce loot');
+  const h=swarmGame();h.time=211.99;h.ranks.sword=0;updateGame(h,1/30,{x:1,y:0});
+  const surviving=h.enemies.slice();h.time=239.99;updateGame(h,1/30);
+  assert.ok(h.bossSpawned);assert.ok(surviving.every(e=>!e.march));
+});
+
+test('changing lane can avoid real front contact while walking straight meets the line',()=>{
+  const outcomes=[];
+  for(const lane of ['straight','gap']) {
+    const g=swarmGame();g.time=153.99;g.ranks.sword=0;g.player.invincible=0;
+    updateGame(g,1/60,{x:1,y:0});
+    const ys=g.enemies.map(e=>e.y).sort((a,b)=>a-b);
+    let gap=null;for(let i=1;i<ys.length;i++)if(ys[i]-ys[i-1]>130)gap=(ys[i]+ys[i-1])/2;
+    assert.notEqual(gap,null);
+    for(let i=0;i<140;i++)updateGame(g,1/60,lane==='gap'&&Math.abs(g.player.y-gap)>3
+      ?{x:0,y:Math.sign(gap-g.player.y)}:{x:1,y:0});
+    outcomes.push(g.player.hp);assert.equal(g.kills,0);
+  }
+  assert.ok(outcomes[0]<100);assert.equal(outcomes[1],100);
+});

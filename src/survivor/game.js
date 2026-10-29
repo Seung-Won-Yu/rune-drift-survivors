@@ -16,7 +16,7 @@ import { healPlayer, updateField } from './field.js';
 import { EVOLUTION_BREATHER, spawnPlan } from './pacing.js';
 import { validExperiment } from './experiments.js';
 import { vowStats, validGoal, primaryBranches } from './progression.js';
-import { createSwarms, spawnOpening, updateSwarms, recordSwarmKill } from './swarms.js';
+import { createSwarms, spawnOpening, updateSwarms, recordSwarmKill, MARCH_SPEED } from './swarms.js';
 export const RUN_SECONDS = 300;
 export const LIMITS = {
   enemies: 160,
@@ -1154,8 +1154,11 @@ export function updateGame(game, dt, input = {
     }
     if (!attacking) {
       const fromX = e.x, fromY = e.y;
-      e.x += (dx / d * e.speed * danger * (e.slowUntil > game.time ? .7 : 1) + pushX + e.knockX) * dt;
-      e.y += (dy / d * e.speed * danger * (e.slowUntil > game.time ? .7 : 1) + pushY + e.knockY) * dt;
+      if (e.march && game.time >= e.march.until) e.march = null;
+      const direction = e.march ?? {x:dx/d,y:dy/d};
+      const travelSpeed = e.march ? MARCH_SPEED : e.speed;
+      e.x += (direction.x * travelSpeed * danger * (e.slowUntil > game.time ? .7 : 1) + pushX + e.knockX) * dt;
+      e.y += (direction.y * travelSpeed * danger * (e.slowUntil > game.time ? .7 : 1) + pushY + e.knockY) * dt;
       e.walk = (e.walk ?? 0) + Math.hypot(e.x - fromX, e.y - fromY);
     }
     e.knockX *= Math.exp(-12 * dt);
@@ -1166,7 +1169,7 @@ export function updateGame(game, dt, input = {
       const a = game.rng() * Math.PI * 2;
       e.x = p.x + Math.cos(a) * game.spawnRadius;
       e.y = p.y + Math.sin(a) * game.spawnRadius;
-      e.hunt = null; e.slam = null; e.huntClock = 2; e.attackClock = 2.2;
+      e.march = null; e.hunt = null; e.slam = null; e.huntClock = 2; e.attackClock = 2.2;
     }
     if (!attacking && Math.hypot(p.x - e.x, p.y - e.y) < e.radius + 12) {
       hurtPlayer(game, e.damage * danger, 'contact', e);
